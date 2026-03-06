@@ -34,7 +34,7 @@ Feature: Features related to bugs
 
         When I route I should get
             | waypoints | route     | turns | locations |
-            | 1,2       | top,right | depart,arrive | |
+            | 1,2 | top,right | depart,arrive | 1,2 |
 
     @3156
     Scenario: Incorrect lanes tag

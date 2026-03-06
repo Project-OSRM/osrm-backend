@@ -25,8 +25,8 @@ Feature: Staggered Intersections
 
         When I route I should get
             | waypoints | route                         | turns                              | modes | locations |
-            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | cycling,pushing bike,cycling,cycling | |
-            | g,a       | Oak St,Oak St                 | depart,arrive                      | cycling,cycling | |
+            | a,g | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | cycling,pushing bike,cycling,cycling | a,a,a,g |
+            | g,a | Oak St,Oak St | depart,arrive | cycling,cycling | g,a |
 
     Scenario: Staggered Intersection - pushing at start
         Given the node map
@@ -47,8 +47,8 @@ Feature: Staggered Intersections
 
         When I route I should get
             | waypoints | route                         | turns                              | modes | locations |
-            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,cycling,cycling | |
-            | g,a       | Oak St,Oak St                 | depart,arrive                      | cycling,cycling | |
+            | a,g | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,cycling,cycling | a,a,a,g |
+            | g,a | Oak St,Oak St | depart,arrive | cycling,cycling | g,a |
 
     Scenario: Staggered Intersection - pushing at end
         Given the node map
@@ -69,8 +69,8 @@ Feature: Staggered Intersections
 
         When I route I should get
             | waypoints | route         | turns                                              | modes | locations |
-            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | cycling,cycling,pushing bike,pushing bike | |
-            | g,a       | Oak St,Oak St | depart,arrive                                      | cycling,cycling | |
+            | a,g | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | cycling,cycling,pushing bike,pushing bike | a,a,a,g |
+            | g,a | Oak St,Oak St | depart,arrive | cycling,cycling | g,a |
 
     Scenario: Staggered Intersection - pushing at start and end
         Given the node map
@@ -91,8 +91,8 @@ Feature: Staggered Intersections
 
         When I route I should get
             | waypoints | route                         | turns                              | modes | locations |
-            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,pushing bike,pushing bike | |
-            | g,a       | Oak St,Oak St                 | depart,arrive                      | cycling,cycling | |
+            | a,g | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,pushing bike,pushing bike | a,a,a,g |
+            | g,a | Oak St,Oak St | depart,arrive | cycling,cycling | g,a |
 
     Scenario: Staggered Intersection - pushing at start and end
         Given the node map
@@ -113,8 +113,8 @@ Feature: Staggered Intersections
 
         When I route I should get
             | waypoints | route                         | turns                              | modes | locations |
-            | a,g       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,pushing bike,pushing bike | |
-            | g,a       | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,pushing bike,pushing bike | |
+            | a,g | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,pushing bike,pushing bike | a,a,a,g |
+            | g,a | Oak St,Cedar Dr,Oak St,Oak St | depart,turn right,turn left,arrive | pushing bike,cycling,pushing bike,pushing bike | g,a,a,a |
 
     Scenario: Staggered Intersection - control, all cycling on staggered intersection
         Given the node map
@@ -135,5 +135,5 @@ Feature: Staggered Intersections
 
         When I route I should get
             | waypoints | route         | turns         | modes | locations |
-            | a,g       | Oak St,Oak St | depart,arrive | cycling,cycling | |
-            | g,a       | Oak St,Oak St | depart,arrive | cycling,cycling | |
+            | a,g | Oak St,Oak St | depart,arrive | cycling,cycling | a,g |
+            | g,a | Oak St,Oak St | depart,arrive | cycling,cycling | g,a |

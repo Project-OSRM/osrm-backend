@@ -19,8 +19,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route         | turns | locations |
-            | a,e       | abcde,abcde   | depart,arrive | |
-            | a,g       | abcde,bfg,bfg | depart,off ramp slight right,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | a,g | abcde,bfg,bfg | depart,off ramp slight right,arrive | a,b,g |
 
     Scenario: Ramp Exit Right Curved Right
         Given the node map
@@ -37,8 +37,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route         | turns | locations |
-            | a,e       | abcde,abcde   | depart,arrive | |
-            | a,g       | abcde,bfg,bfg | depart,off ramp right,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | a,g | abcde,bfg,bfg | depart,off ramp right,arrive | a,b,g |
 
     Scenario: Ramp Exit Right Curved Left
         Given the node map
@@ -55,8 +55,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route         | turns | locations |
-            | a,e       | abcde,abcde   | depart,arrive | |
-            | a,g       | abcde,cfg,cfg | depart,off ramp slight right,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | a,g | abcde,cfg,cfg | depart,off ramp slight right,arrive | a,c,g |
 
 
     Scenario: Ramp Exit Left
@@ -73,8 +73,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route         | turns | locations |
-            | a,e       | abcde,abcde   | depart,arrive | |
-            | a,g       | abcde,bfg,bfg | depart,off ramp slight left,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | a,g | abcde,bfg,bfg | depart,off ramp slight left,arrive | a,b,g |
 
     Scenario: Ramp Exit Left Curved Left
         Given the node map
@@ -91,8 +91,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route         | turns | locations |
-            | a,e       | abcde,abcde   | depart,arrive | |
-            | a,g       | abcde,bfg,bfg | depart,off ramp left,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | a,g | abcde,bfg,bfg | depart,off ramp left,arrive | a,b,g |
 
     Scenario: Ramp Exit Left Curved Right
         Given the node map
@@ -109,8 +109,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route         | turns | locations |
-            | a,e       | abcde,abcde   | depart,arrive | |
-            | a,g       | abcde,cfg,cfg | depart,off ramp slight left,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | a,g | abcde,cfg,cfg | depart,off ramp slight left,arrive | a,c,g |
 
     Scenario: On Ramp Right
         Given the node map
@@ -126,8 +126,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route           | turns | locations |
-            | a,e       | abcde,abcde     | depart,arrive | |
-            | f,e       | fgd,abcde,abcde | depart,merge slight left,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | f,e | fgd,abcde,abcde | depart,merge slight left,arrive | f,d,e |
 
     Scenario: On Ramp Left
         Given the node map
@@ -143,8 +143,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route           | turns | locations |
-            | a,e       | abcde,abcde     | depart,arrive | |
-            | f,e       | fgd,abcde,abcde | depart,merge slight right,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | f,e | fgd,abcde,abcde | depart,merge slight right,arrive | f,d,e |
 
     Scenario: Highway Fork
         Given the node map
@@ -161,8 +161,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route             | turns | locations |
-            | a,e       | abcde,abcde,abcde | depart,fork slight left,arrive | |
-            | a,g       | abcde,cfg,cfg     | depart,fork slight right,arrive | |
+            | a,e | abcde,abcde,abcde | depart,fork slight left,arrive | a,a,e |
+            | a,g | abcde,cfg,cfg | depart,fork slight right,arrive | a,c,g |
 
      Scenario: Fork After Ramp
        Given the node map
@@ -180,8 +180,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route       | turns | locations |
-            | a,e       | abc,cde,cde | depart,fork slight left,arrive | |
-            | a,g       | abc,cfg,cfg | depart,fork slight right,arrive | |
+            | a,e | abc,cde,cde | depart,fork slight left,arrive | a,c,e |
+            | a,g | abc,cfg,cfg | depart,fork slight right,arrive | a,c,g |
 
      Scenario: On And Off Ramp Right
        Given the node map
@@ -198,10 +198,10 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route           | turns | locations |
-            | a,e       | abcde,abcde     | depart,arrive | |
-            | f,e       | fgc,abcde,abcde | depart,merge slight left,arrive | |
-            | a,i       | abcde,chi,chi   | depart,off ramp slight right,arrive | |
-            | f,i       | fgc,chi,chi     | depart,off ramp slight right,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | f,e | fgc,abcde,abcde | depart,merge slight left,arrive | f,c,e |
+            | a,i | abcde,chi,chi | depart,off ramp slight right,arrive | a,c,i |
+            | f,i | fgc,chi,chi | depart,off ramp slight right,arrive | f,c,i |
 
     Scenario: On And Off Ramp Left
        Given the node map
@@ -218,10 +218,10 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route           | turns | locations |
-            | a,e       | abcde,abcde     | depart,arrive | |
-            | f,e       | fgc,abcde,abcde | depart,merge slight right,arrive | |
-            | a,i       | abcde,chi,chi   | depart,off ramp slight left,arrive | |
-            | f,i       | fgc,chi,chi     | depart,off ramp slight left,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | f,e | fgc,abcde,abcde | depart,merge slight right,arrive | f,c,e |
+            | a,i | abcde,chi,chi | depart,off ramp slight left,arrive | a,c,i |
+            | f,i | fgc,chi,chi | depart,off ramp slight left,arrive | f,c,i |
 
     Scenario: Merging Motorways
         Given the node map
@@ -239,8 +239,8 @@ Feature: Motorway Guidance
 
         When I route I should get
             | waypoints | route      | turns | locations |
-            | d,c       | db,abc,abc | depart,merge slight left,arrive | |
-            | e,c       | eb,abc,abc | depart,merge slight right,arrive | |
+            | d,c | db,abc,abc | depart,merge slight left,arrive | d,b,c |
+            | e,c | eb,abc,abc | depart,merge slight right,arrive | e,b,c |
 
     Scenario: Handle 90 degree off ramps correctly
         Given the node map
@@ -260,7 +260,7 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route               | turns | locations |
-            | a,d       | On,Hwy,Off,Off      | depart,merge slight right,off ramp right,arrive | |
+            | a,d | On,Hwy,Off,Off | depart,merge slight right,off ramp right,arrive | a,?,?,d |
 
     #http://0.0.0.0:9966/?z=18&center=38.893323%2C-77.055117&loc=38.893551%2C-77.054833&loc=38.893112%2C-77.055536&hl=en&alt=0
     Scenario: Merging with same name
@@ -279,8 +279,8 @@ Feature: Motorway Guidance
 
         When I route I should get
             | waypoints | route | turns | locations |
-            | a,d       | ,     | depart,arrive | |
-            | b,d       | ,     | depart,arrive | |
+            | a,d | , | depart,arrive | a,d |
+            | b,d | , | depart,arrive | b,d |
 
 
     Scenario: Ramp Exit with Lower Priority
@@ -297,8 +297,8 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route         | turns | locations |
-            | a,e       | abcde,abcde   | depart,arrive | |
-            | a,g       | abcde,bfg,bfg | depart,off ramp slight right,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
+            | a,g | abcde,bfg,bfg | depart,off ramp slight right,arrive | a,b,g |
 
 
     # https://www.openstreetmap.org/node/67366428#map=18/33.64613/-84.44425
@@ -320,9 +320,9 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route | turns | locations |
-            | a,c       | ,,    | depart,fork slight left,arrive | |
-            | a,e       | ,,,   | depart,fork slight right,fork slight left,arrive | |
-            | a,f       | ,,,   | depart,fork slight right,fork slight right,arrive | |
+            | a,c | ,, | depart,fork slight left,arrive | a,?,c |
+            | a,e | ,,, | depart,fork slight right,fork slight left,arrive | a,?,?,e |
+            | a,f | ,,, | depart,fork slight right,fork slight right,arrive | a,?,?,f |
 
 
     # https://www.openstreetmap.org/#map=19/53.46186/-2.24509
@@ -342,6 +342,6 @@ Feature: Motorway Guidance
 
        When I route I should get
             | waypoints | route      | turns | locations |
-            | a,d       | abce,cd,cd | depart,off ramp slight left,arrive | |
-            | a,e       | abce,abce  | depart,arrive | |
-            | a,f       | abce,cf,cf | depart,turn slight right,arrive | |
+            | a,d | abce,cd,cd | depart,off ramp slight left,arrive | a,c,d |
+            | a,e | abce,abce | depart,arrive | a,e |
+            | a,f | abce,cf,cf | depart,turn slight right,arrive | a,c,f |

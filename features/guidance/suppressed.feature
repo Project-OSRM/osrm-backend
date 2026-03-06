@@ -19,7 +19,7 @@ Feature: Suppressed Turns
 
        When I route I should get
             | waypoints | route         | turns | locations |
-            | a,e       | abcde,abcde   | depart,arrive | |
+            | a,e | abcde,abcde | depart,arrive | a,e |
 
     Scenario: Do not announce reference changes
         Given the node map
@@ -37,7 +37,7 @@ Feature: Suppressed Turns
 
         When I route I should get
             | waypoints | route                     | turns         | ref | locations |
-            | a,f       | highway,highway           | depart,arrive | A1,A1 | |
+            | a,f | highway,highway | depart,arrive | A1,A1 | a,f |
 
 
     Scenario: Don't Announce Turn on following major road class -- service
@@ -54,7 +54,7 @@ Feature: Suppressed Turns
 
         When I route I should get
             | waypoints | route   | turns | locations |
-            | a,c       | abc,abc | depart,arrive | |
+            | a,c | abc,abc | depart,arrive | a,c |
 
     Scenario: Don't Announce Turn on following major road class -- residential
         Given the node map
@@ -70,5 +70,5 @@ Feature: Suppressed Turns
 
         When I route I should get
             | waypoints | route     | turns | locations |
-            | a,c       | abc,abc   | depart,arrive | |
-            | a,d       | abc,bd,bd | depart,turn straight,arrive | |
+            | a,c | abc,abc | depart,arrive | a,c |
+            | a,d | abc,bd,bd | depart,turn straight,arrive | a,b,d |

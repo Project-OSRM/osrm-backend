@@ -36,9 +36,9 @@ Feature: Turn Lane Guidance
 
        When I route I should get
             | waypoints | route                | turns                           | lanes | locations |
-            | a,e       | in,cross,cross       | depart,turn left,arrive         | ;,left:true straight:false, | |
-            | a,g       | in,straight,straight | depart,new name straight,arrive | ;,left:false straight:true, | |
-            | a,f       | in,cross,cross       | depart,continue right,arrive    | ,;right:true, | |
+            | a,e | in,cross,cross | depart,turn left,arrive | ;,left:true straight:false, | a,?,e |
+            | a,g | in,straight,straight | depart,new name straight,arrive | ;,left:false straight:true, | a,i,g |
+            | a,f | in,cross,cross | depart,continue right,arrive | ,;right:true, | a,?,f |
 
     @sliproads
     Scenario: Separate Turn Lanes
@@ -69,9 +69,9 @@ Feature: Turn Lane Guidance
 
        When I route I should get
             | waypoints | route                | turns                           | lanes | locations |
-            | a,e       | in,cross,cross       | depart,turn left,arrive         | ;,left:true straight:false right:false, | |
-            | a,g       | in,straight,straight | depart,new name straight,arrive | ;,left:false straight:true right:false, | |
-            | a,f       | in,cross,cross       | depart,turn right,arrive        | ,left:false straight:false right:true;left:false straight:false right:true, | |
+            | a,e | in,cross,cross | depart,turn left,arrive | ;,left:true straight:false right:false, | a,?,e |
+            | a,g | in,straight,straight | depart,new name straight,arrive | ;,left:false straight:true right:false, | a,i,g |
+            | a,f | in,cross,cross | depart,turn right,arrive | ,left:false straight:false right:true;left:false straight:false right:true, | a,?,f |
 
 
     @sliproads
@@ -110,11 +110,11 @@ Feature: Turn Lane Guidance
 
        When I route I should get
             | waypoints | route                | turns                               | lanes | locations |
-            | a,e       | in,cross,cross       | depart,turn left,arrive             | ;,left:true straight:false right:false, | |
-            | a,g       | in,straight,straight | depart,new name straight,arrive     | ;,left:false straight:true right:false, | |
-            | a,f       | in,cross,cross       | depart,turn right,arrive            | ,left:false straight:false right:true;left:false straight:false right:true, | |
-            | a,j       | in,turn,other,other  | depart,turn right,turn left,arrive  | ,,left:true right:false, | |
-            | a,i       | in,turn,other,other  | depart,turn right,turn right,arrive | ,,left:false right:true, | |
+            | a,e | in,cross,cross | depart,turn left,arrive | ;,left:true straight:false right:false, | a,?,e |
+            | a,g | in,straight,straight | depart,new name straight,arrive | ;,left:false straight:true right:false, | a,i,g |
+            | a,f | in,cross,cross | depart,turn right,arrive | ,left:false straight:false right:true;left:false straight:false right:true, | a,?,f |
+            | a,j | in,turn,other,other | depart,turn right,turn left,arrive | ,,left:true right:false, | a,n,t,j |
+            | a,i | in,turn,other,other | depart,turn right,turn right,arrive | ,,left:false right:true, | a,n,t,i |
 
 
     @todo @2654 @none
@@ -144,8 +144,8 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route    | turns                    | lanes | locations |
-            | a,f       | ,ksd,ksd | depart,turn left,arrive  | ,left:true none:true right:false, | |
-            | a,i       | ,ksd,ksd | depart,turn right,arrive | ,left:false none:true right:true, | |
+            | a,f | ,ksd,ksd | depart,turn left,arrive | ,left:true none:true right:false, | a,?,f |
+            | a,i | ,ksd,ksd | depart,turn right,arrive | ,left:false none:true right:true, | a,?,i |
 
     @todo @2650 @sliproads
     #market and haight in SF, restricted turn
@@ -190,10 +190,10 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route                | turns                              | lanes | locations |
-            | a,l       | ghough,haight,haight | depart,turn right,arrive           | ,none:false straight:false straight:false straight:true, | |
-            | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true, | |
-            | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, | |
-            | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false, | |
+            | a,l | ghough,haight,haight | depart,turn right,arrive | ,none:false straight:false straight:false straight:true, | a,h,l |
+            | a,h | ghough,market,market | depart,turn slight right,arrive | ,none:false straight:false straight:true straight:true, | a,?,h |
+            | a,j | ghough,market,market | depart,turn left,arrive | ,none:true straight:false straight:false straight:false, | a,?,j |
+            | a,f | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false, | a,g,f |
 
     @todo @2650 @sliproads
     #market and haight in SF, unrestricted
@@ -234,10 +234,10 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | waypoints | route                | turns                              | lanes | locations |
-            | a,l       | ghough,haight,haight | depart,turn right,arrive           | ,none:false straight:false straight:false straight:true, | |
-            | a,h       | ghough,market,market | depart,turn slight right,arrive    | ,none:false straight:false straight:true straight:true, | |
-            | a,j       | ghough,market,market | depart,turn left,arrive            | ,none:true straight:false straight:false straight:false, | |
-            | a,f       | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false, | |
+            | a,l | ghough,haight,haight | depart,turn right,arrive | ,none:false straight:false straight:false straight:true, | a,h,l |
+            | a,h | ghough,market,market | depart,turn slight right,arrive | ,none:false straight:false straight:true straight:true, | a,?,h |
+            | a,j | ghough,market,market | depart,turn left,arrive | ,none:true straight:false straight:false straight:false, | a,?,j |
+            | a,f | ghough,ghough,ghough | depart,continue slight left,arrive | ,none:true straight:true straight:false straight:false, | a,g,f |
 
 
     Scenario: Check sliproad handler loop's exit condition, Issue #2896
@@ -254,4 +254,4 @@ Feature: Turn Lane Guidance
 
         When I route I should get
             | from | to | route | turns | locations |
-            | a    | c  | ,     | depart,arrive | |
+            | a | c | , | depart,arrive | a,c |

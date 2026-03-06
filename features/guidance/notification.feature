@@ -21,7 +21,7 @@ Feature: Notification on turn onto mode change
 
         When I route I should get
             | waypoints | route     | turns                                        | modes | locations |
-            | a,e       | ,ferry,,  | depart,turn right,notification right,arrive  | driving,ferry,driving,driving | |
+            | a,e | ,ferry,, | depart,turn right,notification right,arrive | driving,ferry,driving,driving | a,?,?,e |
 
     Scenario: Turn onto a Ferry
         Given the node map
@@ -40,8 +40,8 @@ Feature: Notification on turn onto mode change
 
         When I route I should get
             | waypoints | route     | turns                                                      | modes | locations |
-            | g,h       | ,ferry,,, | depart,turn right,notification straight,turn right,arrive  | driving,ferry,driving,driving,driving | |
-            | b,g       | ,,ferry,, | depart,turn right,notification straight,turn left,arrive   | driving,driving,ferry,driving,driving | |
+            | g,h | ,ferry,,, | depart,turn right,notification straight,turn right,arrive | driving,ferry,driving,driving,driving | g,?,?,?,h |
+            | b,g | ,,ferry,, | depart,turn right,notification straight,turn left,arrive | driving,driving,ferry,driving,driving | b,?,?,?,g |
 
     Scenario: Straight onto a Ferry
         Given the node map
@@ -60,4 +60,4 @@ Feature: Notification on turn onto mode change
 
         When I route I should get
             | waypoints | route     | turns                                                  | modes | locations |
-            | a,f       | ,ferry,,  | depart,notification right,notification right,arrive    | driving,ferry,driving,driving | |
+            | a,f | ,ferry,, | depart,notification right,notification right,arrive | driving,ferry,driving,driving | a,?,?,f |

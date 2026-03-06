@@ -21,8 +21,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route    | turns | locations |
-            | a,c       | ab,bc,bc | depart,fork slight left,arrive | |
-            | a,d       | ab,bd,bd | depart,fork slight right,arrive | |
+            | a,c | ab,bc,bc | depart,fork slight left,arrive | a,b,c |
+            | a,d | ab,bd,bd | depart,fork slight right,arrive | a,b,d |
 
     Scenario: Don't Fork On Single Road
         Given the node map
@@ -40,7 +40,7 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route | turns | locations |
-            | a,d       | ab,bd | depart,arrive | |
+            | a,d | ab,bd | depart,arrive | a,d |
 
     Scenario: Don't Fork On Single Road
         Given the node map
@@ -57,7 +57,7 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route     | turns | locations |
-            | a,d       | road,turn | depart,arrive | |
+            | a,d | road,turn | depart,arrive | a,d |
 
     Scenario: Do not fork on link type
         Given the node map
@@ -75,8 +75,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route      | turns | locations |
-            | a,c       | abc,abc    | depart,arrive | |
-            | a,d       | abc,bd,bd  | depart,turn slight right,arrive | |
+            | a,c | abc,abc | depart,arrive | a,c |
+            | a,d | abc,bd,bd | depart,turn slight right,arrive | a,b,d |
 
     Scenario: Fork in presence of other roads
         Given the node map
@@ -95,8 +95,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route    | turns | locations |
-            | a,c       | ab,bc,bc | depart,fork slight left,arrive | |
-            | a,d       | ab,bd,bd | depart,fork slight right,arrive | |
+            | a,c | ab,bc,bc | depart,fork slight left,arrive | a,b,c |
+            | a,d | ab,bd,bd | depart,fork slight right,arrive | a,b,d |
 
     Scenario: Fork Turning Slight Left
         Given the node map
@@ -115,8 +115,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route    | turns | locations |
-            | a,c       | ab,bc,bc | depart,fork slight left,arrive | |
-            | a,d       | ab,bd,bd | depart,fork slight right,arrive | |
+            | a,c | ab,bc,bc | depart,fork slight left,arrive | a,b,c |
+            | a,d | ab,bd,bd | depart,fork slight right,arrive | a,b,d |
 
     Scenario: Fork Turning Slight Right
         Given the node map
@@ -135,8 +135,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route    | turns | locations |
-            | a,c       | ab,bc,bc | depart,fork slight left,arrive | |
-            | a,d       | ab,bd,bd | depart,fork slight right,arrive | |
+            | a,c | ab,bc,bc | depart,fork slight left,arrive | a,b,c |
+            | a,d | ab,bd,bd | depart,fork slight right,arrive | a,b,d |
 
     Scenario: Do not fork on service
         Given the node map
@@ -153,8 +153,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route     | turns | locations |
-            | a,c       | abc,abc   | depart,arrive | |
-            | a,d       | abc,bd,bd | depart,turn slight right,arrive | |
+            | a,c | abc,abc | depart,arrive | a,c |
+            | a,d | abc,bd,bd | depart,turn slight right,arrive | a,b,d |
 
     Scenario: Fork Both Turning Slight Right
         Given the node map
@@ -172,8 +172,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route    | turns | locations |
-            | a,c       | ab,bc,bc | depart,fork slight left,arrive | |
-            | a,d       | ab,bd,bd | depart,fork slight right,arrive | |
+            | a,c | ab,bc,bc | depart,fork slight left,arrive | a,b,c |
+            | a,d | ab,bd,bd | depart,fork slight right,arrive | a,b,d |
 
     Scenario: Fork Both Turning Slight Left
         Given the node map
@@ -191,8 +191,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route    | turns | locations |
-            | a,c       | ab,bc,bc | depart,fork slight left,arrive | |
-            | a,d       | ab,bd,bd | depart,fork slight right,arrive | |
+            | a,c | ab,bc,bc | depart,fork slight left,arrive | a,b,c |
+            | a,d | ab,bd,bd | depart,fork slight right,arrive | a,b,d |
 
     Scenario: Fork Both Turning Slight Right - Unnamed
         Given the node map
@@ -210,8 +210,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route | turns | locations |
-            | a,c       | ,,    | depart,fork slight left,arrive | |
-            | a,d       | ,,    | depart,fork slight right,arrive | |
+            | a,c | ,, | depart,fork slight left,arrive | a,?,c |
+            | a,d | ,, | depart,fork slight right,arrive | a,?,d |
 
     Scenario: Fork Both Turning Slight Left - Unnamed
         Given the node map
@@ -229,8 +229,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route | turns | locations |
-            | a,c       | ,,    | depart,fork slight left,arrive | |
-            | a,d       | ,,    | depart,fork slight right,arrive | |
+            | a,c | ,, | depart,fork slight left,arrive | a,?,c |
+            | a,d | ,, | depart,fork slight right,arrive | a,?,d |
 
     Scenario: Fork Both Turning Very Slightly Right - Unnamed
         Given the node map
@@ -248,8 +248,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route | turns | locations |
-            | a,c       | ,,    | depart,fork slight left,arrive | |
-            | a,d       | ,,    | depart,fork slight right,arrive | |
+            | a,c | ,, | depart,fork slight left,arrive | a,?,c |
+            | a,d | ,, | depart,fork slight right,arrive | a,?,d |
 
     Scenario: Fork Both Turning Very Slightly Right - Unnamed Ramps
         Given the node map
@@ -267,8 +267,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route | turns | locations |
-            | a,c       | ,,    | depart,fork slight left,arrive | |
-            | a,d       | ,,    | depart,fork slight right,arrive | |
+            | a,c | ,, | depart,fork slight left,arrive | a,?,c |
+            | a,d | ,, | depart,fork slight right,arrive | a,?,d |
 
     Scenario: Non-Fork on complex intersection - left
         Given the node map
@@ -286,8 +286,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route     | turns | locations |
-            | a,c       | abc,abc   | depart,arrive | |
-            | a,d       | abc,bd,bd | depart,turn slight right,arrive | |
+            | a,c | abc,abc | depart,arrive | a,c |
+            | a,d | abc,bd,bd | depart,turn slight right,arrive | a,b,d |
 
     Scenario: Non-Fork on complex intersection - right
         Given the node map
@@ -305,8 +305,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route     | turns | locations |
-            | a,c       | abd,bc,bc | depart,turn slight left,arrive | |
-            | a,d       | abd,abd   | depart,arrive | |
+            | a,c | abd,bc,bc | depart,turn slight left,arrive | a,b,c |
+            | a,d | abd,abd | depart,arrive | a,d |
 
     Scenario: Tripple fork
         Given the node map
@@ -325,9 +325,9 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route    | turns | locations |
-            | a,c       | ab,bc,bc | depart,fork slight left,arrive | |
-            | a,d       | ab,bd,bd | depart,fork straight,arrive | |
-            | a,e       | ab,be,be | depart,fork slight right,arrive | |
+            | a,c | ab,bc,bc | depart,fork slight left,arrive | a,b,c |
+            | a,d | ab,bd,bd | depart,fork straight,arrive | a,b,d |
+            | a,e | ab,be,be | depart,fork slight right,arrive | a,b,e |
 
     Scenario: Tripple fork -- middle obvious
         Given the node map
@@ -345,9 +345,9 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route     | turns | locations |
-            | a,c       | abd,bc,bc | depart,turn slight left,arrive | |
-            | a,d       | abd,abd   | depart,arrive | |
-            | a,e       | abd,be,be | depart,turn slight right,arrive | |
+            | a,c | abd,bc,bc | depart,turn slight left,arrive | a,b,c |
+            | a,d | abd,abd | depart,arrive | a,d |
+            | a,e | abd,be,be | depart,turn slight right,arrive | a,b,e |
 
     Scenario: Don't Fork when leaving Road
         Given the node map
@@ -363,8 +363,8 @@ Feature: Fork Instructions
 
        When I route I should get
             | waypoints | route     | turns | locations |
-            | a,c       | abc,abc   | depart,arrive | |
-            | a,d       | abc,bd,bd | depart,turn slight right,arrive | |
+            | a,c | abc,abc | depart,arrive | a,c |
+            | a,d | abc,bd,bd | depart,turn slight right,arrive | a,b,d |
 
      Scenario: Fork on motorway links - don't fork on through
         Given the node map
@@ -383,5 +383,5 @@ Feature: Fork Instructions
 
         When I route I should get
             | waypoints | route      | turns | locations |
-            | a,j       | on,xbcj    | depart,arrive | |
-            | a,i       | on,off,off | depart,turn right,arrive | |
+            | a,j | on,xbcj | depart,arrive | a,j |
+            | a,i | on,off,off | depart,turn right,arrive | a,o,i |

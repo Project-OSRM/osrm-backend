@@ -69,7 +69,7 @@ Feature: Maneuver tag support
 
         When I route I should get
             | waypoints | route                               | turns | locations |
-            | a,j       | A Street,C Street,J Street,J Street | depart,turn sharp right,turn left,arrive | |
+            | a,j | A Street,C Street,J Street,J Street | depart,turn sharp right,turn left,arrive | a,t,t,j |
 
 
     Scenario: multiple via-way
@@ -98,7 +98,7 @@ Feature: Maneuver tag support
 
         When I route I should get
             | waypoints | route                               | turns | locations |
-            | a,j       | A Street,C Street,J Street,J Street | depart,turn sharp right,end of road left,arrive | |
+            | a,j | A Street,C Street,J Street,J Street | depart,turn sharp right,end of road left,arrive | a,t,t,j |
 
 
     Scenario: Use maneuver tag to announce a particular turn type
@@ -140,7 +140,7 @@ Feature: Maneuver tag support
 
         When I route I should get
             | waypoints | route                        | turns | locations |
-            | h,t       | CA-120,Priest Rd,Priest Rd   | depart,turn left,arrive | |
+            | h,t | CA-120,Priest Rd,Priest Rd | depart,turn left,arrive | h,?,t |
   #original | h,t       | CA-120,Priest Rd,Priest Rd   | depart,turn straight,arrive  |
 
     Scenario: Use maneuver tag to announce lane guidance
@@ -178,7 +178,7 @@ Feature: Maneuver tag support
 
         When I route I should get
             | waypoints | route                         | turns | locations |
-            | a,d       | Marsh Rd,Marsh Rd,Marsh Rd    | depart,turn uturn,arrive | |
+            | a,d | Marsh Rd,Marsh Rd,Marsh Rd | depart,turn uturn,arrive | a,M,d |
   #original | a,d       | Marsh Rd,service,Marsh Rd,Marsh Rd | depart,turn left,turn left,arrive |
 
     Scenario: Use maneuver tag to suppress a turn
@@ -228,8 +228,8 @@ Feature: Maneuver tag support
 
         When I route I should get
             | waypoints | route                 | turns | locations |
-            | z,t       | NY Ave,395,395        | depart,on ramp left,arrive | |
-            | z,b       | NY Ave,,4th St,4th St | depart,on ramp left,fork slight right,arrive | |
+            | z,t | NY Ave,395,395 | depart,on ramp left,arrive | z,?,t |
+            | z,b | NY Ave,,4th St,4th St | depart,on ramp left,fork slight right,arrive | z,?,?,b |
 
     Scenario: Gracefully handles maneuvers that are redundant for the profile
         Given the node map
@@ -251,7 +251,7 @@ Feature: Maneuver tag support
 
         When I route I should get
             | waypoints | route             | turns | locations |
-            | a,f       | A Street,A Street | depart,arrive | |
+            | a,f | A Street,A Street | depart,arrive | a,f |
 
     Scenario: Handles uncompressed nodes in maneuver path
         Given the node map
@@ -280,7 +280,7 @@ Feature: Maneuver tag support
 
         When I route I should get
             | waypoints | route                               | turns | locations |
-            | a,i       | A Street,C Street,F Street,F Street | depart,turn right,turn sharp right,arrive | |
+            | a,i | A Street,C Street,F Street,F Street | depart,turn right,turn sharp right,arrive | a,t,t,i |
 
 
     Scenario: Can be used with turn restrictions
@@ -323,7 +323,7 @@ Feature: Maneuver tag support
 
         When I route I should get
             | waypoints | route                                        | turns | locations |
-            | a,e       | A Street,C Street,C Street                   | depart,turn sharp right,arrive | |
-            | b,f       | C Street,D Street,D Street                   | depart,turn sharp left,arrive | |
-            | c,h       | B Street,E Street,F Street,F Street          | depart,turn left,turn slight right,arrive | |
-            | c,i       | B Street,A Street,E Street,G Street,G Street | depart,turn uturn,turn right,end of road left,arrive | |
+            | a,e | A Street,C Street,C Street | depart,turn sharp right,arrive | a,t,e |
+            | b,f | C Street,D Street,D Street | depart,turn sharp left,arrive | b,t,f |
+            | c,h | B Street,E Street,F Street,F Street | depart,turn left,turn slight right,arrive | c,t,t,h |
+            | c,i | B Street,A Street,E Street,G Street,G Street | depart,turn uturn,turn right,end of road left,arrive | c,t,t,t,i |

@@ -30,4 +30,4 @@ Feature: Bike - Mode flag
 
         When I route I should get
             | waypoints | route             | turns | locations |
-            | a,f       | street,,road,road | depart,turn right,turn right,arrive | |
+            | a,f | street,,road,road | depart,turn right,turn right,arrive | a,?,?,f |

@@ -28,15 +28,15 @@ Feature: Circular
 
        When I route I should get
            | waypoints | route       | turns | locations |
-           | a,d       | ab,cd,cd,cd | depart,bgecb-exit-3,exit rotary right,arrive | |
-           | a,f       | ab,ef,ef,ef | depart,bgecb-exit-2,exit rotary right,arrive | |
-           | a,h       | ab,gh,gh,gh | depart,bgecb-exit-1,exit rotary right,arrive | |
-           | d,f       | cd,ef,ef,ef | depart,bgecb-exit-3,exit rotary right,arrive | |
-           | d,h       | cd,gh,gh,gh | depart,bgecb-exit-2,exit rotary right,arrive | |
-           | d,a       | cd,ab,ab,ab | depart,bgecb-exit-1,exit rotary right,arrive | |
-           | f,h       | ef,gh,gh,gh | depart,bgecb-exit-3,exit rotary right,arrive | |
-           | f,a       | ef,ab,ab,ab | depart,bgecb-exit-2,exit rotary right,arrive | |
-           | f,d       | ef,cd,cd,cd | depart,bgecb-exit-1,exit rotary right,arrive | |
-           | h,a       | gh,ab,ab,ab | depart,bgecb-exit-3,exit rotary right,arrive | |
-           | h,d       | gh,cd,cd,cd | depart,bgecb-exit-2,exit rotary right,arrive | |
-           | h,f       | gh,ef,ef,ef | depart,bgecb-exit-1,exit rotary right,arrive | |
+            | a,d | ab,cd,cd,cd | depart,bgecb-exit-3,exit rotary right,arrive | a,?,c,d |
+            | a,f | ab,ef,ef,ef | depart,bgecb-exit-2,exit rotary right,arrive | a,?,e,f |
+            | a,h | ab,gh,gh,gh | depart,bgecb-exit-1,exit rotary right,arrive | a,?,g,h |
+            | d,f | cd,ef,ef,ef | depart,bgecb-exit-3,exit rotary right,arrive | d,?,e,f |
+            | d,h | cd,gh,gh,gh | depart,bgecb-exit-2,exit rotary right,arrive | d,?,g,h |
+            | d,a | cd,ab,ab,ab | depart,bgecb-exit-1,exit rotary right,arrive | d,?,a,a |
+            | f,h | ef,gh,gh,gh | depart,bgecb-exit-3,exit rotary right,arrive | f,?,g,h |
+            | f,a | ef,ab,ab,ab | depart,bgecb-exit-2,exit rotary right,arrive | f,?,a,a |
+            | f,d | ef,cd,cd,cd | depart,bgecb-exit-1,exit rotary right,arrive | f,?,c,d |
+            | h,a | gh,ab,ab,ab | depart,bgecb-exit-3,exit rotary right,arrive | h,?,a,a |
+            | h,d | gh,cd,cd,cd | depart,bgecb-exit-2,exit rotary right,arrive | h,?,c,d |
+            | h,f | gh,ef,ef,ef | depart,bgecb-exit-1,exit rotary right,arrive | h,?,e,f |

@@ -18,7 +18,7 @@ Feature: Suppress New Names on dedicated Suffices
 
        When I route I should get
             | waypoints | route     | turns | locations |
-            | a,c       | 42 N,42 S | depart,arrive | |
+            | a,c | 42 N,42 S | depart,arrive | a,c |
 
     Scenario: Suffix To Suffix Ref
         Given the node map
@@ -33,7 +33,7 @@ Feature: Suppress New Names on dedicated Suffices
 
        When I route I should get
             | waypoints | route           | turns         | ref | locations |
-            | a,c       | 42 N,42 S       | depart,arrive | ,101 | |
+            | a,c | 42 N,42 S | depart,arrive | ,101 | a,c |
 
     Scenario: Prefix Change
         Given the node map
@@ -48,7 +48,7 @@ Feature: Suppress New Names on dedicated Suffices
 
        When I route I should get
             | waypoints | route           | turns | locations |
-            | a,c       | West 42,East 42 | depart,arrive | |
+            | a,c | West 42,East 42 | depart,arrive | a,c |
 
     Scenario: Prefix Change ref
         Given the node map
@@ -63,7 +63,7 @@ Feature: Suppress New Names on dedicated Suffices
 
        When I route I should get
             | waypoints | route      | turns | locations |
-            | a,c       | West 42,42 | depart,arrive | |
+            | a,c | West 42,42 | depart,arrive | a,c |
 
     Scenario: Prefix Change and Reference
         Given the node map
@@ -78,7 +78,7 @@ Feature: Suppress New Names on dedicated Suffices
 
        When I route I should get
             | waypoints | route                 | turns         | ref | locations |
-            | a,c       | West 42,East 42       | depart,arrive | 101, | |
+            | a,c | West 42,East 42 | depart,arrive | 101, | a,c |
 
     Scenario: Suffix To Suffix - Turn
         Given the node map
@@ -95,8 +95,8 @@ Feature: Suppress New Names on dedicated Suffices
 
        When I route I should get
             | waypoints | route          | turns | locations |
-            | a,c       | 42 N,42 S      | depart,arrive | |
-            | a,d       | 42 N,42 E,42 E | depart,continue right,arrive | |
+            | a,c | 42 N,42 S | depart,arrive | a,c |
+            | a,d | 42 N,42 E,42 E | depart,continue right,arrive | a,4,d |
 
     Scenario: Suffix To No Suffix
         Given the node map
@@ -111,7 +111,7 @@ Feature: Suppress New Names on dedicated Suffices
 
        When I route I should get
             | waypoints | route   | turns | locations |
-            | a,c       | 42 N,42 | depart,arrive | |
+            | a,c | 42 N,42 | depart,arrive | a,c |
 
     Scenario: No Suffix To Suffix
         Given the node map
@@ -126,5 +126,5 @@ Feature: Suppress New Names on dedicated Suffices
 
        When I route I should get
             | waypoints | route   | turns | locations |
-            | a,c       | 42,42 S | depart,arrive | |
+            | a,c | 42,42 S | depart,arrive | a,c |
 
