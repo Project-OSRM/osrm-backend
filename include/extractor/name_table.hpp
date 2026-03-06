@@ -1,5 +1,5 @@
-#ifndef OSRM_EXTRACTOR_PREDATAFACADE_STRING_VIEWER_HPP
-#define OSRM_EXTRACTOR_PREDATAFACADE_STRING_VIEWER_HPP
+#ifndef OSRM_EXTRACTOR_STRING_TABLE_HPP
+#define OSRM_EXTRACTOR_STRING_TABLE_HPP
 
 #include "util/indexed_data.hpp"
 #include "util/typedefs.hpp"
@@ -12,7 +12,7 @@ namespace osrm::extractor
 
 namespace detail
 {
-template <storage::Ownership Ownership> class PreDatafacadeStringViewerImpl;
+template <storage::Ownership Ownership> class StringTableImpl;
 } // namespace detail
 
 namespace serialization
@@ -20,12 +20,12 @@ namespace serialization
 template <storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
-                 detail::PreDatafacadeStringViewerImpl<Ownership> &index_data);
+                 detail::StringTableImpl<Ownership> &index_data);
 
 template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
-                  const detail::PreDatafacadeStringViewerImpl<Ownership> &index_data);
+                  const detail::StringTableImpl<Ownership> &index_data);
 } // namespace serialization
 
 namespace detail
@@ -44,7 +44,7 @@ namespace detail
 //
 // Offset 0 is name, 1 is destination, 2 is pronunciation, 3 is ref, 4 is exits
 // See datafacades and extractor callbacks for details.
-template <storage::Ownership Ownership> class PreDatafacadeStringViewerImpl
+template <storage::Ownership Ownership> class StringTableImpl
 {
   public:
     using IndexedData =
@@ -52,9 +52,9 @@ template <storage::Ownership Ownership> class PreDatafacadeStringViewerImpl
     using ResultType = typename IndexedData::ResultType;
     using ValueType = typename IndexedData::ValueType;
 
-    PreDatafacadeStringViewerImpl() {}
+    StringTableImpl() {}
 
-    PreDatafacadeStringViewerImpl(IndexedData indexed_data_) : indexed_data{std::move(indexed_data_)} {}
+    StringTableImpl(IndexedData indexed_data_) : indexed_data{std::move(indexed_data_)} {}
 
     std::string_view GetNameForID(const StringViewID id) const
     {
@@ -100,23 +100,25 @@ template <storage::Ownership Ownership> class PreDatafacadeStringViewerImpl
 
     friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
                                                const std::string &name,
-                                               PreDatafacadeStringViewerImpl &index_data);
+                                               StringTableImpl &index_data);
 
     friend void serialization::write<Ownership>(storage::tar::FileWriter &writer,
                                                 const std::string &name,
-                                                const PreDatafacadeStringViewerImpl &index_data);
+                                                const StringTableImpl &index_data);
 
   private:
     IndexedData indexed_data;
 };
 } // namespace detail
 
-using PreDatafacadeStringViewer = detail::PreDatafacadeStringViewerImpl<storage::Ownership::Container>;
-using PreDatafacadeStringViewerView = detail::PreDatafacadeStringViewerImpl<storage::Ownership::View>;
+using StringTable = detail::StringTableImpl<storage::Ownership::Container>;
+using StringTableView = detail::StringTableImpl<storage::Ownership::View>;
 
 // Backwards compatibility aliases (deprecated)
-using NameTable = PreDatafacadeStringViewer;
-using NameTableView = PreDatafacadeStringViewerView;
+using NameTable = StringTable;
+using NameTableView = StringTableView;
+using PreDatafacadeStringViewer = StringTable;
+using PreDatafacadeStringViewerView = StringTableView;
 } // namespace osrm::extractor
 
-#endif // OSRM_EXTRACTOR_PREDATAFACADE_STRING_VIEWER_HPP
+#endif // OSRM_EXTRACTOR_STRING_TABLE_HPP
