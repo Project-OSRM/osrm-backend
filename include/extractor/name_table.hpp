@@ -1,5 +1,5 @@
-#ifndef OSRM_EXTRACTOR_NAME_TABLE_HPP
-#define OSRM_EXTRACTOR_NAME_TABLE_HPP
+#ifndef OSRM_EXTRACTOR_STRING_TABLE_HPP
+#define OSRM_EXTRACTOR_STRING_TABLE_HPP
 
 #include "util/indexed_data.hpp"
 #include "util/typedefs.hpp"
@@ -12,7 +12,7 @@ namespace osrm::extractor
 
 namespace detail
 {
-template <storage::Ownership Ownership> class NameTableImpl;
+template <storage::Ownership Ownership> class StringTableImpl;
 } // namespace detail
 
 namespace serialization
@@ -20,12 +20,12 @@ namespace serialization
 template <storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
-                 detail::NameTableImpl<Ownership> &index_data);
+                 detail::StringTableImpl<Ownership> &index_data);
 
 template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
-                  const detail::NameTableImpl<Ownership> &index_data);
+                  const detail::StringTableImpl<Ownership> &index_data);
 } // namespace serialization
 
 namespace detail
@@ -44,7 +44,7 @@ namespace detail
 //
 // Offset 0 is name, 1 is destination, 2 is pronunciation, 3 is ref, 4 is exits
 // See datafacades and extractor callbacks for details.
-template <storage::Ownership Ownership> class NameTableImpl
+template <storage::Ownership Ownership> class StringTableImpl
 {
   public:
     using IndexedData =
@@ -52,46 +52,46 @@ template <storage::Ownership Ownership> class NameTableImpl
     using ResultType = typename IndexedData::ResultType;
     using ValueType = typename IndexedData::ValueType;
 
-    NameTableImpl() {}
+    StringTableImpl() {}
 
-    NameTableImpl(IndexedData indexed_data_) : indexed_data{std::move(indexed_data_)} {}
+    StringTableImpl(IndexedData indexed_data_) : indexed_data{std::move(indexed_data_)} {}
 
-    std::string_view GetNameForID(const NameID id) const
+    std::string_view GetNameForID(const StringViewID id) const
     {
-        if (id == INVALID_NAMEID)
+        if (id == INVALID_STRINGVIEWID)
             return {};
 
         return indexed_data.at(id + 0);
     }
 
-    std::string_view GetDestinationsForID(const NameID id) const
+    std::string_view GetDestinationsForID(const StringViewID id) const
     {
-        if (id == INVALID_NAMEID)
+        if (id == INVALID_STRINGVIEWID)
             return {};
 
         return indexed_data.at(id + 1);
     }
 
-    std::string_view GetExitsForID(const NameID id) const
+    std::string_view GetExitsForID(const StringViewID id) const
     {
-        if (id == INVALID_NAMEID)
+        if (id == INVALID_STRINGVIEWID)
             return {};
 
         return indexed_data.at(id + 4);
     }
 
-    std::string_view GetRefForID(const NameID id) const
+    std::string_view GetRefForID(const StringViewID id) const
     {
-        if (id == INVALID_NAMEID)
+        if (id == INVALID_STRINGVIEWID)
             return {};
 
         const constexpr auto OFFSET_REF = 3u;
         return indexed_data.at(id + OFFSET_REF);
     }
 
-    std::string_view GetPronunciationForID(const NameID id) const
+    std::string_view GetPronunciationForID(const StringViewID id) const
     {
-        if (id == INVALID_NAMEID)
+        if (id == INVALID_STRINGVIEWID)
             return {};
 
         const constexpr auto OFFSET_PRONUNCIATION = 2u;
@@ -100,19 +100,25 @@ template <storage::Ownership Ownership> class NameTableImpl
 
     friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
                                                const std::string &name,
-                                               NameTableImpl &index_data);
+                                               StringTableImpl &index_data);
 
     friend void serialization::write<Ownership>(storage::tar::FileWriter &writer,
                                                 const std::string &name,
-                                                const NameTableImpl &index_data);
+                                                const StringTableImpl &index_data);
 
   private:
     IndexedData indexed_data;
 };
 } // namespace detail
 
-using NameTable = detail::NameTableImpl<storage::Ownership::Container>;
-using NameTableView = detail::NameTableImpl<storage::Ownership::View>;
+using StringTable = detail::StringTableImpl<storage::Ownership::Container>;
+using StringTableView = detail::StringTableImpl<storage::Ownership::View>;
+
+// Backwards compatibility aliases (deprecated)
+using NameTable = StringTable;
+using NameTableView = StringTableView;
+using PreDatafacadeStringViewer = StringTable;
+using PreDatafacadeStringViewerView = StringTableView;
 } // namespace osrm::extractor
 
-#endif // OSRM_EXTRACTOR_NAME_TABLE_HPP
+#endif // OSRM_EXTRACTOR_STRING_TABLE_HPP
