@@ -18,9 +18,9 @@ Feature: Continue Instructions
             | bd     | primary |
 
        When I route I should get
-            | waypoints | route       | turns | locations |
-            | a,c | abc,abc,abc | depart,continue left,arrive | a,a,c |
-            | a,d | abc,bd,bd | depart,turn straight,arrive | a,b,d |
+            | waypoints | route       | turns                       | locations |
+            | a,c       | abc,abc,abc | depart,continue left,arrive | a,a,c     |
+            | a,d       | abc,bd,bd   | depart,turn straight,arrive | a,b,d     |
 
     Scenario: Road turning left, Suffix changes
         Given the node map
@@ -36,8 +36,8 @@ Feature: Continue Instructions
             | bd     | primary | some random street      |
 
        When I route I should get
-            | waypoints | route                                                                   | turns | locations |
-            | a,c | North Capitol Northeast,North Capitol Northwest,North Capitol Northwest | depart,continue left,arrive | a,N,c |
+            | waypoints | route                                                                   | turns                       | locations |
+            | a,c       | North Capitol Northeast,North Capitol Northwest,North Capitol Northwest | depart,continue left,arrive | a,N,c     |
 
     Scenario: Road turning left, Suffix changes, no-spaces
         Given the node map
@@ -53,8 +53,8 @@ Feature: Continue Instructions
             | bd     | primary | some random street     |
 
        When I route I should get
-            | waypoints | route                                                                | turns | locations |
-            | a,c | North CapitolNortheast,North CapitolNorthwest,North CapitolNorthwest | depart,continue left,arrive | a,N,c |
+            | waypoints | route                                                                | turns                       | locations |
+            | a,c       | North CapitolNortheast,North CapitolNorthwest,North CapitolNorthwest | depart,continue left,arrive | a,N,c     |
 
     Scenario: Road turning left and straight
         Given the node map
@@ -69,9 +69,9 @@ Feature: Continue Instructions
             | bd     | primary | road |
 
        When I route I should get
-            | waypoints | route          | turns | locations |
-            | a,c | road,road,road | depart,continue left,arrive | a,r,c |
-            | a,d | road,road | depart,arrive | a,d |
+            | waypoints | route          | turns                       | locations |
+            | a,c       | road,road,road | depart,continue left,arrive | a,r,c     |
+            | a,d       | road,road      | depart,arrive               | a,d       |
 
     Scenario: Road turning left and straight
         Given the node map
@@ -88,10 +88,10 @@ Feature: Continue Instructions
             | be     | primary | road |
 
        When I route I should get
-            | waypoints | route          | turns | locations |
-            | a,c | road,road,road | depart,continue left,arrive | a,r,c |
-            | a,d | road,road | depart,arrive | a,d |
-            | a,e | road,road,road | depart,continue right,arrive | a,r,e |
+            | waypoints | route          | turns                        | locations |
+            | a,c       | road,road,road | depart,continue left,arrive  | a,r,c     |
+            | a,d       | road,road      | depart,arrive                | a,d       |
+            | a,e       | road,road,road | depart,continue right,arrive | a,r,e     |
 
     Scenario: Road turning right
         Given the node map
@@ -106,9 +106,9 @@ Feature: Continue Instructions
             | bd     | primary |
 
        When I route I should get
-            | waypoints | route       | turns | locations |
-            | a,c | abc,abc,abc | depart,continue right,arrive | a,a,c |
-            | a,d | abc,bd,bd | depart,turn straight,arrive | a,b,d |
+            | waypoints | route       | turns                        | locations |
+            | a,c       | abc,abc,abc | depart,continue right,arrive | a,a,c     |
+            | a,d       | abc,bd,bd   | depart,turn straight,arrive  | a,b,d     |
 
     Scenario: Road turning slight left
         Given the node map
@@ -125,9 +125,9 @@ Feature: Continue Instructions
             | bd     | primary |
 
        When I route I should get
-            | waypoints | route       | turns | locations |
-            | a,c | abc,abc,abc | depart,continue left,arrive | a,a,c |
-            | a,d | abc,bd,bd | depart,turn right,arrive | a,b,d |
+            | waypoints | route       | turns                       | locations |
+            | a,c       | abc,abc,abc | depart,continue left,arrive | a,a,c     |
+            | a,d       | abc,bd,bd   | depart,turn right,arrive    | a,b,d     |
 
     Scenario: Road turning slight right
         Given the node map
@@ -144,9 +144,9 @@ Feature: Continue Instructions
             | bd     | primary |
 
        When I route I should get
-            | waypoints | route       | turns | locations |
-            | a,c | abc,abc,abc | depart,continue right,arrive | a,a,c |
-            | a,d | abc,bd,bd | depart,turn left,arrive | a,b,d |
+            | waypoints | route       | turns                        | locations |
+            | a,c       | abc,abc,abc | depart,continue right,arrive | a,a,c     |
+            | a,d       | abc,bd,bd   | depart,turn left,arrive      | a,b,d     |
 
     Scenario: Road Loop
        Given the node map
@@ -164,10 +164,10 @@ Feature: Continue Instructions
           | bg      | primary |
 
        When I route I should get
-          | waypoints | route                   | turns | locations |
-            | a,c | abcdefb,abcdefb,abcdefb | depart,continue right,arrive | a,a,c |
-            | a,f | abcdefb,abcdefb,abcdefb | depart,continue left,arrive | a,a,f |
-            | a,d | abcdefb,abcdefb,abcdefb | depart,continue right,arrive | a,a,d |
+            | waypoints | route                   | turns                        | locations |
+            | a,c       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive | a,a,c     |
+            | a,f       | abcdefb,abcdefb,abcdefb | depart,continue left,arrive  | a,a,f     |
+            | a,d       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive | a,a,d     |
           # continuing right here, since the turn to the left is more expensive
           | a,e       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive |
 
@@ -189,5 +189,5 @@ Feature: Continue Instructions
 
 
         When I route I should get
-            | waypoints | route               | turns | locations |
-            | e,a | turn,road,road,road | depart,turn right,continue left,arrive | e,r,r,a |
+            | waypoints | route               | turns                                  | locations |
+            | e,a       | turn,road,road,road | depart,turn right,continue left,arrive | e,r,r,a   |

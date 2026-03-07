@@ -22,9 +22,9 @@ Feature: Exceptions for routing onto low-priority roads
             | bc     | service     | service |
 
        When I route I should get
-            | waypoints | route            | turns | locations |
-            | c,e | service,service | depart,arrive | c,e |
-            | e,c | service,service | depart,arrive | e,c |
+            | waypoints | route           | turns         | locations |
+            | c,e       | service,service | depart,arrive | c,e       |
+            | e,c       | service,service | depart,arrive | e,c       |
 
     Scenario: Straight onto low-priority: onto and from unnamed
         Given the node map
@@ -43,9 +43,9 @@ Feature: Exceptions for routing onto low-priority roads
             | bc     | service     |         |
 
        When I route I should get
-            | waypoints | route | turns | locations |
-            | e,c | , | depart,arrive | e,c |
-            | c,e | , | depart,arrive | c,e |
+            | waypoints | route | turns         | locations |
+            | e,c       | ,     | depart,arrive | e,c       |
+            | c,e       | ,     | depart,arrive | c,e       |
 
     Scenario: Straight onto low-priority: unnamed
         Given the node map
@@ -64,9 +64,9 @@ Feature: Exceptions for routing onto low-priority roads
             | bc     | service     |         |
 
        When I route I should get
-            | waypoints | route    | turns | locations |
-            | e,c | service, | depart,arrive | e,c |
-            | c,e | ,service | depart,arrive | c,e |
+            | waypoints | route    | turns         | locations |
+            | e,c       | service, | depart,arrive | e,c       |
+            | c,e       | ,service | depart,arrive | c,e       |
 
     Scenario: Straight onto low-priority
         Given the node map
@@ -80,8 +80,8 @@ Feature: Exceptions for routing onto low-priority roads
             | bc     | service     | service |
 
        When I route I should get
-            | waypoints | route        | turns | locations |
-            | a,c | road,service | depart,arrive | a,c |
+            | waypoints | route        | turns         | locations |
+            | a,c       | road,service | depart,arrive | a,c       |
 
     Scenario: Straight onto low-priority, with driveway
         Given the node map
@@ -97,8 +97,8 @@ Feature: Exceptions for routing onto low-priority roads
             | bf     | driveway    |       |
 
        When I route I should get
-            | waypoints | route      | turns | locations |
-            | a,c | road,road | depart,arrive | a,c |
+            | waypoints | route     | turns         | locations |
+            | a,c       | road,road | depart,arrive | a,c       |
 
     Scenario: Straight onto low-priority, with driveway
         Given the node map
@@ -114,6 +114,6 @@ Feature: Exceptions for routing onto low-priority roads
             | bf     | driveway    |       |
 
        When I route I should get
-            | waypoints | route | turns | locations |
-            | a,c | road, | depart,arrive | a,c |
-            | c,a | ,road | depart,arrive | c,a |
+            | waypoints | route | turns         | locations |
+            | a,c       | road, | depart,arrive | a,c       |
+            | c,a       | ,road | depart,arrive | c,a       |

@@ -28,8 +28,8 @@ Feature: Divided road entry
             | igj    | maple st | residential |        |
 
        When I route I should get
-            | waypoints | route                  | turns | locations |
-            | h,a | side st,main st,main st | depart,end of road left,arrive | h,t,a |
+            | waypoints | route                   | turns                          | locations |
+            | h,a       | side st,main st,main st | depart,end of road left,arrive | h,t,a     |
 
 
     # Similar to previous one, but the joining way is tagged with the side-street name
@@ -55,8 +55,8 @@ Feature: Divided road entry
             | igj    | maple st | residential |        |
 
        When I route I should get
-            | waypoints | route    | turns | locations |
-            | h,a | side st,main st,main st | depart,end of road left,arrive | h,t,a |
+            | waypoints | route                   | turns                          | locations |
+            | h,a       | side st,main st,main st | depart,end of road left,arrive | h,t,a     |
 
 
     # Center join named after crossroad
@@ -80,8 +80,8 @@ Feature: Divided road entry
             | hbeg   | side st | residential |        |
 
        When I route I should get
-            | waypoints | route    | turns | locations |
-            | g,a | side st,main st,main st | depart,turn left,arrive | g,t,a |
+            | waypoints | route                   | turns                   | locations |
+            | g,a       | side st,main st,main st | depart,turn left,arrive | g,t,a     |
 
     # Join named after divided road
     Scenario: Crossing a divided road, named after main street
@@ -106,8 +106,8 @@ Feature: Divided road entry
             | eg     | side st | residential |        |
 
        When I route I should get
-            | waypoints | route    | turns | locations |
-            | g,a | side st,main st,main st | depart,turn left,arrive | g,t,a |
+            | waypoints | route                   | turns                   | locations |
+            | g,a       | side st,main st,main st | depart,turn left,arrive | g,t,a     |
 
     # Verify end of road left turn across divided roads
     Scenario: Join on a divided road, named after the side street
@@ -133,7 +133,7 @@ Feature: Divided road entry
             | mjgn   | maple st| residential | no     |
 
        When I route I should get
-            | waypoints | route    | turns | locations |
-            | l,a | side st,main st,main st | depart,end of road left,arrive | l,t,a |
+            | waypoints | route                   | turns                          | locations |
+            | l,a       | side st,main st,main st | depart,end of road left,arrive | l,t,a     |
 
 

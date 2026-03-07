@@ -32,9 +32,9 @@ Feature: Simple Turns
             | ed    | turn | primary | yes    |
 
         When I route I should get
-            | waypoints | turns                           | route          | intersections | locations |
-            | f,a | depart,arrive | road,road | true:0,true:0 false:150 false:180;true:180 | f,a |
-            | e,a | depart,turn slight right,arrive | turn,road,road | true:333;true:0 false:150 false:180;true:180 | e,r,a |
+            | waypoints | turns                           | route          | intersections                                | locations |
+            | f,a       | depart,arrive                   | road,road      | true:0,true:0 false:150 false:180;true:180   | f,a       |
+            | e,a       | depart,turn slight right,arrive | turn,road,road | true:333;true:0 false:150 false:180;true:180 | e,r,a     |
 
     Scenario: Turning into splitting road - no improvement
         Given the node map
@@ -62,9 +62,9 @@ Feature: Simple Turns
             | ed    | turn | primary | yes    |
 
         When I route I should get
-            | waypoints | turns                    | route          | intersections | locations |
-            | f,a | depart,arrive | road,road | true:0,true:0 false:90 false:180;true:180 | f,a |
-            | e,a | depart,turn right,arrive | turn,road,road | true:270;true:0 false:90 false:180;true:180 | e,r,a |
+            | waypoints | turns                    | route          | intersections                               | locations |
+            | f,a       | depart,arrive            | road,road      | true:0,true:0 false:90 false:180;true:180   | f,a       |
+            | e,a       | depart,turn right,arrive | turn,road,road | true:270;true:0 false:90 false:180;true:180 | e,r,a     |
 
     Scenario: Turning into splitting road
         Given the node map
@@ -95,12 +95,12 @@ Feature: Simple Turns
             | bg    | left | primary | yes    |
 
         When I route I should get
-            | waypoints | turns                                     | route | locations |
-            | f,a | depart,arrive | road,road | f,a |
-            | e,a | depart,turn slight right,arrive | turn,road,road | e,r,a |
-            | e,g | depart,turn slight right,turn left,arrive | turn,road,left,left | e,r,?,g |
-            | f,g | depart,turn left,arrive | road,left,left | f,?,g |
-            | f,c | depart,continue uturn,arrive | road,road,road | f,r,c |
+            | waypoints | turns                                     | route               | locations |
+            | f,a       | depart,arrive                             | road,road           | f,a       |
+            | e,a       | depart,turn slight right,arrive           | turn,road,road      | e,r,a     |
+            | e,g       | depart,turn slight right,turn left,arrive | turn,road,left,left | e,r,?,g   |
+            | f,g       | depart,turn left,arrive                   | road,left,left      | f,?,g     |
+            | f,c       | depart,continue uturn,arrive              | road,road,road      | f,r,c     |
 
     @bug @not-sorted @3179
     Scenario: Adjusting road angles to not be sorted
@@ -127,7 +127,7 @@ Feature: Simple Turns
             | ei    | left  | yes    |
 
         When I route I should get
-            | waypoints | route          | turns | locations |
-            | g,a | in,road,road | depart,fork slight right,arrive | g,?,a |
-            | g,h | in,right,right | depart,fork straight,arrive | g,i,h |
-            | g,i | in,left,left | depart,fork slight left,arrive | g,?,i |
+            | waypoints | route          | turns                           | locations |
+            | g,a       | in,road,road   | depart,fork slight right,arrive | g,?,a     |
+            | g,h       | in,right,right | depart,fork straight,arrive     | g,i,h     |
+            | g,i       | in,left,left   | depart,fork slight left,arrive  | g,?,i     |

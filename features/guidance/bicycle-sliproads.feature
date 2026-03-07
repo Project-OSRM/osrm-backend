@@ -29,5 +29,5 @@ Feature: Bike - Mode flag
             | geh   | secondary | street |                |  |
 
         When I route I should get
-            | waypoints | route             | turns | locations |
-            | a,f | street,,road,road | depart,turn right,turn right,arrive | a,?,?,f |
+            | waypoints | route             | turns                               | locations |
+            | a,f       | street,,road,road | depart,turn right,turn right,arrive | a,?,?,f   |

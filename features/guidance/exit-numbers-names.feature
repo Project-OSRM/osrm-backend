@@ -24,7 +24,7 @@ Feature: Exit Numbers and Names
 
        When I route I should get
             | waypoints | route                      | turns                               | exits | locations |
-            | a,f | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,3, | a,a,f |
+            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,3,   | a,a,f     |
 
 
     Scenario: Exit number on the way, motorway junction node tag missing, multiple numbers
@@ -41,8 +41,8 @@ Feature: Exit Numbers and Names
             | ef     | motorway_link | ExitRamp |              |
 
        When I route I should get
-            | waypoints | route                      | turns                               | exits | locations |
-            | a,f | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,10; 12, | a,a,f |
+            | waypoints | route                      | turns                               | exits    | locations |
+            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,10; 12, | a,a,f     |
 
 
     Scenario: Exit number on the ways after the motorway junction, multiple exits
@@ -67,8 +67,8 @@ Feature: Exit Numbers and Names
 
        When I route I should get
             | waypoints | route                      | turns                               | exits | locations |
-            | a,f | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,3, | a,a,f |
-            | a,h | MainRoad,ExitRamp,ExitRamp | depart,off ramp right,arrive | ,3, | a,a,h |
+            | a,f       | MainRoad,ExitRamp,ExitRamp | depart,off ramp slight right,arrive | ,3,   | a,a,f     |
+            | a,h       | MainRoad,ExitRamp,ExitRamp | depart,off ramp right,arrive        | ,3,   | a,a,h     |
 
 
 
@@ -93,6 +93,6 @@ Feature: Exit Numbers and Names
             | cf     | motorway_link |                  | 393          | yes    | Great America Parkway;Bowers Avenue |
 
        When I route I should get
-            | waypoints | route                             | turns                               | exits    | destinations | locations |
-            | a,e | Bayshore Freeway,Bayshore Freeway | depart,arrive | , | , | a,e |
-            | a,f | Bayshore Freeway,, | depart,off ramp slight right,arrive | ,393,393 | ,Great America Parkway, Bowers Avenue,Great America Parkway, Bowers Avenue | a,?,f |
+            | waypoints | route                             | turns                               | exits    | destinations                                                               | locations |
+            | a,e       | Bayshore Freeway,Bayshore Freeway | depart,arrive                       | ,        | ,                                                                          | a,e       |
+            | a,f       | Bayshore Freeway,,                | depart,off ramp slight right,arrive | ,393,393 | ,Great America Parkway, Bowers Avenue,Great America Parkway, Bowers Avenue | a,?,f     |
