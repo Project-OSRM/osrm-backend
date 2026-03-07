@@ -37,13 +37,13 @@ Feature: Maneuver tag support
         When I route I should get
             | waypoints | route | turns | locations |
         # Testing directly connected from/to
-            | a,j       | A Street,C Street,J Street,J Street | depart,turn sharp right,turn left,arrive |
-            | b,g       | A Street,C Street,C Street          | depart,turn sharp right,arrive           |
+            | a,j       | A Street,C Street,J Street,J Street | depart,turn sharp right,turn left,arrive | a,?,?,j   |
+            | b,g       | A Street,C Street,C Street          | depart,turn sharp right,arrive           | b,?,g     |
         # Testing re-awakening suppressed turns
-            | a,e       | A Street,B Street,B Street          | depart,turn slight left,arrive           |
-            | e,i       | B Street,C Street,C Street          | depart,turn straight,arrive              |
-            | i,e       | C Street,B Street,B Street          | depart,fork slight right,arrive          |
-            | i,a       | C Street,A Street,A Street          | depart,turn right,arrive                 |
+            | a,e       | A Street,B Street,B Street          | depart,turn slight left,arrive           | a,?,e     |
+            | e,i       | B Street,C Street,C Street          | depart,turn straight,arrive              | e,?,i     |
+            | i,e       | C Street,B Street,B Street          | depart,fork slight right,arrive          | i,?,e     |
+            | i,a       | C Street,A Street,A Street          | depart,turn right,arrive                 | i,?,a     |
 
     Scenario: single via-way
       Given the node map

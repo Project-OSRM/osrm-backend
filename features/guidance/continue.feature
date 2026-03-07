@@ -169,7 +169,7 @@ Feature: Continue Instructions
             | a,f       | abcdefb,abcdefb,abcdefb | depart,continue left,arrive  | a,a,f     |
             | a,d       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive | a,a,d     |
           # continuing right here, since the turn to the left is more expensive
-          | a,e       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive |
+          | a,e       | abcdefb,abcdefb,abcdefb | depart,continue right,arrive | a,a,e     |
 
     Scenario: End-Of-Road Continue
         Given the node map

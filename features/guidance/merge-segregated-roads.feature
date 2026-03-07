@@ -672,10 +672,10 @@ Feature: Merge Segregated Roads
         When I route I should get
             | waypoints | route          | turns                        | #                                                                                                                         | locations |
             | a,c       | otto,otto      | depart,arrive                |                                                                                                                           | a,c       |
-            | a,f       | otto,otto,otto | depart,continue uturn,arrive |                                                                                                                           |
-            | a,1       | otto,otto,otto | depart,continue left,arrive  |                                                                                                                           |
-            | a,d       | otto,neu,neu   | depart,turn left,arrive      |                                                                                                                           |
-            | c,1       | otto,otto      | depart,arrive                |                                                                                                                           |
+            | a,f       | otto,otto,otto | depart,continue uturn,arrive |                                                                                                                           | a,?,f     |
+            | a,1       | otto,otto,otto | depart,continue left,arrive  |                                                                                                                           | a,?,1     |
+            | a,d       | otto,neu,neu   | depart,turn left,arrive      |                                                                                                                           | a,?,d     |
+            | c,1       | otto,otto      | depart,arrive                |                                                                                                                           | c,1       |
             | c,f       | otto,otto,otto | depart,continue left,arrive  | Ideally, this would be depart,arrive, but the obvious discovery making the turn onto `1` from `c` obvious interferes here | c,o,f     |
 
     # https://www.openstreetmap.org/#map=18/50.94608/7.02030

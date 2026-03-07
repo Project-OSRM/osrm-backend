@@ -36,14 +36,14 @@ Feature: Destination Signs
 
         When I route I should get
           | from | to | route | destinations                                    | ref   | # | locations |
-          | a    | b  | AB,AB | ,                                               | E1,E1 | |
-          | c    | d  | CD,CD | Berlin,Berlin                                   | , | |
-          | e    | f  | EF,EF | A1: Berlin,A1: Berlin                           | , | |
-          | g    | h  | ,     | A1: Berlin,A1: Berlin                           | , | |
-          | i    | j  | ,     | Berlin,Berlin                                   | , | |
-          | k    | l  | KL,KL | A1: Berlin,A1: Berlin                           | E1,E1 | |
-          | m    | n  | MN,MN | A1, A2: Berlin, Hamburg,A1, A2: Berlin, Hamburg | , | |
-          | o    | p  | OP,OP | ,                                               | ,     | guard against mis-tagging | |
-          | q    | r  | QR,QR | A1, A2,A1, A2                                   | , | |
-          | s    | t  | ST,ST | St Street,St Street                             | , | |
-          | u    | v  | UV,UV | Berlin,Berlin                                   | ,     | city preferred over street | |
+          | a    | b  | AB,AB | ,                                               | E1,E1 |   | a,b       |
+          | c    | d  | CD,CD | Berlin,Berlin                                   | ,     |   | c,d       |
+          | e    | f  | EF,EF | A1: Berlin,A1: Berlin                           | ,     |   | e,f       |
+          | g    | h  | ,     | A1: Berlin,A1: Berlin                           | ,     |   | g,h       |
+          | i    | j  | ,     | Berlin,Berlin                                   | ,     |   | i,j       |
+          | k    | l  | KL,KL | A1: Berlin,A1: Berlin                           | E1,E1 |   | k,l       |
+          | m    | n  | MN,MN | A1, A2: Berlin, Hamburg,A1, A2: Berlin, Hamburg | ,     |   | m,n       |
+          | o    | p  | OP,OP | ,                                               | ,     | guard against mis-tagging | o,p       |
+          | q    | r  | QR,QR | A1, A2,A1, A2                                   | ,     |   | q,r       |
+          | s    | t  | ST,ST | St Street,St Street                             | ,     |   | s,t       |
+          | u    | v  | UV,UV | Berlin,Berlin                                   | ,     | city preferred over street | u,v       |
