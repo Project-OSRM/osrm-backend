@@ -209,7 +209,8 @@ void unpackLegs(const DataFacade<Algorithm> &facade,
                    raw_route_data.unpacked_path_segments[current_leg]);
 
         raw_route_data.source_traversed_in_reverse.push_back(
-            (total_unpacked_nodes[leg_begin_idx] != leg_endpoints[current_leg].source_phantom.forward_segment_id.id));
+            (total_unpacked_nodes[leg_begin_idx] !=
+             leg_endpoints[current_leg].source_phantom.forward_segment_id.id));
         raw_route_data.target_traversed_in_reverse.push_back(
             (total_unpacked_nodes[leg_end_idx - 1] !=
              leg_endpoints[current_leg].target_phantom.forward_segment_id.id));
@@ -336,8 +337,10 @@ shortestPathWithWaypointUTurns(SearchEngineData<Algorithm> &engine_working_data,
             return {};
 
         unpacked_leg_begin.push_back(total_unpacked_nodes.size());
-        total_unpacked_nodes.insert(total_unpacked_nodes.end(), unpacked_leg_nodes.begin(), unpacked_leg_nodes.end());
-        total_unpacked_edges.insert(total_unpacked_edges.end(), unpacked_leg_edges.begin(), unpacked_leg_edges.end());
+        total_unpacked_nodes.insert(
+            total_unpacked_nodes.end(), unpacked_leg_nodes.begin(), unpacked_leg_nodes.end());
+        total_unpacked_edges.insert(
+            total_unpacked_edges.end(), unpacked_leg_edges.begin(), unpacked_leg_edges.end());
         total_weight += leg_weight;
     };
 
@@ -623,15 +626,19 @@ struct route_state
                                                       INVALID_EDGE_WEIGHT);
 
         unpacked_leg_begin.push_back(total_unpacked_nodes.size());
-        total_unpacked_nodes.insert(
-            total_unpacked_nodes.end(), unpacked_leg_to_forward.begin(), unpacked_leg_to_forward.end());
-        total_unpacked_edges.insert(
-            total_unpacked_edges.end(), unpacked_edges_to_forward.begin(), unpacked_edges_to_forward.end());
+        total_unpacked_nodes.insert(total_unpacked_nodes.end(),
+                                    unpacked_leg_to_forward.begin(),
+                                    unpacked_leg_to_forward.end());
+        total_unpacked_edges.insert(total_unpacked_edges.end(),
+                                    unpacked_edges_to_forward.begin(),
+                                    unpacked_edges_to_forward.end());
         unpacked_leg_begin.push_back(total_unpacked_nodes.size());
-        total_unpacked_nodes.insert(
-            total_unpacked_nodes.end(), unpacked_leg_to_reverse.begin(), unpacked_leg_to_reverse.end());
-        total_unpacked_edges.insert(
-            total_unpacked_edges.end(), unpacked_edges_to_reverse.begin(), unpacked_edges_to_reverse.end());
+        total_unpacked_nodes.insert(total_unpacked_nodes.end(),
+                                    unpacked_leg_to_reverse.begin(),
+                                    unpacked_leg_to_reverse.end());
+        total_unpacked_edges.insert(total_unpacked_edges.end(),
+                                    unpacked_edges_to_reverse.begin(),
+                                    unpacked_edges_to_reverse.end());
     }
 
     // Find the final target with the shortest route and backtrack through the legs to find the
