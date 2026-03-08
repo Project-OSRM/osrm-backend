@@ -135,6 +135,44 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |   30     |   1    |        | 24 km/h | 24 km/h | 3.3       | 3.3        |
             | primary |   30     |   2    |        | 24 km/h | 24 km/h | 6.7       | 6.7        |
 
+    Scenario: Car - Roads without lane markings should incur a penalty
+        Then routability should be
+
+            | highway | maxspeed | lane_markings | maxspeed:forward | maxspeed:backward | forw    | backw   | forw_rate | backw_rate |
+            | primary |          |               |                  |                   | 64 km/h | 64 km/h | 18.1      | 18.1       |
+            | primary |          | no            |                  |                   | 64 km/h | 64 km/h | 13.5      | 13.5       |
+            | primary | 60       |               |                  |                   | 48 km/h | 48 km/h | 13.3      | 13.3       |
+            | primary | 60       | no            |                  |                   | 48 km/h | 48 km/h | 10        | 10         |
+            | primary |          | no            | 60               |                   | 48 km/h | 64 km/h | 10        | 13.5       |
+            | primary |          | no            |                  | 60                | 64 km/h | 48 km/h | 13.5      | 10         |
+            | primary | 15       | no            | 60               |                   | 48 km/h | 12 km/h | 10        | 2.5        |
+            | primary | 15       | no            |                  | 60                | 12 km/h | 48 km/h | 2.5       | 10         |
+            | primary | 15       | no            | 30               | 60                | 24 km/h | 48 km/h | 5         | 10         |
+
+    Scenario: Car - Lane markings penalty only applies to bidirectional streets
+        Then routability should be
+            | highway | maxspeed | lane_markings | oneway | forw    | backw   | forw_rate | backw_rate |
+            | primary |   30     | no            | yes    | 24 km/h |         | 6.7       |            |
+            | primary |   30     | no            | -1     |         | 24 km/h |           | 6.7        |
+            | primary |   30     | no            |        | 24 km/h | 24 km/h | 5         | 5          |
+            | primary |   30     |               |        | 24 km/h | 24 km/h | 6.7       | 6.7        |
+
+    Scenario: Car - Narrow streets and lane_markings penalties interaction
+        Then routability should be
+            | highway | maxspeed | width | lane_markings | forw    | backw   | forw_rate | backw_rate |
+            | primary |          |       |               | 64 km/h | 64 km/h | 18.1      | 18.1       |
+            | primary |          | 3     |               | 64 km/h | 64 km/h | 9         | 9          |
+            | primary |          |       | no            | 64 km/h | 64 km/h | 13.5      | 13.5       |
+            | primary |          | 3     | no            | 64 km/h | 64 km/h | 9         | 9          |
+
+    Scenario: Car - Single lane and lane_markings penalties interaction
+        Then routability should be
+            | highway | maxspeed | lanes | lane_markings | forw    | backw   | forw_rate | backw_rate |
+            | primary |          |       |               | 64 km/h | 64 km/h | 18.1      | 18.1       |
+            | primary |          | 1     |               | 64 km/h | 64 km/h | 9         | 9          |
+            | primary |          |       | no            | 64 km/h | 64 km/h | 13.5      | 13.5       |
+            | primary |          | 1     | no            | 64 km/h | 64 km/h | 9         | 9          |
+
     Scenario: Car - Forward/backward maxspeed on reverse oneways
         Then routability should be
             | highway | maxspeed | maxspeed:forward | maxspeed:backward | oneway | forw    | backw   | forw_rate | backw_rate |

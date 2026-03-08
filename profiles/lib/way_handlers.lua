@@ -414,6 +414,12 @@ function WayHandlers.penalties(profile,way,result,data)
   local is_bidirectional = result.forward_mode ~= mode.inaccessible and
                            result.backward_mode ~= mode.inaccessible
 
+  -- Apply penalty for roads with no lane markings (on bidirectional roads)
+  local lane_markings = way:get_value_by_key("lane_markings")
+  if lane_markings == "no" and is_bidirectional then
+    width_penalty = profile.lane_markings_penalty
+  end
+
   if width <= 3 or (lanes <= 1 and is_bidirectional) then
     width_penalty = 0.5
   end
