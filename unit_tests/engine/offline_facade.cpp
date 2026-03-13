@@ -398,4 +398,29 @@ BOOST_AUTO_TEST_CASE(facade_uncompressed_methods)
     BOOST_CHECK_EQUAL(facade.GetUncompressedReverseDatasources(0).size(), 0);
 }
 
+BOOST_AUTO_TEST_CASE(insert_or_update_skips_removed_nodes)
+{
+    using QueryHeap =
+        osrm::engine::SearchEngineData<osrm::engine::routing_algorithms::offline::Algorithm>::
+            QueryHeap;
+
+    QueryHeap heap(4, 0);
+    const osrm::engine::MultiLayerDijkstraHeapData initial_data{SPECIAL_NODEID, false};
+    const osrm::engine::MultiLayerDijkstraHeapData updated_data{1, true};
+
+    heap.Insert(1, {10}, initial_data);
+    BOOST_CHECK_EQUAL(heap.DeleteMin(), 1);
+    BOOST_CHECK(heap.WasRemoved(1));
+
+    osrm::engine::routing_algorithms::mld::insertOrUpdate(heap, 1, {5}, updated_data);
+
+    BOOST_CHECK(heap.WasRemoved(1));
+    BOOST_CHECK_EQUAL(from_alias<int>(heap.GetKey(1)), 10);
+
+    const auto heap_node = heap.GetHeapNodeIfWasInserted(1);
+    BOOST_REQUIRE(heap_node != nullptr);
+    BOOST_CHECK_EQUAL(heap_node->data.parent, SPECIAL_NODEID);
+    BOOST_CHECK_EQUAL(heap_node->data.from_clique_arc, false);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
