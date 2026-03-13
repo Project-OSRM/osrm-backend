@@ -400,9 +400,8 @@ BOOST_AUTO_TEST_CASE(facade_uncompressed_methods)
 
 BOOST_AUTO_TEST_CASE(insert_or_update_skips_removed_nodes)
 {
-    using QueryHeap =
-        osrm::engine::SearchEngineData<osrm::engine::routing_algorithms::offline::Algorithm>::
-            QueryHeap;
+    using QueryHeap = osrm::engine::SearchEngineData<
+        osrm::engine::routing_algorithms::offline::Algorithm>::QueryHeap;
 
     QueryHeap heap(4, 0);
     const osrm::engine::MultiLayerDijkstraHeapData initial_data{SPECIAL_NODEID, false};
