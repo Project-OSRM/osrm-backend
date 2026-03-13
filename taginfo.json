@@ -257,6 +257,7 @@
         {"key": "lanes", "description": "Penalties for shared single lane streets"},
         {"key": "lanes:forward", "description": "Lanes in forward direction"},
         {"key": "lanes:backward", "description": "Lanes in backward direction"},
+        {"key": "lane_markings", "value": "no", "description": "Penalty for roads without lane markings on bidirectional streets"},
         {"key": "surface", "value": "asphalt"},
         {"key": "surface", "value": "concrete"},
         {"key": "surface", "value": "concrete:plates"},
