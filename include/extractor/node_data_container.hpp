@@ -81,7 +81,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
 
     NameID GetNameID(const NodeID node_id) const
     {
-        return annotation_data[nodes[node_id].annotation_id].name_id;
+        return annotation_data[nodes[node_id].annotation_id].string_view_id;
     }
 
     ClassData GetClassData(const NodeID node_id) const

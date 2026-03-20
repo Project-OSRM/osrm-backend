@@ -28,7 +28,7 @@ inline bool isThroughStreet(const std::size_t index,
     const auto &data_at_index = node_data_container.GetAnnotation(
         node_based_graph.GetEdgeData(intersection[index].eid).annotation_data);
 
-    if (data_at_index.name_id == EMPTY_NAMEID)
+    if (data_at_index.string_view_id == EMPTY_NAMEID)
         return false;
 
     // a through street cannot start at our own position -> index 1
@@ -46,7 +46,7 @@ inline bool isThroughStreet(const std::size_t index,
                                         (STRAIGHT_ANGLE - FUZZY_ANGLE_DIFFERENCE);
 
         const bool have_same_name = extractor::intersection::HaveIdenticalNames(
-            data_at_index.name_id, road_data.name_id, name_table, street_name_suffix_table);
+            data_at_index.string_view_id, road_data.string_view_id, name_table, street_name_suffix_table);
 
         const bool have_same_category =
             node_based_graph.GetEdgeData(intersection[index].eid).flags.road_classification ==

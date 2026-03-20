@@ -63,8 +63,8 @@ struct CmpEdgeByInternalSourceTargetAndName
         if (lhs.result.target == SPECIAL_NODEID)
             return false;
 
-        auto const lhs_name_id = edge_annotation_data[lhs.result.annotation_data].name_id;
-        auto const rhs_name_id = edge_annotation_data[rhs.result.annotation_data].name_id;
+        auto const lhs_name_id = edge_annotation_data[lhs.result.annotation_data].string_view_id;
+        auto const rhs_name_id = edge_annotation_data[rhs.result.annotation_data].string_view_id;
         if (lhs_name_id == rhs_name_id)
             return false;
 

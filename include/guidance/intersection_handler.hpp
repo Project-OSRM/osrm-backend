@@ -201,8 +201,8 @@ IntersectionHandler::IsDistinctNarrowTurn(const EdgeID via_edge,
 
     // check if the candidate road changes it's name
     auto const no_name_change_to_candidate =
-        !util::guidance::requiresNameAnnounced(via_edge_annotation.name_id,
-                                               candidate_annotation.name_id,
+        !util::guidance::requiresNameAnnounced(via_edge_annotation.string_view_id,
+                                               candidate_annotation.string_view_id,
                                                name_table,
                                                street_name_suffix_table);
 
@@ -256,8 +256,8 @@ IntersectionHandler::IsDistinctNarrowTurn(const EdgeID via_edge,
 
         // 5. Similarity check based on name changes
         auto const name_changes_to_compare =
-            util::guidance::requiresNameAnnounced(via_edge_annotation.name_id,
-                                                  compare_annotation.name_id,
+            util::guidance::requiresNameAnnounced(via_edge_annotation.string_view_id,
+                                                  compare_annotation.string_view_id,
                                                   name_table,
                                                   street_name_suffix_table);
 
@@ -277,8 +277,8 @@ IntersectionHandler::IsDistinctNarrowTurn(const EdgeID via_edge,
 
         auto const four_or_more_ways_intersection = intersection.size() >= 4;
         auto const no_name_change_to_compare_from_opposing =
-            !util::guidance::requiresNameAnnounced(opposing_annotation.name_id,
-                                                   compare_annotation.name_id,
+            !util::guidance::requiresNameAnnounced(opposing_annotation.string_view_id,
+                                                   compare_annotation.string_view_id,
                                                    name_table,
                                                    street_name_suffix_table);
 
@@ -367,8 +367,8 @@ IntersectionHandler::IsDistinctNarrowTurn(const EdgeID via_edge,
             extractor::getRoadGroup(via_edge_data.flags.road_classification) <
             extractor::getRoadGroup(compare_data.flags.road_classification);
         auto const candidate_and_compare_have_different_names =
-            util::guidance::requiresNameAnnounced(candidate_annotation.name_id,
-                                                  compare_annotation.name_id,
+            util::guidance::requiresNameAnnounced(candidate_annotation.string_view_id,
+                                                  compare_annotation.string_view_id,
                                                   name_table,
                                                   street_name_suffix_table);
 
@@ -510,7 +510,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             return true;
 
         // to continue on a name, we need to have one first
-        if (via_edge_annotation.name_id == EMPTY_NAMEID &&
+        if (via_edge_annotation.string_view_id == EMPTY_NAMEID &&
             !via_edge_data.flags.road_classification.IsLowPriorityRoadClass())
             return true;
 
@@ -518,13 +518,13 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         // here)
         auto const &road_data = node_based_graph.GetEdgeData(road.eid);
         const auto &road_annotation = node_data_container.GetAnnotation(road_data.annotation_data);
-        if (road_annotation.name_id == EMPTY_NAMEID &&
+        if (road_annotation.string_view_id == EMPTY_NAMEID &&
             !road_data.flags.road_classification.IsLowPriorityRoadClass())
             return true;
 
         // if not both of the entries are empty, we do not consider this a continue
-        if ((via_edge_annotation.name_id == EMPTY_NAMEID) ^
-            (road_annotation.name_id == EMPTY_NAMEID))
+        if ((via_edge_annotation.string_view_id == EMPTY_NAMEID) ^
+            (road_annotation.string_view_id == EMPTY_NAMEID))
             return true;
 
         // the priority can only stay the same or increase. We don't consider a
@@ -539,8 +539,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
             return true;
 
         // most expensive check last (since we filter, we check whether the name changes
-        return util::guidance::requiresNameAnnounced(via_edge_annotation.name_id,
-                                                     road_annotation.name_id,
+        return util::guidance::requiresNameAnnounced(via_edge_annotation.string_view_id,
+                                                     road_annotation.string_view_id,
                                                      name_table,
                                                      street_name_suffix_table);
     };
@@ -643,10 +643,10 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
     const auto all_roads_have_same_name =
         std::all_of(intersection.begin(),
                     intersection.end(),
-                    [id = via_edge_annotation.name_id, this](auto const &road)
+                    [id = via_edge_annotation.string_view_id, this](auto const &road)
                     {
                         auto const data_id = node_based_graph.GetEdgeData(road.eid).annotation_data;
-                        auto const name_id = node_data_container.GetAnnotation(data_id).name_id;
+                        auto const name_id = node_data_container.GetAnnotation(data_id).string_view_id;
                         return (name_id != EMPTY_NAMEID) && (name_id == id);
                     });
 

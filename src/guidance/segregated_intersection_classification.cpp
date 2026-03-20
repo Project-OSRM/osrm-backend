@@ -76,7 +76,7 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
     {
         /// @todo Make string normalization/lowercase/trim for comparison ...
 
-        auto const id = annotation[edge_data.annotation_data].name_id;
+        auto const id = annotation[edge_data.annotation_data].string_view_id;
         BOOST_ASSERT(id != INVALID_NAMEID);
         auto const name = names.GetNameForID(id);
         return {edge_id,

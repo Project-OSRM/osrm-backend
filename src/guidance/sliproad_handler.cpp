@@ -165,7 +165,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
     {
         const auto target_annotation_id = node_based_graph.GetEdgeData(road.eid).annotation_data;
         const auto &target_data = node_data_container.GetAnnotation(target_annotation_id);
-        target_road_name_ids.push_back(target_data.name_id);
+        target_road_name_ids.push_back(target_data.string_view_id);
     }
 
     auto sliproad_found = false;
@@ -508,7 +508,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
             const auto name_mismatch = [&](const NameID road_name_id)
             {
                 return util::guidance::requiresNameAnnounced(road_name_id,              //
-                                                             candidate_data.name_id,    //
+                                                             candidate_data.string_view_id,    //
                                                              name_table,                //
                                                              street_name_suffix_table); //
             };
@@ -527,22 +527,22 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
             const auto main_road_name_id =
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(main_road.eid).annotation_data)
-                    .name_id;
+                    .string_view_id;
             const auto main_road_name_empty = name_table.GetNameForID(main_road_name_id).empty();
             const auto &sliproad_annotation =
                 node_data_container.GetAnnotation(sliproad_edge_data.annotation_data);
             const auto sliproad_name_empty =
-                name_table.GetNameForID(sliproad_annotation.name_id).empty();
+                name_table.GetNameForID(sliproad_annotation.string_view_id).empty();
             const auto candidate_road_name_empty =
-                name_table.GetNameForID(candidate_data.name_id).empty();
+                name_table.GetNameForID(candidate_data.string_view_id).empty();
             if (!sliproad_edge_data.flags.road_classification.IsLinkClass() &&
                 !sliproad_name_empty && !main_road_name_empty && !candidate_road_name_empty &&
                 util::guidance::requiresNameAnnounced(main_road_name_id,
-                                                      sliproad_annotation.name_id,
+                                                      sliproad_annotation.string_view_id,
                                                       name_table,
                                                       street_name_suffix_table) &&
-                util::guidance::requiresNameAnnounced(sliproad_annotation.name_id,
-                                                      candidate_data.name_id,
+                util::guidance::requiresNameAnnounced(sliproad_annotation.string_view_id,
+                                                      candidate_data.string_view_id,
                                                       name_table,
                                                       street_name_suffix_table))
             {
@@ -617,7 +617,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
             intersection[*obvious].instruction.direction_modifier =
                 getTurnDirection(intersection[*obvious].angle);
         }
-        else if (!name_table.GetNameForID(main_annotation.name_id).empty())
+        else if (!name_table.GetNameForID(main_annotation.string_view_id).empty())
         {
             intersection[*obvious].instruction.type = TurnType::NewName;
             intersection[*obvious].instruction.direction_modifier =
@@ -721,10 +721,10 @@ bool SliproadHandler::roadContinues(const EdgeID current, const EdgeID next) con
                               node_based_graph.GetEdgeData(next).flags.road_classification;
     auto same_travel_mode = current_data.travel_mode == next_data.travel_mode;
 
-    auto same_name = current_data.name_id != EMPTY_NAMEID && //
-                     next_data.name_id != EMPTY_NAMEID &&    //
-                     !util::guidance::requiresNameAnnounced(current_data.name_id,
-                                                            next_data.name_id,
+    auto same_name = current_data.string_view_id != EMPTY_NAMEID && //
+                     next_data.string_view_id != EMPTY_NAMEID &&    //
+                     !util::guidance::requiresNameAnnounced(current_data.string_view_id,
+                                                            next_data.string_view_id,
                                                             name_table,
                                                             street_name_suffix_table); //
 

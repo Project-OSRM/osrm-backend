@@ -33,7 +33,7 @@ inline auto makeCheckRoadForName(const NameID name_id,
         const auto road_name_id =
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
-                .name_id;
+                .string_view_id;
         const auto road_name_empty = name_table.GetNameForID(road_name_id).empty();
         const auto in_name_empty = name_table.GetNameForID(name_id).empty();
         if (in_name_empty || road_name_empty)
@@ -127,9 +127,9 @@ bool MergableRoadDetector::IsDistinctFrom(const MergableRoadData &lhs,
     else // or it cannot have the same name
         return !HaveIdenticalNames(
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
-                .name_id,
+                .string_view_id,
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(rhs.eid).annotation_data)
-                .name_id,
+                .string_view_id,
             name_table,
             street_name_suffix_table);
 }
@@ -154,7 +154,7 @@ bool MergableRoadDetector::EdgeDataSupportsMerge(
 
     // we require valid names
     if (!HaveIdenticalNames(
-            lhs_annotation.name_id, rhs_annotation.name_id, name_table, street_name_suffix_table))
+            lhs_annotation.string_view_id, rhs_annotation.string_view_id, name_table, street_name_suffix_table))
         return false;
 
     return lhs_flags.road_classification == rhs_flags.road_classification;
@@ -196,7 +196,7 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
      */
     SelectStraightmostRoadByNameAndOnlyChoice selector(
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
-            .name_id,
+            .string_view_id,
         lhs.perceived_bearing,
         /*requires entry=*/false,
         false);
@@ -314,7 +314,7 @@ bool MergableRoadDetector::IsCircularShape(const NodeID intersection_node,
         LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
         SelectStraightmostRoadByNameAndOnlyChoice selector(
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
-                .name_id,
+                .string_view_id,
             lhs.perceived_bearing,
             /*requires_entry=*/false,
             false);
@@ -387,7 +387,7 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
         SelectStraightmostRoadByNameAndOnlyChoice selector(
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
-                .name_id,
+                .string_view_id,
             lhs.perceived_bearing,
             /*requires_entry=*/false,
             true);
@@ -508,14 +508,14 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
         const auto required_name_id =
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(range.front()).annotation_data)
-                .name_id;
+                .string_view_id;
 
         const auto has_required_name = [this, required_name_id](const auto edge_id)
         {
             const auto road_name_id =
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
-                    .name_id;
+                    .string_view_id;
             const auto &road_name_empty = name_table.GetNameForID(road_name_id).empty();
             const auto &required_name_empty = name_table.GetNameForID(required_name_id).empty();
             if (required_name_empty && road_name_empty)
@@ -572,7 +572,7 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
     {
         return node_data_container
             .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
-            .name_id;
+            .string_view_id;
     };
 
     const auto requested_name_id = extract_name_id(road);

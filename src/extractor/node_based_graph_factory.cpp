@@ -203,7 +203,7 @@ void NodeBasedGraphFactory::CompressAnnotationData()
     {
         auto const it = unique_annotations.find(id);
         if (it == unique_annotations.end() || *it != id)
-            annotation_data[id].name_id = INVALID_NAMEID;
+            annotation_data[id].string_view_id = INVALID_NAMEID;
     }
 
     // remove unreferenced entries, shifting other entries to the front
@@ -214,7 +214,7 @@ void NodeBasedGraphFactory::CompressAnnotationData()
                                             // both elements are considered equal (to remove the
                                             // second one) if the annotation mapping of the second
                                             // one is invalid
-                                            return data.name_id == INVALID_NAMEID;
+                                            return data.string_view_id == INVALID_NAMEID;
                                         });
 
     const auto old_size = annotation_data.size();

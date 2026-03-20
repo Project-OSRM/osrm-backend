@@ -229,25 +229,25 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
                     return SPECIAL_EDGEID;
                 }
 
-                const auto &edge_name_empty = name_table.GetNameForID(edge_data.name_id).empty();
+                const auto &edge_name_empty = name_table.GetNameForID(edge_data.string_view_id).empty();
                 if (!edge_name_empty)
                 {
 
                     const auto announce = [&](unsigned id)
                     {
                         return util::guidance::requiresNameAnnounced(
-                            id, edge_data.name_id, name_table, street_name_suffix_table);
+                            id, edge_data.string_view_id, name_table, street_name_suffix_table);
                     };
 
                     if (std::all_of(begin(roundabout_name_ids), end(roundabout_name_ids), announce))
-                        roundabout_name_ids.insert(edge_data.name_id);
+                        roundabout_name_ids.insert(edge_data.string_view_id);
                 }
                 continue_edge = edge_id;
             }
             else if (!edge.flags.roundabout && !edge.flags.circular)
             {
                 // remember all connected road names
-                connected_names.insert(edge_data.name_id);
+                connected_names.insert(edge_data.string_view_id);
             }
         }
         return continue_edge;

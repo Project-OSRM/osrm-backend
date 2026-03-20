@@ -78,10 +78,10 @@ TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
 
     const auto &in_name_id =
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(via_edge).annotation_data)
-            .name_id;
+            .string_view_id;
     const auto &out_name_id =
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
-            .name_id;
+            .string_view_id;
     const auto &in_name_empty = name_table.GetNameForID(in_name_id).empty();
     const auto &out_name_empty = name_table.GetNameForID(out_name_id).empty();
 
@@ -144,7 +144,7 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
             node_based_graph.GetEdgeData(road.eid).annotation_data);
 
         if (util::guidance::requiresNameAnnounced(
-                in_data.name_id, out_data.name_id, name_table, street_name_suffix_table))
+                in_data.string_view_id, out_data.string_view_id, name_table, street_name_suffix_table))
         {
             // obvious turn onto a through street is a merge
             if (through_street)
@@ -478,10 +478,10 @@ bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID t
     const auto &target_edge_data = node_data_container.GetAnnotation(
         node_based_graph.GetEdgeData(target_edge_id).annotation_data);
 
-    return !name_table.GetNameForID(source_edge_data.name_id).empty() && //
-           !name_table.GetNameForID(target_edge_data.name_id).empty() && //
-           !util::guidance::requiresNameAnnounced(source_edge_data.name_id,
-                                                  target_edge_data.name_id,
+    return !name_table.GetNameForID(source_edge_data.string_view_id).empty() && //
+           !name_table.GetNameForID(target_edge_data.string_view_id).empty() && //
+           !util::guidance::requiresNameAnnounced(source_edge_data.string_view_id,
+                                                  target_edge_data.string_view_id,
                                                   name_table,
                                                   street_name_suffix_table); //
 }
