@@ -71,7 +71,9 @@ parking_class = Set{
 local function to_number_uint(s)
   local n = tonumber(s)
   if n ~= nil and n > 0 and n % 1 == 0 then
-    return n
+    -- Convert to integer to ensure Sol2 binding accepts it
+    -- math.tointeger returns nil if conversion fails, so use math.floor as fallback
+    return math.tointeger(n) or math.floor(n)
   end
   return nil
 end
