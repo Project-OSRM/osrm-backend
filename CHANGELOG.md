@@ -2,6 +2,7 @@
   - Changes from 6.0.0
     - Routing:
       - ADDED: Use turning circles, turning loops, and mini roundabouts for u-turns with zero penalty [#620](https://github.com/Project-OSRM/osrm-backend/issues/620)
+      - FIXED: Prevent MLD route queries from updating removed heap nodes, avoiding `osrm-routed` segfaults/asserts [#7203](https://github.com/Project-OSRM/osrm-backend/issues/7203)
       - FIXED: Crash when route starts or ends at `type=manoeuvre` relation via node [#7287](https://github.com/Project-OSRM/osrm-backend/issues/7287)
     - Extraction:
       - ADDED: Emit warning when ways reference nodes not present in input data [#1596](https://github.com/Project-OSRM/osrm-backend/issues/1596)
