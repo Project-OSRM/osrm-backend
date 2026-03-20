@@ -2,7 +2,7 @@
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/files.hpp"
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
 #include "util/coordinate_calculation.hpp"

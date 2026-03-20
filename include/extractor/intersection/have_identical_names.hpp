@@ -1,7 +1,7 @@
 #ifndef OSRM_EXTRACTOR_INTERSECTION_HAVE_IDENTICAL_NAMES_HPP_
 #define OSRM_EXTRACTOR_INTERSECTION_HAVE_IDENTICAL_NAMES_HPP_
 
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/suffix_table.hpp"
 #include "guidance/constants.hpp"
 

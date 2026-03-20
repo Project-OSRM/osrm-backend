@@ -1,7 +1,7 @@
 #include "extractor/intersection/mergable_road_detector.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/intersection/node_based_graph_walker.hpp"
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/suffix_table.hpp"
 #include "guidance/constants.hpp"

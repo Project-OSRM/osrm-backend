@@ -1,4 +1,4 @@
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 
 #include "util/typedefs.hpp"
 

@@ -1,7 +1,7 @@
 #ifndef OSRM_GUIDANCE_MOTORWAY_HANDLER_HPP_
 #define OSRM_GUIDANCE_MOTORWAY_HANDLER_HPP_
 
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 
 #include "guidance/intersection.hpp"
 #include "guidance/intersection_handler.hpp"

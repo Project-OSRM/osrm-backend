@@ -3,7 +3,7 @@
 
 /* A set of tools required for guidance in both pre and post-processing */
 
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/suffix_table.hpp"
 
 #include "util/typedefs.hpp"

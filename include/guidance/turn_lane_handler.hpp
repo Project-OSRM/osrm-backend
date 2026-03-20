@@ -1,7 +1,7 @@
 #ifndef OSRM_GUIDANCE_TURN_LANE_HANDLER_HPP_
 #define OSRM_GUIDANCE_TURN_LANE_HANDLER_HPP_
 
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/turn_lane_types.hpp"
 

@@ -14,7 +14,7 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/maneuver_override.hpp"
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/travel_mode.hpp"
