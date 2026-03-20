@@ -229,7 +229,8 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
                     return SPECIAL_EDGEID;
                 }
 
-                const auto &edge_name_empty = name_table.GetNameForID(edge_data.string_view_id).empty();
+                const auto &edge_name_empty =
+                    name_table.GetNameForID(edge_data.string_view_id).empty();
                 if (!edge_name_empty)
                 {
 

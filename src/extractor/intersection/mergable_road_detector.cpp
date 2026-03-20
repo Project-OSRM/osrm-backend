@@ -153,8 +153,10 @@ bool MergableRoadDetector::EdgeDataSupportsMerge(
         return false;
 
     // we require valid names
-    if (!HaveIdenticalNames(
-            lhs_annotation.string_view_id, rhs_annotation.string_view_id, name_table, street_name_suffix_table))
+    if (!HaveIdenticalNames(lhs_annotation.string_view_id,
+                            rhs_annotation.string_view_id,
+                            name_table,
+                            street_name_suffix_table))
         return false;
 
     return lhs_flags.road_classification == rhs_flags.road_classification;

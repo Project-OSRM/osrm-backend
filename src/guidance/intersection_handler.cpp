@@ -143,8 +143,10 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
         const auto &out_data = node_data_container.GetAnnotation(
             node_based_graph.GetEdgeData(road.eid).annotation_data);
 
-        if (util::guidance::requiresNameAnnounced(
-                in_data.string_view_id, out_data.string_view_id, name_table, street_name_suffix_table))
+        if (util::guidance::requiresNameAnnounced(in_data.string_view_id,
+                                                  out_data.string_view_id,
+                                                  name_table,
+                                                  street_name_suffix_table))
         {
             // obvious turn onto a through street is a merge
             if (through_street)

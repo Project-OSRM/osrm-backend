@@ -129,8 +129,10 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
             const auto &out_data = node_data_container.GetAnnotation(
                 node_based_graph.GetEdgeData(road.eid).annotation_data);
 
-            const auto same_name = !util::guidance::requiresNameAnnounced(
-                in_data.string_view_id, out_data.string_view_id, name_table, street_name_suffix_table);
+            const auto same_name = !util::guidance::requiresNameAnnounced(in_data.string_view_id,
+                                                                          out_data.string_view_id,
+                                                                          name_table,
+                                                                          street_name_suffix_table);
 
             if (road.angle != 0 && in_data.string_view_id != EMPTY_NAMEID &&
                 out_data.string_view_id != EMPTY_NAMEID && same_name &&

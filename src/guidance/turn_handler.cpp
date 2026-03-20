@@ -203,8 +203,10 @@ bool TurnHandler::isObviousOfTwo(const EdgeID via_edge,
     const auto &via_name_empty = name_table.GetNameForID(via_data.string_view_id).empty();
     if (!via_name_empty)
     {
-        const auto same_name = !util::guidance::requiresNameAnnounced(
-            via_data.string_view_id, road_data.string_view_id, name_table, street_name_suffix_table);
+        const auto same_name = !util::guidance::requiresNameAnnounced(via_data.string_view_id,
+                                                                      road_data.string_view_id,
+                                                                      name_table,
+                                                                      street_name_suffix_table);
         if (turn_is_perfectly_straight && same_name)
         {
             return true;

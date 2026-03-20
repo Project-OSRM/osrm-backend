@@ -646,7 +646,8 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
                     [id = via_edge_annotation.string_view_id, this](auto const &road)
                     {
                         auto const data_id = node_based_graph.GetEdgeData(road.eid).annotation_data;
-                        auto const name_id = node_data_container.GetAnnotation(data_id).string_view_id;
+                        auto const name_id =
+                            node_data_container.GetAnnotation(data_id).string_view_id;
                         return (name_id != EMPTY_NAMEID) && (name_id == id);
                     });
 
