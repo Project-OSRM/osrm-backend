@@ -282,7 +282,7 @@ void insertOrUpdate(Heap &heap,
     {
         heap.Insert(node, weight, data);
     }
-    else if (!heap.WasRemoved(node) && weight < heapNode->weight)
+    else if (!heapNode->WasRemoved() && weight < heapNode->weight)
     {
         heapNode->data = data;
         heapNode->weight = weight;
