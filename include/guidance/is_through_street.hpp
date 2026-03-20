@@ -20,7 +20,7 @@ inline bool isThroughStreet(const std::size_t index,
                             const IntersectionType &intersection,
                             const util::NodeBasedDynamicGraph &node_based_graph,
                             const extractor::EdgeBasedNodeDataContainer &node_data_container,
-                            const extractor::NameTable &name_table,
+                            const extractor::StringTable &string_table,
                             const extractor::SuffixTable &street_name_suffix_table)
 {
     using osrm::util::angularDeviation;
@@ -28,7 +28,7 @@ inline bool isThroughStreet(const std::size_t index,
     const auto &data_at_index = node_data_container.GetAnnotation(
         node_based_graph.GetEdgeData(intersection[index].eid).annotation_data);
 
-    if (data_at_index.string_view_id == EMPTY_NAMEID)
+    if (data_at_index.string_view_id == EMPTY_STRINGVIEWID)
         return false;
 
     // a through street cannot start at our own position -> index 1
@@ -48,7 +48,7 @@ inline bool isThroughStreet(const std::size_t index,
         const bool have_same_name =
             extractor::intersection::HaveIdenticalNames(data_at_index.string_view_id,
                                                         road_data.string_view_id,
-                                                        name_table,
+                                                        string_table,
                                                         street_name_suffix_table);
 
         const bool have_same_category =

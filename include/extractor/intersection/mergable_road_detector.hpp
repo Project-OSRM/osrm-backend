@@ -24,7 +24,7 @@ namespace osrm
 // FWD declarations
 namespace util
 {
-class NameTable;
+class StringTable;
 } // namespace util
 
 namespace extractor
@@ -50,7 +50,7 @@ class MergableRoadDetector
                          const RestrictionMap &node_restriction_map,
                          const ObstacleMap &obstacle_nodes,
                          const TurnLanesIndexedArray &turn_lanes_data,
-                         const extractor::NameTable &name_table,
+                         const extractor::StringTable &string_table,
                          const SuffixTable &street_name_suffix_table);
 
     // OSM ways tend to be modelled as separate ways for different directions. This is often due to
@@ -169,7 +169,7 @@ class MergableRoadDetector
     const TurnLanesIndexedArray &turn_lanes_data;
 
     // name detection
-    const extractor::NameTable &name_table;
+    const extractor::StringTable &string_table;
     const SuffixTable &street_name_suffix_table;
 
     const CoordinateExtractor coordinate_extractor;

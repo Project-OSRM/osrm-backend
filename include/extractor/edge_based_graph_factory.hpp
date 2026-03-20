@@ -63,7 +63,7 @@ class EdgeBasedGraphFactory
                                    EdgeBasedNodeDataContainer &node_data_container,
                                    const CompressedEdgeContainer &compressed_edge_container,
                                    const std::vector<util::Coordinate> &coordinates,
-                                   const NameTable &name_table,
+                                   const StringTable &string_table,
                                    const std::unordered_set<EdgeID> &segregated_edges,
                                    const LaneDescriptionMap &lane_description_map);
 
@@ -128,7 +128,7 @@ class EdgeBasedGraphFactory
 
     const CompressedEdgeContainer &m_compressed_edge_container;
 
-    const NameTable &name_table;
+    const StringTable &string_table;
     const std::unordered_set<EdgeID> &segregated_edges;
     const LaneDescriptionMap &lane_description_map;
 

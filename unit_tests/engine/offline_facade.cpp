@@ -262,18 +262,18 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     bool IsBackwardEdge(const NodeID /*edge*/) const { return true; }
 
     bool HasLaneData(const EdgeID /*id*/) const override { return false; }
-    NameID GetNameIndex(const NodeID /*nodeID*/) const override { return EMPTY_NAMEID; }
-    std::string_view GetNameForID(const NameID /*id*/) const override { return std::string_view{}; }
-    std::string_view GetRefForID(const NameID /*id*/) const override { return std::string_view{}; }
-    std::string_view GetPronunciationForID(const NameID /*id*/) const override
+    StringViewID GetNameIndex(const NodeID /*nodeID*/) const override { return EMPTY_STRINGVIEWID; }
+    std::string_view GetNameForID(const StringViewID /*id*/) const override { return std::string_view{}; }
+    std::string_view GetRefForID(const StringViewID /*id*/) const override { return std::string_view{}; }
+    std::string_view GetPronunciationForID(const StringViewID /*id*/) const override
     {
         return std::string_view{};
     }
-    std::string_view GetDestinationsForID(const NameID /*id*/) const override
+    std::string_view GetDestinationsForID(const StringViewID /*id*/) const override
     {
         return std::string_view{};
     }
-    std::string_view GetExitsForID(const NameID /*id*/) const override
+    std::string_view GetExitsForID(const StringViewID /*id*/) const override
     {
         return std::string_view{};
     }
