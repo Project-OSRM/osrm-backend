@@ -24,7 +24,7 @@ SliproadHandler::SliproadHandler(const util::NodeBasedDynamicGraph &node_based_g
                                  const extractor::RestrictionMap &node_restriction_map,
                                  const extractor::ObstacleMap &obstacle_nodes,
                                  const extractor::TurnLanesIndexedArray &turn_lanes_data,
-                                 const extractor::NameTable &name_table,
+                                 const extractor::StringTable &string_table,
                                  const extractor::SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
@@ -33,7 +33,7 @@ SliproadHandler::SliproadHandler(const util::NodeBasedDynamicGraph &node_based_g
                           node_restriction_map,
                           obstacle_nodes,
                           turn_lanes_data,
-                          name_table,
+                          string_table,
                           street_name_suffix_table),
       coordinate_extractor(node_based_graph, compressed_geometries, node_coordinates)
 {
@@ -158,7 +158,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
         return intersection;
     }
 
-    std::vector<NameID> target_road_name_ids;
+    std::vector<StringViewID> target_road_name_ids;
     target_road_name_ids.reserve(main_road_intersection->intersection.size());
 
     for (const auto &road : main_road_intersection->intersection)
@@ -361,7 +361,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
                     target_intersection,
                     node_based_graph,
                     node_data_container,
-                    name_table,
+                    string_table,
                     street_name_suffix_table))
             {
                 continue;
@@ -505,11 +505,11 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
                 node_based_graph.GetEdgeData(candidate_road.eid).annotation_data);
 
             // Name mismatch: check roads at `c` and `d` for same name
-            const auto name_mismatch = [&](const NameID road_name_id)
+            const auto name_mismatch = [&](const StringViewID road_name_id)
             {
                 return util::guidance::requiresNameAnnounced(road_name_id,                  //
                                                              candidate_data.string_view_id, //
-                                                             name_table,                    //
+                                                             string_table,                    //
                                                              street_name_suffix_table);     //
             };
 
@@ -528,22 +528,22 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(main_road.eid).annotation_data)
                     .string_view_id;
-            const auto main_road_name_empty = name_table.GetNameForID(main_road_name_id).empty();
+            const auto main_road_name_empty = string_table.GetNameForID(main_road_name_id).empty();
             const auto &sliproad_annotation =
                 node_data_container.GetAnnotation(sliproad_edge_data.annotation_data);
             const auto sliproad_name_empty =
-                name_table.GetNameForID(sliproad_annotation.string_view_id).empty();
+                string_table.GetNameForID(sliproad_annotation.string_view_id).empty();
             const auto candidate_road_name_empty =
-                name_table.GetNameForID(candidate_data.string_view_id).empty();
+                string_table.GetNameForID(candidate_data.string_view_id).empty();
             if (!sliproad_edge_data.flags.road_classification.IsLinkClass() &&
                 !sliproad_name_empty && !main_road_name_empty && !candidate_road_name_empty &&
                 util::guidance::requiresNameAnnounced(main_road_name_id,
                                                       sliproad_annotation.string_view_id,
-                                                      name_table,
+                                                      string_table,
                                                       street_name_suffix_table) &&
                 util::guidance::requiresNameAnnounced(sliproad_annotation.string_view_id,
                                                       candidate_data.string_view_id,
-                                                      name_table,
+                                                      string_table,
                                                       street_name_suffix_table))
             {
                 continue;
@@ -617,7 +617,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
             intersection[*obvious].instruction.direction_modifier =
                 getTurnDirection(intersection[*obvious].angle);
         }
-        else if (!name_table.GetNameForID(main_annotation.string_view_id).empty())
+        else if (!string_table.GetNameForID(main_annotation.string_view_id).empty())
         {
             intersection[*obvious].instruction.type = TurnType::NewName;
             intersection[*obvious].instruction.direction_modifier =
@@ -721,11 +721,11 @@ bool SliproadHandler::roadContinues(const EdgeID current, const EdgeID next) con
                               node_based_graph.GetEdgeData(next).flags.road_classification;
     auto same_travel_mode = current_data.travel_mode == next_data.travel_mode;
 
-    auto same_name = current_data.string_view_id != EMPTY_NAMEID && //
-                     next_data.string_view_id != EMPTY_NAMEID &&    //
+    auto same_name = current_data.string_view_id != EMPTY_STRINGVIEWID && //
+                     next_data.string_view_id != EMPTY_STRINGVIEWID &&    //
                      !util::guidance::requiresNameAnnounced(current_data.string_view_id,
                                                             next_data.string_view_id,
-                                                            name_table,
+                                                            string_table,
                                                             street_name_suffix_table); //
 
     const auto continues = same_road_category && same_travel_mode && same_name;

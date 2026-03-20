@@ -48,12 +48,12 @@ IntersectionHandler::IntersectionHandler(
     const extractor::RestrictionMap &node_restriction_map,
     const extractor::ObstacleMap &obstacle_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
-    const extractor::NameTable &name_table,
+    const extractor::StringTable &string_table,
     const extractor::SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
       node_restriction_map(node_restriction_map), obstacle_nodes(obstacle_nodes),
-      turn_lanes_data(turn_lanes_data), name_table(name_table),
+      turn_lanes_data(turn_lanes_data), string_table(string_table),
       street_name_suffix_table(street_name_suffix_table), graph_walker(node_based_graph,
                                                                        node_data_container,
                                                                        node_coordinates,
@@ -82,11 +82,11 @@ TurnType::Enum IntersectionHandler::findBasicTurnType(const EdgeID via_edge,
     const auto &out_name_id =
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
             .string_view_id;
-    const auto &in_name_empty = name_table.GetNameForID(in_name_id).empty();
-    const auto &out_name_empty = name_table.GetNameForID(out_name_id).empty();
+    const auto &in_name_empty = string_table.GetNameForID(in_name_id).empty();
+    const auto &out_name_empty = string_table.GetNameForID(out_name_id).empty();
 
     const auto same_name = !util::guidance::requiresNameAnnounced(
-        in_name_id, out_name_id, name_table, street_name_suffix_table);
+        in_name_id, out_name_id, string_table, street_name_suffix_table);
 
     if (!in_name_empty && !out_name_empty && same_name)
     {
@@ -145,7 +145,7 @@ TurnInstruction IntersectionHandler::getInstructionForObvious(const std::size_t 
 
         if (util::guidance::requiresNameAnnounced(in_data.string_view_id,
                                                   out_data.string_view_id,
-                                                  name_table,
+                                                  string_table,
                                                   street_name_suffix_table))
         {
             // obvious turn onto a through street is a merge
@@ -480,11 +480,11 @@ bool IntersectionHandler::isSameName(const EdgeID source_edge_id, const EdgeID t
     const auto &target_edge_data = node_data_container.GetAnnotation(
         node_based_graph.GetEdgeData(target_edge_id).annotation_data);
 
-    return !name_table.GetNameForID(source_edge_data.string_view_id).empty() && //
-           !name_table.GetNameForID(target_edge_data.string_view_id).empty() && //
+    return !string_table.GetNameForID(source_edge_data.string_view_id).empty() && //
+           !string_table.GetNameForID(target_edge_data.string_view_id).empty() && //
            !util::guidance::requiresNameAnnounced(source_edge_data.string_view_id,
                                                   target_edge_data.string_view_id,
-                                                  name_table,
+                                                  string_table,
                                                   street_name_suffix_table); //
 }
 

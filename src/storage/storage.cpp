@@ -432,8 +432,8 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
     // Name data
     if (config.IsRequiredConfiguredInput(".osrm.names"))
     {
-        auto name_table = make_name_table_view(index, "/common/names");
-        extractor::files::readNames(config.GetPath(".osrm.names"), name_table);
+        auto string_table = make_string_table_view(index, "/common/names");
+        extractor::files::readNames(config.GetPath(".osrm.names"), string_table);
     }
 
     // Load original edge data

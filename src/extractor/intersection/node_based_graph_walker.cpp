@@ -61,7 +61,7 @@ void LengthLimitedCoordinateAccumulator::update(const NodeID from_node,
 
 // ---------------------------------------------------------------------------------
 SelectRoadByNameOnlyChoiceAndStraightness::SelectRoadByNameOnlyChoiceAndStraightness(
-    const NameID desired_name_id, const bool requires_entry)
+    const StringViewID desired_name_id, const bool requires_entry)
     : desired_name_id(desired_name_id), requires_entry(requires_entry)
 {
 }
@@ -109,7 +109,7 @@ std::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
 
 // ---------------------------------------------------------------------------------
 SelectStraightmostRoadByNameAndOnlyChoice::SelectStraightmostRoadByNameAndOnlyChoice(
-    const NameID desired_name_id,
+    const StringViewID desired_name_id,
     const double initial_bearing,
     const bool requires_entry,
     const bool stop_on_ambiguous_turns)

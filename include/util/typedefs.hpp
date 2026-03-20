@@ -101,9 +101,6 @@ using StringViewID = std::uint32_t;
 using AnnotationID = std::uint32_t;
 using PackedGeometryID = std::uint32_t;
 
-// Backwards compatibility aliases (deprecated)
-using NameID = StringViewID;
-
 using EdgeWeight = osrm::Alias<std::int32_t, tag::edge_weight>;
 using EdgeDuration = osrm::Alias<std::int32_t, tag::edge_duration>;
 using EdgeDistance = osrm::Alias<float, tag::edge_distance>;
@@ -135,9 +132,6 @@ static const StringViewID INVALID_STRINGVIEWID = std::numeric_limits<StringViewI
 static const StringViewID EMPTY_STRINGVIEWID = 0;
 static const unsigned INVALID_COMPONENTID = 0;
 
-// Backwards compatibility aliases (deprecated)
-static const auto INVALID_NAMEID = INVALID_STRINGVIEWID;
-static const auto EMPTY_NAMEID = EMPTY_STRINGVIEWID;
 static const std::size_t SEGMENT_WEIGHT_BITS = 22;
 static const std::size_t SEGMENT_DURATION_BITS = 22;
 static const SegmentWeight INVALID_SEGMENT_WEIGHT = SegmentWeight{(1u << SEGMENT_WEIGHT_BITS) - 1};

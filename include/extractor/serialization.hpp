@@ -5,7 +5,7 @@
 #include "extractor/datasources.hpp"
 #include "extractor/intersection_bearings_container.hpp"
 #include "extractor/maneuver_override.hpp"
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/profile_properties.hpp"
@@ -202,18 +202,18 @@ inline void read(storage::tar::FileReader &reader,
 template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
-                  const detail::StringTableImpl<Ownership> &name_table)
+                  const detail::StringTableImpl<Ownership> &string_table)
 {
     storage::io::BufferWriter buffer_writer;
-    util::serialization::write(writer, name, name_table.indexed_data);
+    util::serialization::write(writer, name, string_table.indexed_data);
 }
 
 template <storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
-                 detail::StringTableImpl<Ownership> &name_table)
+                 detail::StringTableImpl<Ownership> &string_table)
 {
-    util::serialization::read(reader, name, name_table.indexed_data);
+    util::serialization::read(reader, name, string_table.indexed_data);
 }
 } // namespace osrm::extractor::serialization
 

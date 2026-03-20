@@ -79,7 +79,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
 
     bool IsSegregated(const NodeID node_id) const { return nodes[node_id].segregated; }
 
-    NameID GetNameID(const NodeID node_id) const
+    StringViewID GetNameID(const NodeID node_id) const
     {
         return annotation_data[nodes[node_id].annotation_id].string_view_id;
     }

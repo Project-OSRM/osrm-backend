@@ -112,7 +112,7 @@ TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                          const extractor::RestrictionMap &node_restriction_map,
                          const extractor::ObstacleMap &obstacle_nodes,
                          const extractor::TurnLanesIndexedArray &turn_lanes_data,
-                         const extractor::NameTable &name_table,
+                         const extractor::StringTable &string_table,
                          const extractor::SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
@@ -121,7 +121,7 @@ TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                           node_restriction_map,
                           obstacle_nodes,
                           turn_lanes_data,
-                          name_table,
+                          string_table,
                           street_name_suffix_table)
 {
 }
@@ -200,12 +200,12 @@ bool TurnHandler::isObviousOfTwo(const EdgeID via_edge,
 
     const bool turn_is_perfectly_straight =
         angularDeviation(road.angle, STRAIGHT_ANGLE) < std::numeric_limits<double>::epsilon();
-    const auto &via_name_empty = name_table.GetNameForID(via_data.string_view_id).empty();
+    const auto &via_name_empty = string_table.GetNameForID(via_data.string_view_id).empty();
     if (!via_name_empty)
     {
         const auto same_name = !util::guidance::requiresNameAnnounced(via_data.string_view_id,
                                                                       road_data.string_view_id,
-                                                                      name_table,
+                                                                      string_table,
                                                                       street_name_suffix_table);
         if (turn_is_perfectly_straight && same_name)
         {
@@ -299,7 +299,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                                                          intersection,
                                                          node_based_graph,
                                                          node_data_container,
-                                                         name_table,
+                                                         string_table,
                                                          street_name_suffix_table),
                                          intersection[1]);
             const auto second_direction = (direction_at_one == direction_at_two &&
@@ -320,7 +320,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                                                          intersection,
                                                          node_based_graph,
                                                          node_data_container,
-                                                         name_table,
+                                                         string_table,
                                                          street_name_suffix_table),
                                          intersection[2]);
             const auto first_direction = (direction_at_one == direction_at_two &&
@@ -361,7 +361,7 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
                                                      intersection,
                                                      node_based_graph,
                                                      node_data_container,
-                                                     name_table,
+                                                     string_table,
                                                      street_name_suffix_table),
                                      intersection[obvious_index]);
 

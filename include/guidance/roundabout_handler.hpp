@@ -3,7 +3,7 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/intersection/coordinate_extractor.hpp"
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/query_node.hpp"
 
 #include "guidance/intersection.hpp"
@@ -43,7 +43,7 @@ class RoundaboutHandler final : public IntersectionHandler
                       const extractor::RestrictionMap &node_restriction_map,
                       const extractor::ObstacleMap &obstacle_nodes,
                       const extractor::TurnLanesIndexedArray &turn_lanes_data,
-                      const extractor::NameTable &name_table,
+                      const extractor::StringTable &string_table,
                       const extractor::SuffixTable &street_name_suffix_table);
 
     ~RoundaboutHandler() override final = default;

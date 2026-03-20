@@ -4,7 +4,7 @@
 #include "guidance/turn_data_container.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/node_restriction_map.hpp"
 #include "extractor/obstacles.hpp"
@@ -33,7 +33,7 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                    const extractor::ObstacleMap &obstacle_nodes,
                    const extractor::RestrictionMap &node_restriction_map,
                    const extractor::WayRestrictionMap &way_restriction_map,
-                   const extractor::NameTable &name_table,
+                   const extractor::StringTable &string_table,
                    const extractor::SuffixTable &suffix_table,
                    const extractor::TurnLanesIndexedArray &turn_lanes_data,
                    extractor::LaneDescriptionMap &lane_description_map,
