@@ -7,14 +7,14 @@ Feature: Car - Use turning circles for u-turns
     Scenario: Car - Should use turning_circle for u-turn when direct u-turn is restricted
         Given the node map
             """
-            a---b---c
+            a---b---c---e
                 |
                 d
             """
 
         And the ways
             | nodes | highway |
-            | abc   | primary |
+            | abce  | primary |
             | bd    | primary |
 
         And the nodes
@@ -23,11 +23,11 @@ Feature: Car - Use turning circles for u-turns
 
         And the relations
             | type        | way:from | node:via | way:to | restriction |
-            | restriction | abc      | b        | abc    | no_u_turn   |
+            | restriction | abce     | b        | abce   | no_u_turn   |
 
         When I route I should get
-            | waypoints | bearings     | route                 | turns                                             |
-            | a,a       | 90,10 270,10 | abc,bd,bd,abc,abc     | depart,turn right,continue uturn,turn left,arrive |
+            | waypoints | bearings     | route                   | turns                                             |
+            | a,a       | 90,10 270,10 | abce,bd,bd,abce,abce    | depart,turn right,continue uturn,turn left,arrive |
 
     Scenario: Car - Should use turning_loop for u-turn when direct u-turn is restricted
         Given the node map
@@ -78,6 +78,34 @@ Feature: Car - Use turning circles for u-turns
         When I route I should get
             | waypoints | bearings     | route                   | turns                                             |
             | a,a       | 90,10 270,10 | abcd,be,be,abcd,abcd    | depart,turn right,continue uturn,turn left,arrive |
+
+    Scenario: Car - Prefer turning_circle over plain dead end for u-turn
+        Given the node map
+            """
+                c
+                |
+            a---b
+                |
+                d
+            """
+
+        And the ways
+            | nodes | highway |
+            | ab    | primary |
+            | bc    | primary |
+            | bd    | primary |
+
+        And the nodes
+            | node | highway        |
+            | d    | turning_circle |
+
+        And the relations
+            | type        | way:from | node:via | way:to | restriction |
+            | restriction | ab       | b        | ab     | no_u_turn   |
+
+        When I route I should get
+            | waypoints | bearings     | route             | turns                                             |
+            | a,a       | 90,10 270,10 | ab,bd,bd,ab,ab    | depart,turn right,continue uturn,turn left,arrive |
 
     Scenario: Car - Multiple turning facilities, use closest
         Given the node map
