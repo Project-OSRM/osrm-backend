@@ -47,8 +47,20 @@ Feature: Traffic - turn penalties applied to turn onto which a phantom node snap
             | 1    | e  | ab,be,be | 36 km/h  | 30s +-1 |
             | b    | f  | bc,cf,cf | 36 km/h  | 40s +-1 |
             | 2    | f  | bc,cf,cf | 36 km/h  | 30s +-1 |
-            | c    | g  | cd,dg,dg | 72 km/h  | 20s +-1 |
+            | c    | g  | cd,dg,dg | 71 km/h  | 20s +-1 |
             | 3    | g  | cd,dg,dg | 54 km/h  | 20s +-1 |
+
+    Scenario: Negative turn duration penalty on intermediate segment must not produce negative route duration
+        Given the turn penalty file
+            """
+            2,3,4,-70,0
+            """
+        And the contract extra arguments "--turn-penalty-file {penalties_file}"
+        And the customize extra arguments "--turn-penalty-file {penalties_file}"
+
+        When I route I should get
+            | from | to | route       | time    |
+            | a    | d  | ab,bc,cd,cd | 40s +-5 |
 
     Scenario: Weighting based on turn penalty file with weights
         Given the turn penalty file
@@ -65,5 +77,5 @@ Feature: Traffic - turn penalties applied to turn onto which a phantom node snap
             | 1    | e  | ab,be,be | 36 km/h  | 30s +-1 | 6.8,20,0   |
             | b    | f  | bc,cf,cf | 36 km/h  | 40s +-1 | 20,20,0    |
             | 2    | f  | bc,cf,cf | 36 km/h  | 30s +-1 | 10.1,20,0  |
-            | c    | g  | cd,dg,dg | 72 km/h  | 20s +-1 | 120.8,20,0 |
+            | c    | g  | cd,dg,dg | 71 km/h  | 20s +-1 | 120.8,20,0 |
             | 3    | g  | cd,dg,dg | 54 km/h  | 20s +-1 | 110.9,20,0 |
