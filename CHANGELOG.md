@@ -5,6 +5,7 @@
     - Extraction:
       - ADDED: Emit warning when ways reference nodes not present in input data [#1596](https://github.com/Project-OSRM/osrm-backend/issues/1596)
     - Profiles:
+      - FIXED: Roads with a real `highway=*` type and an additional `proposed=*` tag (e.g. a planned upgrade) are now routed correctly instead of being silently pruned [#7413](https://github.com/Project-OSRM/osrm-backend/issues/7413)
       - ADDED: Vehicle-specific maximum speed profiles with configurable upper bounds (e.g., 87 km/h for trucks) [#6979](https://github.com/Project-OSRM/osrm-backend/issues/6979)
       - ADDED: Make `max_collapse_distance` configurable via Lua profiles to preserve short road crossings in pedestrian routing [#6171](https://github.com/Project-OSRM/osrm-backend/issues/6171)
       - ADDED: Support `maxweightrating` tag as an alternative to `maxweight` for weight restrictions in car profile [#7325](https://github.com/Project-OSRM/osrm-backend/issues/7325)
