@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(check_string_table_fill)
 
     for (std::size_t index = 0; index < expected_names.size(); ++index)
     {
-        const NameID id = 5 * index;
+        const StringViewID id = 5 * index;
         BOOST_CHECK_EQUAL(string_table.GetNameForID(id), expected_names[index]);
         BOOST_CHECK_EQUAL(string_table.GetRefForID(id), expected_names[index] + "_ref");
         BOOST_CHECK_EQUAL(string_table.GetDestinationsForID(id), expected_names[index] + "_des");
@@ -93,7 +93,7 @@ BOOST_AUTO_TEST_CASE(check_string_table_nofill)
     // CALLGRIND_START_INSTRUMENTATION;
     for (std::size_t index = 0; index < expected_names.size(); ++index)
     {
-        const NameID id = 5 * index;
+        const StringViewID id = 5 * index;
         BOOST_CHECK_EQUAL(string_table.GetNameForID(id), expected_names[index]);
         BOOST_CHECK(string_table.GetRefForID(id).empty());
         BOOST_CHECK(string_table.GetDestinationsForID(id).empty());
@@ -106,11 +106,11 @@ BOOST_AUTO_TEST_CASE(check_string_table_nofill)
 BOOST_AUTO_TEST_CASE(check_invalid_ids)
 {
     StringTable string_table;
-    BOOST_CHECK_EQUAL(string_table.GetNameForID(INVALID_NAMEID), "");
-    BOOST_CHECK_EQUAL(string_table.GetRefForID(INVALID_NAMEID), "");
-    BOOST_CHECK_EQUAL(string_table.GetDestinationsForID(INVALID_NAMEID), "");
-    BOOST_CHECK_EQUAL(string_table.GetPronunciationForID(INVALID_NAMEID), "");
-    BOOST_CHECK_EQUAL(string_table.GetExitsForID(INVALID_NAMEID), "");
+    BOOST_CHECK_EQUAL(string_table.GetNameForID(INVALID_STRINGVIEWID), "");
+    BOOST_CHECK_EQUAL(string_table.GetRefForID(INVALID_STRINGVIEWID), "");
+    BOOST_CHECK_EQUAL(string_table.GetDestinationsForID(INVALID_STRINGVIEWID), "");
+    BOOST_CHECK_EQUAL(string_table.GetPronunciationForID(INVALID_STRINGVIEWID), "");
+    BOOST_CHECK_EQUAL(string_table.GetExitsForID(INVALID_STRINGVIEWID), "");
 }
 
 BOOST_AUTO_TEST_SUITE_END()

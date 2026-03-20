@@ -37,7 +37,7 @@ struct EdgeInfo
 };
 
 std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFactory &factory,
-                                               const extractor::NameTable &names)
+                                               const extractor::StringTable &names)
 {
     auto const &graph = factory.GetGraph();
     auto const &annotation = factory.GetAnnotationData();
@@ -77,7 +77,7 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
         /// @todo Make string normalization/lowercase/trim for comparison ...
 
         auto const id = annotation[edge_data.annotation_data].string_view_id;
-        BOOST_ASSERT(id != INVALID_NAMEID);
+        BOOST_ASSERT(id != INVALID_STRINGVIEWID);
         auto const name = names.GetNameForID(id);
         return {edge_id,
                 node,

@@ -11,9 +11,9 @@ namespace osrm::extractor::intersection
 // check if two name ids can be seen as identical (in presence of refs/others)
 // in our case this translates into no name announcement in either direction (lhs->rhs and
 // rhs->lhs)
-bool HaveIdenticalNames(const NameID lhs,
-                        const NameID rhs,
-                        const NameTable &name_table,
+bool HaveIdenticalNames(const StringViewID lhs,
+                        const StringViewID rhs,
+                        const StringTable &string_table,
                         const SuffixTable &street_name_suffix_table);
 
 } // namespace osrm::extractor::intersection

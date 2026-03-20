@@ -65,15 +65,15 @@ util::PackedVectorView<T, Bits> make_packed_vector_view(const SharedDataIndex &i
     return V{packed_internal, std::numeric_limits<std::size_t>::max()};
 }
 
-inline auto make_name_table_view(const SharedDataIndex &index, const std::string &name)
+inline auto make_string_table_view(const SharedDataIndex &index, const std::string &name)
 {
-    auto blocks = make_vector_view<extractor::NameTableView::IndexedData::BlockReference>(
+    auto blocks = make_vector_view<extractor::StringTableView::IndexedData::BlockReference>(
         index, name + "/blocks");
     auto values =
-        make_vector_view<extractor::NameTableView::IndexedData::ValueType>(index, name + "/values");
+        make_vector_view<extractor::StringTableView::IndexedData::ValueType>(index, name + "/values");
 
-    extractor::NameTableView::IndexedData index_data_view{blocks, values};
-    return extractor::NameTableView{index_data_view};
+    extractor::StringTableView::IndexedData index_data_view{blocks, values};
+    return extractor::StringTableView{index_data_view};
 }
 
 inline auto make_lane_data_view(const SharedDataIndex &index, const std::string &name)

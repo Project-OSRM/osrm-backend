@@ -223,13 +223,13 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                    parsed_osm_data.edge_list,
                                                    std::move(parsed_osm_data.annotation_data));
 
-    NameTable name_table;
-    files::readNames(config.GetPath(".osrm.names"), name_table);
+    StringTable string_table;
+    files::readNames(config.GetPath(".osrm.names"), string_table);
 
     util::Log() << "Find segregated edges in node-based graph ..." << std::flush;
     TIMER_START(segregated);
 
-    auto segregated_edges = guidance::findSegregatedNodes(node_based_graph_factory, name_table);
+    auto segregated_edges = guidance::findSegregatedNodes(node_based_graph_factory, string_table);
 
     TIMER_STOP(segregated);
     util::Log() << "ok, after " << TIMER_SEC(segregated) << "s";
@@ -273,7 +273,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                node_based_graph_factory.GetCompressedEdges(),
                                restriction_graph,
                                segregated_edges,
-                               name_table,
+                               string_table,
                                parsed_osm_data.unresolved_maneuver_overrides,
                                parsed_osm_data.turn_lane_map,
                                scripting_environment,
@@ -290,7 +290,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                          coordinates,
                          node_based_graph_factory.GetCompressedEdges(),
                          restriction_graph,
-                         name_table,
+                         string_table,
                          std::move(parsed_osm_data.turn_lane_map),
                          scripting_environment);
 
@@ -721,7 +721,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     const CompressedEdgeContainer &compressed_edge_container,
     const RestrictionGraph &restriction_graph,
     const std::unordered_set<EdgeID> &segregated_edges,
-    const NameTable &name_table,
+    const StringTable &string_table,
     const std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
     const LaneDescriptionMap &turn_lane_map,
     // for calculating turn penalties
@@ -739,7 +739,7 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
                                                    edge_based_nodes_container,
                                                    compressed_edge_container,
                                                    coordinates,
-                                                   name_table,
+                                                   string_table,
                                                    segregated_edges,
                                                    turn_lane_map);
 
@@ -826,7 +826,7 @@ void Extractor::ProcessGuidanceTurns(
     const std::vector<util::Coordinate> &node_coordinates,
     const CompressedEdgeContainer &compressed_edge_container,
     const RestrictionGraph &restriction_graph,
-    const NameTable &name_table,
+    const StringTable &string_table,
     LaneDescriptionMap lane_description_map,
     ScriptingEnvironment &scripting_environment)
 {
@@ -854,7 +854,7 @@ void Extractor::ProcessGuidanceTurns(
                                       scripting_environment.m_obstacle_map,
                                       unconditional_node_restriction_map,
                                       way_restriction_map,
-                                      name_table,
+                                      string_table,
                                       street_name_suffix_table,
                                       turn_lanes_data,
                                       lane_description_map,

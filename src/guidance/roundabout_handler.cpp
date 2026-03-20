@@ -26,7 +26,7 @@ RoundaboutHandler::RoundaboutHandler(
     const extractor::RestrictionMap &node_restriction_map,
     const extractor::ObstacleMap &obstacle_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
-    const extractor::NameTable &name_table,
+    const extractor::StringTable &string_table,
     const extractor::SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
@@ -35,7 +35,7 @@ RoundaboutHandler::RoundaboutHandler(
                           node_restriction_map,
                           obstacle_nodes,
                           turn_lanes_data,
-                          name_table,
+                          string_table,
                           street_name_suffix_table),
       coordinate_extractor(node_based_graph, compressed_geometries, coordinates)
 {
@@ -230,14 +230,14 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
                 }
 
                 const auto &edge_name_empty =
-                    name_table.GetNameForID(edge_data.string_view_id).empty();
+                    string_table.GetNameForID(edge_data.string_view_id).empty();
                 if (!edge_name_empty)
                 {
 
                     const auto announce = [&](unsigned id)
                     {
                         return util::guidance::requiresNameAnnounced(
-                            id, edge_data.string_view_id, name_table, street_name_suffix_table);
+                            id, edge_data.string_view_id, string_table, street_name_suffix_table);
                     };
 
                     if (std::all_of(begin(roundabout_name_ids), end(roundabout_name_ids), announce))
@@ -491,7 +491,7 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                                                                  intersection,
                                                                  node_based_graph,
                                                                  node_data_container,
-                                                                 name_table,
+                                                                 string_table,
                                                                  street_name_suffix_table),
                                                  turn);
                 }

@@ -68,10 +68,10 @@ struct CmpEdgeByInternalSourceTargetAndName
         if (lhs_name_id == rhs_name_id)
             return false;
 
-        if (lhs_name_id == EMPTY_NAMEID)
+        if (lhs_name_id == EMPTY_STRINGVIEWID)
             return false;
 
-        if (rhs_name_id == EMPTY_NAMEID)
+        if (rhs_name_id == EMPTY_STRINGVIEWID)
             return true;
 
         BOOST_ASSERT(!name_offsets.empty() && name_offsets.back() == name_data.size());
@@ -428,7 +428,7 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     TIMER_START(write_index);
 
     files::writeNames(file_name,
-                      NameTable{NameTable::IndexedData(
+                      StringTable{StringTable::IndexedData(
                           name_offsets.begin(), name_offsets.end(), name_char_data.begin())});
 
     TIMER_STOP(write_index);

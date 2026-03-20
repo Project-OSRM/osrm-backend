@@ -113,12 +113,6 @@ template <storage::Ownership Ownership> class StringTableImpl
 
 using StringTable = detail::StringTableImpl<storage::Ownership::Container>;
 using StringTableView = detail::StringTableImpl<storage::Ownership::View>;
-
-// Backwards compatibility aliases (deprecated)
-using NameTable = StringTable;
-using NameTableView = StringTableView;
-using PreDatafacadeStringViewer = StringTable;
-using PreDatafacadeStringViewerView = StringTableView;
 } // namespace osrm::extractor
 
 #endif // OSRM_EXTRACTOR_STRING_TABLE_HPP
