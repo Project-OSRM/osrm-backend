@@ -36,12 +36,14 @@ Feature: Foot - Accessability of different way types
             | highway | leisure  | forw |
             | (nil)   | track    |   x  |
 
-    Scenario: Foot - Proposed ways
+    Scenario: Foot - Proposed ways: unbuilt proposed highways are ignored, real highways with proposed upgrade tags are routed
         Then routability should be
-            | highway  | foot  | proposed | forw |
-            | footway  |       |          | x    |
-            | proposed |       |          |      |
-            | proposed | yes   | yes      |      |
+            | highway  | foot  | proposed  | forw |
+            | footway  |       |           | x    |
+            | proposed |       |           |      |
+            | proposed | yes   | yes       |      |
+            | footway  |       | yes       | x    |
+            | primary  |       | secondary | x    |
 
     Scenario: Foot - Motorroad
         Then routability should be

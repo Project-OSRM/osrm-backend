@@ -79,13 +79,15 @@ Feature: Bike - Accessability of different way types
             | construction |      | yes     |       |
 
     @proposed
-    Scenario: Bike - Don't allow routing on ways still being proposed
+    Scenario: Bike - Don't allow routing on unbuilt proposed ways, but allow real highways with proposed upgrade tags
         Then routability should be
-            | highway  | foot | bicycle | proposed | bothw |
-            | primary  |      |         |          | x     |
-            | proposed |      |         |          |       |
-            | proposed | yes  |         | yes      |       |
-            | proposed |      | yes     | yes      |       |
+            | highway  | foot | bicycle | proposed  | bothw |
+            | primary  |      |         |           | x     |
+            | proposed |      |         |           |       |
+            | proposed | yes  |         | yes       |       |
+            | proposed |      | yes     | yes       |       |
+            | primary  |      |         | yes       | x     |
+            | primary  |      |         | secondary | x     |
 
     @roundabout
     Scenario: Bike - Don't push bikes against oneway flow on roundabouts
