@@ -154,6 +154,8 @@ class QueryHeap
         NodeID node;
         Weight weight;
         Data data;
+
+        bool WasRemoved() const { return handle == HeapContainer::INVALID_HANDLE; }
     };
 
     template <typename... StorageArgs> explicit QueryHeap(StorageArgs... args) : node_index(args...)
