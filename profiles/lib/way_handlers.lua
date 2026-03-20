@@ -678,7 +678,12 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   -- http://wiki.openstreetmap.org/wiki/Key:proposed
   -- https://taginfo.openstreetmap.org/keys/proposed#values
   if profile.avoid.proposed and way:get_value_by_key('proposed') then
-    return false
+    -- Only block if the highway itself is 'proposed' (road not yet built).
+    -- A road with a real highway type and a proposed upgrade tag (e.g. highway=tertiary,
+    -- proposed=secondary) is a real, routable road -- the proposed tag is implicitly ignored.
+    if not data.highway or data.highway == 'proposed' then
+      return false
+    end
   end
 
   -- Reversible oneways change direction with low frequency (think twice a day):

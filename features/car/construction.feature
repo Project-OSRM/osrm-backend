@@ -6,12 +6,14 @@ Feature: Car - all construction tags the OpenStreetMap community could think of 
 
     Scenario: Various ways to tag construction and proposed roads
         Then routability should be
-            | highway      | construction | proposed | bothw |
-            | primary      |              |          | x     |
-            | construction |              |          |       |
-            | proposed     |              |          |       |
-            | primary      |          yes |          |       |
-            | primary      |              |     yes  |       |
-            | primary      |           no |          | x     |
-            | primary      |     widening |          | x     |
-            | primary      |        minor |          | x     |
+            | highway      | construction | proposed   | bothw |
+            | primary      |              |            | x     |
+            | construction |              |            |       |
+            | proposed     |              |            |       |
+            | proposed     |              | secondary  |       |
+            | primary      |          yes |            |       |
+            | primary      |              | yes        | x     |
+            | tertiary     |              | secondary  | x     |
+            | primary      |           no |            | x     |
+            | primary      |     widening |            | x     |
+            | primary      |        minor |            | x     |
