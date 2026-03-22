@@ -61,7 +61,7 @@ void LengthLimitedCoordinateAccumulator::update(const NodeID from_node,
 
 // ---------------------------------------------------------------------------------
 SelectRoadByNameOnlyChoiceAndStraightness::SelectRoadByNameOnlyChoiceAndStraightness(
-    const NameID desired_name_id, const bool requires_entry)
+    const StringViewID desired_name_id, const bool requires_entry)
     : desired_name_id(desired_name_id), requires_entry(requires_entry)
 {
 }
@@ -89,7 +89,7 @@ std::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
             if (desired_name_id !=
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
-                    .name_id)
+                    .string_view_id)
                 result_score += 180;
 
             return result_score + angularDeviation(road.angle, STRAIGHT_ANGLE);
@@ -109,7 +109,7 @@ std::optional<EdgeID> SelectRoadByNameOnlyChoiceAndStraightness::operator()(
 
 // ---------------------------------------------------------------------------------
 SelectStraightmostRoadByNameAndOnlyChoice::SelectStraightmostRoadByNameAndOnlyChoice(
-    const NameID desired_name_id,
+    const StringViewID desired_name_id,
     const double initial_bearing,
     const bool requires_entry,
     const bool stop_on_ambiguous_turns)
@@ -144,7 +144,7 @@ std::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
             if (desired_name_id !=
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
-                    .name_id)
+                    .string_view_id)
                 result_score += 180;
 
             return result_score + angularDeviation(road.angle, STRAIGHT_ANGLE);
@@ -160,7 +160,7 @@ std::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
         {
             return node_data_container
                        .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
-                       .name_id == desired_name_id;
+                       .string_view_id == desired_name_id;
         });
     if (count_desired_name > 2)
         return {};
@@ -204,7 +204,7 @@ std::optional<EdgeID> SelectStraightmostRoadByNameAndOnlyChoice::operator()(
                                    //  and the outgoing edge
         node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(min_element->eid).annotation_data)
-                .name_id == desired_name_id &&
+                .string_view_id == desired_name_id &&
         angularDeviation(min_element->angle, STRAIGHT_ANGLE) < 100; // don't do crazy turns
 
     // do not allow major turns in the road, if other similar turns are present
