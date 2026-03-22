@@ -263,8 +263,14 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     bool HasLaneData(const EdgeID /*id*/) const override { return false; }
     StringViewID GetNameIndex(const NodeID /*nodeID*/) const override { return EMPTY_STRINGVIEWID; }
-    std::string_view GetNameForID(const StringViewID /*id*/) const override { return std::string_view{}; }
-    std::string_view GetRefForID(const StringViewID /*id*/) const override { return std::string_view{}; }
+    std::string_view GetNameForID(const StringViewID /*id*/) const override
+    {
+        return std::string_view{};
+    }
+    std::string_view GetRefForID(const StringViewID /*id*/) const override
+    {
+        return std::string_view{};
+    }
     std::string_view GetPronunciationForID(const StringViewID /*id*/) const override
     {
         return std::string_view{};

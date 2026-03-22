@@ -56,7 +56,8 @@ StringTable::IndexedData PrepareStringTableData(std::vector<std::string> &data, 
     }
     name_offsets.push_back(name_char_data.size());
 
-    return StringTable::IndexedData(name_offsets.begin(), name_offsets.end(), name_char_data.begin());
+    return StringTable::IndexedData(
+        name_offsets.begin(), name_offsets.end(), name_char_data.begin());
 }
 
 BOOST_AUTO_TEST_CASE(check_string_table_fill)

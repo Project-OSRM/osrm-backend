@@ -1,8 +1,8 @@
 #include "extractor/intersection/mergable_road_detector.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/intersection/node_based_graph_walker.hpp"
-#include "extractor/string_table.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/suffix_table.hpp"
 #include "guidance/constants.hpp"
 
@@ -38,10 +38,10 @@ inline auto makeCheckRoadForName(const StringViewID name_id,
         const auto in_name_empty = string_table.GetNameForID(name_id).empty();
         if (in_name_empty || road_name_empty)
             return true;
-        const auto requires_announcement =
-            util::guidance::requiresNameAnnounced(
-                name_id, road_name_id, string_table, suffix_table) ||
-            util::guidance::requiresNameAnnounced(road_name_id, name_id, string_table, suffix_table);
+        const auto requires_announcement = util::guidance::requiresNameAnnounced(
+                                               name_id, road_name_id, string_table, suffix_table) ||
+                                           util::guidance::requiresNameAnnounced(
+                                               road_name_id, name_id, string_table, suffix_table);
 
         return requires_announcement;
     };

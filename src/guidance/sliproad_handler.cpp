@@ -509,7 +509,7 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
             {
                 return util::guidance::requiresNameAnnounced(road_name_id,                  //
                                                              candidate_data.string_view_id, //
-                                                             string_table,                    //
+                                                             string_table,                  //
                                                              street_name_suffix_table);     //
             };
 

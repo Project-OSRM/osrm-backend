@@ -17,7 +17,8 @@ bool HaveIdenticalNames(const StringViewID lhs,
 
     // symmetrical check for announcements
     return non_empty &&
-           !util::guidance::requiresNameAnnounced(lhs, rhs, string_table, street_name_suffix_table) &&
+           !util::guidance::requiresNameAnnounced(
+               lhs, rhs, string_table, street_name_suffix_table) &&
            !util::guidance::requiresNameAnnounced(rhs, lhs, string_table, street_name_suffix_table);
 }
 

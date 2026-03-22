@@ -462,7 +462,8 @@ void readRawNBGraph(const std::filesystem::path &path,
     storage::serialization::read(reader, "/extractor/edges", edge_list);
 }
 
-template <typename StringTableT> void readNames(const std::filesystem::path &path, StringTableT &table)
+template <typename StringTableT>
+void readNames(const std::filesystem::path &path, StringTableT &table)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};

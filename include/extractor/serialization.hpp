@@ -5,12 +5,12 @@
 #include "extractor/datasources.hpp"
 #include "extractor/intersection_bearings_container.hpp"
 #include "extractor/maneuver_override.hpp"
-#include "extractor/string_table.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/segment_data_container.hpp"
+#include "extractor/string_table.hpp"
 
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"

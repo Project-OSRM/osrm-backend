@@ -14,9 +14,9 @@
 #include "extractor/edge_based_node.hpp"
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/maneuver_override.hpp"
-#include "extractor/string_table.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/travel_mode.hpp"
 
 #include "guidance/turn_bearing.hpp"
@@ -69,8 +69,8 @@ inline auto make_string_table_view(const SharedDataIndex &index, const std::stri
 {
     auto blocks = make_vector_view<extractor::StringTableView::IndexedData::BlockReference>(
         index, name + "/blocks");
-    auto values =
-        make_vector_view<extractor::StringTableView::IndexedData::ValueType>(index, name + "/values");
+    auto values = make_vector_view<extractor::StringTableView::IndexedData::ValueType>(
+        index, name + "/values");
 
     extractor::StringTableView::IndexedData index_data_view{blocks, values};
     return extractor::StringTableView{index_data_view};

@@ -10,12 +10,12 @@
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
 #include "extractor/maneuver_override_relation_parser.hpp"
-#include "extractor/string_table.hpp"
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/node_restriction_map.hpp"
 #include "extractor/restriction_graph.hpp"
 #include "extractor/restriction_parser.hpp"
 #include "extractor/scripting_environment.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/turn_path_filter.hpp"
 #include "extractor/way_restriction_map.hpp"
 

@@ -3,8 +3,8 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/intersection/intersection_view.hpp"
-#include "extractor/string_table.hpp"
 #include "extractor/node_restriction_map.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/suffix_table.hpp"
 
 #include "guidance/driveway_handler.hpp"
