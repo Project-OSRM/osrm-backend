@@ -9,6 +9,7 @@ TrafficSignal = require("lib/traffic_signal")
 find_access_tag = require("lib/access").find_access_tag
 limit = require("lib/maxspeed").limit
 Measure = require("lib/measure")
+country_speeds = require("lib/country_speeds")
 
 function setup()
   local default_speed = 15
@@ -226,7 +227,10 @@ function setup()
       'construction',
       'proposed',
       'motorroad'
-    }
+    },
+
+    profile = 'bicycle',
+    uselocationtags = Set { }
   }
 end
 
@@ -325,6 +329,10 @@ function handle_bicycle_tags(profile,way,result,data)
   data.foot_backward = way:get_value_by_key("foot:backward")
   data.bicycle = way:get_value_by_key("bicycle")
 
+  if profile.uselocationtags and profile.uselocationtags.countryspeeds then
+    data.location = country_speeds.getcountrytag(way)
+  end
+
   speed_handler(profile,way,result,data)
 
   oneway_handler(profile,way,result,data)
@@ -357,6 +365,20 @@ end
 function speed_handler(profile,way,result,data)
 
   data.way_type_allows_pushing = false
+
+  -- Check country-specific access rules before any speed assignments
+  local country_speed = nil
+  if profile.uselocationtags and profile.uselocationtags.countryspeeds and data.highway then
+    local extra = country_speeds.getAccessProfile(data, profile.profile)
+    if extra and extra.highway then
+      local cspeed = extra.highway[data.highway]
+      if cspeed == -1 then
+        return false  -- this highway type is blocked in this country
+      elseif cspeed then
+        country_speed = cspeed  -- will be used if bicycle_speeds doesn't cover this highway
+      end
+    end
+  end
 
   -- speed
   local bridge_speed = profile.bridge_speeds[data.bridge]
@@ -398,6 +420,11 @@ function speed_handler(profile,way,result,data)
     -- parking areas
     result.forward_speed = profile.amenity_speeds[data.amenity]
     result.backward_speed = profile.amenity_speeds[data.amenity]
+    data.way_type_allows_pushing = true
+  elseif country_speed then
+    -- Country data provides access for this highway type (e.g. trunk in most countries)
+    result.forward_speed = country_speed
+    result.backward_speed = country_speed
     data.way_type_allows_pushing = true
   elseif profile.bicycle_speeds[data.highway] then
     -- regular ways

@@ -588,3 +588,26 @@ There are a few helper functions defined in the global scope that profiles can u
 - `trimLaneString`
 - `applyAccessTokens`
 - `canonicalizeStringList`
+
+### Country-specific access rules
+
+Some countries have different access rules for cyclists and pedestrians, particularly regarding trunk roads. See the [OSM access restrictions wiki](https://wiki.openstreetmap.org/wiki/OSM_tags_for_routing/Access_restrictions) for details.
+
+The `bicycle` and `foot` profiles support per-country highway access tables via the `uselocationtags` mechanism. To enable:
+
+```lua
+profile.uselocationtags.countryspeeds = true
+```
+
+Country-specific location data (GeoJSON polygons with ISO 3166-1 alpha-3 codes) must be provided to `osrm-extract`:
+
+```
+osrm-extract --profile profiles/bicycle.lua --location-dependent-data data/countries.geojson map.osm.pbf
+```
+
+The GeoJSON features must have one of these properties: `iso_a3_eh`, `iso_a3`, `ISO_A3`, `ISO3_CODE`, or `name_en`.
+
+When `countryspeeds` is enabled:
+- The `bicycle` profile allows trunk/trunk_link access globally (Worldwide default), but blocks it in countries where it is prohibited (e.g. Austria, Belgium, Switzerland, Denmark, Finland, France, Hungary, Slovakia)
+- The `foot` profile similarly allows trunk/trunk_link globally but blocks it in the same set of countries
+- If no location data is provided or a way falls outside all country polygons, the "Worldwide" defaults apply (trunk accessible for both profiles)
