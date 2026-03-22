@@ -2,6 +2,7 @@
 
 #include "util/exception.hpp"
 #include "util/geojson_validation.hpp"
+#include "util/log.hpp"
 
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
@@ -40,6 +41,30 @@ LocationDependentData::LocationDependentData(const std::vector<std::filesystem::
     rtree = rtree_t(bounding_boxes);
     util::Log() << "Parsed " << properties.size() << " location-dependent features with "
                 << polygons.size() << " GeoJSON polygons";
+
+    // Warn about overlapping polygons: sample each polygon's bbox centroid.
+    // If multiple polygons contain the same point the input data is ambiguous;
+    // FindByKey returns the first match (GIGO — caller's responsibility).
+    std::set<std::pair<std::size_t, std::size_t>> warned_pairs;
+    for (const auto &entry : bounding_boxes)
+    {
+        const auto &bbox = entry.first;
+        const point_t sample{(bbox.min_corner().x() + bbox.max_corner().x()) / 2.0,
+                             (bbox.min_corner().y() + bbox.max_corner().y()) / 2.0};
+        const auto matches = GetPropertyIndexes(sample);
+        if (matches.size() > 1)
+        {
+            const auto key =
+                std::make_pair(std::min(matches[0], matches[1]), std::max(matches[0], matches[1]));
+            if (warned_pairs.insert(key).second)
+            {
+                util::Log(logWARNING)
+                    << "Overlapping location-dependent polygons detected near ("
+                    << sample.x() << ", " << sample.y()
+                    << ") — first matched polygon properties will be used";
+            }
+        }
+    }
 }
 
 void LocationDependentData::loadLocationDependentData(

@@ -207,8 +207,7 @@ BOOST_AUTO_TEST_CASE(staircase_polygon)
 }
 
 BOOST_AUTO_TEST_CASE(empty_when_no_files)
-{
-    // No files provided → data is empty → has_location_data() equivalent returns true for empty()
+{    // No files provided → data is empty → has_location_data() equivalent returns true for empty()
     LocationDependentData data({});
     BOOST_CHECK(data.empty());
     BOOST_CHECK(data.GetPropertyIndexes(point_t(5, 5)).empty());
@@ -307,6 +306,52 @@ BOOST_AUTO_TEST_CASE(directory_and_file_combined)
 
     auto grc = data.GetPropertyIndexes(point_t(45, 5));
     BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey(grc, "iso_a3_eh")), "GRC");
+}
+
+BOOST_AUTO_TEST_CASE(overlapping_polygons)
+{
+    // Two polygons that overlap in the region [2,2]-[4,4].
+    // A covers [0,0]-[5,5], B covers [2,2]-[7,7].
+    // A point in the overlap area must be inside both polygons;
+    // GetPropertyIndexes returns multiple indexes — GIGO, first wins.
+    LocationDataFixture fixture(R"json({
+"type": "FeatureCollection",
+"features": [
+{
+    "type": "Feature",
+    "properties": { "iso_a3_eh": "AAA", "rank": 1 },
+    "geometry": { "type": "Polygon", "coordinates":
+        [ [ [0,0],[5,0],[5,5],[0,5],[0,0] ] ] }
+},
+{
+    "type": "Feature",
+    "properties": { "iso_a3_eh": "BBB", "rank": 2 },
+    "geometry": { "type": "Polygon", "coordinates":
+        [ [ [2,2],[7,2],[7,7],[2,7],[2,2] ] ] }
+}
+]})json");
+
+    LocationDependentData data({fixture.temporary_file.path});
+    BOOST_CHECK(!data.empty());
+
+    // Point only in A
+    auto a_only = data.GetPropertyIndexes(point_t(1, 1));
+    BOOST_REQUIRE_EQUAL(a_only.size(), 1u);
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey(a_only, "iso_a3_eh")), "AAA");
+
+    // Point only in B
+    auto b_only = data.GetPropertyIndexes(point_t(6, 6));
+    BOOST_REQUIRE_EQUAL(b_only.size(), 1u);
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey(b_only, "iso_a3_eh")), "BBB");
+
+    // Point in the overlap — must be inside both polygons
+    auto overlap = data.GetPropertyIndexes(point_t(3, 3));
+    BOOST_CHECK_GE(overlap.size(), 2u);
+
+    // FindByKey returns the first match — result is one of AAA or BBB,
+    // not a crash or a mixture of the two.
+    const auto winner = boost::get<std::string>(data.FindByKey(overlap, "iso_a3_eh"));
+    BOOST_CHECK(winner == "AAA" || winner == "BBB");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
