@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"iso_a3_eh":"IRL","name_en":"Ireland"},"geometry":{"type":"Polygon","coordinates":[[[10.0,8.0],[20.0,8.0],[20.0,7.0],[10.0,7.0],[10.0,8.0]]]}}]}

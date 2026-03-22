@@ -22,7 +22,18 @@ LocationDependentData::LocationDependentData(const std::vector<std::filesystem::
     std::vector<rtree_t::value_type> bounding_boxes;
     for (const auto &path : file_paths)
     {
-        loadLocationDependentData(path, bounding_boxes);
+        if (std::filesystem::is_directory(path))
+        {
+            for (const auto &entry : std::filesystem::directory_iterator(path))
+            {
+                if (entry.path().extension() == ".geojson")
+                    loadLocationDependentData(entry.path(), bounding_boxes);
+            }
+        }
+        else
+        {
+            loadLocationDependentData(path, bounding_boxes);
+        }
     }
 
     // Create R-tree for bounding boxes of collected polygons

@@ -599,15 +599,26 @@ The `bicycle` and `foot` profiles support per-country highway access tables via 
 profile.uselocationtags.countryspeeds = true
 ```
 
-Country-specific location data (GeoJSON polygons with ISO 3166-1 alpha-3 codes) must be provided to `osrm-extract`:
+Country-specific location data must be supplied as GeoJSON files (one per country) containing polygon features with ISO 3166-1 alpha-3 codes. Organise them in a subdirectory and pass the directory path to `osrm-extract`:
 
 ```
-osrm-extract --profile profiles/bicycle.lua --location-dependent-data data/countries.geojson map.osm.pbf
+osrm-extract --profile profiles/bicycle.lua --location-dependent-data data/countries/ map.osm.pbf
 ```
 
-The GeoJSON features must have one of these properties: `iso_a3_eh`, `iso_a3`, `ISO_A3`, `ISO3_CODE`, or `name_en`.
+You can also pass individual files or mix files and directories by repeating the flag:
+
+```
+osrm-extract --profile profiles/bicycle.lua \
+  --location-dependent-data data/countries/CHE.geojson \
+  --location-dependent-data data/countries/FRA.geojson \
+  map.osm.pbf
+```
+
+Each GeoJSON file must be a `FeatureCollection` whose features carry at least one of: `iso_a3_eh`, `iso_a3`, `ISO_A3`, `ISO3_CODE`, or `name_en`.
 
 When `countryspeeds` is enabled:
-- The `bicycle` profile allows trunk/trunk_link access globally (Worldwide default), but blocks it in countries where it is prohibited (e.g. Austria, Belgium, Switzerland, Denmark, Finland, France, Hungary, Slovakia)
-- The `foot` profile similarly allows trunk/trunk_link globally but blocks it in the same set of countries
-- If no location data is provided or a way falls outside all country polygons, the "Worldwide" defaults apply (trunk accessible for both profiles)
+- The `bicycle` profile blocks trunk/trunk_link in countries where it is prohibited (e.g. Austria, Belgium, Switzerland, Denmark, Finland, France, Hungary, Slovakia) and allows it elsewhere.
+- The `foot` profile applies the same country-specific trunk restrictions.
+- If a way falls outside all loaded country polygons the "Worldwide" defaults apply (trunk accessible for both profiles).
+- **Graceful fallback**: if no `--location-dependent-data` files are provided at all, the profiles behave identically to having `countryspeeds` disabled — existing default rules remain in effect (trunk is **not** accessible for cycling or on foot).
+

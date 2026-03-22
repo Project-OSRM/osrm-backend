@@ -1,5 +1,5 @@
 @routing @foot @countryway
-Feature: Foot - Worldwide access with countryspeeds enabled
+Feature: Foot - Graceful fallback when no country data provided
 
   Background:
     Given the profile file "foot" initialized with
@@ -7,13 +7,13 @@ Feature: Foot - Worldwide access with countryspeeds enabled
     profile.uselocationtags.countryspeeds = true
     """
 
-  Scenario: Foot - Trunk accessible worldwide when countryspeeds enabled
+  Scenario: Foot - Profile defaults apply when no location data files are loaded
     Then routability should be
       | highway       | forw |
       | motorway      |      |
       | motorway_link |      |
-      | trunk         | x    |
-      | trunk_link    | x    |
+      | trunk         |      |
+      | trunk_link    |      |
       | primary       | x    |
       | secondary     | x    |
       | tertiary      | x    |
@@ -24,3 +24,4 @@ Feature: Foot - Worldwide access with countryspeeds enabled
       | path          | x    |
       | cycleway      |      |
       | bridleway     |      |
+

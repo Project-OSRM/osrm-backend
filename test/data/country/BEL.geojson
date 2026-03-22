@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"iso_a3_eh":"BEL","name_en":"Belgium"},"geometry":{"type":"Polygon","coordinates":[[[10.0,9.0],[20.0,9.0],[20.0,8.0],[10.0,8.0],[10.0,9.0]]]}}]}

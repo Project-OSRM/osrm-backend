@@ -368,7 +368,7 @@ function speed_handler(profile,way,result,data)
 
   -- Check country-specific access rules before any speed assignments
   local country_speed = nil
-  if profile.uselocationtags and profile.uselocationtags.countryspeeds and data.highway then
+  if profile.uselocationtags and profile.uselocationtags.countryspeeds and data.location and data.highway then
     local extra = country_speeds.getAccessProfile(data, profile.profile)
     if extra and extra.highway then
       local cspeed = extra.highway[data.highway]

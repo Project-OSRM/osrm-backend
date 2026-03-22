@@ -1,0 +1,1 @@
+{"type":"FeatureCollection","features":[{"type":"Feature","properties":{"iso_a3_eh":"FIN","name_en":"Finland"},"geometry":{"type":"Polygon","coordinates":[[[10.0,10.0],[20.0,10.0],[20.0,9.0],[10.0,9.0],[10.0,10.0]]]}}]}

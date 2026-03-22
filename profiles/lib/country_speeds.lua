@@ -10,8 +10,13 @@ local country_speeds = {}
 
 -- Read the ISO alpha-3 country code from the way's location tags.
 -- Tries multiple common GeoJSON property names.
--- Returns the ISO code if known, or 'Worldwide' as fallback.
+-- Returns the ISO code or 'Worldwide' if files are loaded but the way is
+-- outside all known polygons.  Returns nil when no location data files were
+-- provided at all, signalling that profile defaults should be used instead.
 function country_speeds.getcountrytag(way)
+  if not way:has_location_data() then
+    return nil
+  end
   local location = way:get_location_tag('iso_a3_eh')
   if not location then location = way:get_location_tag('iso_a3') end
   if not location then location = way:get_location_tag('ISO_A3') end
@@ -48,7 +53,7 @@ function country_speeds.wayspeed(profile, way, result, data)
 
   local key, value, speed
 
-  if profile.uselocationtags and profile.uselocationtags.countryspeeds then
+  if profile.uselocationtags and profile.uselocationtags.countryspeeds and data.location then
     local extra = country_speeds.getAccessProfile(data, profile.profile)
     if extra then
       key, value, speed = Tags.get_constant_by_key_value(way, extra)

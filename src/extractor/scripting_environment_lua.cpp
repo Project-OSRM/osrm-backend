@@ -289,7 +289,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             const auto &nodes = way.nodes();
             const auto &location = nodes.back().location();
             return get_location_tag(context, location, key);
-        });
+        },
+        "has_location_data",
+        [&context](const osmium::Way &) -> bool
+        { return !context.location_dependent_data.empty(); });
 
     context.state.new_usertype<osmium::Node>(
         "Node",

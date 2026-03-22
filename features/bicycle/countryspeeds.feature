@@ -2,7 +2,7 @@
 Feature: Bicycle - Country-specific highway access
 
   Background:
-    Given the extract extra arguments "--location-dependent-data test/data/countrytest.geojson"
+    Given the extract extra arguments "--location-dependent-data test/data/country"
     And the partition extra arguments "--threads 1"
     And the customize extra arguments "--threads 1"
     And the profile file "bicycle" initialized with
@@ -52,3 +52,19 @@ Feature: Bicycle - Country-specific highway access
       | waypoints | route | status |
       | a,b       | ab,ab | 200    |
       | b,c       | bc,bc | 200    |
+
+  Scenario: Bicycle - Trunk accessible worldwide when outside all country polygons
+
+    And the node locations
+      | node | lat  | lon  |
+      | a    | 11.0 | 5.0  |
+      | b    | 11.0 | 15.0 |
+
+    And the ways
+      | nodes | highway |
+      | ab    | trunk   |
+
+    When I route I should get
+      | waypoints | route | status |
+      | a,b       | ab,ab | 200    |
+
