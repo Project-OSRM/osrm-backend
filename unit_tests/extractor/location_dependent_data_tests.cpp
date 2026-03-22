@@ -15,6 +15,16 @@ using namespace osrm;
 using namespace osrm::extractor;
 using point_t = LocationDependentData::point_t;
 
+static const std::string SIMPLE_BOX_JSON = R"json({
+"type": "FeatureCollection",
+"features": [
+{
+    "type": "Feature",
+    "properties": { "iso_a3_eh": "CHE", "answer": 42 },
+    "geometry": { "type": "Polygon", "coordinates": [ [ [0,0],[10,0],[10,10],[0,10],[0,0] ] ] }
+}
+]})json";
+
 struct LocationDataFixture
 {
     LocationDataFixture(const std::string &json)
@@ -24,6 +34,19 @@ struct LocationDataFixture
     }
 
     TemporaryFile temporary_file;
+};
+
+// Helper: create a temporary directory that is removed on destruction.
+struct TemporaryDirectory
+{
+    TemporaryDirectory()
+        : path(std::filesystem::temp_directory_path() / random_string(8))
+    {
+        std::filesystem::create_directory(path);
+    }
+    ~TemporaryDirectory() { std::filesystem::remove_all(path); }
+
+    std::filesystem::path path;
 };
 
 BOOST_AUTO_TEST_CASE(polygon_tests)
@@ -183,4 +206,108 @@ BOOST_AUTO_TEST_CASE(staircase_polygon)
     BOOST_CHECK(data.GetPropertyIndexes(point_t(3.5, 2)).empty());
 }
 
+BOOST_AUTO_TEST_CASE(empty_when_no_files)
+{
+    // No files provided → data is empty → has_location_data() equivalent returns true for empty()
+    LocationDependentData data({});
+    BOOST_CHECK(data.empty());
+    BOOST_CHECK(data.GetPropertyIndexes(point_t(5, 5)).empty());
+}
+
+BOOST_AUTO_TEST_CASE(not_empty_when_file_loaded)
+{
+    LocationDataFixture fixture(SIMPLE_BOX_JSON);
+    LocationDependentData data({fixture.temporary_file.path});
+    BOOST_CHECK(!data.empty());
+}
+
+BOOST_AUTO_TEST_CASE(directory_loading)
+{
+    // Write two GeoJSON files into a temp directory: CHE (box [0,0]-[10,10])
+    // and FRA (box [20,0]-[30,10]).  Pass the directory to the constructor.
+    TemporaryDirectory dir;
+
+    auto write = [&](const std::string &filename, const std::string &iso, double x0, double x1)
+    {
+        std::ofstream f(dir.path / filename);
+        f << R"json({"type":"FeatureCollection","features":[{"type":"Feature",)json"
+          << R"json("properties":{"iso_a3_eh":")json" << iso << R"json("},)json"
+          << R"json("geometry":{"type":"Polygon","coordinates":[[[)json"
+          << x0 << ",0],[" << x1 << ",0],[" << x1 << ",10],[" << x0 << ",10],[" << x0
+          << R"json(,0]]]}},)json"
+          << R"json("type":"Feature"]})json";
+        // well-formed GeoJSON via explicit construction below
+        f.close();
+
+        // Overwrite with properly-formed GeoJSON
+        std::ofstream g(dir.path / filename);
+        g << "{\"type\":\"FeatureCollection\",\"features\":["
+          << "{\"type\":\"Feature\","
+          << "\"properties\":{\"iso_a3_eh\":\"" << iso << "\"},"
+          << "\"geometry\":{\"type\":\"Polygon\","
+          << "\"coordinates\":[[[" << x0 << ",0],[" << x1 << ",0],["
+          << x1 << ",10],[" << x0 << ",10],[" << x0 << ",0]]]}}"
+          << "]}";
+    };
+
+    write("CHE.geojson", "CHE", 0, 10);
+    write("FRA.geojson", "FRA", 20, 30);
+
+    // Also write a non-geojson file that must be ignored
+    { std::ofstream f(dir.path / "README.txt"); f << "ignore me"; }
+
+    LocationDependentData data({dir.path});
+
+    BOOST_CHECK(!data.empty());
+
+    // Point inside CHE polygon
+    auto che_indexes = data.GetPropertyIndexes(point_t(5, 5));
+    BOOST_CHECK(!che_indexes.empty());
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey(che_indexes, "iso_a3_eh")), "CHE");
+
+    // Point inside FRA polygon
+    auto fra_indexes = data.GetPropertyIndexes(point_t(25, 5));
+    BOOST_CHECK(!fra_indexes.empty());
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey(fra_indexes, "iso_a3_eh")), "FRA");
+
+    // Point between the two polygons — outside both
+    BOOST_CHECK(data.GetPropertyIndexes(point_t(15, 5)).empty());
+}
+
+BOOST_AUTO_TEST_CASE(directory_and_file_combined)
+{
+    // Pass a directory (CHE) plus an individual file (GRC) in the same call.
+    TemporaryDirectory dir;
+
+    auto write_file = [](const std::filesystem::path &path,
+                         const std::string &iso,
+                         double x0,
+                         double x1)
+    {
+        std::ofstream f(path);
+        f << "{\"type\":\"FeatureCollection\",\"features\":["
+          << "{\"type\":\"Feature\","
+          << "\"properties\":{\"iso_a3_eh\":\"" << iso << "\"},"
+          << "\"geometry\":{\"type\":\"Polygon\","
+          << "\"coordinates\":[[[" << x0 << ",0],[" << x1 << ",0],["
+          << x1 << ",10],[" << x0 << ",10],[" << x0 << ",0]]]}}"
+          << "]}";
+    };
+
+    write_file(dir.path / "CHE.geojson", "CHE", 0, 10);
+
+    TemporaryFile grc_file;
+    write_file(grc_file.path, "GRC", 40, 50);
+
+    LocationDependentData data({dir.path, grc_file.path});
+
+    BOOST_CHECK(!data.empty());
+    auto che = data.GetPropertyIndexes(point_t(5, 5));
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey(che, "iso_a3_eh")), "CHE");
+
+    auto grc = data.GetPropertyIndexes(point_t(45, 5));
+    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey(grc, "iso_a3_eh")), "GRC");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+
