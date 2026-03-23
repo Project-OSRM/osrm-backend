@@ -45,6 +45,11 @@ function setup()
       'forestry',
       'private',
       'delivery',
+      -- When a way is tagged with `foot=use_sidepath` a parallel way suitable
+      -- for pedestrians is mapped and must be used instead (by law in some
+      -- countries). For purposes of routing pedestrians, this value should be
+      -- treated as 'no access for pedestrians'.
+      'use_sidepath',
     },
 
     restricted_access_tag_list = Set { },
