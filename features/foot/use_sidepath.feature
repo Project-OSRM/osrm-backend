@@ -25,3 +25,21 @@ Feature: Foot - foot=use_sidepath access
         When I route I should get
             | from | to | route               |
             | a    | b  | Connector,Connector |
+
+    Scenario: Foot - routing avoids road when sidewalk is mapped as a separate way
+        Given the node map
+            """
+            a b
+            c d
+            """
+
+        And the ways
+            | nodes | highway | sidewalk:right | name      |
+            | ab    | primary | separate       | Main Road |
+            | cd    | footway |                | Sidewalk  |
+            | ac    | footway |                | Connector |
+            | bd    | footway |                | Connector |
+
+        When I route I should get
+            | from | to | route               |
+            | a    | b  | Connector,Connector |

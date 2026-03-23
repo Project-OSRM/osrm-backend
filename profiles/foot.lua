@@ -175,6 +175,29 @@ function process_node(profile, node, result)
   end
 end
 
+-- Block ways where the sidewalk is mapped as a separate parallel way.
+-- Tags like `sidewalk=separate`, `sidewalk:both=separate`, or
+-- `sidewalk:left/right=separate` indicate that the pedestrian path is
+-- already captured by a distinct OSM way, so routing along this
+-- carriageway would duplicate it. Explicit `foot=yes/permissive/designated`
+-- can still override this inference.
+local function handle_sidewalk_separate(profile, way, result, data)
+  -- skip if foot access was explicitly granted
+  if data.forward_access and profile.access_tag_whitelist[data.forward_access] then return end
+  if data.backward_access and profile.access_tag_whitelist[data.backward_access] then return end
+
+  local sidewalk = way:get_value_by_key('sidewalk')
+  local sidewalk_both = way:get_value_by_key('sidewalk:both')
+  local sidewalk_left = way:get_value_by_key('sidewalk:left')
+  local sidewalk_right = way:get_value_by_key('sidewalk:right')
+
+  if sidewalk == 'separate' or sidewalk_both == 'separate'
+      or sidewalk_left == 'separate' or sidewalk_right == 'separate' then
+    result.forward_mode = mode.inaccessible
+    result.backward_mode = mode.inaccessible
+  end
+end
+
 -- main entry point for processsing a way
 function process_way(profile, way, result)
   -- the intial filtering of ways based on presence of tags
@@ -223,6 +246,10 @@ function process_way(profile, way, result)
     -- determine access status by checking our hierarchy of
     -- access tags, e.g: motorcar, motor_vehicle, vehicle
     WayHandlers.access,
+
+    -- block ways whose sidewalk is separately mapped (sidewalk:*=separate),
+    -- unless foot access is explicitly whitelisted
+    handle_sidewalk_separate,
 
     -- check whether forward/backward directons are routable
     WayHandlers.oneway,
