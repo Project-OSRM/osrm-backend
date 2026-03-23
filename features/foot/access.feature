@@ -97,6 +97,13 @@ Feature: Foot - Access tags on ways
             | primary     | yes        | use_sidepath |       |
             | primary     | permissive | use_sidepath |       |
 
+    Scenario: Foot - explicit foot access overrides sidewalk:*=separate inference
+        Then routability should be
+            | highway | foot        | sidewalk:right | bothw |
+            | primary | destination | separate       | x     |
+            | primary | yes         | separate       | x     |
+            | primary |             | separate       |       |
+
     Scenario: Foot - Ignore access tags for other modes
         Then routability should be
             | highway  | boat | motor_vehicle | moped | bothw |

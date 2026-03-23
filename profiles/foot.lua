@@ -182,19 +182,27 @@ end
 -- carriageway would duplicate it. Explicit `foot=yes/permissive/designated`
 -- can still override this inference.
 local function handle_sidewalk_separate(profile, way, result, data)
-  -- skip if foot access was explicitly granted
-  if data.forward_access and profile.access_tag_whitelist[data.forward_access] then return end
-  if data.backward_access and profile.access_tag_whitelist[data.backward_access] then return end
-
   local sidewalk = way:get_value_by_key('sidewalk')
   local sidewalk_both = way:get_value_by_key('sidewalk:both')
   local sidewalk_left = way:get_value_by_key('sidewalk:left')
   local sidewalk_right = way:get_value_by_key('sidewalk:right')
 
-  if sidewalk == 'separate' or sidewalk_both == 'separate'
-      or sidewalk_left == 'separate' or sidewalk_right == 'separate' then
+  if sidewalk ~= 'separate' and sidewalk_both ~= 'separate'
+      and sidewalk_left ~= 'separate' and sidewalk_right ~= 'separate' then
+    return
+  end
+
+  -- An explicit non-blacklisted foot access tag (e.g. foot=yes/permissive/destination)
+  -- overrides the sidewalk inference for each direction independently.
+  if not (data.forward_access and not profile.access_tag_blacklist[data.forward_access]) then
     result.forward_mode = mode.inaccessible
+  end
+  if not (data.backward_access and not profile.access_tag_blacklist[data.backward_access]) then
     result.backward_mode = mode.inaccessible
+  end
+
+  if result.forward_mode == mode.inaccessible and result.backward_mode == mode.inaccessible then
+    return false
   end
 end
 
