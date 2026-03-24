@@ -94,7 +94,7 @@ class RasterSource
     const float xstep;
     const float ystep;
 
-    float CalcSize(int min, int max, std::size_t count) const;
+    static float CalcSize(int min, int max, std::size_t count);
 
   public:
     RasterGrid raster_data;

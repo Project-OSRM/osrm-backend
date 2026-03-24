@@ -111,7 +111,7 @@ struct RouteStep
 
 inline void RouteStep::Invalidate()
 {
-    name_id = EMPTY_NAMEID;
+    name_id = EMPTY_STRINGVIEWID;
     name.clear();
     ref.clear();
     pronunciation.clear();

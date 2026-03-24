@@ -46,6 +46,21 @@ When(/^I request nearest I should get$/, function (table, callback) {
                   } else {
                     row[key] = util.format('%s [%d,%d]', row[key], outNode.lat, outNode.lon);
                   }
+                } else if (key === 'nodes') {
+                  const nodeNames = row.nodes.split(',').map(n => n.trim()).filter(n => n.length > 0);
+                  if (nodeNames.length !== 2)
+                    throw new Error(util.format('*** nodes column must be "from,to", got "%s"', row.nodes));
+                  const fromNode = this.findNodeByName(nodeNames[0]);
+                  const toNode = this.findNodeByName(nodeNames[1]);
+                  if (!fromNode) throw new Error(util.format('*** unknown from-node "%s"', nodeNames[0]));
+                  if (!toNode) throw new Error(util.format('*** unknown to-node "%s"', nodeNames[1]));
+                  const actualNodes = json.waypoints[0].nodes;
+                  if (actualNodes && actualNodes[0] === fromNode.id && actualNodes[1] === toNode.id) {
+                    got.nodes = row.nodes;
+                  } else {
+                    row.nodes = util.format('%s [got: %s,%s]', row.nodes,
+                      actualNodes ? actualNodes[0] : '?', actualNodes ? actualNodes[1] : '?');
+                  }
                 }
               });
             }
