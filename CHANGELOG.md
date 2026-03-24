@@ -1,10 +1,16 @@
 # Unreleased
   - Changes from 6.0.0
     - Routing:
+      - FIXED: Nearest API returning node ID 0 when snapping to the start of a one-way road [#7047](https://github.com/Project-OSRM/osrm-backend/issues/7047)
+      - FIXED: Prevent MLD route queries from updating removed heap nodes, avoiding `osrm-routed` segfaults/asserts [#7203](https://github.com/Project-OSRM/osrm-backend/issues/7203)
       - FIXED: Crash when route starts or ends at `type=manoeuvre` relation via node [#7287](https://github.com/Project-OSRM/osrm-backend/issues/7287)
     - Extraction:
       - ADDED: Emit warning when ways reference nodes not present in input data [#1596](https://github.com/Project-OSRM/osrm-backend/issues/1596)
+      - FIXED: Compilation error in raster_source [#7422](https://github.com/Project-OSRM/osrm-backend/issues/7422)
     - Profiles:
+      - FIXED: Exclude `highway=road` from foot and bicycle profiles since it is an OSM error marker with unknown classification [#7039](https://github.com/Project-OSRM/osrm-backend/issues/7039)
+      - FIXED: Roads with a real `highway=*` type and an additional `proposed=*` tag (e.g. a planned upgrade) are now routed correctly instead of being silently pruned [#7413](https://github.com/Project-OSRM/osrm-backend/issues/7413)
+      - ADDED: Vehicle-specific maximum speed profiles with configurable upper bounds (e.g., 87 km/h for trucks) [#6979](https://github.com/Project-OSRM/osrm-backend/issues/6979)
       - ADDED: Make `max_collapse_distance` configurable via Lua profiles to preserve short road crossings in pedestrian routing [#6171](https://github.com/Project-OSRM/osrm-backend/issues/6171)
       - ADDED: Support `maxweightrating` tag as an alternative to `maxweight` for weight restrictions in car profile [#7325](https://github.com/Project-OSRM/osrm-backend/issues/7325)
       - CHANGED: Apply configurable penalty (default 60s) to gates in car profile [#6757](https://github.com/Project-OSRM/osrm-backend/issues/6757)

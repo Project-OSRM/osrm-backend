@@ -2,7 +2,6 @@
 #include "util/bearing.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/numeric/conversion/cast.hpp>
 
 using osrm::util::angularDeviation;
 

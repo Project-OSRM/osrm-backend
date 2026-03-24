@@ -148,17 +148,17 @@ class BaseDataFacade
     virtual extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID lane_description_id) const = 0;
 
-    virtual NameID GetNameIndex(const NodeID edge_based_node_id) const = 0;
+    virtual StringViewID GetNameIndex(const NodeID edge_based_node_id) const = 0;
 
-    virtual std::string_view GetNameForID(const NameID id) const = 0;
+    virtual std::string_view GetNameForID(const StringViewID id) const = 0;
 
-    virtual std::string_view GetRefForID(const NameID id) const = 0;
+    virtual std::string_view GetRefForID(const StringViewID id) const = 0;
 
-    virtual std::string_view GetPronunciationForID(const NameID id) const = 0;
+    virtual std::string_view GetPronunciationForID(const StringViewID id) const = 0;
 
-    virtual std::string_view GetDestinationsForID(const NameID id) const = 0;
+    virtual std::string_view GetDestinationsForID(const StringViewID id) const = 0;
 
-    virtual std::string_view GetExitsForID(const NameID id) const = 0;
+    virtual std::string_view GetExitsForID(const StringViewID id) const = 0;
 
     virtual bool GetContinueStraightDefault() const = 0;
 

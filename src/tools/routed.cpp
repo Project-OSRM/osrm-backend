@@ -13,7 +13,6 @@
 
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/any.hpp>
-#include <boost/optional/optional_io.hpp>
 #include <boost/program_options.hpp>
 
 #include <cstdlib>

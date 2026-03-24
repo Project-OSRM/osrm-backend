@@ -1320,6 +1320,10 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
         turn.weight = turn.duration;
         break;
     }
+
+    // Cap turn duration to prevent int16_t overflow on storage (duration is always in seconds,
+    // converted to deciseconds at 1/10s resolution, independent of weight_precision).
+    turn.duration = std::max(turn.duration, -from_alias<double>(MAXIMAL_TURN_PENALTY) / 10.0);
 }
 
 void Sol2ScriptingEnvironment::ProcessSegment(ExtractionSegment &segment)

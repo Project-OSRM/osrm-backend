@@ -414,6 +414,12 @@ function WayHandlers.penalties(profile,way,result,data)
   local is_bidirectional = result.forward_mode ~= mode.inaccessible and
                            result.backward_mode ~= mode.inaccessible
 
+  -- Apply penalty for roads with no lane markings (on bidirectional roads)
+  local lane_markings = way:get_value_by_key("lane_markings")
+  if lane_markings == "no" and is_bidirectional then
+    width_penalty = profile.lane_markings_penalty
+  end
+
   if width <= 3 or (lanes <= 1 and is_bidirectional) then
     width_penalty = 0.5
   end
@@ -672,7 +678,12 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   -- http://wiki.openstreetmap.org/wiki/Key:proposed
   -- https://taginfo.openstreetmap.org/keys/proposed#values
   if profile.avoid.proposed and way:get_value_by_key('proposed') then
-    return false
+    -- Only block if the highway itself is 'proposed' (road not yet built).
+    -- A road with a real highway type and a proposed upgrade tag (e.g. highway=tertiary,
+    -- proposed=secondary) is a real, routable road -- the proposed tag is implicitly ignored.
+    if not data.highway or data.highway == 'proposed' then
+      return false
+    end
   end
 
   -- Reversible oneways change direction with low frequency (think twice a day):
@@ -690,6 +701,20 @@ function WayHandlers.blocked_ways(profile,way,result,data)
 
     if way:get_value_by_key("status") == "impassable" then
       return false
+    end
+  end
+end
+
+-- Apply vehicle-specific maximum speed cap
+-- This handler ensures that no derived speed exceeds the vehicle_max_speed
+-- if it is defined in the profile. When vehicle_max_speed is nil, no capping occurs.
+function WayHandlers.vehicle_speed_cap(profile,way,result,data)
+  if profile.vehicle_max_speed then
+    if result.forward_speed and result.forward_speed > 0 then
+      result.forward_speed = math.min(result.forward_speed, profile.vehicle_max_speed)
+    end
+    if result.backward_speed and result.backward_speed > 0 then
+      result.backward_speed = math.min(result.backward_speed, profile.vehicle_max_speed)
     end
   end
 end

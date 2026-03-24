@@ -26,7 +26,7 @@ RoundaboutHandler::RoundaboutHandler(
     const extractor::RestrictionMap &node_restriction_map,
     const extractor::ObstacleMap &obstacle_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
-    const extractor::NameTable &name_table,
+    const extractor::StringTable &string_table,
     const extractor::SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
@@ -35,7 +35,7 @@ RoundaboutHandler::RoundaboutHandler(
                           node_restriction_map,
                           obstacle_nodes,
                           turn_lanes_data,
-                          name_table,
+                          string_table,
                           street_name_suffix_table),
       coordinate_extractor(node_based_graph, compressed_geometries, coordinates)
 {
@@ -229,25 +229,26 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
                     return SPECIAL_EDGEID;
                 }
 
-                const auto &edge_name_empty = name_table.GetNameForID(edge_data.name_id).empty();
+                const auto &edge_name_empty =
+                    string_table.GetNameForID(edge_data.string_view_id).empty();
                 if (!edge_name_empty)
                 {
 
                     const auto announce = [&](unsigned id)
                     {
                         return util::guidance::requiresNameAnnounced(
-                            id, edge_data.name_id, name_table, street_name_suffix_table);
+                            id, edge_data.string_view_id, string_table, street_name_suffix_table);
                     };
 
                     if (std::all_of(begin(roundabout_name_ids), end(roundabout_name_ids), announce))
-                        roundabout_name_ids.insert(edge_data.name_id);
+                        roundabout_name_ids.insert(edge_data.string_view_id);
                 }
                 continue_edge = edge_id;
             }
             else if (!edge.flags.roundabout && !edge.flags.circular)
             {
                 // remember all connected road names
-                connected_names.insert(edge_data.name_id);
+                connected_names.insert(edge_data.string_view_id);
             }
         }
         return continue_edge;
@@ -490,7 +491,7 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                                                                  intersection,
                                                                  node_based_graph,
                                                                  node_data_container,
-                                                                 name_table,
+                                                                 string_table,
                                                                  street_name_suffix_table),
                                                  turn);
                 }

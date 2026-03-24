@@ -82,7 +82,7 @@ class Extractor
         const CompressedEdgeContainer &compressed_edge_container,
         const RestrictionGraph &restriction_graph,
         const std::unordered_set<EdgeID> &segregated_edges,
-        const NameTable &name_table,
+        const StringTable &string_table,
         const std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
         const LaneDescriptionMap &turn_lane_map,
         // for calculating turn penalties
@@ -108,7 +108,7 @@ class Extractor
                               const std::vector<util::Coordinate> &node_coordinates,
                               const CompressedEdgeContainer &compressed_edge_container,
                               const RestrictionGraph &restriction_graph,
-                              const NameTable &name_table,
+                              const StringTable &string_table,
                               LaneDescriptionMap lane_description_map,
                               ScriptingEnvironment &scripting_environment);
 };

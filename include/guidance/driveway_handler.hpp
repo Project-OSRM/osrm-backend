@@ -17,7 +17,7 @@ class DrivewayHandler final : public IntersectionHandler
                     const extractor::RestrictionMap &node_restriction_map,
                     const extractor::ObstacleMap &obstacle_nodes,
                     const extractor::TurnLanesIndexedArray &turn_lanes_data,
-                    const extractor::NameTable &name_table,
+                    const extractor::StringTable &string_table,
                     const extractor::SuffixTable &street_name_suffix_table);
 
     ~DrivewayHandler() override final = default;

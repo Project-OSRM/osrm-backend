@@ -26,7 +26,7 @@ RasterSource::RasterSource(RasterGrid _raster_data,
     BOOST_ASSERT(ystep != 0);
 }
 
-float RasterSource::CalcSize(int min, int max, std::size_t count) const
+float RasterSource::CalcSize(int min, int max, std::size_t count)
 {
     BOOST_ASSERT(count > 0);
     return (max - min) / (static_cast<float>(count) - 1);

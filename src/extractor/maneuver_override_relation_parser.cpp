@@ -1,8 +1,6 @@
 #include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/maneuver_override.hpp"
 
-#include <boost/ref.hpp>
-
 #include <optional>
 #include <osmium/osm.hpp>
 #include <osmium/tags/filter.hpp>

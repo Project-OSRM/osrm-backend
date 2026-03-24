@@ -65,6 +65,13 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary | 15       |                  | 60                | 12 km/h | 48 km/h |
             | primary | 15       | 30               | 60                | 24 km/h | 48 km/h |
 
+    Scenario: Car - Latvia living_street symbolic maxspeed uses 20 km/h
+        Given a grid size of 100 meters
+
+        Then routability should be
+            | highway       | maxspeed          | forw        | backw       |
+            | living_street | LV:living_street  | 16 km/h +-1 | 16 km/h +-1 |
+
     Scenario: Car - Maxspeed should not allow routing on unroutable ways
         Then routability should be
             | highway   | railway | access | maxspeed | maxspeed:forward | maxspeed:backward | bothw |
@@ -128,6 +135,44 @@ OSRM will use 4/5 of the projected free-flow speed.
             | primary |   30     |   1    |        | 24 km/h | 24 km/h | 3.3       | 3.3        |
             | primary |   30     |   2    |        | 24 km/h | 24 km/h | 6.7       | 6.7        |
 
+    Scenario: Car - Roads without lane markings should incur a penalty
+        Then routability should be
+
+            | highway | maxspeed | lane_markings | maxspeed:forward | maxspeed:backward | forw    | backw   | forw_rate | backw_rate |
+            | primary |          |               |                  |                   | 64 km/h | 64 km/h | 18.1      | 18.1       |
+            | primary |          | no            |                  |                   | 64 km/h | 64 km/h | 13.5      | 13.5       |
+            | primary | 60       |               |                  |                   | 48 km/h | 48 km/h | 13.3      | 13.3       |
+            | primary | 60       | no            |                  |                   | 48 km/h | 48 km/h | 10        | 10         |
+            | primary |          | no            | 60               |                   | 48 km/h | 64 km/h | 10        | 13.5       |
+            | primary |          | no            |                  | 60                | 64 km/h | 48 km/h | 13.5      | 10         |
+            | primary | 15       | no            | 60               |                   | 48 km/h | 12 km/h | 10        | 2.5        |
+            | primary | 15       | no            |                  | 60                | 12 km/h | 48 km/h | 2.5       | 10         |
+            | primary | 15       | no            | 30               | 60                | 24 km/h | 48 km/h | 5         | 10         |
+
+    Scenario: Car - Lane markings penalty only applies to bidirectional streets
+        Then routability should be
+            | highway | maxspeed | lane_markings | oneway | forw    | backw   | forw_rate | backw_rate |
+            | primary |   30     | no            | yes    | 24 km/h |         | 6.7       |            |
+            | primary |   30     | no            | -1     |         | 24 km/h |           | 6.7        |
+            | primary |   30     | no            |        | 24 km/h | 24 km/h | 5         | 5          |
+            | primary |   30     |               |        | 24 km/h | 24 km/h | 6.7       | 6.7        |
+
+    Scenario: Car - Narrow streets and lane_markings penalties interaction
+        Then routability should be
+            | highway | maxspeed | width | lane_markings | forw    | backw   | forw_rate | backw_rate |
+            | primary |          |       |               | 64 km/h | 64 km/h | 18.1      | 18.1       |
+            | primary |          | 3     |               | 64 km/h | 64 km/h | 9         | 9          |
+            | primary |          |       | no            | 64 km/h | 64 km/h | 13.5      | 13.5       |
+            | primary |          | 3     | no            | 64 km/h | 64 km/h | 9         | 9          |
+
+    Scenario: Car - Single lane and lane_markings penalties interaction
+        Then routability should be
+            | highway | maxspeed | lanes | lane_markings | forw    | backw   | forw_rate | backw_rate |
+            | primary |          |       |               | 64 km/h | 64 km/h | 18.1      | 18.1       |
+            | primary |          | 1     |               | 64 km/h | 64 km/h | 9         | 9          |
+            | primary |          |       | no            | 64 km/h | 64 km/h | 13.5      | 13.5       |
+            | primary |          | 1     | no            | 64 km/h | 64 km/h | 9         | 9          |
+
     Scenario: Car - Forward/backward maxspeed on reverse oneways
         Then routability should be
             | highway | maxspeed | maxspeed:forward | maxspeed:backward | oneway | forw    | backw   | forw_rate | backw_rate |
@@ -162,3 +207,71 @@ OSRM will use 4/5 of the projected free-flow speed.
             | d    | e  | de,de | 64 km/h |
             | e    | f  | ef,ef | 80 km/h |
             | f    | g  | fg,fg | 96 km/h |
+    Scenario: Car - Vehicle maximum speed caps all derived speeds when set
+        Given the profile file "car" initialized with
+        """
+        profile.vehicle_max_speed = 87
+        """
+
+        Given the node map
+            """
+            a b c d e f
+            """
+
+        And the ways
+            | nodes | highway    | maxspeed |
+            | ab    | motorway   |          |
+            | bc    | trunk      | 120      |
+            | cd    | primary    | 80       |
+            | de    | secondary  | 60       |
+            | ef    | residential|          |
+
+        When I route I should get
+            | from | to | route | speed   |
+            | a    | b  | ab,ab | 87 km/h |
+            | b    | c  | bc,bc | 87 km/h |
+            | c    | d  | cd,cd | 64 km/h |
+            | d    | e  | de,de | 48 km/h |
+            | e    | f  | ef,ef | 25 km/h |
+
+    Scenario: Car - Vehicle maximum speed preserves default behavior when unset
+        Given the profile file "car" initialized with
+        """
+        profile.vehicle_max_speed = nil
+        """
+
+        Given the node map
+            """
+            a b c d e
+            """
+
+        And the ways
+            | nodes | highway   | maxspeed |
+            | ab    | motorway  |          |
+            | bc    | trunk     | 120      |
+            | cd    | primary   | 80       |
+            | de    | secondary | 60       |
+
+        When I route I should get
+            | from | to | route | speed   |
+            | a    | b  | ab,ab | 90 km/h |
+            | b    | c  | bc,bc | 96 km/h |
+            | c    | d  | cd,cd | 64 km/h |
+            | d    | e  | de,de | 48 km/h |
+
+    Scenario: Car - Vehicle maximum speed with forward/backward directions
+        Given the profile file "car" initialized with
+        """
+        profile.vehicle_max_speed = 87
+        """
+
+        Given a grid size of 100 meters
+
+        Then routability should be
+            | highway  | maxspeed | maxspeed:forward | maxspeed:backward | forw       | backw      |
+            | motorway |          |                  |                   | 87 km/h    |            |
+            | trunk    | 120      |                  |                   | 87 km/h +-1| 87 km/h +-1|
+            | primary  | 80       |                  |                   | 64 km/h    | 64 km/h    |
+            | primary  |          | 120              |                   | 87 km/h    | 65 km/h    |
+            | primary  |          |                  | 120               | 65 km/h    | 87 km/h    |
+            | primary  | 15       | 120              |                   | 87 km/h    | 12 km/h    |
