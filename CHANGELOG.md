@@ -1,6 +1,7 @@
 # Unreleased
   - Changes from 6.0.0
     - Routing:
+      - FIXED: Nearest API returning node ID 0 when snapping to the start of a one-way road [#7047](https://github.com/Project-OSRM/osrm-backend/issues/7047)
       - FIXED: Prevent MLD route queries from updating removed heap nodes, avoiding `osrm-routed` segfaults/asserts [#7203](https://github.com/Project-OSRM/osrm-backend/issues/7203)
       - FIXED: Crash when route starts or ends at `type=manoeuvre` relation via node [#7287](https://github.com/Project-OSRM/osrm-backend/issues/7287)
     - Extraction:
