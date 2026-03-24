@@ -47,7 +47,9 @@ When(/^I request nearest I should get$/, function (table, callback) {
                     row[key] = util.format('%s [%d,%d]', row[key], outNode.lat, outNode.lon);
                   }
                 } else if (key === 'nodes') {
-                  const nodeNames = row.nodes.split(',').map(n => n.trim());
+                  const nodeNames = row.nodes.split(',').map(n => n.trim()).filter(n => n.length > 0);
+                  if (nodeNames.length !== 2)
+                    throw new Error(util.format('*** nodes column must be "from,to", got "%s"', row.nodes));
                   const fromNode = this.findNodeByName(nodeNames[0]);
                   const toNode = this.findNodeByName(nodeNames[1]);
                   if (!fromNode) throw new Error(util.format('*** unknown from-node "%s"', nodeNames[0]));
