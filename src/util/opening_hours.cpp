@@ -328,7 +328,7 @@ inline const auto weekday_sequence =
 
 inline const auto weekday_selector =
     x3::rule<struct wdsel_tag, std::vector<oh::WeekdayRange>>{"weekday_selector"} =
-    // holiday, then optional (comma/space + weekdays)
+        // holiday, then optional (comma/space + weekdays)
     (x3::omit[holiday_sequence >> -(x3::char_(", ") >> weekday_sequence)]) |
     // weekdays, then optional (comma/space + holiday)
     (weekday_sequence >> x3::omit[-(x3::char_(", ") >> holiday_sequence)]);
@@ -390,8 +390,8 @@ inline const auto monthday_range = x3::rule<struct mr_tag, oh::MonthdayRange>{"m
     (date_from >> x3::omit[-date_offset] >> x3::lit('+'))[(
         [](auto &ctx) { x3::_val(ctx) = oh::MonthdayRange(oh::Monthday(-1), oh::Monthday{}); })] |
     // single date with optional offset (no '+')
-    (date_from >> x3::omit[-date_offset])[([](auto &ctx)
-               { x3::_val(ctx) = oh::MonthdayRange(x3::_attr(ctx), oh::Monthday{}); })];
+    (date_from >> x3::omit[-date_offset])[(
+        [](auto &ctx) { x3::_val(ctx) = oh::MonthdayRange(x3::_attr(ctx), oh::Monthday{}); })];
 
 inline const auto monthday_selector =
     x3::rule<struct mdsel_tag, std::vector<oh::MonthdayRange>>{"monthday_selector"} =
