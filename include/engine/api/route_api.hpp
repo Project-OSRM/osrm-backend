@@ -199,8 +199,8 @@ class RouteAPI : public BaseAPI
     util::json::Value MakeGeometry(const std::vector<Coordinate> &geometry) const
     {
         util::json::Value json_geometry;
-        auto begin = geometry.begin();
-        auto end = geometry.end();
+        auto begin = geometry.cbegin();
+        auto end = geometry.cend();
         if (parameters.geometries == RouteParameters::GeometriesType::Polyline)
         {
             json_geometry = json::makePolyline<100000>(begin, end);
@@ -753,7 +753,7 @@ class RouteAPI : public BaseAPI
         if (parameters.overview == RouteParameters::OverviewType::ByLegs)
         {
             json_overview_by_legs.reserve(leg_geometries.size());
-            for (const auto& leg_geometry : leg_geometries)
+            for (const auto &leg_geometry : leg_geometries)
             {
                 json_overview_by_legs.emplace_back(MakeGeometry(leg_geometry.locations));
             }
