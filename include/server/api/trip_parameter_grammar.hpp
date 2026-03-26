@@ -6,10 +6,7 @@
 
 #include <boost/spirit/home/x3.hpp>
 
-namespace osrm::server::api
-{
-
-namespace trip_grammar
+namespace osrm::server::api::trip_grammar
 {
 
 namespace x3 = boost::spirit::x3;
@@ -48,7 +45,6 @@ inline const auto root_rule = x3::rule<struct trip_root_tag>{"trip_root"} =
     base_grammar::query_rule > base_grammar::format_rule >
     -('?' > (roundtrip_rule | source_rule | destination_rule | route_grammar::route_options) % '&');
 
-} // namespace trip_grammar
-} // namespace osrm::server::api
+} // namespace osrm::server::api::trip_grammar
 
 #endif

@@ -6,10 +6,7 @@
 
 #include <boost/spirit/home/x3.hpp>
 
-namespace osrm::server::api
-{
-
-namespace match_grammar
+namespace osrm::server::api::match_grammar
 {
 
 namespace x3 = boost::spirit::x3;
@@ -40,7 +37,6 @@ inline const auto root_rule = x3::rule<struct match_root_tag>{"match_root"} =
     base_grammar::query_rule > base_grammar::format_rule >
     -('?' > (timestamps_rule | route_grammar::route_options | gaps_rule | tidy_rule) % '&');
 
-} // namespace match_grammar
-} // namespace osrm::server::api
+} // namespace osrm::server::api::match_grammar
 
 #endif

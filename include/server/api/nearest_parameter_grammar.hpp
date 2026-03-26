@@ -6,10 +6,7 @@
 
 #include <boost/spirit/home/x3.hpp>
 
-namespace osrm::server::api
-{
-
-namespace nearest_grammar
+namespace osrm::server::api::nearest_grammar
 {
 
 namespace x3 = boost::spirit::x3;
@@ -24,7 +21,6 @@ inline const auto root_rule = x3::rule<struct nearest_root_tag>{"nearest_root"} 
     base_grammar::query_rule > base_grammar::format_rule >
     -('?' > (number_rule | base_grammar::base_options) % '&');
 
-} // namespace nearest_grammar
-} // namespace osrm::server::api
+} // namespace osrm::server::api::nearest_grammar
 
 #endif

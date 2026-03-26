@@ -6,10 +6,7 @@
 
 #include <boost/spirit/home/x3.hpp>
 
-namespace osrm::server::api
-{
-
-namespace table_grammar
+namespace osrm::server::api::table_grammar
 {
 
 namespace x3 = boost::spirit::x3;
@@ -88,7 +85,6 @@ inline const auto root_rule = x3::rule<struct table_root_tag>{"table_root"} =
              fallback_coordinate_rule) %
                 '&');
 
-} // namespace table_grammar
-} // namespace osrm::server::api
+} // namespace osrm::server::api::table_grammar
 
 #endif

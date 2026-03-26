@@ -6,10 +6,7 @@
 
 #include <boost/spirit/home/x3.hpp>
 
-namespace osrm::server::api
-{
-
-namespace route_grammar
+namespace osrm::server::api::route_grammar
 {
 
 namespace x3 = boost::spirit::x3;
@@ -112,7 +109,6 @@ inline const auto root_rule = x3::rule<struct route_root_tag>{"route_root"} =
     base_grammar::query_rule > base_grammar::format_rule >
     -('?' > (route_rule | route_options) % '&');
 
-} // namespace route_grammar
-} // namespace osrm::server::api
+} // namespace osrm::server::api::route_grammar
 
 #endif
