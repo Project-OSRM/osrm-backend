@@ -20,14 +20,9 @@ After building and installing the main project (on this repo's root level):
 
 ```bash
 cd example/
+mkdir build && cd build/
 cmake ..
 cmake --build .
-```
-
-#### Program execution
-
-```bash
-cd example/
 ./osrm-example ../test/data/mld/monaco.osrm
 ```
 
