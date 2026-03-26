@@ -137,7 +137,7 @@ inline const auto wday = []()
 
 inline const auto month_sym = []()
 {
-    x3::symbols<unsigned> sym;
+    x3::symbols<unsigned char> sym;
     sym.add("Jan", 1)("Feb", 2)("Mar", 3)("Apr", 4)("May", 5)("Jun", 6)("Jul", 7)("Aug", 8)(
         "Sep", 9)("Oct", 10)("Nov", 11)("Dec", 12);
     return sym;
@@ -328,12 +328,10 @@ inline const auto weekday_sequence =
 
 inline const auto weekday_selector =
     x3::rule<struct wdsel_tag, std::vector<oh::WeekdayRange>>{"weekday_selector"} =
-        // weekdays then optional holiday
-    (weekday_sequence >> x3::omit[-(x3::lit(',') >> holiday_sequence)]) |
-    // holiday, separator, weekdays
-    (x3::omit[holiday_sequence >> x3::lit(',')] >> weekday_sequence) |
-    // holiday alone
-    (x3::omit[holiday_sequence] >> x3::attr(std::vector<oh::WeekdayRange>{}));
+    // holiday, then optional (comma/space + weekdays)
+    (x3::omit[holiday_sequence >> -(x3::char_(", ") >> weekday_sequence)]) |
+    // weekdays, then optional (comma/space + holiday)
+    (weekday_sequence >> x3::omit[-(x3::char_(", ") >> holiday_sequence)]);
 
 // --- Week rules ---
 
@@ -375,20 +373,24 @@ inline const auto date_from = x3::rule<struct df_tag, oh::Monthday>{"date_from"}
     variable_date[([](auto &ctx) { x3::_val(ctx) = oh::Monthday(); })];
 
 inline const auto date_to = x3::rule<struct dt_tag, oh::Monthday>{"date_to"} =
-    date_from |
+    date_from[([](auto &ctx) { x3::_val(ctx) = x3::_attr(ctx); })] |
     daynum[([](auto &ctx)
             { x3::_val(ctx) = oh::Monthday(0, 0, static_cast<char>(x3::_attr(ctx))); })];
 
 inline const auto monthday_range = x3::rule<struct mr_tag, oh::MonthdayRange>{"monthday_range"} =
-    // from-to range: use per-field actions to avoid Monthday+Monthday fusion merge
-    (date_from[([](auto &ctx) { x3::_val(ctx).from = x3::_attr(ctx); })] >>
-     x3::omit[-date_offset] >> '-' >>
-     date_to[([](auto &ctx) { x3::_val(ctx).to = x3::_attr(ctx); })] >> x3::omit[-date_offset]) |
+    // from-to range
+    (date_from >> x3::omit[-date_offset] >> '-' >> date_to >> x3::omit[-date_offset])[(
+        [](auto &ctx)
+        {
+            auto &a = x3::_attr(ctx);
+            x3::_val(ctx).from = fusion::at_c<0>(a);
+            x3::_val(ctx).to = fusion::at_c<1>(a);
+        })] |
     // single date + offset + '+'
     (date_from >> x3::omit[-date_offset] >> x3::lit('+'))[(
         [](auto &ctx) { x3::_val(ctx) = oh::MonthdayRange(oh::Monthday(-1), oh::Monthday{}); })] |
     // single date with optional offset (no '+')
-    date_from[([](auto &ctx)
+    (date_from >> x3::omit[-date_offset])[([](auto &ctx)
                { x3::_val(ctx) = oh::MonthdayRange(x3::_attr(ctx), oh::Monthday{}); })];
 
 inline const auto monthday_selector =
