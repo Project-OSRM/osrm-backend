@@ -1,6 +1,6 @@
 ## Introduction
 
-OSRM can be used as a library (libosrm) via C++ instead of using it through the HTTP interface and `osrm-routed`. This allows for fine-tuning OSRM and has much less overhead. Here is a quick introduction into how to use `libosrm` in the upcoming v5 release.
+OSRM can be used as a library (libosrm) via C++ instead of using it through the HTTP interface and `osrm-routed`. This allows for fine-tuning OSRM and has much less overhead. Here is a quick introduction into how to use `libosrm` in the current version.
 
 Take a look at the example code that lives in the [example directory](https://github.com/Project-OSRM/osrm-backend/tree/master/example). Here is all you ever wanted to know about `libosrm`, that is a short description of what the types do and where to find documentation on it:
 
