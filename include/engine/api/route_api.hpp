@@ -191,9 +191,9 @@ class RouteAPI : public BaseAPI
         std::optional<util::json::Value> json_geometry;
         if (geometry)
         {
-            json_geometry = MakeGeometry(*geometry);
+            return MakeGeometry(*geometry);
         }
-        return json_geometry;
+        return std::nullopt;
     }
 
     util::json::Value MakeGeometry(const std::vector<Coordinate> &geometry) const
@@ -753,9 +753,9 @@ class RouteAPI : public BaseAPI
         if (parameters.overview == RouteParameters::OverviewType::ByLegs)
         {
             json_overview_by_legs.reserve(leg_geometries.size());
-            for (const auto idx : util::irange<std::size_t>(0UL, leg_geometries.size()))
+            for (const auto& leg_geometry : leg_geometries)
             {
-                json_overview_by_legs.emplace_back(MakeGeometry(leg_geometries[idx].locations));
+                json_overview_by_legs.emplace_back(MakeGeometry(leg_geometry.locations));
             }
         }
 
