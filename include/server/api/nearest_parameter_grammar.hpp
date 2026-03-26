@@ -4,38 +4,27 @@
 #include "server/api/base_parameters_grammar.hpp"
 #include "engine/api/nearest_parameters.hpp"
 
-#include <boost/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/home/x3.hpp>
 
 namespace osrm::server::api
 {
 
-namespace
+namespace nearest_grammar
 {
-namespace ph = boost::phoenix;
-namespace qi = boost::spirit::qi;
-} // namespace
 
-template <typename Iterator = std::string::iterator,
-          typename Signature = void(engine::api::NearestParameters &)>
-struct NearestParametersGrammar final : public BaseParametersGrammar<Iterator, Signature>
-{
-    using BaseGrammar = BaseParametersGrammar<Iterator, Signature>;
+namespace x3 = boost::spirit::x3;
 
-    NearestParametersGrammar() : BaseGrammar(root_rule)
-    {
-        nearest_rule = (qi::lit("number=") >
-                        qi::uint_)[ph::bind(&engine::api::NearestParameters::number_of_results,
-                                            qi::_r1) = qi::_1];
+inline const auto number_rule =
+    x3::lit("number=") > x3::uint_[([](auto &ctx) {
+        x3::get<params_tag>(ctx).get().number_of_results = x3::_attr(ctx);
+    })];
 
-        root_rule = BaseGrammar::query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
-                    -('?' > (nearest_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) % '&');
-    }
+// Nearest root rule
+inline const auto root_rule = x3::rule<struct nearest_root_tag>{"nearest_root"} =
+    base_grammar::query_rule > base_grammar::format_rule >
+    -('?' > (number_rule | base_grammar::base_options) % '&');
 
-  private:
-    qi::rule<Iterator, Signature> root_rule;
-    qi::rule<Iterator, Signature> nearest_rule;
-};
+} // namespace nearest_grammar
 } // namespace osrm::server::api
 
 #endif

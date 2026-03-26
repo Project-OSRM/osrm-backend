@@ -475,12 +475,6 @@ find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
 
-add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
-add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
-
-# Workaround for https://github.com/boostorg/phoenix/issues/111
-add_dependency_defines(-DBOOST_PHOENIX_STL_TUPLE_H_)
-
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
