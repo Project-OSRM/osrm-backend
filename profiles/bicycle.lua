@@ -356,21 +356,24 @@ end
 -- `cycleway:left/right=separate` indicate that the bicycle path is
 -- already captured by a distinct OSM way, so routing along this
 -- carriageway would duplicate it. Explicit bicycle access tags
--- (e.g. bicycle=yes/permissive/designated) can still override this inference.
+-- (e.g. bicycle=yes/permissive/designated/destination) can still override this inference.
 local function handle_cycleway_separate(profile, way, result, data)
-  local cycleway = way:get_value_by_key('cycleway')
+  local cycleway = data.cycleway or way:get_value_by_key('cycleway')
   local cycleway_both = way:get_value_by_key('cycleway:both')
-  local cycleway_left = way:get_value_by_key('cycleway:left')
-  local cycleway_right = way:get_value_by_key('cycleway:right')
+  local cycleway_left = data.cycleway_left or way:get_value_by_key('cycleway:left')
+  local cycleway_right = data.cycleway_right or way:get_value_by_key('cycleway:right')
 
   if cycleway ~= 'separate' and cycleway_both ~= 'separate'
       and cycleway_left ~= 'separate' and cycleway_right ~= 'separate' then
     return
   end
 
-  -- An explicit non-blacklisted access tag (resolved via the bicycle > vehicle > access
-  -- hierarchy) overrides the cycleway inference.
-  if data.access and not profile.access_tag_blacklist[data.access] then
+  -- Only an explicit bicycle=yes/permissive/designated/destination tag overrides
+  -- the cycleway inference; values resolved through the vehicle or access hierarchy
+  -- (e.g. vehicle=yes) are intentionally not sufficient.
+  local bicycle_tag = way:get_value_by_key('bicycle')
+  local bicycle_override = Set { 'yes', 'permissive', 'designated', 'destination' }
+  if bicycle_tag and bicycle_override[bicycle_tag] then
     return
   end
 
