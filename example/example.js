@@ -1,12 +1,9 @@
-import { availableParallelism } from 'node:os';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import express from 'express';
 
 import OSRM from '../lib/index.js';
-
-process.env.UV_THREADPOOL_SIZE = Math.ceil(availableParallelism());
 
 const app = express();
 const __dirname = dirname(fileURLToPath(import.meta.url));
