@@ -15,8 +15,8 @@ namespace x3 = boost::spirit::x3;
 
 // X3 rule: parses "tile(x,y,z).mvt" into TileParameters
 const x3::rule<struct tile_rule_tag, engine::api::TileParameters> tile_rule = "tile_rule";
-const auto tile_rule_def =
-    x3::lit("tile(") > x3::uint_ > ',' > x3::uint_ > ',' > x3::uint_ > x3::lit(").mvt");
+const auto tile_rule_def = x3::lit("tile(") > x3::uint_ > ',' > x3::uint_ > ',' > x3::uint_ >
+                           x3::lit(").mvt");
 BOOST_SPIRIT_DEFINE(tile_rule)
 
 } // namespace osrm::server::api

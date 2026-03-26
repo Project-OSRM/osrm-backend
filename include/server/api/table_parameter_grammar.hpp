@@ -41,49 +41,43 @@ inline const auto fallback_coordinate_type = []()
 // Accumulate annotations with bitwise OR
 inline const auto annotations_list =
     x3::rule<struct table_annotations_list_tag, AnnotationsType>{"table_annotations_list"} =
-    annotations_sym[([](auto &ctx) {
-        x3::_val(ctx) = x3::_val(ctx) | x3::_attr(ctx);
-    })] %
-        ',';
+        annotations_sym[([](auto &ctx) { x3::_val(ctx) = x3::_val(ctx) | x3::_attr(ctx); })] % ',';
 
 inline const auto table_annotations_rule =
     x3::lit("annotations=") >
-    annotations_list[([](auto &ctx) {
-        x3::get<params_tag>(ctx).get().annotations = x3::_attr(ctx);
-    })];
+    annotations_list[([](auto &ctx)
+                      { x3::get<params_tag>(ctx).get().annotations = x3::_attr(ctx); })];
 
 // Table base options = base + table annotations
-inline const auto table_base_options = x3::rule<struct table_base_options_tag>{"table_base_options"} =
-    base_grammar::base_options | table_annotations_rule;
+inline const auto table_base_options =
+    x3::rule<struct table_base_options_tag>{"table_base_options"} =
+        base_grammar::base_options | table_annotations_rule;
 
 inline const auto sources_rule =
     x3::lit("sources=") >
     (x3::lit("all") |
-     (size_t_ % ';')[([](auto &ctx) {
-         x3::get<params_tag>(ctx).get().sources = x3::_attr(ctx);
-     })]);
+     (size_t_ % ';')[([](auto &ctx) { x3::get<params_tag>(ctx).get().sources = x3::_attr(ctx); })]);
 
 inline const auto destinations_rule =
     x3::lit("destinations=") >
     (x3::lit("all") |
-     (size_t_ % ';')[([](auto &ctx) {
-         x3::get<params_tag>(ctx).get().destinations = x3::_attr(ctx);
-     })]);
+     (size_t_ %
+      ';')[([](auto &ctx) { x3::get<params_tag>(ctx).get().destinations = x3::_attr(ctx); })]);
 
 inline const auto fallback_speed_rule =
-    x3::lit("fallback_speed=") > json_double[([](auto &ctx) {
-        x3::get<params_tag>(ctx).get().fallback_speed = x3::_attr(ctx);
-    })];
+    x3::lit("fallback_speed=") >
+    json_double[([](auto &ctx)
+                 { x3::get<params_tag>(ctx).get().fallback_speed = x3::_attr(ctx); })];
 
 inline const auto scale_factor_rule =
-    x3::lit("scale_factor=") > json_double[([](auto &ctx) {
-        x3::get<params_tag>(ctx).get().scale_factor = x3::_attr(ctx);
-    })];
+    x3::lit("scale_factor=") >
+    json_double[([](auto &ctx) { x3::get<params_tag>(ctx).get().scale_factor = x3::_attr(ctx); })];
 
 inline const auto fallback_coordinate_rule =
-    x3::lit("fallback_coordinate=") > fallback_coordinate_type[([](auto &ctx) {
-        x3::get<params_tag>(ctx).get().fallback_coordinate_type = x3::_attr(ctx);
-    })];
+    x3::lit("fallback_coordinate=") >
+    fallback_coordinate_type[(
+        [](auto &ctx)
+        { x3::get<params_tag>(ctx).get().fallback_coordinate_type = x3::_attr(ctx); })];
 
 inline const auto table_rule = destinations_rule | sources_rule;
 

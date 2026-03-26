@@ -15,9 +15,9 @@ namespace nearest_grammar
 namespace x3 = boost::spirit::x3;
 
 inline const auto number_rule =
-    x3::lit("number=") > x3::uint_[([](auto &ctx) {
-        x3::get<params_tag>(ctx).get().number_of_results = x3::_attr(ctx);
-    })];
+    x3::lit("number=") >
+    x3::uint_[([](auto &ctx)
+               { x3::get<params_tag>(ctx).get().number_of_results = x3::_attr(ctx); })];
 
 // Nearest root rule
 inline const auto root_rule = x3::rule<struct nearest_root_tag>{"nearest_root"} =

@@ -25,8 +25,7 @@ std::optional<ParameterT> parseParameters(std::string::iterator &iter,
     try
     {
         ParameterT parameters;
-        const auto ok =
-            x3::parse(iter, end, x3::with<params_tag>(std::ref(parameters))[grammar]);
+        const auto ok = x3::parse(iter, end, x3::with<params_tag>(std::ref(parameters))[grammar]);
 
         if (ok && iter == end)
             return parameters;
@@ -77,8 +76,7 @@ template <>
 std::optional<engine::api::TripParameters> parseParameters(std::string::iterator &iter,
                                                            const std::string::iterator end)
 {
-    return detail::parseParameters<engine::api::TripParameters>(
-        iter, end, trip_grammar::root_rule);
+    return detail::parseParameters<engine::api::TripParameters>(iter, end, trip_grammar::root_rule);
 }
 
 template <>

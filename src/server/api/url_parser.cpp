@@ -28,8 +28,8 @@ const auto query = x3::rule<struct query_tag, std::string>{"query"} = +all_chars
 
 // Example input: /route/v1/driving/7.416351,43.731205;7.420363,43.736189
 const auto url_parser = x3::rule<struct url_parser_tag, osrm::server::api::ParsedURL>{"url"} =
-    x3::lit('/') > service > x3::lit('/') > x3::lit('v') > version > x3::lit('/') > profile >
-    x3::lit('/') > query;
+    x3::lit('/') > service > x3::lit('/') > x3::lit('v') > version > x3::lit('/') > profile
+    > x3::lit('/') > query;
 
 std::size_t countDigits(unsigned v)
 {

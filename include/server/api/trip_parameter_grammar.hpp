@@ -31,18 +31,17 @@ inline const auto destination_type = []()
 }();
 
 inline const auto roundtrip_rule =
-    x3::lit("roundtrip=") > x3::bool_[([](auto &ctx) {
-        x3::get<params_tag>(ctx).get().roundtrip = x3::_attr(ctx);
-    })];
+    x3::lit("roundtrip=") >
+    x3::bool_[([](auto &ctx) { x3::get<params_tag>(ctx).get().roundtrip = x3::_attr(ctx); })];
 
-inline const auto source_rule = x3::lit("source=") > source_type[([](auto &ctx) {
-                                    x3::get<params_tag>(ctx).get().source = x3::_attr(ctx);
-                                })];
+inline const auto source_rule =
+    x3::lit("source=") >
+    source_type[([](auto &ctx) { x3::get<params_tag>(ctx).get().source = x3::_attr(ctx); })];
 
 inline const auto destination_rule =
-    x3::lit("destination=") > destination_type[([](auto &ctx) {
-        x3::get<params_tag>(ctx).get().destination = x3::_attr(ctx);
-    })];
+    x3::lit("destination=") >
+    destination_type[([](auto &ctx)
+                      { x3::get<params_tag>(ctx).get().destination = x3::_attr(ctx); })];
 
 // Trip root rule
 inline const auto root_rule = x3::rule<struct trip_root_tag>{"trip_root"} =

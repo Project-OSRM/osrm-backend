@@ -30,8 +30,7 @@ namespace osrm::updater
 template <typename Key, typename Value> struct CSVFilesParser
 {
     using Iterator = boost::iostreams::mapped_file_source::iterator;
-    using ParseFn =
-        std::function<bool(Iterator &, Iterator, std::vector<std::pair<Key, Value>> &)>;
+    using ParseFn = std::function<bool(Iterator &, Iterator, std::vector<std::pair<Key, Value>> &)>;
 
     template <typename KeyParser, typename ValueParser>
     CSVFilesParser(std::size_t start_index, KeyParser key_parser, ValueParser value_parser)
@@ -44,8 +43,7 @@ template <typename Key, typename Value> struct CSVFilesParser
                   // Wrap in typed rules so X3 synthesizes Key/Value, not flat sequence
                   auto key = x3::rule<struct key_tag, Key>{"key"} = kp;
                   auto val = x3::rule<struct val_tag, Value>{"value"} = vp;
-                  auto csv_line =
-                      key >> ',' >> val >> x3::omit[-(',' >> *(x3::char_ - x3::eol))];
+                  auto csv_line = key >> ',' >> val >> x3::omit[-(',' >> *(x3::char_ - x3::eol))];
                   return x3::parse(first, last, -(csv_line % x3::eol) >> *x3::eol, result);
               })
     {

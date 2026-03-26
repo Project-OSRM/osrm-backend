@@ -24,17 +24,16 @@ inline const auto gaps_type = []()
 
 inline const auto timestamps_rule =
     x3::lit("timestamps=") >
-    (x3::uint_ % ';')[([](auto &ctx) {
-        x3::get<params_tag>(ctx).get().timestamps = x3::_attr(ctx);
-    })];
+    (x3::uint_ %
+     ';')[([](auto &ctx) { x3::get<params_tag>(ctx).get().timestamps = x3::_attr(ctx); })];
 
-inline const auto gaps_rule = x3::lit("gaps=") > gaps_type[([](auto &ctx) {
-                                  x3::get<params_tag>(ctx).get().gaps = x3::_attr(ctx);
-                              })];
+inline const auto gaps_rule =
+    x3::lit("gaps=") >
+    gaps_type[([](auto &ctx) { x3::get<params_tag>(ctx).get().gaps = x3::_attr(ctx); })];
 
-inline const auto tidy_rule = x3::lit("tidy=") > x3::bool_[([](auto &ctx) {
-                                  x3::get<params_tag>(ctx).get().tidy = x3::_attr(ctx);
-                              })];
+inline const auto tidy_rule =
+    x3::lit("tidy=") >
+    x3::bool_[([](auto &ctx) { x3::get<params_tag>(ctx).get().tidy = x3::_attr(ctx); })];
 
 // Match root rule
 inline const auto root_rule = x3::rule<struct match_root_tag>{"match_root"} =
