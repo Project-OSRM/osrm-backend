@@ -1,6 +1,7 @@
 #include "extractor/graph_compressor.hpp"
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/maneuver_override.hpp"
+#include "extractor/obstacles.hpp"
 #include "extractor/restriction.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
@@ -239,6 +240,51 @@ BOOST_AUTO_TEST_CASE(direction_changes)
 
     BOOST_CHECK(graph.FindEdge(0, 1) != SPECIAL_EDGEID);
     BOOST_CHECK(graph.FindEdge(1, 2) != SPECIAL_EDGEID);
+}
+
+BOOST_AUTO_TEST_CASE(elevator_incompressible_test)
+{
+    //
+    // 0---1---2---3---4
+    //         ^
+    //      Elevator
+    //
+    // Node 2 should not be compressed because it has an Elevator obstacle.
+    // Result: 0-2 compressed, 2-4 compressed, but node 2 remains.
+    //
+    GraphCompressor compressor;
+
+    std::vector<TurnRestriction> restrictions;
+    std::vector<NodeBasedEdgeAnnotation> annotations(1);
+    CompressedEdgeContainer container;
+    test::MockScriptingEnvironment scripting_environment;
+    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
+
+    std::vector<InputEdge> edges = {MakeUnitEdge(0, 1),
+                                    MakeUnitEdge(1, 0),
+                                    MakeUnitEdge(1, 2),
+                                    MakeUnitEdge(2, 1),
+                                    MakeUnitEdge(2, 3),
+                                    MakeUnitEdge(3, 2),
+                                    MakeUnitEdge(3, 4),
+                                    MakeUnitEdge(4, 3)};
+
+    Graph graph(5, edges);
+
+    // Mark node 2 as an elevator
+    scripting_environment.m_obstacle_map.emplace(
+        SPECIAL_NODEID, NodeID{2}, Obstacle{Obstacle::Type::Elevator});
+
+    compressor.Compress(
+        scripting_environment, restrictions, maneuver_overrides, graph, annotations, container);
+
+    // Nodes 1 and 3 should be compressed away
+    BOOST_CHECK_EQUAL(graph.FindEdge(0, 1), SPECIAL_EDGEID);
+    BOOST_CHECK_EQUAL(graph.FindEdge(3, 4), SPECIAL_EDGEID);
+
+    // Node 2 should remain — edges to/from it should exist
+    BOOST_CHECK(graph.FindEdge(0, 2) != SPECIAL_EDGEID);
+    BOOST_CHECK(graph.FindEdge(2, 4) != SPECIAL_EDGEID);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

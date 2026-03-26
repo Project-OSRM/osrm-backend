@@ -45,7 +45,8 @@ const std::initializer_list<std::pair<std::string_view, Obstacle::Type>>
                                          {"mini_roundabout", Obstacle::Type::MiniRoundabout},
                                          {"turning_loop", Obstacle::Type::TurningLoop},
                                          {"turning_circle", Obstacle::Type::TurningCircle},
-                                         {"gate", Obstacle::Type::Gate}};
+                                         {"gate", Obstacle::Type::Gate},
+                                         {"elevator", Obstacle::Type::Elevator}};
 
 const std::initializer_list<std::pair<std::string_view, Obstacle::Direction>>
     Obstacle::enum_direction_initializer_list{{"none", Obstacle::Direction::None},
