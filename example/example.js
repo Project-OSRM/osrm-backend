@@ -22,7 +22,7 @@ app.get('/', function(req, res) {
     coordinates.push([+end[0],+end[1]]);
     const query = {
         coordinates: coordinates,
-        alternateRoute: req.query.alternatives !== 'false'
+        alternatives: req.query.alternatives !== 'false'
     };
     osrm.route(query, function(err, result) {
         if (err) return res.json({"error":err.message});
