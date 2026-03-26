@@ -351,7 +351,33 @@ function handle_bicycle_tags(profile,way,result,data)
   safety_handler(profile,way,result,data)
 end
 
+-- Block ways where the cycleway is mapped as a separate parallel way.
+-- Tags like `cycleway=separate`, `cycleway:both=separate`, or
+-- `cycleway:left/right=separate` indicate that the bicycle path is
+-- already captured by a distinct OSM way, so routing along this
+-- carriageway would duplicate it. Explicit bicycle access tags
+-- (e.g. bicycle=yes/permissive/designated) can still override this inference.
+local function handle_cycleway_separate(profile, way, result, data)
+  local cycleway = way:get_value_by_key('cycleway')
+  local cycleway_both = way:get_value_by_key('cycleway:both')
+  local cycleway_left = way:get_value_by_key('cycleway:left')
+  local cycleway_right = way:get_value_by_key('cycleway:right')
 
+  if cycleway ~= 'separate' and cycleway_both ~= 'separate'
+      and cycleway_left ~= 'separate' and cycleway_right ~= 'separate' then
+    return
+  end
+
+  -- An explicit non-blacklisted access tag (resolved via the bicycle > vehicle > access
+  -- hierarchy) overrides the cycleway inference.
+  if data.access and not profile.access_tag_blacklist[data.access] then
+    return
+  end
+
+  result.forward_mode = mode.inaccessible
+  result.backward_mode = mode.inaccessible
+  return false
+end
 
 function speed_handler(profile,way,result,data)
 
@@ -675,6 +701,10 @@ function process_way(profile, way, result)
 
     -- our main handler
     handle_bicycle_tags,
+
+    -- block ways whose cycleway is separately mapped (cycleway:*=separate),
+    -- unless bicycle access is explicitly whitelisted
+    handle_cycleway_separate,
 
     -- compute speed taking into account way type, maxspeed tags, etc.
     WayHandlers.surface,
