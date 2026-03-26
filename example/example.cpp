@@ -87,4 +87,9 @@ int main(int argc, const char *argv[])
         std::cout << "Message: " << message << "\n";
         return EXIT_FAILURE;
     }
+    else
+    {
+        std::cout << "Unexpected status returned from OSRM::Route.\n";
+        return EXIT_FAILURE;
+    }
 }
