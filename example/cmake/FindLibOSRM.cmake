@@ -30,25 +30,6 @@ find_path(LibOSRM_INCLUDE_DIR osrm/osrm.hpp
   /opt/local
   /opt)
 
-find_library(TEST_LibOSRM_STATIC_LIBRARY Names osrm.lib libosrm.a
-  PATH_SUFFIXES osrm lib/osrm lib
-  HINTS ${PC_LibOSRM_LIBDIR} ${PC_LibOSRM_LIBRARY_DIRS}
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt/local
-  /opt)
-find_library(TEST_LibOSRM_DYNAMIC_LIBRARY Names libosrm.dylib libosrm.so
-  PATH_SUFFIXES osrm lib/osrm lib
-  HINTS ${PC_LibOSRM_LIBDIR} ${PC_LibOSRM_LIBRARY_DIRS}
-  ~/Library/Frameworks
-  /Library/Frameworks
-  /usr/local
-  /usr
-  /opt/local
-  /opt)
-
 set(LibOSRM_DEPENDENT_LIBRARIES ${PC_LibOSRM_STATIC_LDFLAGS})
 set(LibOSRM_LIBRARIES ${PC_LibOSRM_LDFLAGS})
 
