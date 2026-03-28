@@ -8,6 +8,8 @@
     - Extraction:
       - ADDED: Emit warning when ways reference nodes not present in input data [#1596](https://github.com/Project-OSRM/osrm-backend/issues/1596)
       - FIXED: Compilation error in raster_source [#7422](https://github.com/Project-OSRM/osrm-backend/issues/7422)
+    - API:
+      - ADDED: The parameter `overview` now accepts `by_legs` to include the geometry on the `RouteLeg` instead of the `Route` object. [#7256](https://github.com/Project-OSRM/osrm-backend/pull/7256)
     - Profiles:
       - FIXED: Exclude `highway=road` from foot and bicycle profiles since it is an OSM error marker with unknown classification [#7039](https://github.com/Project-OSRM/osrm-backend/issues/7039)
       - FIXED: Roads with a real `highway=*` type and an additional `proposed=*` tag (e.g. a planned upgrade) are now routed correctly instead of being silently pruned [#7413](https://github.com/Project-OSRM/osrm-backend/issues/7413)
@@ -17,6 +19,7 @@
       - CHANGED: Apply configurable penalty (default 60s) to gates in car profile [#6757](https://github.com/Project-OSRM/osrm-backend/issues/6757)
       - ADDED: Add exception for audible fences (`barrier=fence` with `sensory=audible` or `sensory=audio`) that deter livestock but do not block vehicles [#6964](https://github.com/Project-OSRM/osrm-backend/issues/6964)
       - ADDED: Use `is_sidepath:of:name` and `street:name` as fallback names for unnamed sidewalks and sidepaths in foot and bicycle profiles [#7259](https://github.com/Project-OSRM/osrm-backend/issues/7259)
+      - FIXED: Foot profile now respects `foot=use_sidepath` and `sidewalk:*=separate` tags, avoiding carriageways where a separate parallel footway is mapped [#6229](https://github.com/Project-OSRM/osrm-backend/issues/6229)
     - Build:
       - FIXED: Upgrade tar npm dependency from 7.5.7 to 7.5.9 to address security vulnerability GHSA-83g3-92jg-28cx [#7365](https://github.com/Project-OSRM/osrm-backend/issues/7365)
       - FIXED: Documentation build fails with ESM/CommonJS conflict after adding "type": "module" [#7347](https://github.com/Project-OSRM/osrm-backend/issues/7347)

@@ -30,7 +30,8 @@ export default defineConfig({
         text: 'API Documentation',
         items: [
           { text: 'HTTP API', link: '/http' },
-          { text: 'Node.js API', link: '/nodejs/api' }
+          { text: 'Node.js API', link: '/nodejs/api' },
+          { text: 'libosrm C++ API', link: '/libosrm' },
         ]
       },
       {

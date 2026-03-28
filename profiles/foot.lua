@@ -45,6 +45,11 @@ function setup()
       'forestry',
       'private',
       'delivery',
+      -- When a way is tagged with `foot=use_sidepath` a parallel way suitable
+      -- for pedestrians is mapped and must be used instead (by law in some
+      -- countries). For purposes of routing pedestrians, this value should be
+      -- treated as 'no access for pedestrians'.
+      'use_sidepath',
     },
 
     restricted_access_tag_list = Set { },
@@ -170,6 +175,37 @@ function process_node(profile, node, result)
   end
 end
 
+-- Block ways where the sidewalk is mapped as a separate parallel way.
+-- Tags like `sidewalk=separate`, `sidewalk:both=separate`, or
+-- `sidewalk:left/right=separate` indicate that the pedestrian path is
+-- already captured by a distinct OSM way, so routing along this
+-- carriageway would duplicate it. Explicit `foot=yes/permissive/designated`
+-- can still override this inference.
+local function handle_sidewalk_separate(profile, way, result, data)
+  local sidewalk = way:get_value_by_key('sidewalk')
+  local sidewalk_both = way:get_value_by_key('sidewalk:both')
+  local sidewalk_left = way:get_value_by_key('sidewalk:left')
+  local sidewalk_right = way:get_value_by_key('sidewalk:right')
+
+  if sidewalk ~= 'separate' and sidewalk_both ~= 'separate'
+      and sidewalk_left ~= 'separate' and sidewalk_right ~= 'separate' then
+    return
+  end
+
+  -- An explicit non-blacklisted foot access tag (e.g. foot=yes/permissive/destination)
+  -- overrides the sidewalk inference for each direction independently.
+  if not (data.forward_access and not profile.access_tag_blacklist[data.forward_access]) then
+    result.forward_mode = mode.inaccessible
+  end
+  if not (data.backward_access and not profile.access_tag_blacklist[data.backward_access]) then
+    result.backward_mode = mode.inaccessible
+  end
+
+  if result.forward_mode == mode.inaccessible and result.backward_mode == mode.inaccessible then
+    return false
+  end
+end
+
 -- main entry point for processsing a way
 function process_way(profile, way, result)
   -- the intial filtering of ways based on presence of tags
@@ -218,6 +254,10 @@ function process_way(profile, way, result)
     -- determine access status by checking our hierarchy of
     -- access tags, e.g: motorcar, motor_vehicle, vehicle
     WayHandlers.access,
+
+    -- block ways whose sidewalk is separately mapped (sidewalk:*=separate),
+    -- unless foot access is explicitly whitelisted
+    handle_sidewalk_separate,
 
     -- check whether forward/backward directons are routable
     WayHandlers.oneway,
