@@ -351,7 +351,36 @@ function handle_bicycle_tags(profile,way,result,data)
   safety_handler(profile,way,result,data)
 end
 
+-- Block ways where the cycleway is mapped as a separate parallel way.
+-- Tags like `cycleway=separate`, `cycleway:both=separate`, or
+-- `cycleway:left/right=separate` indicate that the bicycle path is
+-- already captured by a distinct OSM way, so routing along this
+-- carriageway would duplicate it. Explicit bicycle access tags
+-- (e.g. bicycle=yes/permissive/designated/destination) can still override this inference.
+local function handle_cycleway_separate(profile, way, result, data)
+  local cycleway = data.cycleway or way:get_value_by_key('cycleway')
+  local cycleway_both = way:get_value_by_key('cycleway:both')
+  local cycleway_left = data.cycleway_left or way:get_value_by_key('cycleway:left')
+  local cycleway_right = data.cycleway_right or way:get_value_by_key('cycleway:right')
 
+  if cycleway ~= 'separate' and cycleway_both ~= 'separate'
+      and cycleway_left ~= 'separate' and cycleway_right ~= 'separate' then
+    return
+  end
+
+  -- Only an explicit bicycle=yes/permissive/designated/destination tag overrides
+  -- the cycleway inference; values resolved through the vehicle or access hierarchy
+  -- (e.g. vehicle=yes) are intentionally not sufficient.
+  local bicycle_tag = way:get_value_by_key('bicycle')
+  local bicycle_override = Set { 'yes', 'permissive', 'designated', 'destination' }
+  if bicycle_tag and bicycle_override[bicycle_tag] then
+    return
+  end
+
+  result.forward_mode = mode.inaccessible
+  result.backward_mode = mode.inaccessible
+  return false
+end
 
 function speed_handler(profile,way,result,data)
 
@@ -675,6 +704,10 @@ function process_way(profile, way, result)
 
     -- our main handler
     handle_bicycle_tags,
+
+    -- block ways whose cycleway is separately mapped (cycleway:*=separate),
+    -- unless bicycle access is explicitly whitelisted
+    handle_cycleway_separate,
 
     -- compute speed taking into account way type, maxspeed tags, etc.
     WayHandlers.surface,
