@@ -60,6 +60,7 @@
       - FIXED: Correctly limit exclude classes to 7. [#7322](https://github.com/Project-OSRM/osrm-backend/pull/7322)
       - FIXED: Speed limits in Czech Republic [#7279](https://github.com/Project-OSRM/osrm-backend/pull/7279)
       - CHANGED: Add the PSV vehicle subtypes to the access_tag_blacklist of the car profile (taxi, share_taxi, minibus, and bus) [#7295](https://github.com/Project-OSRM/osrm-backend/pull/7295)
+      - FIXED: Some path inconsistencies preventing parent projects to use OSRM via cmake's `FetchContent` [#7439](https://github.com/Project-OSRM/osrm-backend/issues/7439)
 
 # 6.0.0
   - Changes from 6.0.0 RC2: None
