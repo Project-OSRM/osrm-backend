@@ -31,6 +31,7 @@
       - FIXED: Work around compilation error due to a false-positive of array-bounds check in sol2 [#7317](https://github.com/Project-OSRM/osrm-backend/pull/7317)
       - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
       - ADDED: Conditionally prefix custom CMake targets with `osrm_` when built as subproject, and add ALIAS targets for FetchContent compatibility [#7267](https://github.com/Project-OSRM/osrm-backend/issues/7267)
+      - FIXED: Compilation error in vendored sol2 when LUA_COMPAT_BITLIB or LUA_COMPAT_5_2 are defined as empty macros [#00](https://github.com/Project-OSRM/osrm-backend/issues/00)
     - Misc:
       - CHANGED: Upgrade from clang-format-15 to clang-format-18 [#7249](https://github.com/Project-OSRM/osrm-backend/issues/7249)
       - ADDED: `--output` / `-o` option to osrm-extract for specifying custom output base path [#4930](https://github.com/Project-OSRM/osrm-backend/issues/4930)
