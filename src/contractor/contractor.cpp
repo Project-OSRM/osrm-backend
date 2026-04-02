@@ -1,32 +1,18 @@
 #include "contractor/contractor.hpp"
-#include "contractor/contracted_edge_container.hpp"
 #include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
 
-#include "extractor/compressed_edge_container.hpp"
-#include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/files.hpp"
-#include "extractor/node_based_edge.hpp"
-
-#include "storage/io.hpp"
 
 #include "updater/updater.hpp"
 
-#include "util/exception.hpp"
-#include "util/exception_utils.hpp"
 #include "util/exclude_flag.hpp"
-#include "util/filtered_graph.hpp"
-#include "util/integer_range.hpp"
 #include "util/log.hpp"
-#include "util/static_graph.hpp"
-#include "util/string_util.hpp"
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
 
-#include <algorithm>
 #include <cstdint>
-#include <iterator>
 #include <vector>
 
 #include <tbb/global_control.h>
@@ -55,18 +41,13 @@ int Contractor::Run()
     EdgeID number_of_edge_based_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
         edge_based_edge_list, node_weights, connectivity_checksum);
 
-    // Convert node weights for oneway streets to INVALID_EDGE_WEIGHT
-    for (auto &weight : node_weights)
-    {
-        weight = (from_alias<EdgeWeight::value_type>(weight) & 0x80000000) ? INVALID_EDGE_WEIGHT
-                                                                           : weight;
-    }
-
     // Contracting the edge-expanded graph
 
     TIMER_START(contraction);
 
     std::string metric_name;
+    // filters on way classes like: 'toll', 'motorway', 'ferry', 'restricted', 'tunnel', ...
+    // max. 7 classes can be defined
     std::vector<std::vector<bool>> node_filters;
     {
         extractor::EdgeBasedNodeDataContainer node_data;
@@ -83,10 +64,8 @@ int Contractor::Run()
     QueryGraph query_graph;
     std::vector<std::vector<bool>> edge_filters;
     std::vector<std::vector<bool>> cores;
-    std::tie(query_graph, edge_filters) =
-        contractExcludableGraph(toContractorGraph(number_of_edge_based_nodes, edge_based_edge_list),
-                                std::move(node_weights),
-                                node_filters);
+    std::tie(query_graph, edge_filters) = contractExcludableGraph(
+        toContractorGraph(number_of_edge_based_nodes, edge_based_edge_list), node_filters);
     TIMER_STOP(contraction);
     util::Log() << "Contracted graph has " << query_graph.GetNumberOfEdges() << " edges.";
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";

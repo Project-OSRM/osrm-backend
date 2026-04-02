@@ -1,4 +1,5 @@
 #include "engine/routing_algorithms/routing_base_ch.hpp"
+#include "util/log.hpp"
 
 namespace osrm::engine::routing_algorithms::ch
 {
@@ -131,6 +132,9 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
         }
     }
 
+    util::Log(logDEBUG) << "Search completed with middle node " << middle << " at weight "
+                        << weight;
+
     // No path found for both target nodes?
     if (weight_upper_bound <= weight || SPECIAL_NODEID == middle)
     {
@@ -151,6 +155,14 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
     else
     {
         retrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
+    }
+    {
+        auto log = util::Log(logDEBUG);
+        log << "  and packed_leg of size " << packed_leg.size() << " with nodes";
+        for (auto node : packed_leg)
+        {
+            log << " " << node;
+        }
     }
 }
 

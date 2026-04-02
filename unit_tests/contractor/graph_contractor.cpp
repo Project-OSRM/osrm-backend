@@ -30,7 +30,7 @@ BOOST_AUTO_TEST_CASE(contract_graph)
         const ContractorGraph g = makeGraph({{0, 1, 1}}); // start, target, weight
 
         auto query_graph = g;
-        contractGraph(query_graph, {{1}, {1}});
+        contractGraph(query_graph);
 
         HAS(0, 1)
         NOT(1, 0)
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(contract_graph)
                                              {1, 2, 1}});
 
         auto query_graph = g;
-        contractGraph(query_graph, {{1}, {1}, {1}});
+        contractGraph(query_graph);
 
         HAS(0, 1)
         HAS(2, 1)
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(contract_graph)
                                              {0, 2, 1}});
 
         auto query_graph = g;
-        contractGraph(query_graph, {{1}, {1}, {1}});
+        contractGraph(query_graph, {});
 
         HAS(0, 1)
         HAS(0, 2)
@@ -108,7 +108,7 @@ BOOST_AUTO_TEST_CASE(contract_graph)
                                              {3, 0, 1}});
 
         auto query_graph = g;
-        contractGraph(query_graph, {{1}, {1}, {1}, {1}});
+        contractGraph(query_graph, {});
 
         HAS(0, 1)
         HAS(0, 3)
@@ -149,8 +149,8 @@ BOOST_AUTO_TEST_CASE(contract_excludable_graph)
                                              {2, 3, 1},
                                              {3, 0, 1}});
 
-        auto [query_graph, ignore] = contractExcludableGraph(
-            g, {{1}, {1}, {1}, {1}}, {{true, true, true, true}, {false, true, true, true}});
+        auto [query_graph, ignore] =
+            contractExcludableGraph(g, {{true, true, true, true}, {false, true, true, true}});
 
         HAS(1, 0)
         HAS(1, 2)

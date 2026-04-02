@@ -1,4 +1,5 @@
 #include "util/query_heap.hpp"
+#include "util/linear_hash_storage.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/mpl/list.hpp>
@@ -22,8 +23,9 @@ struct TestData
 using TestNodeID = NodeID;
 using TestKey = int;
 using TestWeight = int;
-using storage_types =
-    boost::mpl::list<ArrayStorage<TestNodeID, TestKey>, UnorderedMapStorage<TestNodeID, TestKey>>;
+using storage_types = boost::mpl::list<ArrayStorage<TestNodeID, TestKey>,
+                                       UnorderedMapStorage<TestNodeID, TestKey>,
+                                       LinearHashStorage<TestNodeID, TestKey>>;
 
 template <unsigned NUM_ELEM> struct RandomDataFixture
 {
@@ -49,7 +51,7 @@ template <unsigned NUM_ELEM> struct RandomDataFixture
     std::vector<unsigned> order;
 };
 
-constexpr unsigned NUM_NODES = 100;
+constexpr unsigned NUM_NODES = 0x100;
 
 BOOST_FIXTURE_TEST_CASE_TEMPLATE(insert_test, T, storage_types, RandomDataFixture<NUM_NODES>)
 {
@@ -142,9 +144,9 @@ BOOST_FIXTURE_TEST_CASE_TEMPLATE(smoke_test, T, storage_types, RandomDataFixture
     }
 }
 
-BOOST_FIXTURE_TEST_CASE_TEMPLATE(decrease_key_test, T, storage_types, RandomDataFixture<10>)
+BOOST_FIXTURE_TEST_CASE_TEMPLATE(decrease_key_test, T, storage_types, RandomDataFixture<16>)
 {
-    QueryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(10);
+    QueryHeap<TestNodeID, TestKey, TestWeight, TestData, T> heap(16);
 
     for (unsigned idx : order)
     {

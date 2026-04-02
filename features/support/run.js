@@ -39,7 +39,7 @@ export function runBin(bin, args, options, log) {
     log(`${bin} aborted with error ${err}`);
     throw(err);
   });
-  child.on('exit', (code, signal) => {
+  child.on('close', (code, signal) => {
     if (signal != null) {
       const msg = `${bin} aborted with signal ${child.signal}`;
       log(msg);
@@ -76,9 +76,9 @@ export function runBinSync(bin, args, options, log) {
   if (child.stderr)
     log(`${bin} stderr:\n${child.stderr}`);
   if (child.status != null)
-    log(`${bin} completed with exit code ${child.status}`);
+    log(`${bin} sync completed with exit code ${child.status}`);
   if (child.signal != null) {
-    const msg = `${bin} aborted with signal ${child.signal}`;
+    const msg = `${bin} sync aborted with signal ${child.signal}`;
     log(msg);
     if (child.signal != 'SIGABRT') // some tests deliberately fail
       throw new Error(msg);

@@ -333,6 +333,15 @@ class QueryHeap
                       { inserted_nodes[heapData.index].handle = new_handle; });
     }
 
+    void IncreaseKey(const HeapNode &heapNode)
+    {
+        BOOST_ASSERT(!WasRemoved(heapNode.node));
+        heap.increase(heapNode.handle,
+                      HeapData{heapNode.weight, heap[heapNode.handle].index},
+                      [this](const auto &heapData, auto new_handle)
+                      { inserted_nodes[heapData.index].handle = new_handle; });
+    }
+
   private:
     std::vector<HeapNode> inserted_nodes;
     HeapContainer heap;

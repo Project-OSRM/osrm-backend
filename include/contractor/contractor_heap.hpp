@@ -7,20 +7,8 @@
 
 namespace osrm::contractor
 {
-struct ContractorHeapData
-{
-    ContractorHeapData() {}
-    ContractorHeapData(short hop_, bool target_) : hop(hop_), target(target_) {}
-
-    short hop = 0;
-    bool target = false;
-};
-
-using ContractorHeap = util::QueryHeap<NodeID,
-                                       NodeID,
-                                       EdgeWeight,
-                                       ContractorHeapData,
-                                       util::LinearHashStorage<NodeID, NodeID>>;
+using ContractorHeap =
+    util::QueryHeap<NodeID, NodeID, EdgeWeight, bool, util::LinearHashStorage<NodeID, NodeID>>;
 
 } // namespace osrm::contractor
 

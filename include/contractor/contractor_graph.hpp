@@ -18,7 +18,7 @@ struct ContractorEdgeData
                        EdgeDuration duration,
                        EdgeDistance distance,
                        unsigned original_edges,
-                       unsigned id,
+                       NodeID id,
                        bool shortcut,
                        bool forward,
                        bool backward)
@@ -30,7 +30,8 @@ struct ContractorEdgeData
     EdgeWeight weight;
     EdgeDuration duration;
     EdgeDistance distance;
-    unsigned id;
+    NodeID id;
+    /** Recursive count of how many edges are replaced by this shortcut. */
     unsigned originalEdges : 29;
     bool shortcut : 1;
     bool forward : 1;

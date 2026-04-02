@@ -13,6 +13,7 @@ namespace osrm::contractor
 
 void search(ContractorHeap &heap,
             const ContractorGraph &graph,
+            const NodeID start,
             const std::vector<bool> &contractable,
             const unsigned number_of_targets,
             const int node_limit,

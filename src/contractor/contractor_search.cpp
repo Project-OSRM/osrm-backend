@@ -2,6 +2,7 @@
 
 #include "contractor/contractor_graph.hpp"
 #include "contractor/contractor_heap.hpp"
+#include "util/typedefs.hpp"
 
 namespace osrm::contractor
 {
@@ -10,12 +11,11 @@ namespace
 {
 void relaxNode(ContractorHeap &heap,
                const ContractorGraph &graph,
-               const std::vector<bool> &contractable,
+               const std::vector<bool> &contractible,
                const NodeID node,
                const EdgeWeight node_weight,
                const NodeID forbidden_node)
 {
-    const short current_hop = heap.GetData(node).hop + 1;
     for (auto edge : graph.GetAdjacentEdgeRange(node))
     {
         const auto &data = graph.GetEdgeData(edge);
@@ -35,18 +35,17 @@ void relaxNode(ContractorHeap &heap,
         // New Node discovered -> Add to Heap + Node Info Storage
         if (!toHeapNode)
         {
-            if (!contractable[to])
+            if (!contractible[to])
             {
                 continue;
             }
-            heap.Insert(to, to_weight, ContractorHeapData{current_hop, false});
+            heap.Insert(to, to_weight, false);
         }
         // Found a shorter Path -> Update weight
         else if (to_weight < toHeapNode->weight)
         {
             toHeapNode->weight = to_weight;
             heap.DecreaseKey(*toHeapNode);
-            toHeapNode->data.hop = current_hop;
         }
     }
 }
@@ -54,7 +53,8 @@ void relaxNode(ContractorHeap &heap,
 
 void search(ContractorHeap &heap,
             const ContractorGraph &graph,
-            const std::vector<bool> &contractable,
+            const NodeID start,
+            const std::vector<bool> &contractible,
             const unsigned number_of_targets,
             const int node_limit,
             const EdgeWeight weight_limit,
@@ -62,6 +62,7 @@ void search(ContractorHeap &heap,
 {
     int nodes = 0;
     unsigned number_of_targets_found = 0;
+    relaxNode(heap, graph, contractible, start, EdgeWeight{0}, forbidden_node);
     while (!heap.Empty())
     {
         const NodeID node = heap.DeleteMin();
@@ -76,8 +77,8 @@ void search(ContractorHeap &heap,
             return;
         }
 
-        // Destination settled?
-        if (heap.GetData(node).target)
+        // Target settled?
+        if (heap.GetData(node))
         {
             ++number_of_targets_found;
             if (number_of_targets_found >= number_of_targets)
@@ -86,7 +87,7 @@ void search(ContractorHeap &heap,
             }
         }
 
-        relaxNode(heap, graph, contractable, node, node_weight, forbidden_node);
+        relaxNode(heap, graph, contractible, node, node_weight, forbidden_node);
     }
 }
 } // namespace osrm::contractor
