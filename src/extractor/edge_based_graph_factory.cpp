@@ -621,6 +621,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // node. But we'll check anyway.
             const bool is_traffic_light = scripting_environment.m_obstacle_map.any(
                 node_along_road_entering, intersection_node, Obstacle::Type::TrafficSignals);
+            const bool has_turning_facility = scripting_environment.m_obstacle_map.any(
+                intersection_node, Obstacle::Type::Turning);
             const bool is_uturn =
                 guidance::getTurnDirection(turn_angle) == guidance::DirectionModifier::UTurn;
 
@@ -631,6 +633,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                  is_uturn),
                 is_uturn,
                 is_traffic_light,
+                has_turning_facility,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
                     .is_left_hand_driving,
                 // source info
