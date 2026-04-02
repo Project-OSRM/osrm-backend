@@ -1,6 +1,5 @@
 #include "contractor/graph_contractor.hpp"
 
-#include "../common/range_tools.hpp"
 #include "contractor/contractor_graph.hpp"
 #include "helper.hpp"
 
@@ -13,192 +12,161 @@ using namespace osrm;
 using namespace osrm::contractor;
 using namespace osrm::unit_test;
 
+#define HAS(a, b) BOOST_CHECK(query_graph.FindEdge(a, b) != SPECIAL_EDGEID);
+#define NOT(a, b) BOOST_CHECK(query_graph.FindEdge(a, b) == SPECIAL_EDGEID);
+
 BOOST_AUTO_TEST_SUITE(graph_contractor)
-
-BOOST_AUTO_TEST_CASE(contract_exclude_graph)
-{
-    const ContractorGraph g = makeGraph({TestEdge{1, 0, 1}, // start, target, weight
-                                         TestEdge{0, 3, 1},
-                                         TestEdge{1, 2, 2},
-                                         TestEdge{2, 3, 2}});
-
-    /* All edges are normal edges,
-     * edge 2 will be contracted
-     *
-     * Deleted edge_based_edges 1 -> 2, 3 -> 2
-     *
-     * (0) <--1-- (1)
-     *  |          |
-     *  1          2 (== weight)
-     *  |          |
-     *  v          v
-     * (3) <--2-- (2)
-     */
-
-    {
-        auto [query_graph, ignore] = contractExcludableGraph(
-            g, {{1}, {1}, {1}, {1}}, {{true, true, true, true}, {true, true, true, true}});
-
-        REQUIRE_SIZE_RANGE(query_graph.GetAdjacentEdgeRange(0), 0);
-        BOOST_CHECK(query_graph.FindEdge(0, 1) == SPECIAL_EDGEID);
-        BOOST_CHECK(query_graph.FindEdge(0, 3) == SPECIAL_EDGEID);
-        REQUIRE_SIZE_RANGE(query_graph.GetAdjacentEdgeRange(1), 1);
-        BOOST_CHECK(query_graph.FindEdge(1, 0) != SPECIAL_EDGEID);
-        BOOST_CHECK(query_graph.FindEdge(1, 2) == SPECIAL_EDGEID);
-        REQUIRE_SIZE_RANGE(query_graph.GetAdjacentEdgeRange(2), 2);
-        BOOST_CHECK(query_graph.FindEdge(2, 1) != SPECIAL_EDGEID);
-        BOOST_CHECK(query_graph.FindEdge(2, 3) != SPECIAL_EDGEID);
-        REQUIRE_SIZE_RANGE(query_graph.GetAdjacentEdgeRange(3), 1);
-        BOOST_CHECK(query_graph.FindEdge(3, 0) != SPECIAL_EDGEID);
-        BOOST_CHECK(query_graph.FindEdge(3, 2) == SPECIAL_EDGEID);
-    }
-
-    /* Edge 0 is labeled with toll,
-     * no edge will be contracted
-     *
-     * toll
-     * (0) <--1-- (1)
-     *  |          |
-     *  1          2 (== weight)
-     *  |          |
-     *  v          v
-     * (3) <--2-- (2)
-     */
-
-    {
-        auto [query_graph, ignore] = contractExcludableGraph(
-            g, {{1}, {1}, {1}, {1}}, {{true, true, true, true}, {false, true, true, true}});
-
-        REQUIRE_SIZE_RANGE(query_graph.GetAdjacentEdgeRange(0), 0);
-        BOOST_CHECK(query_graph.FindEdge(0, 1) == SPECIAL_EDGEID);
-        BOOST_CHECK(query_graph.FindEdge(0, 3) == SPECIAL_EDGEID);
-        REQUIRE_SIZE_RANGE(query_graph.GetAdjacentEdgeRange(1), 2);
-        BOOST_CHECK(query_graph.FindEdge(1, 0) != SPECIAL_EDGEID);
-        BOOST_CHECK(query_graph.FindEdge(1, 2) != SPECIAL_EDGEID);
-        REQUIRE_SIZE_RANGE(query_graph.GetAdjacentEdgeRange(2), 0);
-        BOOST_CHECK(query_graph.FindEdge(2, 1) == SPECIAL_EDGEID);
-        BOOST_CHECK(query_graph.FindEdge(2, 3) == SPECIAL_EDGEID);
-        REQUIRE_SIZE_RANGE(query_graph.GetAdjacentEdgeRange(3), 2);
-        BOOST_CHECK(query_graph.FindEdge(3, 0) != SPECIAL_EDGEID);
-        BOOST_CHECK(query_graph.FindEdge(3, 2) != SPECIAL_EDGEID);
-    }
-}
 
 BOOST_AUTO_TEST_CASE(contract_graph)
 {
-    /*
-     *                 <--1--<
-     * (0) >--3--> (1) >--3--> (3)
-     *  v          ^  v          ^
-     *   \        /    \         |
-     *    1      1      1        1
-     *     \    ^        \       /
-     *      >(5)          > (4) >
-     */
-    std::vector<TestEdge> edges = {TestEdge{0, 1, 3},
-                                   TestEdge{0, 5, 1},
-                                   TestEdge{1, 3, 3},
-                                   TestEdge{1, 4, 1},
-                                   TestEdge{3, 1, 1},
-                                   TestEdge{4, 3, 1},
-                                   TestEdge{5, 1, 1}};
-    auto reference_graph = makeGraph(edges);
+    {
+        /*
+         *  0 - 1
+         *
+         *  1
+         *  |
+         *  0
+         */
+        const ContractorGraph g = makeGraph({{0, 1, 1}}); // start, target, weight
 
-    auto contracted_graph = reference_graph;
-    std::vector<bool> core = contractGraph(contracted_graph, {{1}, {1}, {1}, {1}, {1}, {1}});
+        auto query_graph = g;
+        contractGraph(query_graph, {{1}, {1}});
 
-    // This contraction order is dependent on the priority caculation in the contractor
-    // but deterministic for the same graph.
-    CHECK_EQUAL_RANGE(core, false, false, false, false, false, false);
+        HAS(0, 1)
+        NOT(1, 0)
+    }
 
-    /* After contracting 0 and 2:
-     *
-     * Deltes edges 5 -> 0, 1 -> 0
-     *
-     *                 <--1--<
-     * (0) ---3--> (1) >--3--> (3)
-     *  \          ^  v          ^
-     *   \        /    \         |
-     *    1      1      1        1
-     *     \    ^        \       /
-     *      >(5)          > (4) >
-     */
-    reference_graph.DeleteEdgesTo(5, 0);
-    reference_graph.DeleteEdgesTo(1, 0);
+    {
+        /*
+         *  0 - 1 - 2
+         *
+         *    1
+         *   / \
+         *  0   2
+         */
 
-    /* After contracting 5:
-     *
-     * Deletes edges 1 -> 5
-     *
-     *                 <--1--<
-     * (0) ---3--> (1) >--3--> (3)
-     *  \          ^  v          ^
-     *   \        /    \         |
-     *    1      1      1        1
-     *     \    /        \       /
-     *      >(5)          > (4) >
-     */
-    reference_graph.DeleteEdgesTo(5, 0);
-    reference_graph.DeleteEdgesTo(1, 0);
+        const ContractorGraph g = makeGraph({{0, 1, 1}, // start, target, weight
+                                             {1, 2, 1}});
 
-    /* After contracting 3:
-     *
-     * Deletes edges 1 -> 3
-     * Deletes edges 4 -> 3
-     * Insert edge 4 -> 1
-     *
-     *                 <--1---
-     * (0) ---3--> (1) >--3--- (3)
-     *  \          ^  v ^        |
-     *   \        /    \ \       |
-     *    1      1      1 2      1
-     *     \    /        \ \     /
-     *      >(5)          > (4) >
-     */
-    reference_graph.DeleteEdgesTo(1, 3);
-    reference_graph.DeleteEdgesTo(4, 3);
-    // Insert shortcut
-    reference_graph.InsertEdge(4, 1, {{2}, {4}, {1.0}, 3, 0, true, true, false});
+        auto query_graph = g;
+        contractGraph(query_graph, {{1}, {1}, {1}});
 
-    /* After contracting 4:
-     *
-     * Delete edges 1 -> 4
-     *
-     *                 <--1---
-     * (0) ---3--> (1) >--3--- (3)
-     *  \          ^  v ^        |
-     *   \        /    \ \       |
-     *    1      1      1 2      1
-     *     \    /        \ \     /
-     *      >(5)          \ (4) >
-     */
-    reference_graph.DeleteEdgesTo(1, 4);
+        HAS(0, 1)
+        HAS(2, 1)
 
-    /* After contracting 1:
-     *
-     * Delete no edges.
-     *
-     *                 <--1---
-     * (0) ---3--> (1) >--3--- (3)
-     *  \          ^  v ^        |
-     *   \        /    \ \       |
-     *    1      1      1 2      1
-     *     \    /        \ \     /
-     *      >(5)          \ (4) >
-     */
+        NOT(1, 0)
+        NOT(1, 2)
+        NOT(2, 0)
+        NOT(0, 2)
+    }
 
-    REQUIRE_SIZE_RANGE(contracted_graph.GetAdjacentEdgeRange(0), 2);
-    BOOST_CHECK(contracted_graph.FindEdge(0, 1) != SPECIAL_EDGEID);
-    BOOST_CHECK(contracted_graph.FindEdge(0, 5) != SPECIAL_EDGEID);
-    REQUIRE_SIZE_RANGE(contracted_graph.GetAdjacentEdgeRange(1), 0);
-    REQUIRE_SIZE_RANGE(contracted_graph.GetAdjacentEdgeRange(2), 0);
-    REQUIRE_SIZE_RANGE(contracted_graph.GetAdjacentEdgeRange(3), 3);
-    BOOST_CHECK(contracted_graph.FindEdge(3, 1) != SPECIAL_EDGEID);
-    BOOST_CHECK(contracted_graph.FindEdge(3, 4) != SPECIAL_EDGEID);
-    REQUIRE_SIZE_RANGE(contracted_graph.GetAdjacentEdgeRange(4), 2);
-    BOOST_CHECK(contracted_graph.FindEdge(4, 1) != SPECIAL_EDGEID);
-    REQUIRE_SIZE_RANGE(contracted_graph.GetAdjacentEdgeRange(5), 1);
-    BOOST_CHECK(contracted_graph.FindEdge(5, 1) != SPECIAL_EDGEID);
+    {
+        /*
+         *  0 - 1
+         *   \ /
+         *    2
+         *
+         *    2
+         *   /|
+         *  1 |
+         *   \|
+         *    0
+         */
+
+        const ContractorGraph g = makeGraph({{0, 1, 1}, // start, target, weight
+                                             {1, 2, 1},
+                                             {0, 2, 1}});
+
+        auto query_graph = g;
+        contractGraph(query_graph, {{1}, {1}, {1}});
+
+        HAS(0, 1)
+        HAS(0, 2)
+        HAS(1, 2)
+
+        NOT(1, 0)
+        NOT(2, 0)
+        NOT(2, 1)
+    }
+
+    {
+        /*
+         *  0 - 1
+         *  |   |
+         *  3 - 2
+         *
+         *      3
+         *    / |
+         *  1   |
+         *  | X |
+         *  0   2
+         */
+
+        const ContractorGraph g = makeGraph({{0, 1, 1}, // start, target, weight
+                                             {1, 2, 1},
+                                             {2, 3, 1},
+                                             {3, 0, 1}});
+
+        auto query_graph = g;
+        contractGraph(query_graph, {{1}, {1}, {1}, {1}});
+
+        HAS(0, 1)
+        HAS(0, 3)
+        HAS(2, 1)
+        HAS(2, 3)
+        HAS(1, 3)
+
+        NOT(1, 0)
+        NOT(3, 0)
+        NOT(1, 2)
+        NOT(3, 2)
+        NOT(3, 1)
+
+        NOT(0, 2)
+        NOT(2, 0)
+    }
+}
+
+BOOST_AUTO_TEST_CASE(contract_excludable_graph)
+{
+    {
+        /*
+         *  Same as above but 0 is uncontractible
+         *
+         *  0 - 1
+         *  |   |
+         *  3 - 2
+         *
+         *  0
+         *  | \
+         *  |   2
+         *  | X |
+         *  1   3
+         */
+
+        const ContractorGraph g = makeGraph({{0, 1, 1}, // start, target, weight
+                                             {1, 2, 1},
+                                             {2, 3, 1},
+                                             {3, 0, 1}});
+
+        auto [query_graph, ignore] = contractExcludableGraph(
+            g, {{1}, {1}, {1}, {1}}, {{true, true, true, true}, {false, true, true, true}});
+
+        HAS(1, 0)
+        HAS(1, 2)
+        HAS(3, 0)
+        HAS(3, 2)
+        HAS(2, 0)
+
+        NOT(0, 1)
+        NOT(2, 1)
+        NOT(0, 3)
+        NOT(2, 3)
+        NOT(0, 2)
+
+        NOT(1, 3)
+        NOT(3, 1)
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

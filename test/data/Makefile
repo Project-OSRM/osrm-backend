@@ -17,7 +17,8 @@ all: data
 data: ch/$(DATA_NAME).osrm.hsgr mld/$(DATA_NAME).osrm.partition
 
 clean:
-	-rm -r $(DATA_NAME).*
+	-rm -r $(DATA_NAME).osrm.*
+	-rm -r $(DATA_NAME)-custom-output.osrm.*
 	-rm -r ch mld
 
 ch/$(DATA_NAME).osrm: $(DATA_NAME).osrm
