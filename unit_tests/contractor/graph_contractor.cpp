@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(contract_graph)
                                              {0, 2, 1}});
 
         auto query_graph = g;
-        contractGraph(query_graph, {});
+        contractGraph(query_graph);
 
         HAS(0, 1)
         HAS(0, 2)
@@ -108,13 +108,18 @@ BOOST_AUTO_TEST_CASE(contract_graph)
                                              {3, 0, 1}});
 
         auto query_graph = g;
-        contractGraph(query_graph, {});
+        contractGraph(query_graph);
 
         HAS(0, 1)
         HAS(0, 3)
         HAS(2, 1)
         HAS(2, 3)
         HAS(1, 3)
+
+        HAS(3, 3) // self-loops
+        HAS(1, 1)
+        NOT(0, 0)
+        NOT(2, 2)
 
         NOT(1, 0)
         NOT(3, 0)
@@ -157,12 +162,12 @@ BOOST_AUTO_TEST_CASE(contract_excludable_graph)
         HAS(3, 0)
         HAS(3, 2)
         HAS(2, 0)
+        HAS(0, 2)
 
         NOT(0, 1)
         NOT(2, 1)
         NOT(0, 3)
         NOT(2, 3)
-        NOT(0, 2)
 
         NOT(1, 3)
         NOT(3, 1)

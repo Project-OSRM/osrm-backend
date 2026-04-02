@@ -7,7 +7,6 @@
 #include "d_ary_heap.hpp"
 #include <algorithm>
 #include <limits>
-#include <optional>
 #include <unordered_map>
 #include <vector>
 

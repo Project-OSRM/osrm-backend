@@ -43,29 +43,31 @@ Parallel Time-Dependent Contraction Hierarchies
 Christian Vetter - July 13, 2009
 https://ae.iti.kit.edu/download/vetter_sa.pdf
 
-tldr:
+tl;dr:
 
-All nodes in the graph are ordered by a unique "priority". Searches only follow edges
-from lower priority nodes (think tertiary road) to higher priority nodes (think
-motorways). Searches start from both source and target until they meet somewhere in the
-middle.
+All nodes in the graph are ordered by their "priority". Searches only follow edges from
+lower priority nodes (think: residential road) to higher priority nodes (think:
+motorway).  Searches start from both source and target at the same time until they meet
+somewhere in the middle.
 
-The shortest distance between any two nodes must be invariant under contraction.  Node
-contraction removes all edges going "down" into the contracted node. This does not
-change any distance from the contracted node to any other since all searches starting at
-the contracted node only go "up".  But all paths that went through the contracted node
-before are now interrupted. To fix this, contraction also inserts "shortcuts" around the
-contracted node: For each pair of immediate neighbours of the contracted node a shortcut
-is inserted iff the way through the node was the shortest path between both of them.
+"A node v is contracted by removing it from the network in such a way that shortest
+paths in the remaining overlay graph are preserved." [Geisberger2008]  Node contraction
+removes all edges going "down" into the contracted node.  This does not change any
+distance from the contracted node itself to any other node since all searches starting
+at the contracted node only ever go "up".  But all paths that went through the
+contracted node before are now interrupted.  To fix this, contraction also inserts
+"shortcuts" around the contracted node: For each pair of immediate neighbours of the
+contracted node a shortcut is inserted iff the way through the node was the shortest
+path between both nodes in the pair.
 
 The nodes get contracted in order of their priority. Since there will be fewer and fewer
 nodes left to be contracted the shortcuts will cover greater and greater distances.
 After a node is contracted the priorities of all neighbouring nodes are updated.
 
-Contraction should be strictly sequential from the lowest priority node to the highest.
-To parallelize this process we introduce the concept of independent node.  A node is
-independent if it is far enough removed from other independent nodes.  Independent nodes
-can be contracted in parallel.
+Contraction in [Geisberger2008] is strictly sequential from the lowest priority node to
+the highest.  To parallelize this process we introduce the concept of independent node
+[Vetter2009].  A node is independent if it is far enough removed from any other
+independent node.  Independent nodes can thus be contracted in parallel.
 
 We first find all independent nodes, then contract all of them in parallel. This step is
 repeated until a sufficient percentage of all nodes is contracted.
@@ -74,11 +76,12 @@ See: Algorithm 2 in Chapter 4.3 of [Vetter2009]
 
 A note about self-loops
 
-Contraction must keep the graph invariant wrt. shortest distance between any two nodes.
-We have the added requirement to keep invariant the shortest loop distance from any node
-to itself. This requirement arises from the need to "go around" if source and target are
-on the same node with source downstream from target. For this reason we must insert
-self-loops for all nodes.
+The shortest distance between any two nodes must be invariant under contraction.  We
+must also keep invariant the shortest loop distance from any node back to itself.  This
+requirement arises for us from the need to "go around" if source and target are on the
+same node, with source downstream from target.  For this reason we must insert
+self-loops whenever this is the shortest path from self to self.
+
 
 Notes
 
@@ -131,8 +134,6 @@ struct ContractorNodeData
     std::vector<bool> is_contractible;
     std::vector<NodePriority> priorities;
     std::vector<NodeDepth> depths;
-    /** List of "lost" edges to re-insert into the graph */
-    tbb::concurrent_vector<ContractorEdge> lost_edges;
 };
 
 struct ContractionStats
@@ -243,7 +244,7 @@ void ContractNode(const ContractorGraph &graph,
 
             if (!heap.WasInserted(target))
             {
-                heap.Insert(target, INVALID_EDGE_WEIGHT, true);
+                heap.Insert(target, INVALID_EDGE_WEIGHT, true); // true: node is a target
                 max_weight = std::max(max_weight, s2n_data.weight + n2t_data.weight);
                 ++number_of_targets;
             }

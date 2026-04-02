@@ -7,6 +7,7 @@
 
 namespace osrm::contractor
 {
+// Data: if true signals that node is a target
 using ContractorHeap =
     util::QueryHeap<NodeID, NodeID, EdgeWeight, bool, util::LinearHashStorage<NodeID, NodeID>>;
 
