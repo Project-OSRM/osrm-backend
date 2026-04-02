@@ -20,7 +20,8 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
                      typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                      const PhantomEndpointCandidates &candidates,
                      EdgeWeight &leg_weight,
-                     std::vector<NodeID> &leg_packed_path)
+                     std::vector<NodeID> &leg_packed_path,
+                     std::vector<EdgeID> &leg_packed_edges)
 {
     forward_heap.Clear();
     reverse_heap.Clear();
@@ -63,6 +64,7 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
            reverse_heap,
            leg_weight,
            leg_packed_path,
+           leg_packed_edges,
            {},
            candidates);
 }
@@ -80,7 +82,9 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             EdgeWeight &new_total_weight_to_forward,
             EdgeWeight &new_total_weight_to_reverse,
             std::vector<NodeID> &leg_packed_path_forward,
-            std::vector<NodeID> &leg_packed_path_reverse)
+            std::vector<NodeID> &leg_packed_path_reverse,
+            std::vector<EdgeID> &leg_packed_edges_forward,
+            std::vector<EdgeID> &leg_packed_edges_reverse)
 {
     // We want to find the shortest distance from any of the source candidate segments to this
     // specific target.
@@ -123,6 +127,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                reverse_heap,
                new_total_weight_to_forward,
                leg_packed_path_forward,
+               leg_packed_edges_forward,
                getForwardForceNodes(candidates),
                candidates);
     }
@@ -162,6 +167,7 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
                reverse_heap,
                new_total_weight_to_reverse,
                leg_packed_path_reverse,
+               leg_packed_edges_reverse,
                getBackwardForceNodes(candidates),
                candidates);
     }
@@ -171,8 +177,9 @@ template <typename Algorithm>
 void unpackLegs(const DataFacade<Algorithm> &facade,
                 const std::vector<PhantomEndpoints> &leg_endpoints,
                 const std::vector<size_t> &route_path_indices,
-                const std::vector<NodeID> &total_packed_path,
-                const std::vector<std::size_t> &packed_leg_begin,
+                const std::vector<NodeID> &total_unpacked_nodes,
+                const std::vector<EdgeID> &total_unpacked_edges,
+                const std::vector<std::size_t> &unpacked_leg_begin,
                 const EdgeWeight shortest_path_weight,
                 InternalRouteResult &raw_route_data)
 {
@@ -182,21 +189,30 @@ void unpackLegs(const DataFacade<Algorithm> &facade,
 
     for (const auto current_leg : util::irange<std::size_t>(0UL, route_path_indices.size()))
     {
-        auto leg_begin =
-            total_packed_path.begin() + packed_leg_begin[route_path_indices[current_leg]];
-        auto leg_end =
-            total_packed_path.begin() + packed_leg_begin[route_path_indices[current_leg] + 1];
+        const auto path_index = route_path_indices[current_leg];
+        const auto leg_begin_idx = unpacked_leg_begin[path_index];
+        const auto leg_end_idx = unpacked_leg_begin[path_index + 1];
+
         const auto &unpack_phantom_node_pair = leg_endpoints[current_leg];
+
+        // Extract the nodes and edges for this leg
+        std::vector<NodeID> leg_nodes(total_unpacked_nodes.begin() + leg_begin_idx,
+                                      total_unpacked_nodes.begin() + leg_end_idx);
+        std::vector<EdgeID> leg_edges(total_unpacked_edges.begin() + leg_begin_idx,
+                                      total_unpacked_edges.begin() + leg_end_idx);
+
+        // Use the overload that accepts pre-computed nodes and edges
         unpackPath(facade,
-                   leg_begin,
-                   leg_end,
+                   leg_nodes,
+                   leg_edges,
                    unpack_phantom_node_pair,
                    raw_route_data.unpacked_path_segments[current_leg]);
 
         raw_route_data.source_traversed_in_reverse.push_back(
-            (*leg_begin != leg_endpoints[current_leg].source_phantom.forward_segment_id.id));
+            (total_unpacked_nodes[leg_begin_idx] !=
+             leg_endpoints[current_leg].source_phantom.forward_segment_id.id));
         raw_route_data.target_traversed_in_reverse.push_back(
-            (*std::prev(leg_end) !=
+            (total_unpacked_nodes[leg_end_idx - 1] !=
              leg_endpoints[current_leg].target_phantom.forward_segment_id.id));
     }
 }
@@ -225,8 +241,9 @@ InternalRouteResult
 constructRouteResult(const DataFacade<Algorithm> &facade,
                      const std::vector<PhantomNodeCandidates> &waypoint_candidates,
                      const std::vector<std::size_t> &route_path_indices,
-                     const std::vector<NodeID> &packed_paths,
-                     const std::vector<size_t> &packed_path_begin,
+                     const std::vector<NodeID> &unpacked_nodes,
+                     const std::vector<EdgeID> &unpacked_edges,
+                     const std::vector<size_t> &unpacked_path_begin,
                      const EdgeWeight min_weight)
 {
 
@@ -238,8 +255,8 @@ constructRouteResult(const DataFacade<Algorithm> &facade,
         const auto &source_candidates = waypoint_candidates[i];
         const auto &target_candidates = waypoint_candidates[i + 1];
         const auto path_index = route_path_indices[i];
-        const auto start_node = packed_paths[packed_path_begin[path_index]];
-        const auto end_node = packed_paths[packed_path_begin[path_index + 1] - 1];
+        const auto start_node = unpacked_nodes[unpacked_path_begin[path_index]];
+        const auto end_node = unpacked_nodes[unpacked_path_begin[path_index + 1] - 1];
 
         auto source_it =
             std::find_if(source_candidates.begin(),
@@ -268,8 +285,9 @@ constructRouteResult(const DataFacade<Algorithm> &facade,
     unpackLegs(facade,
                path_endpoints,
                route_path_indices,
-               packed_paths,
-               packed_path_begin,
+               unpacked_nodes,
+               unpacked_edges,
+               unpacked_path_begin,
                min_weight,
                raw_route_data);
 
@@ -287,8 +305,9 @@ shortestPathWithWaypointUTurns(SearchEngineData<Algorithm> &engine_working_data,
 {
 
     EdgeWeight total_weight = {0};
-    std::vector<NodeID> total_packed_path;
-    std::vector<std::size_t> packed_leg_begin;
+    std::vector<NodeID> total_unpacked_nodes;
+    std::vector<EdgeID> total_unpacked_edges;
+    std::vector<std::size_t> unpacked_leg_begin;
 
     initializeHeap(engine_working_data, facade);
 
@@ -299,7 +318,8 @@ shortestPathWithWaypointUTurns(SearchEngineData<Algorithm> &engine_working_data,
     {
         PhantomEndpointCandidates search_candidates{waypoint_candidates[i],
                                                     waypoint_candidates[i + 1]};
-        std::vector<NodeID> packed_leg;
+        std::vector<NodeID> unpacked_leg_nodes;
+        std::vector<EdgeID> unpacked_leg_edges;
         EdgeWeight leg_weight = INVALID_EDGE_WEIGHT;
 
         // We have a valid path up to this leg
@@ -310,28 +330,33 @@ shortestPathWithWaypointUTurns(SearchEngineData<Algorithm> &engine_working_data,
                         reverse_heap,
                         search_candidates,
                         leg_weight,
-                        packed_leg);
+                        unpacked_leg_nodes,
+                        unpacked_leg_edges);
 
         if (leg_weight == INVALID_EDGE_WEIGHT)
             return {};
 
-        packed_leg_begin.push_back(total_packed_path.size());
-        total_packed_path.insert(total_packed_path.end(), packed_leg.begin(), packed_leg.end());
+        unpacked_leg_begin.push_back(total_unpacked_nodes.size());
+        total_unpacked_nodes.insert(
+            total_unpacked_nodes.end(), unpacked_leg_nodes.begin(), unpacked_leg_nodes.end());
+        total_unpacked_edges.insert(
+            total_unpacked_edges.end(), unpacked_leg_edges.begin(), unpacked_leg_edges.end());
         total_weight += leg_weight;
     };
 
     // Add sentinel
-    packed_leg_begin.push_back(total_packed_path.size());
+    unpacked_leg_begin.push_back(total_unpacked_nodes.size());
 
-    BOOST_ASSERT(packed_leg_begin.size() == waypoint_candidates.size());
+    BOOST_ASSERT(unpacked_leg_begin.size() == waypoint_candidates.size());
 
-    std::vector<std::size_t> sequential_indices(packed_leg_begin.size() - 1);
+    std::vector<std::size_t> sequential_indices(unpacked_leg_begin.size() - 1);
     std::iota(sequential_indices.begin(), sequential_indices.end(), 0);
     return constructRouteResult(facade,
                                 waypoint_candidates,
                                 sequential_indices,
-                                total_packed_path,
-                                packed_leg_begin,
+                                total_unpacked_nodes,
+                                total_unpacked_edges,
+                                unpacked_leg_begin,
                                 total_weight);
 }
 
@@ -425,14 +450,16 @@ struct route_state
      *           > path_2
      *                            --path_0--  --path_1-- --path_2-- ....... -path_m-1- --path_m--
      *                           |           |          |          |       |          |          |
-     *  total_packed_path        [n0,n1,.....,na,na+1,..,nb,nb+1,..,.......,nx,.......,ny......nz]
+     *  total_unpacked_nodes     [n0,n1,.....,na,na+1,..,nb,nb+1,..,.......,nx,.......,ny......nz]
+     *  total_unpacked_edges     [e0,e1,.....,ea,........,eb,........,.......,ex,.......,ey......]
      *
-     *  packed_leg_path_begin    [0,a,b,...,x,y,z+1]
+     *  unpacked_leg_begin       [0,a,b,...,x,y,z+1]
      *
      *  previous_leg_in_route    [-1,0,0,...,..,m-1]
      */
-    std::vector<NodeID> total_packed_paths;
-    std::vector<std::size_t> packed_leg_begin;
+    std::vector<NodeID> total_unpacked_nodes;
+    std::vector<EdgeID> total_unpacked_edges;
+    std::vector<std::size_t> unpacked_leg_begin;
     std::vector<std::size_t> previous_leg_in_route;
 
     leg_state last;
@@ -443,7 +470,7 @@ struct route_state
     /**
      *  Given the current state after leg n:
      *                           | leg_0_paths | leg_1_paths | ... | leg_n-1_paths | leg_n_paths |
-     *  packed_leg_begin         [...............................................................]
+     *  unpacked_leg_begin       [...............................................................]
      *  previous_leg_in_route    [...............................................................]
      *                                                                             ^
      *                                                                    previous_leg_path_offset
@@ -498,8 +525,8 @@ struct route_state
     void completeSearch()
     {
         // insert sentinel
-        packed_leg_begin.push_back(total_packed_paths.size());
-        BOOST_ASSERT(packed_leg_begin.size() == previous_leg_in_route.size() + 1);
+        unpacked_leg_begin.push_back(total_unpacked_nodes.size());
+        BOOST_ASSERT(unpacked_leg_begin.size() == previous_leg_in_route.size() + 1);
     }
 
     size_t previousForwardPath(size_t previous_leg) const
@@ -513,8 +540,10 @@ struct route_state
     }
 
     void addSearchResult(const PhantomCandidatesToTarget &candidates,
-                         const std::vector<NodeID> &packed_leg_to_forward,
-                         const std::vector<NodeID> &packed_leg_to_reverse,
+                         const std::vector<NodeID> &unpacked_leg_to_forward,
+                         const std::vector<NodeID> &unpacked_leg_to_reverse,
+                         const std::vector<EdgeID> &unpacked_edges_to_forward,
+                         const std::vector<EdgeID> &unpacked_edges_to_reverse,
                          EdgeWeight new_total_weight_to_forward,
                          EdgeWeight new_total_weight_to_reverse)
     {
@@ -523,8 +552,8 @@ struct route_state
         if (current_leg > 0)
         {
             const auto leg_connections = getLegConnections(candidates.source_phantoms,
-                                                           packed_leg_to_forward,
-                                                           packed_leg_to_reverse,
+                                                           unpacked_leg_to_forward,
+                                                           unpacked_leg_to_reverse,
                                                            new_total_weight_to_forward,
                                                            new_total_weight_to_reverse);
 
@@ -532,7 +561,7 @@ struct route_state
             if (leg_connections.forward_to_forward)
             {
                 auto new_total = last.total_nodes_to_forward[*leg_connections.forward_to_forward] +
-                                 packed_leg_to_forward.size();
+                                 unpacked_leg_to_forward.size();
                 current.total_nodes_to_forward.push_back(new_total);
                 previous_leg_in_route.push_back(
                     previousForwardPath(*leg_connections.forward_to_forward));
@@ -540,7 +569,7 @@ struct route_state
             else if (leg_connections.reverse_to_forward)
             {
                 auto new_total = last.total_nodes_to_reverse[*leg_connections.reverse_to_forward] +
-                                 packed_leg_to_forward.size();
+                                 unpacked_leg_to_forward.size();
                 current.total_nodes_to_forward.push_back(new_total);
                 previous_leg_in_route.push_back(
                     previousReversePath(*leg_connections.reverse_to_forward));
@@ -555,7 +584,7 @@ struct route_state
             if (leg_connections.forward_to_reverse)
             {
                 auto new_total = last.total_nodes_to_forward[*leg_connections.forward_to_reverse] +
-                                 packed_leg_to_reverse.size();
+                                 unpacked_leg_to_reverse.size();
                 current.total_nodes_to_reverse.push_back(new_total);
                 previous_leg_in_route.push_back(
                     previousForwardPath(*leg_connections.forward_to_reverse));
@@ -563,7 +592,7 @@ struct route_state
             else if (leg_connections.reverse_to_reverse)
             {
                 auto new_total = last.total_nodes_to_reverse[*leg_connections.reverse_to_reverse] +
-                                 packed_leg_to_reverse.size();
+                                 unpacked_leg_to_reverse.size();
                 current.total_nodes_to_reverse.push_back(new_total);
                 previous_leg_in_route.push_back(
                     previousReversePath(*leg_connections.reverse_to_reverse));
@@ -577,10 +606,10 @@ struct route_state
         else
         {
             previous_leg_in_route.push_back(INVALID_LEG_INDEX);
-            current.total_nodes_to_forward.push_back(packed_leg_to_forward.size());
+            current.total_nodes_to_forward.push_back(unpacked_leg_to_forward.size());
 
             previous_leg_in_route.push_back(INVALID_LEG_INDEX);
-            current.total_nodes_to_reverse.push_back(packed_leg_to_reverse.size());
+            current.total_nodes_to_reverse.push_back(unpacked_leg_to_reverse.size());
         }
 
         // Update route paths, weights and reachability
@@ -596,12 +625,20 @@ struct route_state
         current.reached_reverse_node_target.push_back(new_total_weight_to_reverse !=
                                                       INVALID_EDGE_WEIGHT);
 
-        packed_leg_begin.push_back(total_packed_paths.size());
-        total_packed_paths.insert(
-            total_packed_paths.end(), packed_leg_to_forward.begin(), packed_leg_to_forward.end());
-        packed_leg_begin.push_back(total_packed_paths.size());
-        total_packed_paths.insert(
-            total_packed_paths.end(), packed_leg_to_reverse.begin(), packed_leg_to_reverse.end());
+        unpacked_leg_begin.push_back(total_unpacked_nodes.size());
+        total_unpacked_nodes.insert(total_unpacked_nodes.end(),
+                                    unpacked_leg_to_forward.begin(),
+                                    unpacked_leg_to_forward.end());
+        total_unpacked_edges.insert(total_unpacked_edges.end(),
+                                    unpacked_edges_to_forward.begin(),
+                                    unpacked_edges_to_forward.end());
+        unpacked_leg_begin.push_back(total_unpacked_nodes.size());
+        total_unpacked_nodes.insert(total_unpacked_nodes.end(),
+                                    unpacked_leg_to_reverse.begin(),
+                                    unpacked_leg_to_reverse.end());
+        total_unpacked_edges.insert(total_unpacked_edges.end(),
+                                    unpacked_edges_to_reverse.begin(),
+                                    unpacked_edges_to_reverse.end());
     }
 
     // Find the final target with the shortest route and backtrack through the legs to find the
@@ -711,8 +748,10 @@ shortestPathWithWaypointContinuation(SearchEngineData<Algorithm> &engine_working
             EdgeWeight new_total_weight_to_forward = INVALID_EDGE_WEIGHT;
             EdgeWeight new_total_weight_to_reverse = INVALID_EDGE_WEIGHT;
 
-            std::vector<NodeID> packed_leg_to_forward;
-            std::vector<NodeID> packed_leg_to_reverse;
+            std::vector<NodeID> unpacked_leg_to_forward;
+            std::vector<NodeID> unpacked_leg_to_reverse;
+            std::vector<EdgeID> unpacked_edges_to_forward;
+            std::vector<EdgeID> unpacked_edges_to_reverse;
 
             if (target_phantom.IsValidForwardTarget() || target_phantom.IsValidReverseTarget())
             {
@@ -727,13 +766,17 @@ shortestPathWithWaypointContinuation(SearchEngineData<Algorithm> &engine_working
                        route.last.total_weight_to_reverse,
                        new_total_weight_to_forward,
                        new_total_weight_to_reverse,
-                       packed_leg_to_forward,
-                       packed_leg_to_reverse);
+                       unpacked_leg_to_forward,
+                       unpacked_leg_to_reverse,
+                       unpacked_edges_to_forward,
+                       unpacked_edges_to_reverse);
             }
 
             route.addSearchResult(search_candidates,
-                                  packed_leg_to_forward,
-                                  packed_leg_to_reverse,
+                                  unpacked_leg_to_forward,
+                                  unpacked_leg_to_reverse,
+                                  unpacked_edges_to_forward,
+                                  unpacked_edges_to_reverse,
                                   new_total_weight_to_forward,
                                   new_total_weight_to_reverse);
         }
@@ -760,8 +803,9 @@ shortestPathWithWaypointContinuation(SearchEngineData<Algorithm> &engine_working
     return constructRouteResult(facade,
                                 waypoint_candidates,
                                 min_path_indices,
-                                route.total_packed_paths,
-                                route.packed_leg_begin,
+                                route.total_unpacked_nodes,
+                                route.total_unpacked_edges,
+                                route.unpacked_leg_begin,
                                 min_weight);
 }
 } // namespace
