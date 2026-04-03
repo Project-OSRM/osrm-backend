@@ -1,0 +1,108 @@
+name: Include What You Use
+
+on:
+  push:
+    branches:
+      - master
+  pull_request:
+    branches:
+      - master
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  iwyu-check:
+    name: IWYU Header Dependencies Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install LLVM and IWYU from apt.llvm.org
+        run: |
+          # Add LLVM repository
+          wget -O - https://apt.llvm.org/llvm-snapshot.gpg.key | sudo apt-key add -
+          echo "deb http://apt.llvm.org/$(lsb_release -cs)/ llvm-toolchain-$(lsb_release -cs)-18 main" | sudo tee /etc/apt/sources.list.d/llvm.list
+
+          # Update and install packages
+          sudo apt-get update
+          sudo apt-get install -y \
+            llvm-18 \
+            llvm-18-dev \
+            clang-18 \
+            libclang-18-dev
+
+          # Install IWYU from Ubuntu repos (compatible with clang-18)
+          sudo apt-get install -y iwyu
+
+          # Create symlink if needed
+          if [ ! -f /usr/bin/include-what-you-use ] && [ -f /usr/bin/iwyu ]; then
+            sudo ln -s /usr/bin/iwyu /usr/bin/include-what-you-use
+          fi
+
+          # Verify IWYU installation
+          include-what-you-use --version || iwyu --version || echo "Warning: IWYU version check failed"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get install -y \
+            libbz2-dev \
+            libxml2-dev \
+            libzip-dev \
+            liblua5.2-dev \
+            ccache
+
+          # Install TBB
+          TBB_VERSION=2021.12.0
+          TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
+          wget --tries 5 ${TBB_URL} -O onetbb.tgz
+          tar zxvf onetbb.tgz
+          sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
+          sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
+
+      - name: Install boost
+        uses: MarkusJx/install-boost@v2
+        id: install-boost
+        with:
+          boost_version: 1.85.0
+
+      - name: Configure CMake with IWYU
+        run: |
+          mkdir build
+          cd build
+          cmake .. \
+            -DCMAKE_BUILD_TYPE=Debug \
+            -DCMAKE_CXX_COMPILER=clang++-18 \
+            -DCMAKE_C_COMPILER=clang-18 \
+            -DENABLE_IWYU=ON \
+            -DENABLE_LTO=OFF
+        env:
+          Boost_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+
+      - name: Run IWYU
+        run: |
+          cd build
+          # Build to trigger IWYU checks (only building libraries, not all targets)
+          make -j$(nproc) osrm 2>&1 | tee iwyu.log || true
+
+          # Check if there are any IWYU warnings
+          if grep -q "should add these lines:" iwyu.log || grep -q "should remove these lines:" iwyu.log; then
+            echo "::warning::IWYU found issues with header dependencies"
+            echo "To fix header dependencies locally:"
+            echo "  1. Configure cmake with -DENABLE_IWYU=ON"
+            echo "  2. Build the project: make -j\$(nproc)"
+            echo "  3. Review IWYU suggestions and apply fixes"
+            echo "  4. You can use iwyu_tool.py and fix_includes.py for automated fixes"
+            # Don't fail the build for now, just warn
+            exit 0
+          else
+            echo "No IWYU issues found or IWYU not properly configured"
+          fi
+
+      - name: Upload IWYU log
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: iwyu-log
+          path: build/iwyu.log

@@ -1,0 +1,18 @@
+[
+  # Standard library mappings
+  { "include": ["<bits/fcntl-linux.h>", "private", "<fcntl.h>", "public"] },
+  { "include": ["<bits/shared_ptr.h>", "private", "<memory>", "public"] },
+  { "include": ["<bits/unique_ptr.h>", "private", "<memory>", "public"] },
+  { "include": ["<bits/std_function.h>", "private", "<functional>", "public"] },
+  { "include": ["<sys/types.h>", "public", "<cstdint>", "public"] },
+
+  # Third-party library mappings
+  { "include": ["<expat_external.h>", "public", "<expat.h>", "public"] },
+  { "include": ["<zconf.h>", "public", "<zlib.h>", "public"] },
+
+  # Boost mappings
+  { "include": ["@<boost/.*>", "public", "<boost/boost.hpp>", "public"] },
+
+  # TBB mappings
+  { "include": ["@<tbb/.*>", "public", "<tbb/tbb.h>", "public"] }
+]
