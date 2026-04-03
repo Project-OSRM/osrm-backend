@@ -228,6 +228,20 @@ std::filesystem::path getLockDir()
         }
         return dir;
     }
+    const char *home = std::getenv("HOME");
+#ifdef _WIN32
+    if (!home)
+    {
+        home = std::getenv("USERPROFILE");
+    }
+#endif
+    if (home)
+    {
+        std::filesystem::path lock_dir = std::filesystem::path(home) / ".osrm";
+        std::filesystem::create_directories(lock_dir);
+        return lock_dir;
+    }
+
     return std::filesystem::temp_directory_path();
 }
 
