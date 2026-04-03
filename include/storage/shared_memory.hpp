@@ -41,10 +41,11 @@ class SharedMemory
 /**
  * @brief Returns the directory to use for OSRM lock files
  *
- * Returns the contents of the environment variable SHM_LOCK_DIR if set else the system
- * temp directory.
+ * Priority: SHM_LOCK_DIR env var > $HOME/.osrm/ > system temp directory.
+ * Using $HOME/.osrm/ by default avoids lock files being cleaned by
+ * systemd-tmpfiles-clean, which would break shared memory access.
  *
- * @return std::filesystem::path The directory to usew for lock files
+ * @return std::filesystem::path The directory to use for lock files
  */
 std::filesystem::path getLockDir();
 
