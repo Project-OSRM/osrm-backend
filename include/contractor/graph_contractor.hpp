@@ -18,7 +18,7 @@ GraphAndFilter contractExcludableGraph(ContractorGraph contractor_graph_,
 
 std::vector<bool> contractGraph(ContractorGraph &graph,
                                 std::vector<bool> node_is_uncontracted,
-                                std::vector<bool> node_is_contractable,
+                                std::vector<bool> node_is_contractible,
                                 double core_factor = 1.0);
 
 // Overload for contracting all nodes
@@ -29,10 +29,10 @@ inline auto contractGraph(ContractorGraph &graph, double core_factor = 1.0)
 
 // Overload no contracted nodes
 inline auto contractGraph(ContractorGraph &graph,
-                          std::vector<bool> node_is_contractable,
+                          std::vector<bool> node_is_contractible,
                           double core_factor = 1.0)
 {
-    return contractGraph(graph, {}, std::move(node_is_contractable), core_factor);
+    return contractGraph(graph, {}, std::move(node_is_contractible), core_factor);
 }
 
 } // namespace osrm::contractor

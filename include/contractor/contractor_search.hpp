@@ -14,7 +14,7 @@ namespace osrm::contractor
 void search(ContractorHeap &heap,
             const ContractorGraph &graph,
             const NodeID start,
-            const std::vector<bool> &contractable,
+            const std::vector<bool> &contractible,
             const unsigned number_of_targets,
             const int node_limit,
             const EdgeWeight weight_limit,

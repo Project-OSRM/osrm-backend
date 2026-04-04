@@ -335,9 +335,9 @@ void ContractNode(const ContractorGraph &graph,
                                                      n2t_data.originalEdges +
                                                          s2n_data.originalEdges,
                                                      node,
-                                                     true,  // shortcut
-                                                     true,  // forward
-                                                     true); // backward
+                                                     true,   // shortcut
+                                                     true,   // forward
+                                                     false); // backward
                     }
 
 #endif
@@ -391,13 +391,12 @@ void PostProcess(ContractorGraph &graph, const NodeID v, ContractorNodeData &nod
     for (const NodeID u : GetNeighbours(graph, v))
     {
         node_data.depths[u] = std::max(depth, node_data.depths[u]);
+
         // "Irrespective of the direction ﬂags, each edge (u, v) is stored only once,
         // namely at the smaller node, which complies with the requirements of both
         // forward and backward search (including the stall-on-demand technique)."
         // [Geisberger2008]
-
         // See also: self-loops
-
         graph.DeleteEdgesTo(u, v);
     }
 }
@@ -407,9 +406,9 @@ void PostProcess(ContractorGraph &graph, const NodeID v, ContractorNodeData &nod
  *
  * - Algo 2: Insert E into Remaining graph
  *
- * Alas edge insertion is not thread-safe even for "independent" nodes (but edge erasure
- * curiously is!). If the graph ever gets fixed to be thread-safe, this function can use
- * parallel execution too.
+ * This function is not thread-safe because edge insertion is not thread-safe even for
+ * "independent" nodes (but edge erasure curiously is!). If the graph ever gets fixed to
+ * be thread-safe, this function can use parallel execution too.
  *
  * @param graph
  * @param inserted_edges
@@ -420,25 +419,6 @@ void InsertEdges(ContractorGraph &graph,
 {
     for (const ContractorEdge &edge : inserted_edges)
     {
-        const EdgeID current_edge_ID = graph.FindEdge(edge.source, edge.target);
-        if (current_edge_ID != SPECIAL_EDGEID)
-        {
-            // found edge in graph ...
-            auto &current_data = graph.GetEdgeData(current_edge_ID);
-            if (edge.data.forward == current_data.forward &&
-                edge.data.backward == current_data.backward)
-            {
-                // ... but found edge has smaller weight, update it.
-                if (edge.data.weight < current_data.weight ||
-                    edge.data.duration < current_data.duration ||
-                    edge.data.distance < current_data.distance)
-                {
-                    current_data = edge.data;
-                }
-                // ... so don't insert a duplicate.
-                continue;
-            }
-        }
         graph.InsertEdge(edge.source, edge.target, edge.data);
     }
 }
@@ -594,7 +574,8 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
 
     // Algo 2: while Remaining Graph not Empty
     //
-    // contract a chunk of nodes until enough nodes are contracted
+    // contract a chunk of nodes until a sufficient percentage of all nodes is
+    // contracted
     while (remaining_nodes.size() > number_of_core_nodes)
     {
         /** List of discovered independent nodes */

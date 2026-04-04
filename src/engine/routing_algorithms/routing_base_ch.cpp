@@ -145,10 +145,10 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
     // Was a paths over one of the forward/reverse nodes not found?
     BOOST_ASSERT_MSG((SPECIAL_NODEID != middle && INVALID_EDGE_WEIGHT != weight), "no path found");
 
-    // make sure to correctly unpack loops
+    // We have to detect and report self-loops this way because we cannot insert the
+    // same node twice into the heap with differing weights.
     if (weight != forward_heap.GetKey(middle) + reverse_heap.GetKey(middle))
     {
-        // self loop makes up the full path
         packed_leg.push_back(middle);
         packed_leg.push_back(middle);
     }
@@ -156,6 +156,8 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
     {
         retrievePackedPathFromHeap(forward_heap, reverse_heap, middle, packed_leg);
     }
+
+#ifndef NDEBUG
     {
         auto log = util::Log(logDEBUG);
         log << "  and packed_leg of size " << packed_leg.size() << " with nodes";
@@ -164,6 +166,7 @@ void search(SearchEngineData<Algorithm> & /*engine_working_data*/,
             log << " " << node;
         }
     }
+#endif
 }
 
 // Requires the heaps for be empty

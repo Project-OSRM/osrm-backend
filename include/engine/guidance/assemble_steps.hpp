@@ -154,8 +154,10 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                           {intersection},
                                           is_left_hand_driving});
 
+#ifndef NDEBUG
                 util::Log(logDEBUG) << "pushing RouteStep of duration "
                                     << from_alias<double>(segment_duration) / 10.;
+#endif
 
                 if (leg_data_index + 1 < leg_data.size())
                 {

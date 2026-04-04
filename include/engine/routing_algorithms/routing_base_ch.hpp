@@ -113,7 +113,7 @@ void routingStep(const DataFacade<Algorithm> &facade,
                  NodeID &middle_node_id,
                  EdgeWeight &upper_bound,
                  EdgeWeight min_edge_offset,
-                 [[maybe_unused]] const std::vector<NodeID> &force_step_nodes)
+                 const std::vector<NodeID> &force_step_nodes)
 {
     auto heapNode = forward_heap.DeleteMinGetHeapNode();
     const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);

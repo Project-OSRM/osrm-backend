@@ -427,8 +427,10 @@ catch (const std::bad_alloc &e)
     util::Log(logWARNING) << "Please provide more memory or consider using a larger swapfile";
     return EXIT_FAILURE;
 }
+#ifdef _WIN32
 catch (const std::exception &e)
 {
     util::Log(logERROR) << "[exception] " << e.what();
     return EXIT_FAILURE;
 }
+#endif

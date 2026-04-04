@@ -76,9 +76,9 @@ export function runBinSync(bin, args, options, log) {
   if (child.stderr)
     log(`${bin} stderr:\n${child.stderr}`);
   if (child.status != null)
-    log(`${bin} sync completed with exit code ${child.status}`);
+    log(`${bin} completed with exit code ${child.status}`);
   if (child.signal != null) {
-    const msg = `${bin} sync aborted with signal ${child.signal}`;
+    const msg = `${bin} aborted with signal ${child.signal}`;
     log(msg);
     if (child.signal != 'SIGABRT') // some tests deliberately fail
       throw new Error(msg);

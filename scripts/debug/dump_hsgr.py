@@ -1,5 +1,5 @@
 """
-Contractior debugging script.
+Contractor debugging script.
 
 This script displays the content of `osrm.ebg` and `osrm.hsgr` files both in tabular
 form and as `.dot` graph.
