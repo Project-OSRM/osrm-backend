@@ -9,7 +9,7 @@
       - FIXED: Compilation error in raster_source [#7422](https://github.com/Project-OSRM/osrm-backend/issues/7422)
     - API:
       - ADDED: The parameter `overview` now accepts `by_legs` to include the geometry on the `RouteLeg` instead of the `Route` object. [#7256](https://github.com/Project-OSRM/osrm-backend/pull/7256)
-      - ADDED: Support `annotations=way_ids` for route, match, and trip responses in JSON, FlatBuffers, HTTP, and Node.js APIs.
+      - ADDED: Support `annotations=way_ids` for route, match, and trip responses in JSON, FlatBuffers, HTTP, and Node.js APIs. [#7444](https://github.com/Project-OSRM/osrm-backend/pull/7444)
     - Profiles:
       - FIXED: Exclude `highway=road` from foot and bicycle profiles since it is an OSM error marker with unknown classification [#7039](https://github.com/Project-OSRM/osrm-backend/issues/7039)
       - FIXED: Roads with a real `highway=*` type and an additional `proposed=*` tag (e.g. a planned upgrade) are now routed correctly instead of being silently pruned [#7413](https://github.com/Project-OSRM/osrm-backend/issues/7413)
