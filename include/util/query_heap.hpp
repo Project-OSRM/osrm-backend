@@ -7,7 +7,6 @@
 #include "d_ary_heap.hpp"
 #include <algorithm>
 #include <limits>
-#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -328,6 +327,15 @@ class QueryHeap
     {
         BOOST_ASSERT(!WasRemoved(heapNode.node));
         heap.decrease(heapNode.handle,
+                      HeapData{heapNode.weight, heap[heapNode.handle].index},
+                      [this](const auto &heapData, auto new_handle)
+                      { inserted_nodes[heapData.index].handle = new_handle; });
+    }
+
+    void IncreaseKey(const HeapNode &heapNode)
+    {
+        BOOST_ASSERT(!WasRemoved(heapNode.node));
+        heap.increase(heapNode.handle,
                       HeapData{heapNode.weight, heap[heapNode.handle].index},
                       [this](const auto &heapData, auto new_handle)
                       { inserted_nodes[heapData.index].handle = new_handle; });
