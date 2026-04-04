@@ -148,6 +148,8 @@ When(/^I match I should get$/, function (table, callback) {
             'datasources',
             'nodes',
             'weight',
+            'speed',
+            'way_ids',
           ];
           if (k.match(/^a:/)) {
             const a_type = k.slice(2);

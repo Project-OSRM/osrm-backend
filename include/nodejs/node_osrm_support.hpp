@@ -934,6 +934,11 @@ inline bool parseCommonParameters(const Napi::Object &obj, ParamType &params)
                     params->annotations_type =
                         params->annotations_type | osrm::RouteParameters::AnnotationsType::Speed;
                 }
+                else if (annotations_str == "way_ids")
+                {
+                    params->annotations_type =
+                        params->annotations_type | osrm::RouteParameters::AnnotationsType::WayIds;
+                }
                 else
                 {
                     ThrowError(obj.Env(), "this 'annotations' param is not supported");

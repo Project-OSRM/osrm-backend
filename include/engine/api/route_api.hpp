@@ -522,6 +522,15 @@ class RouteAPI : public BaseAPI
                                                    [](const guidance::LegGeometry::Annotation &anno)
                                                    { return anno.datasource; });
         }
+
+        flatbuffers::Offset<flatbuffers::Vector<uint64_t>> way_ids;
+        if (requested_annotations & RouteParameters::AnnotationsType::WayIds)
+        {
+            way_ids = GetAnnotations<uint64_t>(fb_result,
+                                               leg_geometry,
+                                               [](const guidance::LegGeometry::Annotation &anno)
+                                               { return static_cast<std::uint64_t>(anno.way_id); });
+        }
         std::vector<uint32_t> nodes;
         if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
         {
@@ -557,6 +566,7 @@ class RouteAPI : public BaseAPI
         annotation.add_weight(weight);
         annotation.add_datasources(datasources);
         annotation.add_nodes(nodes_vector);
+        annotation.add_way_ids(way_ids);
         if (use_metadata)
         {
             annotation.add_metadata(metadata_buffer);
@@ -871,6 +881,14 @@ class RouteAPI : public BaseAPI
                         GetAnnotations(leg_geometry,
                                        [](const guidance::LegGeometry::Annotation &anno)
                                        { return anno.datasource; }));
+                }
+                if (requested_annotations & RouteParameters::AnnotationsType::WayIds)
+                {
+                    annotation.values.emplace(
+                        "way_ids",
+                        GetAnnotations(leg_geometry,
+                                       [](const guidance::LegGeometry::Annotation &anno)
+                                       { return static_cast<std::uint64_t>(anno.way_id); }));
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
                 {
