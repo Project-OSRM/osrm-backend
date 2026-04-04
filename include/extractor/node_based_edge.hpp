@@ -72,6 +72,20 @@ struct NodeBasedEdgeAnnotation
     TravelMode travel_mode : 4;            // 4
     bool is_left_hand_driving : 1;         // 1
 
+    NodeBasedEdgeAnnotation() = default;
+
+    NodeBasedEdgeAnnotation(const StringViewID string_view_id,
+                            const LaneDescriptionID lane_description_id,
+                            const ClassData classes,
+                            const OSMWayID way_id,
+                            const TravelMode travel_mode,
+                            const bool is_left_hand_driving)
+        : string_view_id(string_view_id), lane_description_id(lane_description_id),
+          classes(classes), way_id(way_id), travel_mode(travel_mode),
+          is_left_hand_driving(is_left_hand_driving)
+    {
+    }
+
     bool CanCombineWith(const NodeBasedEdgeAnnotation &other) const
     {
         return (std::tie(string_view_id, classes, way_id, travel_mode, is_left_hand_driving) ==
