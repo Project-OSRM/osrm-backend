@@ -130,8 +130,8 @@ test('match: match in Monaco with speed annotations options', (assert) => {
 });
 
 
-test('match: match in Monaco with several (duration, distance, nodes) annotations options', (assert) => {
-  assert.plan(12);
+test('match: match in Monaco with several (duration, distance, nodes, way_ids) annotations options', (assert) => {
+  assert.plan(13);
   const osrm = new OSRM(data_path);
   const options = {
     timestamps: [1424684612, 1424684616, 1424684620],
@@ -139,7 +139,7 @@ test('match: match in Monaco with several (duration, distance, nodes) annotation
     timestamps: [1424684612, 1424684616, 1424684620],
     radiuses: [4.07, 4.07, 4.07],
     steps: true,
-    annotations: ['duration','distance','nodes'],
+    annotations: ['duration','distance','nodes','way_ids'],
     overview: 'false',
     geometries: 'geojson'
   };
@@ -152,6 +152,7 @@ test('match: match in Monaco with several (duration, distance, nodes) annotation
     assert.ok(response.matchings[0].legs.every((l) => {return l.annotation.distance; }), 'every leg has annotations for distance');
     assert.ok(response.matchings[0].legs.every((l) => {return l.annotation.duration; }), 'every leg has annotations for durations');
     assert.ok(response.matchings[0].legs.every((l) => {return l.annotation.nodes; }), 'every leg has annotations for nodes');
+    assert.ok(response.matchings[0].legs.every((l) => {return l.annotation.way_ids; }), 'every leg has annotations for way ids');
     assert.notOk(response.matchings[0].legs.every((l) => {return l.annotation.weight; }), 'has no annotations for weight');
     assert.notOk(response.matchings[0].legs.every((l) => {return l.annotation.datasources; }), 'has no annotations for datasources');
     assert.notOk(response.matchings[0].legs.every((l) => {return l.annotation.speed; }), 'has no annotations for speed');
@@ -160,7 +161,7 @@ test('match: match in Monaco with several (duration, distance, nodes) annotation
 });
 
 test('match: match in Monaco with all options', (assert) => {
-  assert.plan(8);
+  assert.plan(9);
   const osrm = new OSRM(data_path);
   const options = {
     coordinates: three_test_coordinates,
@@ -181,6 +182,7 @@ test('match: match in Monaco with all options', (assert) => {
     assert.ok(response.matchings[0].legs.every((l) => {return l.annotation; }), 'every leg has annotations');
     assert.ok(response.matchings[0].legs.every((l) => {return l.annotation.distance; }), 'every leg has annotations for distance');
     assert.ok(response.matchings[0].legs.every((l) => {return l.annotation.duration; }), 'every leg has annotations for durations');
+    assert.ok(response.matchings[0].legs.every((l) => {return l.annotation.way_ids; }), 'every leg has annotations for way ids');
     assert.equal(undefined, response.matchings[0].geometry);
   });
 });

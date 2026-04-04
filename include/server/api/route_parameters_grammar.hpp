@@ -71,10 +71,10 @@ struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature
             "false", engine::api::RouteParameters::OverviewType::False)(
             "by_legs", engine::api::RouteParameters::OverviewType::ByLegs);
 
-        annotations_type.add("duration", AnnotationsType::Duration)("nodes",
-                                                                    AnnotationsType::Nodes)(
-            "distance", AnnotationsType::Distance)("weight", AnnotationsType::Weight)(
-            "datasources", AnnotationsType::Datasources)("speed", AnnotationsType::Speed);
+        annotations_type.add("duration", AnnotationsType::Duration)(
+            "nodes", AnnotationsType::Nodes)("distance", AnnotationsType::Distance)(
+            "weight", AnnotationsType::Weight)("datasources", AnnotationsType::Datasources)(
+            "speed", AnnotationsType::Speed)("way_ids", AnnotationsType::WayIds);
 
         waypoints_rule =
             qi::lit("waypoints=") >
