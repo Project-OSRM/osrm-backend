@@ -12,6 +12,7 @@ table Annotation {
     nodes: [uint];
     weight: [uint];
     speed: [float];
+    way_ids: [ulong];
     metadata: Metadata;
 }
 

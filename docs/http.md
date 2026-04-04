@@ -209,7 +209,7 @@ In addition to the [general options](#general-options) the following options are
 |------------|---------------------------------------------|-------------------------------------------------------------------------------|
 |alternatives|`true`, `false` (default), or Number         |Search for alternative routes. Passing a number `alternatives=n` searches for up to `n` alternative routes.\*                            |
 |steps       |`true`, `false` (default)                    |Returned route steps for each route leg                                        |
-|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.      |
+|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`, `way_ids`  |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `polyline6`, `geojson` |Returned route geometry format (influences overview and per step)              |
 |overview    |`simplified` (default), `full`, `false`, `by_legs`      |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, not at all, or split by leg.|
 |continue\_straight |`default` (default), `true`, `false`  |Forces the route to keep going straight at waypoints constraining uturns there even if it would be faster. Default value depends on the profile. |
@@ -431,7 +431,7 @@ In addition to the [general options](#general-options) the following options are
 |------------|------------------------------------------------|------------------------------------------------------------------------------------------|
 |steps       |`true`, `false` (default)                       |Returned route steps for each route                                                       |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)                         |
-|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.                 |
+|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`, `way_ids`  |Returns additional metadata for each coordinate along the route geometry.                 |
 |overview    |`simplified` (default), `full`, `false`, `by_legs`         |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, not at all, or split by leg.|
 |timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamps for the input locations in seconds since UNIX epoch. Timestamps need to be monotonically increasing. |
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
@@ -487,7 +487,7 @@ In addition to the [general options](#general-options) the following options are
 |source      |`any` (default), `first`                        |Returned route starts at `any` or `first` coordinate                       |
 |destination |`any` (default), `last`                         |Returned route ends at `any` or `last` coordinate                          |
 |steps       |`true`, `false` (default)                       |Returned route instructions for each trip                                  |
-|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed` |Returns additional metadata for each coordinate along the route geometry.  |
+|annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`, `way_ids` |Returns additional metadata for each coordinate along the route geometry.  |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)          |
 |overview    |`simplified` (default), `full`, `false`, `by_legs`         |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, not at all, or split by leg.|
 
@@ -667,7 +667,7 @@ Represents a route between two waypoints.
 
 | annotations  |                                                                               |
 |--------------|-------------------------------------------------------------------------------|
-| true         | An `Annotation` object containing node ids, durations, distances, and weights. |
+| true         | An `Annotation` object containing the requested per-segment values, including node ids, way ids, durations, distances, and weights. |
 | false        | `undefined`                                                                   |
 
 #### Example
@@ -686,7 +686,8 @@ With `steps=false` and `annotations=true`:
     "datasources": [1,0,0,0,1],
     "metadata": { "datasource_names": ["traffic","lua profile","lua profile","lua profile","traffic"] },
     "nodes": [49772551,49772552,49786799,49786800,49786801,49786802],
-    "speed": [0.3, 0.3, 0.3, 0.3, 0.3]
+    "speed": [0.3, 0.3, 0.3, 0.3, 0.3],
+    "way_ids": [111,111,222,222,333]
   }
 }
 ```
@@ -703,6 +704,7 @@ Annotation of the whole route leg with fine-grained information about each segme
 - `nodes`: The OSM node ID for each coordinate along the route, excluding the first/last user-supplied coordinates
 - `weight`: The weights between each pair of coordinates.  Does not include any turn costs.
 - `speed`: Convenience field, calculation of `distance / duration` rounded to one decimal place
+- `way_ids`: The OSM way ID for each traversed segment along the route leg
 - `metadata`: Metadata related to other annotations
   - `datasource_names`: The names of the data sources used for the speed between each pair of coordinates.  `lua profile` is the default profile, other values are the filenames supplied via `--segment-speed-file` to `osrm-contract` or `osrm-customize`
 
@@ -715,7 +717,8 @@ Annotation of the whole route leg with fine-grained information about each segme
   "datasources": [1,0,0,0,1],
   "metadata": { "datasource_names": ["traffic","lua profile","lua profile","lua profile","traffic"] },
   "nodes": [49772551,49772552,49786799,49786800,49786801,49786802],
-  "weight": [15,15,40,15,15]
+  "weight": [15,15,40,15,15],
+  "way_ids": [111,111,222,222,333]
 }
 ```
 

@@ -289,6 +289,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return m_osmnodeid_list[node_based_node_id];
     }
 
+    OSMWayID GetOSMWayID(const NodeID edge_based_node_id) const override final
+    {
+        return edge_based_node_data.GetWayID(edge_based_node_id);
+    }
+
     NodeForwardRange GetUncompressedForwardGeometry(const PackedGeometryID id) const override final
     {
         return segment_data.GetForwardGeometry(id);

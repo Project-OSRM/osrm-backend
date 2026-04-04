@@ -41,6 +41,7 @@ struct LegGeometry
         double weight; // weight value, NOT including the turn weight
 
         DatasourceID datasource;
+        OSMWayID way_id;
     };
     std::vector<Annotation> annotations;
 

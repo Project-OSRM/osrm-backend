@@ -102,7 +102,8 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                     10.,
                 from_alias<double>(path_point.weight_until_turn - path_point.weight_of_turn) /
                     facade.GetWeightMultiplier(),
-                path_point.datasource_id});
+                path_point.datasource_id,
+                facade.GetOSMWayID(path_point.from_edge_based_node)});
             geometry.locations.push_back(coordinate);
             geometry.node_ids.push_back(node_id);
         }
@@ -141,7 +142,8 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
             LegGeometry::Annotation{current_distance,
                                     duration,
                                     weight,
-                                    forward_datasources[target_node.fwd_segment_position]});
+                                    forward_datasources[target_node.fwd_segment_position],
+                                    facade.GetOSMWayID(target_node_id)});
     }
     else
     {
@@ -153,7 +155,8 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
             from_alias<double>(reversed_target ? target_node.reverse_weight
                                                : target_node.forward_weight) /
                 facade.GetWeightMultiplier(),
-            forward_datasources[target_node.fwd_segment_position]});
+            forward_datasources[target_node.fwd_segment_position],
+            facade.GetOSMWayID(target_node_id)});
     }
 
     geometry.segment_offsets.push_back(geometry.locations.size());

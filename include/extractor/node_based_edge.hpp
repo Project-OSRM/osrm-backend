@@ -68,14 +68,16 @@ struct NodeBasedEdgeAnnotation
     StringViewID string_view_id;           // 32 4
     LaneDescriptionID lane_description_id; // 16 2
     ClassData classes;                     // 8  1
+    OSMWayID way_id;                       // 64 8
     TravelMode travel_mode : 4;            // 4
     bool is_left_hand_driving : 1;         // 1
 
     bool CanCombineWith(const NodeBasedEdgeAnnotation &other) const
     {
-        return (std::tie(string_view_id, classes, travel_mode, is_left_hand_driving) ==
+        return (std::tie(string_view_id, classes, way_id, travel_mode, is_left_hand_driving) ==
                 std::tie(other.string_view_id,
                          other.classes,
+                         other.way_id,
                          other.travel_mode,
                          other.is_left_hand_driving));
     }
@@ -83,11 +85,16 @@ struct NodeBasedEdgeAnnotation
     bool operator<(const NodeBasedEdgeAnnotation &other) const
     {
         return (
-            std::tie(
-                string_view_id, lane_description_id, classes, travel_mode, is_left_hand_driving) <
+            std::tie(string_view_id,
+                     lane_description_id,
+                     classes,
+                     way_id,
+                     travel_mode,
+                     is_left_hand_driving) <
             std::tie(other.string_view_id,
                      other.lane_description_id,
                      other.classes,
+                     other.way_id,
                      other.travel_mode,
                      other.is_left_hand_driving));
     }
