@@ -106,6 +106,15 @@ target_include_directories(node_osrm SYSTEM PRIVATE ${CMAKE_JS_INC})
 
 target_link_libraries(node_osrm ${CMAKE_JS_LIB} osrm)
 
+# On macOS, Node-API symbols are resolved from the Node.js process at load
+# time, not from a static or shared library. Tell the linker not to error on
+# unresolved symbols so the .node bundle can be loaded by node at runtime.
+# cmake-js sets this flag automatically when it drives the build via
+# `cmake-js configure`; we mirror it here for direct cmake invocations.
+if(APPLE)
+    target_link_options(node_osrm PRIVATE -undefined dynamic_lookup)
+endif()
+
 # node_osrm artifacts in ${BINDING_DIR} to depend targets on
 set(ARTIFACTS "")
 
