@@ -573,16 +573,6 @@ jobs:
         run: |
           node --version
           npm run nodejs-tests
-      - name: Use Node 25
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: 25
-      - name: Run Node package tests on Node 25
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        run: |
-          node --version
-          npm run nodejs-tests
       - name: Use Node latest
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
         uses: actions/setup-node@v4
