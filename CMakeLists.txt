@@ -85,7 +85,7 @@ endif()
 # add @loader_path/$ORIGIN to rpath to make binaries relocatable
 if (APPLE)
   set(CMAKE_BUILD_RPATH "@loader_path")
-else()
+elseif(NOT WIN32)
   set(CMAKE_BUILD_RPATH "\$ORIGIN")
   # https://stackoverflow.com/questions/6324131/rpath-origin-not-having-desired-effect
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,origin")

@@ -84,9 +84,11 @@ if(MSVC)
                 "(exit ${_nodelib_result})")
         endif()
     endif()
-    if(NOT CMAKE_JS_LIB)
-        set(CMAKE_JS_LIB "${CMAKE_JS_NODELIB_TARGET}")
-    endif()
+    # Always use the locally-generated node.lib on MSVC. cmake-js's
+    # print-cmakejs-lib returns <workDir>/node.lib (the root build dir), but
+    # when cmake is invoked directly the lib is generated in
+    # CMAKE_CURRENT_BINARY_DIR instead, so we must override any earlier value.
+    set(CMAKE_JS_LIB "${CMAKE_JS_NODELIB_TARGET}")
 endif()
 
 add_library(node_osrm SHARED node_osrm.cpp ${CMAKE_JS_SRC})
