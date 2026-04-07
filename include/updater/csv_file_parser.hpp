@@ -14,10 +14,10 @@
 
 #include <boost/exception/diagnostic_information.hpp>
 #include <boost/iostreams/device/mapped_file.hpp>
-#include <boost/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/home/x3.hpp>
 
 #include <filesystem>
+#include <functional>
 #include <vector>
 
 namespace osrm::updater
@@ -30,11 +30,22 @@ namespace osrm::updater
 template <typename Key, typename Value> struct CSVFilesParser
 {
     using Iterator = boost::iostreams::mapped_file_source::iterator;
-    using KeyRule = boost::spirit::qi::rule<Iterator, Key()>;
-    using ValueRule = boost::spirit::qi::rule<Iterator, Value()>;
+    using ParseFn = std::function<bool(Iterator &, Iterator, std::vector<std::pair<Key, Value>> &)>;
 
-    CSVFilesParser(std::size_t start_index, const KeyRule &key_rule, const ValueRule &value_rule)
-        : start_index(start_index), key_rule(key_rule), value_rule(value_rule)
+    template <typename KeyParser, typename ValueParser>
+    CSVFilesParser(std::size_t start_index, KeyParser key_parser, ValueParser value_parser)
+        : start_index(start_index),
+          parse_fn(
+              [kp = key_parser, vp = value_parser](
+                  Iterator &first, Iterator last, std::vector<std::pair<Key, Value>> &result)
+              {
+                  namespace x3 = boost::spirit::x3;
+                  // Wrap in typed rules so X3 synthesizes Key/Value, not flat sequence
+                  auto key = x3::rule<struct key_tag, Key>{"key"} = kp;
+                  auto val = x3::rule<struct val_tag, Value>{"value"} = vp;
+                  auto csv_line = key >> ',' >> val >> x3::omit[-(',' >> *(x3::char_ - x3::eol))];
+                  return x3::parse(first, last, -(csv_line % x3::eol) >> *x3::eol, result);
+              })
     {
     }
 
@@ -94,8 +105,6 @@ template <typename Key, typename Value> struct CSVFilesParser
     // Parse a single CSV file and return result as a vector<Key, Value>
     auto ParseCSVFile(const std::string &filename, std::size_t file_id) const
     {
-        namespace qi = boost::spirit::qi;
-
         std::vector<std::pair<Key, Value>> result;
         try
         {
@@ -106,11 +115,11 @@ template <typename Key, typename Value> struct CSVFilesParser
             auto first = mmap.begin(), last = mmap.end();
 
             BOOST_ASSERT(file_id <= std::numeric_limits<std::uint8_t>::max());
-            ValueRule value_source =
-                value_rule[qi::_val = qi::_1, bind(&Value::source, qi::_val) = file_id];
-            qi::rule<Iterator, std::pair<Key, Value>()> csv_line =
-                (key_rule >> ',' >> value_source) >> -(',' >> *(qi::char_ - qi::eol));
-            const auto ok = qi::parse(first, last, -(csv_line % qi::eol) >> *qi::eol, result);
+            const auto ok = parse_fn(first, last, result);
+
+            // Set the file source index on all parsed values
+            for (auto &[key, val] : result)
+                val.source = file_id;
 
             if (!ok || first != last)
             {
@@ -139,8 +148,7 @@ template <typename Key, typename Value> struct CSVFilesParser
     }
 
     const std::size_t start_index;
-    const KeyRule key_rule;
-    const ValueRule value_rule;
+    ParseFn parse_fn;
 };
 } // namespace osrm::updater
 
