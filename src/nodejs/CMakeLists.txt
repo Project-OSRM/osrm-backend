@@ -55,12 +55,17 @@ message(STATUS "Configuring node_osrm bindings")
 if(MSVC)
     if(NOT CMAKE_JS_NODELIB_DEF)
         execute_process(
-            COMMAND node -e
-                "const Module=require('module');const req=Module.createRequire(require.resolve('${PROJECT_SOURCE_DIR}/node_modules/cmake-js/package.json'));process.stdout.write(req('node-api-headers').def_paths.node_api_def)"
+            COMMAND node "${PROJECT_SOURCE_DIR}/cmake/get-node-api-def.cjs"
             WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
             OUTPUT_VARIABLE CMAKE_JS_NODELIB_DEF
             OUTPUT_STRIP_TRAILING_WHITESPACE
+            RESULT_VARIABLE _node_api_def_result
         )
+        if(NOT _node_api_def_result EQUAL 0)
+            message(FATAL_ERROR
+                "Failed to locate node_api.def (exit ${_node_api_def_result}). "
+                "Make sure cmake-js is installed: npm install")
+        endif()
         file(TO_CMAKE_PATH "${CMAKE_JS_NODELIB_DEF}" CMAKE_JS_NODELIB_DEF)
     endif()
     if(NOT CMAKE_JS_NODELIB_TARGET)
@@ -71,7 +76,13 @@ if(MSVC)
             COMMAND ${CMAKE_AR} /def:${CMAKE_JS_NODELIB_DEF}
                                 /out:${CMAKE_JS_NODELIB_TARGET}
                                 ${CMAKE_STATIC_LINKER_FLAGS}
+            RESULT_VARIABLE _nodelib_result
         )
+        if(NOT _nodelib_result EQUAL 0)
+            message(FATAL_ERROR
+                "Failed to generate node.lib from ${CMAKE_JS_NODELIB_DEF} "
+                "(exit ${_nodelib_result})")
+        endif()
     endif()
     if(NOT CMAKE_JS_LIB)
         set(CMAKE_JS_LIB "${CMAKE_JS_NODELIB_TARGET}")
