@@ -4,113 +4,112 @@
 #include "server/api/base_parameters_grammar.hpp"
 #include "engine/api/route_parameters.hpp"
 
-#include <boost/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/home/x3.hpp>
 
-namespace osrm::server::api
+namespace osrm::server::api::route_grammar
 {
 
-namespace
+namespace x3 = boost::spirit::x3;
+inline const x3::uint_parser<std::size_t> size_t_{};
+
+using AnnotationsType = engine::api::RouteParameters::AnnotationsType;
+
+// --- Symbol tables ---
+
+inline const auto geometries_type = []()
 {
-namespace ph = boost::phoenix;
-namespace qi = boost::spirit::qi;
-} // namespace
+    x3::symbols<engine::api::RouteParameters::GeometriesType> sym;
+    sym.add("geojson", engine::api::RouteParameters::GeometriesType::GeoJSON)(
+        "polyline", engine::api::RouteParameters::GeometriesType::Polyline)(
+        "polyline6", engine::api::RouteParameters::GeometriesType::Polyline6);
+    return sym;
+}();
 
-template <typename Iterator = std::string::iterator,
-          typename Signature = void(engine::api::RouteParameters &)>
-struct RouteParametersGrammar : public BaseParametersGrammar<Iterator, Signature>
+inline const auto overview_type = []()
 {
-    using BaseGrammar = BaseParametersGrammar<Iterator, Signature>;
+    x3::symbols<engine::api::RouteParameters::OverviewType> sym;
+    sym.add("simplified", engine::api::RouteParameters::OverviewType::Simplified)(
+        "full", engine::api::RouteParameters::OverviewType::Full)(
+        "false", engine::api::RouteParameters::OverviewType::False)(
+        "by_legs", engine::api::RouteParameters::OverviewType::ByLegs);
+    return sym;
+}();
 
-    RouteParametersGrammar() : RouteParametersGrammar(root_rule)
-    {
-        route_rule =
-            (qi::lit("alternatives=") >
-             (qi::uint_[ph::bind(&engine::api::RouteParameters::number_of_alternatives, qi::_r1) =
-                            qi::_1,
-                        ph::bind(&engine::api::RouteParameters::alternatives, qi::_r1) =
-                            qi::_1 > 0] |
-              qi::bool_[ph::bind(&engine::api::RouteParameters::number_of_alternatives, qi::_r1) =
-                            qi::_1,
-                        ph::bind(&engine::api::RouteParameters::alternatives, qi::_r1) = qi::_1])) |
-            (qi::lit("continue_straight=") >
-             (qi::lit("default") |
-              qi::bool_[ph::bind(&engine::api::RouteParameters::continue_straight, qi::_r1) =
-                            qi::_1]));
+inline const auto annotations_type = []()
+{
+    x3::symbols<AnnotationsType> sym;
+    sym.add("duration", AnnotationsType::Duration)("nodes", AnnotationsType::Nodes)(
+        "distance", AnnotationsType::Distance)("weight", AnnotationsType::Weight)(
+        "datasources", AnnotationsType::Datasources)("speed", AnnotationsType::Speed);
+    return sym;
+}();
 
-        root_rule = query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
-                    -('?' > (route_rule(qi::_r1) | base_rule(qi::_r1)) % '&');
-    }
+// --- Route-specific parameter rules ---
 
-    RouteParametersGrammar(qi::rule<Iterator, Signature> &root_rule_) : BaseGrammar(root_rule_)
-    {
-#ifdef BOOST_HAS_LONG_LONG
-        if (std::is_same<std::size_t, unsigned long long>::value)
-            size_t_ = qi::ulong_long;
-        else
-            size_t_ = qi::ulong_;
-#else
-        size_t_ = qi::ulong_;
-#endif
-        using AnnotationsType = engine::api::RouteParameters::AnnotationsType;
+inline const auto alternatives_rule = x3::lit("alternatives=") >
+                                      (x3::uint_[(
+                                           [](auto &ctx)
+                                           {
+                                               auto &p = x3::get<params_tag>(ctx).get();
+                                               p.number_of_alternatives = x3::_attr(ctx);
+                                               p.alternatives = x3::_attr(ctx) > 0;
+                                           })] |
+                                       x3::bool_[(
+                                           [](auto &ctx)
+                                           {
+                                               auto &p = x3::get<params_tag>(ctx).get();
+                                               p.number_of_alternatives = x3::_attr(ctx);
+                                               p.alternatives = x3::_attr(ctx);
+                                           })]);
 
-        const auto add_annotation =
-            [](engine::api::RouteParameters &route_parameters, AnnotationsType route_param)
-        {
-            route_parameters.annotations_type = route_parameters.annotations_type | route_param;
-            route_parameters.annotations =
-                route_parameters.annotations_type != AnnotationsType::None;
-        };
+inline const auto continue_straight_rule =
+    x3::lit("continue_straight=") >
+    (x3::lit("default") |
+     x3::bool_[([](auto &ctx)
+                { x3::get<params_tag>(ctx).get().continue_straight = x3::_attr(ctx); })]);
 
-        geometries_type.add("geojson", engine::api::RouteParameters::GeometriesType::GeoJSON)(
-            "polyline", engine::api::RouteParameters::GeometriesType::Polyline)(
-            "polyline6", engine::api::RouteParameters::GeometriesType::Polyline6);
+inline const auto route_rule = alternatives_rule | continue_straight_rule;
 
-        overview_type.add("simplified", engine::api::RouteParameters::OverviewType::Simplified)(
-            "full", engine::api::RouteParameters::OverviewType::Full)(
-            "false", engine::api::RouteParameters::OverviewType::False)(
-            "by_legs", engine::api::RouteParameters::OverviewType::ByLegs);
+inline const auto steps_rule =
+    x3::lit("steps=") >
+    x3::bool_[([](auto &ctx) { x3::get<params_tag>(ctx).get().steps = x3::_attr(ctx); })];
 
-        annotations_type.add("duration", AnnotationsType::Duration)("nodes",
-                                                                    AnnotationsType::Nodes)(
-            "distance", AnnotationsType::Distance)("weight", AnnotationsType::Weight)(
-            "datasources", AnnotationsType::Datasources)("speed", AnnotationsType::Speed);
+inline const auto geometries_rule =
+    x3::lit("geometries=") >
+    geometries_type[([](auto &ctx)
+                     { x3::get<params_tag>(ctx).get().geometries = x3::_attr(ctx); })];
 
-        waypoints_rule =
-            qi::lit("waypoints=") >
-            (size_t_ % ';')[ph::bind(&engine::api::RouteParameters::waypoints, qi::_r1) = qi::_1];
+inline const auto overview_rule =
+    x3::lit("overview=") >
+    overview_type[([](auto &ctx) { x3::get<params_tag>(ctx).get().overview = x3::_attr(ctx); })];
 
-        base_rule =
-            BaseGrammar::base_rule(qi::_r1) | waypoints_rule(qi::_r1) |
-            (qi::lit("steps=") >
-             qi::bool_[ph::bind(&engine::api::RouteParameters::steps, qi::_r1) = qi::_1]) |
-            (qi::lit("geometries=") >
-             geometries_type[ph::bind(&engine::api::RouteParameters::geometries, qi::_r1) =
-                                 qi::_1]) |
-            (qi::lit("overview=") >
-             overview_type[ph::bind(&engine::api::RouteParameters::overview, qi::_r1) = qi::_1]) |
-            (qi::lit("annotations=") >
-             (qi::lit("true")[ph::bind(add_annotation, qi::_r1, AnnotationsType::All)] |
-              qi::lit("false")[ph::bind(add_annotation, qi::_r1, AnnotationsType::None)] |
-              (annotations_type[ph::bind(add_annotation, qi::_r1, qi::_1)] % ',')));
-
-        query_rule = BaseGrammar::query_rule(qi::_r1);
-    }
-
-  protected:
-    qi::rule<Iterator, Signature> base_rule;
-    qi::rule<Iterator, Signature> query_rule;
-
-  private:
-    qi::rule<Iterator, Signature> root_rule;
-    qi::rule<Iterator, Signature> route_rule;
-    qi::rule<Iterator, Signature> waypoints_rule;
-    qi::rule<Iterator, std::size_t()> size_t_;
-
-    qi::symbols<char, engine::api::RouteParameters::GeometriesType> geometries_type;
-    qi::symbols<char, engine::api::RouteParameters::OverviewType> overview_type;
-    qi::symbols<char, engine::api::RouteParameters::AnnotationsType> annotations_type;
+inline const auto add_annotation = [](auto &ctx)
+{
+    auto &p = x3::get<params_tag>(ctx).get();
+    p.annotations_type = p.annotations_type | x3::_attr(ctx);
+    p.annotations = p.annotations_type != AnnotationsType::None;
 };
-} // namespace osrm::server::api
+
+inline const auto
+    annotations_rule = x3::lit("annotations=") >
+                       ((x3::lit("true") >> x3::attr(AnnotationsType::All))[add_annotation] |
+                        (x3::lit("false") >> x3::attr(AnnotationsType::None))[add_annotation] |
+                        annotations_type[add_annotation] % ',');
+
+inline const auto waypoints_rule =
+    x3::lit("waypoints=") >
+    (size_t_ % ';')[([](auto &ctx) { x3::get<params_tag>(ctx).get().waypoints = x3::_attr(ctx); })];
+
+// Route options = base options + route extensions
+inline const auto route_options = x3::rule<struct route_options_tag>{"route_options"} =
+    base_grammar::base_options | waypoints_rule | steps_rule | geometries_rule | overview_rule |
+    annotations_rule;
+
+// Route root rule
+inline const auto root_rule = x3::rule<struct route_root_tag>{"route_root"} =
+    base_grammar::query_rule > base_grammar::format_rule >
+    -('?' > (route_rule | route_options) % '&');
+
+} // namespace osrm::server::api::route_grammar
 
 #endif
