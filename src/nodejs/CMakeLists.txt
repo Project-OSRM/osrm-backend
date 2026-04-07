@@ -34,7 +34,15 @@ if(NOT CMAKE_JS_LIB)
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         OUTPUT_VARIABLE CMAKE_JS_LIB
         OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE _cmake_js_lib_result
+        ERROR_VARIABLE _cmake_js_lib_error
     )
+    if(NOT _cmake_js_lib_result EQUAL 0)
+        message(FATAL_ERROR
+            "cmake-js failed to provide Node.js library path (exit ${_cmake_js_lib_result}). "
+            "Make sure cmake-js is installed: npm install. "
+            "${_cmake_js_lib_error}")
+    endif()
 endif()
 
 if(NOT CMAKE_JS_SRC)
@@ -43,8 +51,16 @@ if(NOT CMAKE_JS_SRC)
                 --log-level error print-cmakejs-src
         WORKING_DIRECTORY "${PROJECT_SOURCE_DIR}"
         OUTPUT_VARIABLE CMAKE_JS_SRC
+        ERROR_VARIABLE _cmake_js_src_error
         OUTPUT_STRIP_TRAILING_WHITESPACE
+        RESULT_VARIABLE _cmake_js_src_result
     )
+    if(NOT _cmake_js_src_result EQUAL 0)
+        message(FATAL_ERROR
+            "cmake-js failed to provide Node.js source paths (exit ${_cmake_js_src_result}). "
+            "stderr: ${_cmake_js_src_error}. "
+            "Make sure cmake-js is installed: npm install")
+    endif()
 endif()
 
 message(STATUS "Configuring node_osrm bindings")

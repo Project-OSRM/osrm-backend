@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/Project-OSRM/osrm-backend",
   "engines": {
-    "node": ">=20.0.0"
+    "node": "^20.17.0 || >=22.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
