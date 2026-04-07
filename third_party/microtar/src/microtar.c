@@ -209,7 +209,12 @@ static int file_read(mtar_t *tar, void *data, mtar_size_t size) {
 }
 
 static int file_seek(mtar_t *tar, mtar_size_t offset) {
-  int res = fseek(tar->stream, offset, SEEK_SET);
+  int res;
+#if defined(_WIN32)
+  res = _fseeki64(tar->stream, (__int64) offset, SEEK_SET);
+#else
+  res = fseek(tar->stream, offset, SEEK_SET);
+#endif
   return (res == 0) ? MTAR_ESUCCESS : MTAR_ESEEKFAIL;
 }
 

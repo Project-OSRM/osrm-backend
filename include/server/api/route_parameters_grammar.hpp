@@ -30,7 +30,8 @@ inline const auto overview_type = []()
     x3::symbols<engine::api::RouteParameters::OverviewType> sym;
     sym.add("simplified", engine::api::RouteParameters::OverviewType::Simplified)(
         "full", engine::api::RouteParameters::OverviewType::Full)(
-        "false", engine::api::RouteParameters::OverviewType::False);
+        "false", engine::api::RouteParameters::OverviewType::False)(
+        "by_legs", engine::api::RouteParameters::OverviewType::ByLegs);
     return sym;
 }();
 

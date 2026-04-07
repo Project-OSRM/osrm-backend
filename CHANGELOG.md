@@ -7,6 +7,8 @@
     - Extraction:
       - ADDED: Emit warning when ways reference nodes not present in input data [#1596](https://github.com/Project-OSRM/osrm-backend/issues/1596)
       - FIXED: Compilation error in raster_source [#7422](https://github.com/Project-OSRM/osrm-backend/issues/7422)
+    - API:
+      - ADDED: The parameter `overview` now accepts `by_legs` to include the geometry on the `RouteLeg` instead of the `Route` object. [#7256](https://github.com/Project-OSRM/osrm-backend/pull/7256)
     - Profiles:
       - FIXED: Exclude `highway=road` from foot and bicycle profiles since it is an OSM error marker with unknown classification [#7039](https://github.com/Project-OSRM/osrm-backend/issues/7039)
       - FIXED: Roads with a real `highway=*` type and an additional `proposed=*` tag (e.g. a planned upgrade) are now routed correctly instead of being silently pruned [#7413](https://github.com/Project-OSRM/osrm-backend/issues/7413)
@@ -17,6 +19,7 @@
       - ADDED: Add exception for audible fences (`barrier=fence` with `sensory=audible` or `sensory=audio`) that deter livestock but do not block vehicles [#6964](https://github.com/Project-OSRM/osrm-backend/issues/6964)
       - ADDED: Use `is_sidepath:of:name` and `street:name` as fallback names for unnamed sidewalks and sidepaths in foot and bicycle profiles [#7259](https://github.com/Project-OSRM/osrm-backend/issues/7259)
       - FIXED: Foot profile now respects `foot=use_sidepath` and `sidewalk:*=separate` tags, avoiding carriageways where a separate parallel footway is mapped [#6229](https://github.com/Project-OSRM/osrm-backend/issues/6229)
+      - FIXED: Bicycle profile now respects `cycleway:*=separate` tags, avoiding carriageways where a separate parallel cycleway is mapped [#1171](https://github.com/Project-OSRM/osrm-backend/issues/1171)
     - Build:
       - FIXED: Upgrade tar npm dependency from 7.5.7 to 7.5.9 to address security vulnerability GHSA-83g3-92jg-28cx [#7365](https://github.com/Project-OSRM/osrm-backend/issues/7365)
       - FIXED: Documentation build fails with ESM/CommonJS conflict after adding "type": "module" [#7347](https://github.com/Project-OSRM/osrm-backend/issues/7347)
@@ -28,6 +31,7 @@
       - FIXED: Work around compilation error due to a false-positive of array-bounds check in sol2 [#7317](https://github.com/Project-OSRM/osrm-backend/pull/7317)
       - FIXED: Fix compilation with gcc >14 in release with LTO. [#7268](https://github.com/Project-OSRM/osrm-backend/issues/7268)
       - ADDED: Conditionally prefix custom CMake targets with `osrm_` when built as subproject, and add ALIAS targets for FetchContent compatibility [#7267](https://github.com/Project-OSRM/osrm-backend/issues/7267)
+      - FIXED: Compilation error in vendored sol2 when LUA_COMPAT_BITLIB or LUA_COMPAT_5_2 are defined as empty macros [#00](https://github.com/Project-OSRM/osrm-backend/issues/00)
     - Misc:
       - CHANGED: Upgrade from clang-format-15 to clang-format-18 [#7249](https://github.com/Project-OSRM/osrm-backend/issues/7249)
       - ADDED: `--output` / `-o` option to osrm-extract for specifying custom output base path [#4930](https://github.com/Project-OSRM/osrm-backend/issues/4930)
@@ -57,6 +61,7 @@
       - FIXED: Correctly limit exclude classes to 7. [#7322](https://github.com/Project-OSRM/osrm-backend/pull/7322)
       - FIXED: Speed limits in Czech Republic [#7279](https://github.com/Project-OSRM/osrm-backend/pull/7279)
       - CHANGED: Add the PSV vehicle subtypes to the access_tag_blacklist of the car profile (taxi, share_taxi, minibus, and bus) [#7295](https://github.com/Project-OSRM/osrm-backend/pull/7295)
+      - FIXED: Some path inconsistencies preventing parent projects to use OSRM via cmake's `FetchContent` [#7439](https://github.com/Project-OSRM/osrm-backend/issues/7439)
 
 # 6.0.0
   - Changes from 6.0.0 RC2: None

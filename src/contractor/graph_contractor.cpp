@@ -5,13 +5,10 @@
 #include "contractor/graph_contractor_adaptors.hpp"
 #include "contractor/query_edge.hpp"
 #include "contractor/query_graph.hpp"
-#include "util/deallocating_vector.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
 #include "util/percent.hpp"
-#include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
-#include "util/xor_fast_hash.hpp"
 
 #include <boost/assert.hpp>
 
@@ -120,21 +117,6 @@ struct ThreadDataContainer
         tbb::enumerable_thread_specific<std::shared_ptr<ContractorThreadData>>;
     EnumerableThreadData data;
 };
-
-// This bias function takes up 22 assembly instructions in total on X86
-inline bool Bias(const util::XORFastHash<> &fast_hash, const NodeID a, const NodeID b)
-{
-    const unsigned short hasha = fast_hash(a);
-    const unsigned short hashb = fast_hash(b);
-
-    // The compiler optimizes that to conditional register flags but without branching
-    // statements!
-    if (hasha != hashb)
-    {
-        return hasha < hashb;
-    }
-    return a < b;
-}
 
 template <bool RUNSIMULATION, typename ContractorGraph>
 void ContractNode(ContractorThreadData *data,
@@ -512,9 +494,7 @@ bool UpdateNodeNeighbours(ContractorNodeData &node_data,
     return true;
 }
 
-bool IsNodeIndependent(const util::XORFastHash<> &hash,
-                       const std::vector<float> &priorities,
-                       const std::vector<NodeID> &new_to_old_node_id,
+bool IsNodeIndependent(const std::vector<float> &priorities,
                        const ContractorGraph &graph,
                        ContractorThreadData *const data,
                        const NodeID node)
@@ -534,13 +514,7 @@ bool IsNodeIndependent(const util::XORFastHash<> &hash,
         const float target_priority = priorities[target];
         BOOST_ASSERT(target_priority >= 0);
         // found a neighbour with lower priority?
-        if (priority > target_priority)
-        {
-            return false;
-        }
-        // tie breaking
-        if (std::abs(priority - target_priority) < std::numeric_limits<float>::epsilon() &&
-            Bias(hash, new_to_old_node_id[node], new_to_old_node_id[target]))
+        if (target_priority < priority || (target_priority == priority && target < node))
         {
             return false;
         }
@@ -563,13 +537,7 @@ bool IsNodeIndependent(const util::XORFastHash<> &hash,
             const float target_priority = priorities[target];
             BOOST_ASSERT(target_priority >= 0);
             // found a neighbour with lower priority?
-            if (priority > target_priority)
-            {
-                return false;
-            }
-            // tie breaking
-            if (std::abs(priority - target_priority) < std::numeric_limits<float>::epsilon() &&
-                Bias(hash, new_to_old_node_id[node], new_to_old_node_id[target]))
+            if (target_priority < priority || (target_priority == priority && target < node))
             {
                 return false;
             }
@@ -586,7 +554,6 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
                                 double core_factor)
 {
     BOOST_ASSERT(node_weights_.size() == graph.GetNumberOfNodes());
-    util::XORFastHash<> fast_hash;
 
     // for the preperation we can use a big grain size, which is much faster (probably cache)
     const constexpr size_t PQGrainSize = 100000;
@@ -663,8 +630,6 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     util::UnbufferedLog log;
     util::Percent p(log, remaining_nodes.size());
 
-    const util::XORFastHash<> hash;
-
     std::size_t next_renumbering = number_of_nodes * 0.35;
     while (remaining_nodes.size() > number_of_core_nodes)
     {
@@ -685,8 +650,8 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
                 for (auto i = range.begin(), end = range.end(); i != end; ++i)
                 {
                     const NodeID node = remaining_nodes[i].id;
-                    remaining_nodes[i].is_independent = IsNodeIndependent(
-                        hash, node_data.priorities, new_to_old_node_id, graph, data, node);
+                    remaining_nodes[i].is_independent =
+                        IsNodeIndependent(node_data.priorities, graph, data, node);
                 }
             });
 

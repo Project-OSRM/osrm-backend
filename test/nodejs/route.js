@@ -365,17 +365,17 @@ test('route: invalid route options', (assert) => {
     coordinates: two_test_coordinates,
     overview: false
   }, (err, route) => {}); },
-  /Overview must be a string: \[simplified, full, false\]/);
+  /Overview must be a string: \[simplified, full, false, by_legs\]/);
   assert.throws(() => { osrm.route({
     coordinates: two_test_coordinates,
     overview: false
   }, (err, route) => {}); },
-  /Overview must be a string: \[simplified, full, false\]/);
+  /Overview must be a string: \[simplified, full, false, by_legs\]/);
   assert.throws(() => { osrm.route({
     coordinates: two_test_coordinates,
     overview: 'maybe'
   }, (err, route) => {}); },
-  /'overview' param must be one of \[simplified, full, false\]/);
+  /'overview' param must be one of \[simplified, full, false, by_legs\]/);
   assert.throws(() => { osrm.route({
     coordinates: two_test_coordinates,
     geometries: 'maybe'

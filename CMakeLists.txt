@@ -41,10 +41,8 @@ if (ENABLE_CONAN)
   if (NOT CONAN_EXECUTABLE)
     message(FATAL_ERROR "Conan not found! Please install Conan 2.x and try again.")
   else()
-    set(CMAKE_TOOLCHAIN_FILE "./conan_toolchain.cmake")
-
     execute_process(
-      COMMAND ${CONAN_EXECUTABLE} install .. --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}
+      COMMAND ${CONAN_EXECUTABLE} install ${CMAKE_CURRENT_SOURCE_DIR} --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       OUTPUT_VARIABLE conan_stdout
       ERROR_VARIABLE conan_stderr
@@ -54,6 +52,8 @@ if (ENABLE_CONAN)
     if (NOT conan_install_result EQUAL 0)
       message(FATAL_ERROR "Conan install failed: ${conan_install_result}. Stderr: ${conan_stderr}. Stdout: ${conan_stdout}")
     endif()
+
+    include("${CMAKE_CURRENT_BINARY_DIR}/conan_toolchain.cmake")
   endif()
 endif()
 

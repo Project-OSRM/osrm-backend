@@ -120,30 +120,32 @@ Feature: Car - Turn restrictions
     # https://www.openstreetmap.org/edit?node=54878482#map=19/34.05242/-117.19067
         Given the node map
             """
-                c
-                3
-            a 1 x 2 b
-                4
-                d
+
+            y   c
+              a x b
+            z   d
             """
 
         And the ways
             | nodes |
+            | ya    |
+            | za    |
             | ax    |
-            | xb    |
+            | bx    |
             | cx    |
-            | xd    |
+            | dx    |
 
         And the relations
-            | type        | way:from | way:to | node:via | restriction |
-            | restriction | ax       | ax     | x        | no_u_turn   |
-            | restriction | bx       | bx     | x        | no_u_turn   |
-            | restriction | cx       | cx     | x        | no_u_turn   |
-            | restriction | dx       | dx     | x        | no_u_turn   |
+            | type        | way:from | way:to | node:via | restriction  |
+            | restriction | ax       | ax     | x        | no_u_turn    |
+            | restriction | bx       | bx     | x        | no_u_turn    |
+            | restriction | cx       | cx     | x        | no_u_turn    |
+            | restriction | dx       | dx     | x        | no_u_turn    |
+            | restriction | za       | ya     | a        | no_left_turn |
 
         When I route I should get
-            | waypoints | route             | turns                                                        |
-            | a,x,a     | ax,xb,xb,xb,ax,ax | depart,new name straight,continue uturn,arrive,depart,arrive |
+            | waypoints | route                | turns                                                                                      |
+            | z,y       | za,ax,bx,bx,ax,ya,ya | depart,new name right,new name straight,continue uturn,new name straight,turn right,arrive |
 
     @no_turning
     Scenario: Car - Handle any no_* relation
