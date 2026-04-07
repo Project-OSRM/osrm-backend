@@ -611,7 +611,7 @@ function(add_nodejs_module NAME)
     target_link_libraries(${NAME} ${NODEJS_LIBRARIES})
 
     # Set required properties for the module to build properly
-    # Correct naming, symbol visiblity and C++ standard
+    # Correct naming, symbol visibility and C++ standard
     set_target_properties(${NAME} PROPERTIES
         OUTPUT_NAME ${NAME}
         PREFIX ""
@@ -626,12 +626,12 @@ function(add_nodejs_module NAME)
 
     # Handle link flag cases properly
     # When there are link flags, they should be appended to LINK_FLAGS with space separation
-    # If the list is emtpy (true for most *NIX platforms), this is a no-op
+    # If the list is empty (true for most *NIX platforms), this is a no-op
     foreach(NODEJS_LINK_FLAG IN LISTS NODEJS_LINK_FLAGS)
         set_property(TARGET ${NAME} APPEND_STRING PROPERTY LINK_FLAGS " ${NODEJS_LINK_FLAG}")
     endforeach()
 
-    # Make sure we're buiilding in a build specific output directory
+    # Make sure we're building in a build specific output directory
     # Only necessary on single-target generators (Make, Ninja)
     # Multi-target generators do this automatically
     # This (luckily) mirrors node-gyp conventions
