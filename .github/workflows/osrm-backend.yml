@@ -133,7 +133,7 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v6
       - name: Enable osm.pbf cache
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: berlin-latest.osm.pbf
           key: v1-berlin-osm-pbf
@@ -379,28 +379,28 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Enable Node.js cache
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Enable compiler cache
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: ~/.ccache
           key: ccache-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.name }}-
       - name: Enable Conan cache
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: ~/.conan2
           key: v10-conan-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             v10-conan-${{ matrix.name }}-
       - name: Enable test cache
-        uses: actions/cache@v6
+        uses: actions/cache@v5
         with:
           path: ${{github.workspace}}/test/cache
           key: v4-test-${{ matrix.name }}-${{ github.sha }}
