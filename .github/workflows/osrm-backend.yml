@@ -30,7 +30,7 @@ jobs:
     env:
       BUILD_TYPE: Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: cmake --version
       - uses: actions/setup-node@v6
         with:
@@ -96,13 +96,13 @@ jobs:
   format-taginfo-docs:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
         node-version: latest
     - name: Enable Node.js cache
-      uses: actions/cache@v4
+      uses: actions/cache@v6
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -131,9 +131,9 @@ jobs:
     continue-on-error: false
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Enable osm.pbf cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: berlin-latest.osm.pbf
           key: v1-berlin-osm-pbf
@@ -371,36 +371,36 @@ jobs:
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
       ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build machine architecture
         run: uname -m
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
       - name: Enable Node.js cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Enable compiler cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.ccache
           key: ccache-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.name }}-
       - name: Enable Conan cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.conan2
           key: v10-conan-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             v10-conan-${{ matrix.name }}-
       - name: Enable test cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ${{github.workspace}}/test/cache
           key: v4-test-${{ matrix.name }}-${{ github.sha }}
@@ -555,7 +555,7 @@ jobs:
 
       - name: Use Node 22
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
       - name: Run Node package tests on Node 22
@@ -565,7 +565,7 @@ jobs:
           npm run nodejs-tests
       - name: Use Node 24
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 24
       - name: Run Node package tests on Node 24
@@ -575,7 +575,7 @@ jobs:
           npm run nodejs-tests
       - name: Use Node latest
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: latest
       - name: Run Node package tests on Node-latest
@@ -585,7 +585,7 @@ jobs:
           npm run nodejs-tests
 
       - name: Upload test logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: logs
