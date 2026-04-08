@@ -91,7 +91,6 @@ if(MSVC)
         execute_process(
             COMMAND ${CMAKE_AR} /def:${CMAKE_JS_NODELIB_DEF}
                                 /out:${CMAKE_JS_NODELIB_TARGET}
-                                ${CMAKE_STATIC_LINKER_FLAGS}
             RESULT_VARIABLE _nodelib_result
         )
         if(NOT _nodelib_result EQUAL 0)
