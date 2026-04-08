@@ -1,6 +1,5 @@
 // Step definitions for testing route accessibility and connectivity
 import util from 'util';
-import d3 from 'd3-queue';
 import classes from '../support/data_classes.js';
 import { Then } from '@cucumber/cucumber';
 import { env } from '../support/env.js';
@@ -137,88 +136,75 @@ Then(/^routability should be$/, function (table, callback) {
 // result is an object containing the calculated values for 'rate', 'status',
 // 'time', 'distance', 'speed' and 'mode', for forwards and backwards routing, as well as
 // a bothw object that diffs forwards/backwards
-const testRoutabilityRow = function (i, cb) {
+const testRoutabilityRow = async function (i, cb) {
   const result = {};
 
-  const testDirection = function (dir, callback) {
-    const coordA = this.offsetOriginBy(1 + env.WAY_SPACING * i, 0);
-    const coordB = this.offsetOriginBy(3 + env.WAY_SPACING * i, 0);
+  const testDirection = function (dir) {
+    return new Promise((resolve, reject) => {
+      const coordA = this.offsetOriginBy(1 + env.WAY_SPACING * i, 0);
+      const coordB = this.offsetOriginBy(3 + env.WAY_SPACING * i, 0);
 
-    const a = new classes.Location(coordA[0], coordA[1]),
-      b = new classes.Location(coordB[0], coordB[1]),
-      r = {};
+      const a = new classes.Location(coordA[0], coordA[1]),
+        b = new classes.Location(coordB[0], coordB[1]),
+        r = {};
 
-    r.which = dir;
+      r.which = dir;
 
-    this.requestRoute(
-      dir === 'forw' ? [a, b] : [b, a],
-      [],
-      [],
-      this.queryParams,
-      (err, res, body) => {
-        if (err) return callback(err);
+      this.requestRoute(
+        dir === 'forw' ? [a, b] : [b, a],
+        [],
+        [],
+        this.queryParams,
+        (err, res, body) => {
+          if (err) return reject(err);
 
-        r.json = JSON.parse(body);
-        r.code = r.json.code;
-        r.status = res.statusCode === 200 ? 'x' : null;
-        if (r.status) {
-          r.route = this.wayList(r.json.routes[0]);
-          r.summary = r.json.routes[0].legs.map((l) => l.summary).join(',');
+          r.json = JSON.parse(body);
+          r.code = r.json.code;
+          r.status = res.statusCode === 200 ? 'x' : null;
+          if (r.status) {
+            r.route = this.wayList(r.json.routes[0]);
+            r.summary = r.json.routes[0].legs.map((l) => l.summary).join(',');
 
-          if (r.route.split(',')[0] === util.format('w%d', i)) {
-            r.time = r.json.routes[0].duration;
-            r.distance = r.json.routes[0].distance;
-            r.rate =
-              Math.round((r.distance / r.json.routes[0].weight) * 10) / 10;
-            r.speed = r.time > 0 ? parseInt((3.6 * r.distance) / r.time) : null;
+            if (r.route.split(',')[0] === util.format('w%d', i)) {
+              r.time = r.json.routes[0].duration;
+              r.distance = r.json.routes[0].distance;
+              r.rate =
+                Math.round((r.distance / r.json.routes[0].weight) * 10) / 10;
+              r.speed = r.time > 0 ? parseInt((3.6 * r.distance) / r.time) : null;
 
-            // use the mode of the first step of the route
-            // for routability table test, we can assume the mode is the same throughout the route,
-            // since the route is just a single way
-            if (r.json.routes[0].legs[0] && r.json.routes[0].legs[0].steps[0]) {
-              r.mode = r.json.routes[0].legs[0].steps[0].mode;
+              // use the mode of the first step of the route
+              // for routability table test, we can assume the mode is the same throughout the route,
+              // since the route is just a single way
+              if (r.json.routes[0].legs[0] && r.json.routes[0].legs[0].steps[0]) {
+                r.mode = r.json.routes[0].legs[0].steps[0].mode;
+              }
+            } else {
+              r.status = null;
             }
-          } else {
-            r.status = null;
           }
-        }
 
-        callback(null, r);
-      },
-    );
+          resolve(r);
+        },
+      );
+    });
   }.bind(this);
 
-  d3.queue(1)
-    .defer(testDirection, 'forw')
-    .defer(testDirection, 'backw')
-    .awaitAll((err, res) => {
-      if (err) return cb(err);
-      // check if forw and backw returned the same values
-      res.forEach((dirRes) => {
-        const which = dirRes.which;
-        delete dirRes.which;
-        result[which] = dirRes;
-      });
+  try {
+    // run forw and backw sequentially
+    for (const dir of ['forw', 'backw']) {
+      const dirRes = await testDirection(dir);
+      const which = dirRes.which;
+      delete dirRes.which;
+      result[which] = dirRes;
+    }
 
-      result.bothw = {};
-
-      const sq = d3.queue();
-
-      const parseRes = function (key, scb) {
-        if (result.forw[key] === result.backw[key]) {
-          result.bothw[key] = result.forw[key];
-        } else {
-          result.bothw[key] = 'diff';
-        }
-        scb();
-      };
-
-      ['rate', 'status', 'time', 'distance', 'speed', 'mode'].forEach((key) => {
-        sq.defer(parseRes, key);
-      });
-
-      sq.awaitAll((err) => {
-        cb(err, result);
-      });
+    result.bothw = {};
+    ['rate', 'status', 'time', 'distance', 'speed', 'mode'].forEach((key) => {
+      result.bothw[key] = result.forw[key] === result.backw[key] ? result.forw[key] : 'diff';
     });
+
+    cb(null, result);
+  } catch (err) {
+    cb(err);
+  }
 };

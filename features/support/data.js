@@ -1,7 +1,6 @@
 // Core data manipulation utilities for building synthetic test scenarios and OSM data
 import fs from 'fs';
 import util from 'util';
-import d3 from 'd3-queue';
 
 import CheapRuler from 'cheap-ruler';
 import stripAnsi from 'strip-ansi';
@@ -50,7 +49,7 @@ export default class Data {
   // Builds OSM ways from test table data with synthetic coordinates
   buildWaysFromTable(table, callback) {
     // add one unconnected way for each row
-    const buildRow = (row, ri, cb) => {
+    const buildRow = (row, ri) => {
       // comments ported directly from ruby suite:
       // NOTE: currently osrm crashes when processing an isolated oneway with just 2 nodes, so we use 4 edges
       // this is related to the fact that a oneway dead-end street doesn't make a lot of sense
@@ -131,15 +130,10 @@ export default class Data {
       for (const k in nodeTags) {
         nodes[2].addTag(k, nodeTags[k]);
       }
-      cb();
     };
 
-    const q = d3.queue();
-    table.hashes().forEach((row, ri) => {
-      q.defer(buildRow, row, ri);
-    });
-
-    q.awaitAll(callback);
+    table.hashes().forEach((row, ri) => buildRow(row, ri));
+    callback();
   }
 
   // Converts table grid coordinates to longitude/latitude
@@ -319,16 +313,18 @@ export default class Data {
     callback();
   }
 
-  processRowsAndDiff(table, fn, callback) {
-    const q = d3.queue(1);
-
-    table.hashes().forEach((row, i) => {
-      q.defer(fn, row, i);
-    });
-
-    q.awaitAll((err, actual) => {
-      if (err)
-        return callback(err);
+  async processRowsAndDiff(table, fn, callback) {
+    try {
+      const actual = [];
+      for (const [i, row] of table.hashes().entries()) {
+        const result = await new Promise((resolve, reject) => {
+          fn(row, i, (err, res) => {
+            if (err) reject(err);
+            else resolve(res);
+          });
+        });
+        actual.push(result);
+      }
       const diff = tableDiff(table, actual);
       if (diff) {
         if (env.PLATFORM_CI) {
@@ -341,6 +337,8 @@ export default class Data {
       } else {
         callback();
       }
-    });
+    } catch (err) {
+      callback(err);
+    }
   }
 }
