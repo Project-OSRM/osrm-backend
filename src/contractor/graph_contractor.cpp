@@ -98,7 +98,7 @@ struct RemainingNodeData
 
 struct ThreadDataContainer
 {
-    explicit ThreadDataContainer(int number_of_nodes) : number_of_nodes(number_of_nodes) {}
+    explicit ThreadDataContainer() {}
 
     inline ContractorThreadData *GetThreadData()
     {
@@ -106,13 +106,11 @@ struct ThreadDataContainer
         auto &ref = data.local(exists);
         if (!exists)
         {
-            ref = std::make_shared<ContractorThreadData>(number_of_nodes);
+            ref = std::make_shared<ContractorThreadData>(8000);
         }
 
         return ref.get();
     }
-
-    int number_of_nodes;
     using EnumerableThreadData =
         tbb::enumerable_thread_specific<std::shared_ptr<ContractorThreadData>>;
     EnumerableThreadData data;
@@ -567,7 +565,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
 
     const NodeID number_of_nodes = graph.GetNumberOfNodes();
 
-    ThreadDataContainer thread_data_list(number_of_nodes);
+    ThreadDataContainer thread_data_list;
 
     NodeID number_of_contracted_nodes = 0;
     std::vector<NodeID> new_to_old_node_id(number_of_nodes);
