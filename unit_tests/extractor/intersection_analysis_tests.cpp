@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 
 BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 {
-    std::vector<NodeBasedEdgeAnnotation> annotations;
+    std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;

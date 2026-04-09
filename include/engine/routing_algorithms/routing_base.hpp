@@ -188,6 +188,7 @@ void annotatePath(const FacadeT &facade,
     std::vector<SegmentWeight> weight_vector;
     std::vector<SegmentDuration> duration_vector;
     std::vector<DatasourceID> datasource_vector;
+    std::vector<OSMWayID> way_id_vector;
 
     const auto get_segment_geometry = [&](const auto geometry_index)
     {
@@ -203,6 +204,7 @@ void annotatePath(const FacadeT &facade,
             copy(weight_vector, facade.GetUncompressedForwardWeights(geometry_index.id));
             copy(duration_vector, facade.GetUncompressedForwardDurations(geometry_index.id));
             copy(datasource_vector, facade.GetUncompressedForwardDatasources(geometry_index.id));
+            copy(way_id_vector, facade.GetUncompressedForwardWayIDs(geometry_index.id));
         }
         else
         {
@@ -210,6 +212,7 @@ void annotatePath(const FacadeT &facade,
             copy(weight_vector, facade.GetUncompressedReverseWeights(geometry_index.id));
             copy(duration_vector, facade.GetUncompressedReverseDurations(geometry_index.id));
             copy(datasource_vector, facade.GetUncompressedReverseDatasources(geometry_index.id));
+            copy(way_id_vector, facade.GetUncompressedReverseWayIDs(geometry_index.id));
         }
     };
 
@@ -225,8 +228,10 @@ void annotatePath(const FacadeT &facade,
 
         BOOST_ASSERT(!id_vector.empty());
         BOOST_ASSERT(!datasource_vector.empty());
+        BOOST_ASSERT(!way_id_vector.empty());
         BOOST_ASSERT(weight_vector.size() + 1 == id_vector.size());
         BOOST_ASSERT(duration_vector.size() + 1 == id_vector.size());
+        BOOST_ASSERT(way_id_vector.size() + 1 == id_vector.size());
 
         const bool is_first_segment = unpacked_path.empty();
 
@@ -254,6 +259,7 @@ void annotatePath(const FacadeT &facade,
                                              alias_cast<EdgeDuration>(duration_vector[segment_idx]),
                                              {0},
                                              datasource_vector[segment_idx],
+                                             way_id_vector[segment_idx],
                                              std::nullopt});
         }
         BOOST_ASSERT(!unpacked_path.empty());
@@ -311,6 +317,7 @@ void annotatePath(const FacadeT &facade,
                      alias_cast<EdgeDuration>(duration_vector[segment_idx]),
                      {0},
                      datasource_vector[segment_idx],
+                     way_id_vector[segment_idx],
                      std::nullopt});
     }
 

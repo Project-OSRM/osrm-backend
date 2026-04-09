@@ -334,6 +334,8 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                                                  forward_weight2,
                                                  forward_duration1,
                                                  forward_duration2,
+                                                 fwd_annotation_data1.way_id,
+                                                 fwd_annotation_data2.way_id,
                                                  forward_penalties.weight,
                                                  forward_penalties.duration);
                 geometry_compressor.CompressEdge(reverse_e1,
@@ -344,6 +346,8 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                                                  reverse_weight2,
                                                  reverse_duration1,
                                                  reverse_duration2,
+                                                 rev_annotation_data1.way_id,
+                                                 rev_annotation_data2.way_id,
                                                  backward_penalties.weight,
                                                  backward_penalties.duration);
             }
@@ -361,7 +365,11 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
         {
             const EdgeData &data = graph.GetEdgeData(edge_id);
             const NodeID target = graph.GetTarget(edge_id);
-            geometry_compressor.AddUncompressedEdge(edge_id, target, data.weight, data.duration);
+            geometry_compressor.AddUncompressedEdge(edge_id,
+                                                   target,
+                                                   data.weight,
+                                                   data.duration,
+                                                   node_data_container[data.annotation_data].way_id);
         }
     }
 }
