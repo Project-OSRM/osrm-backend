@@ -167,11 +167,10 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     if (node_weight_penalty != INVALID_EDGE_WEIGHT &&
         node_duration_penalty != MAXIMAL_EDGE_DURATION)
     {
-        edge_bucket_list1.emplace_back(OnewayCompressedEdge{
-            via_node_id,
-            ClipWeight(node_weight_penalty),
-            ClipDuration(node_duration_penalty),
-            SPECIAL_OSM_WAYID});
+        edge_bucket_list1.emplace_back(OnewayCompressedEdge{via_node_id,
+                                                            ClipWeight(node_weight_penalty),
+                                                            ClipDuration(node_duration_penalty),
+                                                            SPECIAL_OSM_WAYID});
     }
 
     if (HasEntryForID(edge_id_2))
