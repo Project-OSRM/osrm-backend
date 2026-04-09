@@ -438,7 +438,7 @@ jobs:
         uses: MarkusJx/install-boost@v2
         id: install-boost
         with:
-          boost_version: 1.85.0
+          boost_version: 1.89.0
 
       - name: Install dev dependencies
         run: |
