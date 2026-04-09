@@ -365,11 +365,12 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
         {
             const EdgeData &data = graph.GetEdgeData(edge_id);
             const NodeID target = graph.GetTarget(edge_id);
-            geometry_compressor.AddUncompressedEdge(edge_id,
-                                                   target,
-                                                   data.weight,
-                                                   data.duration,
-                                                   node_data_container[data.annotation_data].way_id);
+            geometry_compressor.AddUncompressedEdge(
+                edge_id,
+                target,
+                data.weight,
+                data.duration,
+                node_data_container[data.annotation_data].way_id);
         }
     }
 }
