@@ -158,7 +158,11 @@ const testRoutabilityRow = async function (i, cb) {
         (err, res, body) => {
           if (err) return reject(err);
 
-          r.json = JSON.parse(body);
+          try {
+            r.json = JSON.parse(body);
+          } catch (parseErr) {
+            return reject(parseErr);
+          }
           r.code = r.json.code;
           r.status = res.statusCode === 200 ? 'x' : null;
           if (r.status) {

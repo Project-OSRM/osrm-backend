@@ -14,7 +14,10 @@ const hashOfFiles = async (paths) => {
 const hashOfFile = async (path, additional_content) => {
   const result = await fs.promises.readFile(path);
   const checksum = crypto.createHash('md5');
-  checksum.update(result + (additional_content || ''));
+  checksum.update(result);
+  if (additional_content) {
+    checksum.update(additional_content);
+  }
   return checksum.digest('hex');
 };
 
