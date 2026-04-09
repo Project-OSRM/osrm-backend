@@ -47,7 +47,7 @@ export default class Data {
   }
 
   // Builds OSM ways from test table data with synthetic coordinates
-  buildWaysFromTable(table, callback) {
+  buildWaysFromTable(table) {
     // add one unconnected way for each row
     const buildRow = (row, ri) => {
       // comments ported directly from ruby suite:
@@ -133,7 +133,6 @@ export default class Data {
     };
 
     table.hashes().forEach((row, ri) => buildRow(row, ri));
-    callback();
   }
 
   // Converts table grid coordinates to longitude/latitude
@@ -303,42 +302,24 @@ export default class Data {
   // This is called on every "When I X I should Y"
   // On the first call in every scenario it should load the data
   // into osrm-routed or osrm-datastore
-  async reprocessAndLoadData(callback) {
+  async reprocessAndLoadData() {
     if (!this.dataLoaded) {
       this.writeOSM();
       this.runExtractionChain();
       await env.osrmLoader.before(this);
       this.dataLoaded = true;
     }
-    callback();
   }
 
-  async processRowsAndDiff(table, fn, callback) {
-    try {
-      const actual = [];
-      for (const [i, row] of table.hashes().entries()) {
-        const result = await new Promise((resolve, reject) => {
-          fn(row, i, (err, res) => {
-            if (err) reject(err);
-            else resolve(res);
-          });
-        });
-        actual.push(result);
-      }
-      const diff = tableDiff(table, actual);
-      if (diff) {
-        if (env.PLATFORM_CI) {
-          // the github report displays ANSI escapes as characters if passed to the
-          // error callback.
-          callback(stripAnsi(diff));
-        } else {
-          callback(diff);
-        }
-      } else {
-        callback();
-      }
-    } catch (err) {
-      callback(err);
+  async processRowsAndDiff(table, fn) {
+    const actual = [];
+    for (const [i, row] of table.hashes().entries()) {
+      const result = await fn(row, i);
+      actual.push(result);
+    }
+    const diff = tableDiff(table, actual);
+    if (diff) {
+      throw new Error(env.PLATFORM_CI ? stripAnsi(diff) : diff);
     }
   }
 }

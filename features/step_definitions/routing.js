@@ -2,19 +2,14 @@
 import { When, Given } from '@cucumber/cucumber';
 
 
-When(/^I route I should get$/, function (table, callback) {
-  this.WhenIRouteIShouldGet(table, callback);
+When(/^I route I should get$/, async function (table) {
+  await this.WhenIRouteIShouldGet(table);
 });
 
 // Runs routing test multiple times for performance testing
 When(/^I route (\d+) times I should get$/, async function (n, table) {
   for (let i = 0; i < n; i++) {
-    await new Promise((resolve, reject) => {
-      this.WhenIRouteIShouldGet(table, (err) => {
-        if (err) reject(err);
-        else resolve();
-      });
-    });
+    await this.WhenIRouteIShouldGet(table);
   }
 });
 
