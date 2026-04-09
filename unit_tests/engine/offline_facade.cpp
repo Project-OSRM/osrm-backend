@@ -149,6 +149,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     }
 
     OSMNodeID GetOSMNodeIDOfNode(const NodeID /*id*/) const override { return OSMNodeID(); }
+    OSMWayID GetOSMWayID(const NodeID /*id*/) const override { return SPECIAL_OSM_WAYID; }
 
     GeometryID GetGeometryIndex(const NodeID /*id*/) const override { return GeometryID{0, false}; }
 
@@ -200,6 +201,16 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     DatasourceReverseRange GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
     {
         return DatasourceReverseRange(DatasourceForwardRange());
+    }
+
+    WayIDForwardRange GetUncompressedForwardWayIDs(const EdgeID /*id*/) const override
+    {
+        return {};
+    }
+
+    WayIDReverseRange GetUncompressedReverseWayIDs(const EdgeID /*id*/) const override
+    {
+        return WayIDReverseRange(WayIDForwardRange());
     }
 
     std::string_view GetDatasourceName(const DatasourceID /*id*/) const override

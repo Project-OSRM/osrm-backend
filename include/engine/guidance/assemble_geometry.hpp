@@ -103,7 +103,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                 from_alias<double>(path_point.weight_until_turn - path_point.weight_of_turn) /
                     facade.GetWeightMultiplier(),
                 path_point.datasource_id,
-                facade.GetOSMWayID(path_point.from_edge_based_node)});
+                path_point.way_id});
             geometry.locations.push_back(coordinate);
             geometry.node_ids.push_back(node_id);
         }
@@ -118,6 +118,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         reversed_target ? target_node.reverse_segment_id.id : target_node.forward_segment_id.id;
     const auto target_geometry_id = facade.GetGeometryIndex(target_node_id).id;
     const auto forward_datasources = facade.GetUncompressedForwardDatasources(target_geometry_id);
+    const auto forward_way_ids = facade.GetUncompressedForwardWayIDs(target_geometry_id);
 
     // This happens when the source/target are on the same edge-based-node
     // There will be no entries in the unpacked path, thus no annotations.
@@ -143,7 +144,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                                     duration,
                                     weight,
                                     forward_datasources[target_node.fwd_segment_position],
-                                    facade.GetOSMWayID(target_node_id)});
+                                    forward_way_ids[target_node.fwd_segment_position]});
     }
     else
     {
@@ -156,7 +157,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                                                : target_node.forward_weight) /
                 facade.GetWeightMultiplier(),
             forward_datasources[target_node.fwd_segment_position],
-            facade.GetOSMWayID(target_node_id)});
+            forward_way_ids[target_node.fwd_segment_position]});
     }
 
     geometry.segment_offsets.push_back(geometry.locations.size());

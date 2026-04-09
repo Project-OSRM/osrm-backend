@@ -342,6 +342,16 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return segment_data.GetReverseDatasources(id);
     }
 
+    WayIDForwardRange GetUncompressedForwardWayIDs(const PackedGeometryID id) const override final
+    {
+        return segment_data.GetForwardWayIDs(id);
+    }
+
+    WayIDReverseRange GetUncompressedReverseWayIDs(const PackedGeometryID id) const override final
+    {
+        return segment_data.GetReverseWayIDs(id);
+    }
+
     TurnPenalty GetWeightPenaltyForEdgeID(const EdgeID edge_based_edge_id) const override final
     {
         BOOST_ASSERT(m_turn_weight_penalties.size() > edge_based_edge_id);
