@@ -30,11 +30,11 @@ jobs:
     env:
       BUILD_TYPE: Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: cmake --version
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
       - run: node --version
       - run: npm --version
       - name: Prepare environment
@@ -96,13 +96,13 @@ jobs:
   format-taginfo-docs:
     runs-on: ubuntu-24.04
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
-        node-version: 20
+        node-version: latest
     - name: Enable Node.js cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -131,9 +131,9 @@ jobs:
     continue-on-error: false
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Enable osm.pbf cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: berlin-latest.osm.pbf
           key: v1-berlin-osm-pbf
@@ -174,7 +174,7 @@ jobs:
         include:
           - name: clang-20-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-20
@@ -183,7 +183,7 @@ jobs:
 
           - name: clang-19-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-19
@@ -192,7 +192,7 @@ jobs:
 
           - name: clang-18-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
@@ -201,7 +201,7 @@ jobs:
 
           - name: clang-18-debug
             continue-on-error: false
-            node:
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
@@ -210,7 +210,7 @@ jobs:
 
           - name: clang-18-debug-clang-tidy
             continue-on-error: false
-            node: 20
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
@@ -221,7 +221,7 @@ jobs:
 
           - name: clang-18-debug-asan-ubsan
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
@@ -233,7 +233,7 @@ jobs:
 
           - name: clang-17-release
             continue-on-error: false
-            node: 20
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-17
@@ -242,7 +242,7 @@ jobs:
 
           - name: clang-16-release
             continue-on-error: false
-            node: 20
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-16
@@ -251,7 +251,7 @@ jobs:
 
           - name: gcc-14-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
@@ -260,7 +260,7 @@ jobs:
 
           - name: gcc-13-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-13
@@ -269,7 +269,7 @@ jobs:
 
           - name: gcc-13-debug-cov
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: gcc-13
@@ -278,7 +278,7 @@ jobs:
 
           - name: gcc-12-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-22.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-12
@@ -287,7 +287,7 @@ jobs:
 
           - name: conan-linux-release
             continue-on-error: false
-            node: 20
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
@@ -297,7 +297,7 @@ jobs:
 
           - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
-            node: 20
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
@@ -309,7 +309,7 @@ jobs:
           - name: conan-linux-release-node
             build_node_package: true
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-16
@@ -320,7 +320,7 @@ jobs:
           - name: conan-linux-debug-node
             build_node_package: true
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-16
@@ -331,7 +331,7 @@ jobs:
           - name: conan-macos-x64-release-node
             build_node_package: true
             continue-on-error: true
-            node: 22
+            node: 24
             runs-on: macos-15-intel # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -342,7 +342,7 @@ jobs:
           - name: conan-macos-arm64-release-node
             build_node_package: true
             continue-on-error: true
-            node: 22
+            node: 24
             runs-on: macos-15 # arm64
             BUILD_TYPE: Release
             CCOMPILER: clang
@@ -371,36 +371,36 @@ jobs:
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
       ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build machine architecture
         run: uname -m
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
       - name: Enable Node.js cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Enable compiler cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.ccache
           key: ccache-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.name }}-
       - name: Enable Conan cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.conan2
           key: v10-conan-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             v10-conan-${{ matrix.name }}-
       - name: Enable test cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{github.workspace}}/test/cache
           key: v4-test-${{ matrix.name }}-${{ github.sha }}
@@ -553,19 +553,9 @@ jobs:
           popd
           npm test -- --parallel $JOBS
 
-      - name: Use Node 20
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Run Node package tests on Node 20
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        run: |
-          node --version
-          npm run nodejs-tests
       - name: Use Node 22
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
       - name: Run Node package tests on Node 22
@@ -573,9 +563,19 @@ jobs:
         run: |
           node --version
           npm run nodejs-tests
+      - name: Use Node 24
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Run Node package tests on Node 24
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        run: |
+          node --version
+          npm run nodejs-tests
       - name: Use Node latest
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: latest
       - name: Run Node package tests on Node-latest
@@ -585,7 +585,7 @@ jobs:
           npm run nodejs-tests
 
       - name: Upload test logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: logs
