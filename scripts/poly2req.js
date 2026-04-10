@@ -31,7 +31,7 @@ const optionsList = [
   {name: 'coords', alias: 'c', type: Number, defaultValue: 2, description: 'Number of coordinates per query', typeLabel: '{underline number}'},
   {name: 'number', alias: 'n', type: Number, defaultValue: 1000, description: 'Number of queries to generate', typeLabel: '{underline number}'},
   {name: 'sample-size', alias: 's', type: Number, defaultValue: 1000, description: 'Sample size for waypoints mode', typeLabel: '{underline number}'},
-  {name: 'bbox', alias: 'b', type: String, description: 'Bounding box: planet, us, germany, dc, or path to .poly file', typeLabel: '{underline region|file}'},
+  {name: 'bbox', alias: 'b', type: String, defaultOption: true, description: 'Bounding box: planet, us, germany, dc, or path to .poly file', typeLabel: '{underline region|file}'},
   {name: 'axis', alias: 'a', type: String, defaultValue: 'distance', description: 'Query generation mode: distance or waypoints', typeLabel: '{underline distance|waypoints}'}
 ];
 
