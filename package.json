@@ -81,7 +81,9 @@
     "access": "public"
   },
   "overrides": {
-    "vite": "6.4.2",
+    "vitepress": {
+      "vite": "6.4.2"
+    },
     "esbuild": "0.27.2",
     "eslint": {
       "ajv": "^6"
