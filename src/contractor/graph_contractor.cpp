@@ -12,6 +12,7 @@
 
 #include <boost/assert.hpp>
 
+#include <cstddef>
 #include <tbb/blocked_range.h>
 #include <tbb/enumerable_thread_specific.h>
 #include <tbb/parallel_for.h>
@@ -33,6 +34,8 @@ struct ContractorThreadData
     std::vector<ContractorEdge> inserted_edges;
     std::vector<NodeID> neighbours;
     explicit ContractorThreadData(NodeID nodes) : heap(nodes) {}
+    /** Code instrumentation: the max. occupancy of the heap */
+    std::size_t max_heap_occupancy{0};
 };
 
 struct ContractorNodeData
@@ -106,7 +109,7 @@ struct ThreadDataContainer
         auto &ref = data.local(exists);
         if (!exists)
         {
-            ref = std::make_shared<ContractorThreadData>(8000);
+            ref = std::make_shared<ContractorThreadData>(HASH_MAP_CAPACITY);
         }
 
         return ref.get();
@@ -228,7 +231,6 @@ void ContractNode(ContractorThreadData *data,
 
         if (RUNSIMULATION)
         {
-            const int constexpr SIMULATION_SEARCH_SPACE_SIZE = 1000;
             search(heap,
                    graph,
                    contractable,
@@ -239,7 +241,6 @@ void ContractNode(ContractorThreadData *data,
         }
         else
         {
-            const int constexpr FULL_SEARCH_SPACE_SIZE = 2000;
             search(heap,
                    graph,
                    contractable,
@@ -335,6 +336,7 @@ void ContractNode(ContractorThreadData *data,
         }
         inserted_edges.resize(inserted_edges_size);
     }
+    data->max_heap_occupancy = std::max(heap.Occupancy(), data->max_heap_occupancy);
 }
 
 void ContractNode(ContractorThreadData *data,
@@ -754,6 +756,18 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
 
     node_data.Renumber(new_to_old_node_id);
     RenumberGraph(graph, new_to_old_node_id);
+
+    std::size_t max_heap_occupancy = 0;
+    for (auto &data : thread_data_list.data.range())
+    {
+        max_heap_occupancy = std::max(max_heap_occupancy, data->max_heap_occupancy);
+    }
+    util::Log(logDEBUG) << "Max. heap occupancy = " << max_heap_occupancy;
+    if (max_heap_occupancy >= RELAXED_NODE_LIMIT)
+    {
+        util::Log(logWARNING) << "Heap size insufficient. Please increase HASH_MAP_CAPACITY and "
+                                 "recompile and/or open an issue on github.";
+    }
 
     return std::move(node_data.is_core);
 }
