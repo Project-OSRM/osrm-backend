@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/Project-OSRM/osrm-backend",
   "engines": {
-    "node": ">=20.0.0"
+    "node": "^20.17.0 || >=22.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -52,8 +52,8 @@
     "husky": "^9.1.7",
     "jsonpath-plus": "^10.4.0",
     "lint-staged": "^16.2.7",
+    "cmake-js": "^8.0.0",
     "node-addon-api": "^8.5.0",
-    "node-cmake": "^2.5.1",
     "strip-ansi": "^7.1.0",
     "tape": "5.9.0",
     "vitepress": "^1.6.4",

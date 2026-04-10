@@ -3,39 +3,22 @@
 
 #include "engine/api/tile_parameters.hpp"
 
-#include "engine/hint.hpp"
-#include "engine/polyline_compressor.hpp"
+#include <boost/fusion/include/adapt_struct.hpp>
+#include <boost/spirit/home/x3.hpp>
 
-#include <boost/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
-
-#include <string>
+BOOST_FUSION_ADAPT_STRUCT(osrm::engine::api::TileParameters, x, y, z)
 
 namespace osrm::server::api
 {
 
-namespace
-{
-namespace ph = boost::phoenix;
-namespace qi = boost::spirit::qi;
-} // namespace
+namespace x3 = boost::spirit::x3;
 
-template <typename Iterator = std::string::iterator,
-          typename Signature = void(engine::api::TileParameters &)>
-struct TileParametersGrammar final : boost::spirit::qi::grammar<Iterator, Signature>
-{
-    TileParametersGrammar() : TileParametersGrammar::base_type(root_rule)
-    {
-        root_rule = qi::lit("tile(") >
-                    qi::uint_[ph::bind(&engine::api::TileParameters::x, qi::_r1) = qi::_1] > ',' >
-                    qi::uint_[ph::bind(&engine::api::TileParameters::y, qi::_r1) = qi::_1] > ',' >
-                    qi::uint_[ph::bind(&engine::api::TileParameters::z, qi::_r1) = qi::_1] >
-                    qi::lit(").mvt");
-    }
+// X3 rule: parses "tile(x,y,z).mvt" into TileParameters
+const x3::rule<struct tile_rule_tag, engine::api::TileParameters> tile_rule = "tile_rule";
+const auto tile_rule_def = x3::lit("tile(") > x3::uint_ > ',' > x3::uint_ > ',' > x3::uint_ >
+                           x3::lit(").mvt");
+BOOST_SPIRIT_DEFINE(tile_rule)
 
-  private:
-    qi::rule<Iterator, Signature> root_rule;
-};
 } // namespace osrm::server::api
 
 #endif

@@ -85,7 +85,7 @@ endif()
 # add @loader_path/$ORIGIN to rpath to make binaries relocatable
 if (APPLE)
   set(CMAKE_BUILD_RPATH "@loader_path")
-else()
+elseif(NOT WIN32)
   set(CMAKE_BUILD_RPATH "\$ORIGIN")
   # https://stackoverflow.com/questions/6324131/rpath-origin-not-having-desired-effect
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,origin")
@@ -474,12 +474,6 @@ endif()
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
-
-add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
-add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
-
-# Workaround for https://github.com/boostorg/phoenix/issues/111
-add_dependency_defines(-DBOOST_PHOENIX_STL_TUPLE_H_)
 
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})

@@ -4,104 +4,87 @@
 #include "server/api/base_parameters_grammar.hpp"
 #include "engine/api/table_parameters.hpp"
 
-#include <boost/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/home/x3.hpp>
 
-namespace osrm::server::api
+namespace osrm::server::api::table_grammar
 {
 
-namespace
+namespace x3 = boost::spirit::x3;
+using json_policy = no_trailing_dot_policy<double, 'j', 's', 'o', 'n'>;
+inline const x3::real_parser<double, json_policy> json_double{};
+inline const x3::uint_parser<std::size_t> size_t_{};
+
+using AnnotationsType = engine::api::TableParameters::AnnotationsType;
+
+// --- Symbol tables ---
+
+inline const auto annotations_sym = []()
 {
-namespace ph = boost::phoenix;
-namespace qi = boost::spirit::qi;
-} // namespace
+    x3::symbols<AnnotationsType> sym;
+    sym.add("duration", AnnotationsType::Duration)("distance", AnnotationsType::Distance);
+    return sym;
+}();
 
-template <typename Iterator = std::string::iterator,
-          typename Signature = void(engine::api::TableParameters &)>
-struct TableParametersGrammar : public BaseParametersGrammar<Iterator, Signature>
+inline const auto fallback_coordinate_type = []()
 {
-    using BaseGrammar = BaseParametersGrammar<Iterator, Signature>;
+    x3::symbols<engine::api::TableParameters::FallbackCoordinateType> sym;
+    sym.add("input", engine::api::TableParameters::FallbackCoordinateType::Input)(
+        "snapped", engine::api::TableParameters::FallbackCoordinateType::Snapped);
+    return sym;
+}();
 
-    TableParametersGrammar() : TableParametersGrammar(root_rule)
-    {
-#ifdef BOOST_HAS_LONG_LONG
-        if (std::is_same<std::size_t, unsigned long long>::value)
-            size_t_ = qi::ulong_long;
-        else
-            size_t_ = qi::ulong_;
-#else
-        size_t_ = qi::ulong_;
-#endif
+// --- Table-specific rules ---
 
-        destinations_rule =
-            qi::lit("destinations=") >
-            (qi::lit("all") |
-             (size_t_ %
-              ';')[ph::bind(&engine::api::TableParameters::destinations, qi::_r1) = qi::_1]);
+// Accumulate annotations with bitwise OR
+inline const auto annotations_list =
+    x3::rule<struct table_annotations_list_tag, AnnotationsType>{"table_annotations_list"} =
+        annotations_sym[([](auto &ctx) { x3::_val(ctx) = x3::_val(ctx) | x3::_attr(ctx); })] % ',';
 
-        sources_rule =
-            qi::lit("sources=") >
-            (qi::lit("all") |
-             (size_t_ % ';')[ph::bind(&engine::api::TableParameters::sources, qi::_r1) = qi::_1]);
+inline const auto table_annotations_rule =
+    x3::lit("annotations=") >
+    annotations_list[([](auto &ctx)
+                      { x3::get<params_tag>(ctx).get().annotations = x3::_attr(ctx); })];
 
-        fallback_speed_rule =
-            qi::lit("fallback_speed=") >
-            (double_)[ph::bind(&engine::api::TableParameters::fallback_speed, qi::_r1) = qi::_1];
+// Table base options = base + table annotations
+inline const auto table_base_options =
+    x3::rule<struct table_base_options_tag>{"table_base_options"} =
+        base_grammar::base_options | table_annotations_rule;
 
-        fallback_coordinate_type.add("input",
-                                     engine::api::TableParameters::FallbackCoordinateType::Input)(
-            "snapped", engine::api::TableParameters::FallbackCoordinateType::Snapped);
+inline const auto sources_rule =
+    x3::lit("sources=") >
+    (x3::lit("all") |
+     (size_t_ % ';')[([](auto &ctx) { x3::get<params_tag>(ctx).get().sources = x3::_attr(ctx); })]);
 
-        scale_factor_rule =
-            qi::lit("scale_factor=") >
-            (double_)[ph::bind(&engine::api::TableParameters::scale_factor, qi::_r1) = qi::_1];
+inline const auto destinations_rule =
+    x3::lit("destinations=") >
+    (x3::lit("all") |
+     (size_t_ %
+      ';')[([](auto &ctx) { x3::get<params_tag>(ctx).get().destinations = x3::_attr(ctx); })]);
 
-        table_rule = destinations_rule(qi::_r1) | sources_rule(qi::_r1);
+inline const auto fallback_speed_rule =
+    x3::lit("fallback_speed=") >
+    json_double[([](auto &ctx)
+                 { x3::get<params_tag>(ctx).get().fallback_speed = x3::_attr(ctx); })];
 
-        root_rule = BaseGrammar::query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
-                    -('?' > (table_rule(qi::_r1) | base_rule(qi::_r1) | scale_factor_rule(qi::_r1) |
-                             fallback_speed_rule(qi::_r1) |
-                             (qi::lit("fallback_coordinate=") >
-                              fallback_coordinate_type
-                                  [ph::bind(&engine::api::TableParameters::fallback_coordinate_type,
-                                            qi::_r1) = qi::_1])) %
-                                '&');
-    }
+inline const auto scale_factor_rule =
+    x3::lit("scale_factor=") >
+    json_double[([](auto &ctx) { x3::get<params_tag>(ctx).get().scale_factor = x3::_attr(ctx); })];
 
-    TableParametersGrammar(qi::rule<Iterator, Signature> &root_rule_) : BaseGrammar(root_rule_)
-    {
-        using AnnotationsType = engine::api::TableParameters::AnnotationsType;
+inline const auto fallback_coordinate_rule =
+    x3::lit("fallback_coordinate=") >
+    fallback_coordinate_type[(
+        [](auto &ctx)
+        { x3::get<params_tag>(ctx).get().fallback_coordinate_type = x3::_attr(ctx); })];
 
-        annotations.add("duration", AnnotationsType::Duration)("distance",
-                                                               AnnotationsType::Distance);
+inline const auto table_rule = destinations_rule | sources_rule;
 
-        annotations_list = annotations[qi::_val |= qi::_1] % ',';
+// Table root rule
+inline const auto root_rule = x3::rule<struct table_root_tag>{"table_root"} =
+    base_grammar::query_rule > base_grammar::format_rule >
+    -('?' > (table_rule | table_base_options | scale_factor_rule | fallback_speed_rule |
+             fallback_coordinate_rule) %
+                '&');
 
-        base_rule = BaseGrammar::base_rule(qi::_r1) |
-                    (qi::lit("annotations=") >
-                     annotations_list[ph::bind(&engine::api::TableParameters::annotations,
-                                               qi::_r1) = qi::_1]);
-    }
-
-  protected:
-    qi::rule<Iterator, Signature> base_rule;
-
-  private:
-    using json_policy = no_trailing_dot_policy<double, 'j', 's', 'o', 'n'>;
-
-    qi::rule<Iterator, Signature> root_rule;
-    qi::rule<Iterator, Signature> table_rule;
-    qi::rule<Iterator, Signature> sources_rule;
-    qi::rule<Iterator, Signature> destinations_rule;
-    qi::rule<Iterator, Signature> fallback_speed_rule;
-    qi::rule<Iterator, Signature> scale_factor_rule;
-    qi::rule<Iterator, std::size_t()> size_t_;
-    qi::symbols<char, engine::api::TableParameters::AnnotationsType> annotations;
-    qi::rule<Iterator, engine::api::TableParameters::AnnotationsType()> annotations_list;
-    qi::symbols<char, engine::api::TableParameters::FallbackCoordinateType>
-        fallback_coordinate_type;
-    qi::real_parser<double, json_policy> double_;
-};
-} // namespace osrm::server::api
+} // namespace osrm::server::api::table_grammar
 
 #endif
