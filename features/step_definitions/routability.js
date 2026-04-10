@@ -19,7 +19,7 @@ Then(/^routability should be$/, async function (table) {
 
   if (!testedHeaders.some((k) => !!headers.has(k))) {
     throw new Error(
-      '*** routability table must contain either "forw", "backw", "bothw", "forw_rate" or "backw_mode" column',
+      '*** routability table must contain at least one of the following columns: "forw", "backw", "bothw", "forw_rate", "backw_rate", or "bothw_rate"',
     );
   }
 

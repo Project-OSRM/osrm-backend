@@ -30,7 +30,7 @@ export default class SharedSteps {
     await this.reprocessAndLoadData();
     const headers = new Set(table.raw()[0]);
 
-    const requestRow = (row, ri) => {
+    const requestRow = (row, _ri) => {
       return new Promise((resolve, reject) => {
         let got;
 
@@ -158,7 +158,7 @@ export default class SharedSteps {
             if (headers.has('time')) {
               if (!row.time.match(/\d+s/))
                 return reject(
-                  new Error('*** Time must be specied in seconds. (ex: 60s)'),
+                  new Error('*** Time must be specified in seconds. (ex: 60s)'),
                 );
               got.time = instructions ? util.format('%ds', time) : '';
             }
@@ -172,7 +172,7 @@ export default class SharedSteps {
                 if (!row.speed.match(/\d+ km\/h/))
                   return reject(
                     new Error(
-                      '*** Speed must be specied in km/h. (ex: 50 km/h)',
+                      '*** Speed must be specified in km/h. (ex: 50 km/h)',
                     ),
                   );
                 const speed =
@@ -216,22 +216,22 @@ export default class SharedSteps {
               if (k.match(/^a:/)) {
                 const a_type = k.slice(2);
                 if (whitelist.indexOf(a_type) == -1)
-                  return reject(new Error('Unrecognized annotation field', a_type));
+                  return reject(new Error(`Unrecognized annotation field: ${a_type}`));
                 if (annotation && !annotation[a_type])
                   return reject(
-                    new Error('Annotation not found in response', a_type),
+                    new Error(`Annotation not found in response: ${a_type}`),
                   );
                 got[k] = (annotation && annotation[a_type]) || '';
               } else if (k.match(/^am:/)) {
                 const a_type = k.slice(3);
                 if (metadata_whitelist.indexOf(a_type) == -1)
-                  return reject(new Error('Unrecognized annotation field', a_type));
+                  return reject(new Error(`Unrecognized annotation field: ${a_type}`));
                 if (
                   annotation &&
                   (!annotation.metadata || !annotation.metadata[a_type])
                 )
                   return reject(
-                    new Error('Annotation not found in response', a_type),
+                    new Error(`Annotation not found in response: ${a_type}`),
                   );
                 got[k] =
                   (annotation &&
