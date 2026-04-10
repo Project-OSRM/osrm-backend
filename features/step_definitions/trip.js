@@ -7,14 +7,14 @@ function add(a, b) {
   return a + b;
 }
 
-When(/^I plan a trip I should get$/, function (table, callback) {
+When(/^I plan a trip I should get$/, async function (table) {
   let got;
 
-  this.reprocessAndLoadData((e) => {
-    if (e) return callback(e);
-    const testRow = function (row, ri, cb) {
+  await this.reprocessAndLoadData();
+  const testRow = function (row, ri) {
+    return new Promise((resolve, reject) => {
       const afterRequest = function (err, res, body) {
-        if (err) return cb(err);
+        if (err) return reject(err);
         const headers = new Set(table.raw()[0]);
 
         for (const k in row) {
@@ -126,7 +126,7 @@ When(/^I plan a trip I should get$/, function (table, callback) {
           }
         }
 
-        cb(null, got);
+        resolve(got);
       }.bind(this);
 
       if (row.request) {
@@ -137,11 +137,11 @@ When(/^I plan a trip I should get$/, function (table, callback) {
           waypoints = [];
         if (row.from && row.to) {
           const fromNode = this.findNodeByName(row.from);
-          if (!fromNode) throw new Error(util.format('*** unknown from-node "%s"', row.from));
+          if (!fromNode) return reject(new Error(util.format('*** unknown from-node "%s"', row.from)));
           waypoints.push(fromNode);
 
           const toNode = this.findNodeByName(row.to);
-          if (!toNode) throw new Error(util.format('*** unknown to-node "%s"', row.to));
+          if (!toNode) return reject(new Error(util.format('*** unknown to-node "%s"', row.to)));
           waypoints.push(toNode);
 
           got = { from: row.from, to: row.to };
@@ -168,11 +168,11 @@ When(/^I plan a trip I should get$/, function (table, callback) {
 
           this.requestTrip(waypoints, params, afterRequest);
         } else {
-          throw new Error('*** no waypoints');
+          return reject(new Error('*** no waypoints'));
         }
       }
-    }.bind(this);
+    });
+  }.bind(this);
 
-    this.processRowsAndDiff(table, testRow, callback);
-  });
+  await this.processRowsAndDiff(table, testRow);
 });
