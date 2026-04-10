@@ -60,7 +60,7 @@ if (options.help) {
 
 // Bounding box coordinates (southwest and northeast corners)
 let sw = [Number.MAX_VALUE, Number.MAX_VALUE];
-let ne = [Number.MIN_VALUE, Number.MIN_VALUE];
+let ne = [-Infinity, -Infinity];
 
 if (options.bbox) {
   if (bboxes[options.bbox]) {

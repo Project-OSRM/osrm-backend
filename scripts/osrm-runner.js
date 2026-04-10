@@ -102,7 +102,7 @@ const optionsList = [
   {name: 'help', alias: 'h', type: Boolean, description: 'Display this usage guide.', defaultValue: false},
   {name: 'verbose', alias: 'v', type: Boolean, description: 'Print detailed CSV output for each query', defaultValue: false},
   {name: 'server', alias: 's', type: ServerDetails, defaultValue: ServerDetails('localhost:5000'), description: 'OSRM routing server', typeLabel: '{underline hostname[:port]}'},
-  {name: 'path', alias: 'p', type: String, defaultValue: '/route/v1/driving/{};{}', description: 'OSRM query path with \\{\\} coordinate placeholders, default /route/v2/driving/\\{\\};\\{\\}', typeLabel: '{underline path}'},
+  {name: 'path', alias: 'p', type: String, defaultValue: '/route/v1/driving/{};{}', description: 'OSRM query path with \\{\\} coordinate placeholders, default /route/v1/driving/\\{\\};\\{\\}', typeLabel: '{underline path}'},
   {name: 'filter', alias: 'f', type: String, defaultValue: ['$.routes[0].weight'], multiple: true, description: 'JSONPath filters, default "$.routes[0].weight"', typeLabel: '{underline filter}'},
   {name: 'bounding-box', alias: 'b', type: BoundingBox, defaultValue: BoundingBox('5.86442,47.2654,15.0508,55.1478'), multiple: true, description: 'queries bounding box, default "5.86442,47.2654,15.0508,55.1478"', typeLabel: '{underline west,south,east,north}'},
   {name: 'max-sockets', alias: 'm', type: Number, defaultValue: 1, description: 'how many concurrent sockets the agent can have open per origin, default 1', typeLabel: '{underline number}'},
