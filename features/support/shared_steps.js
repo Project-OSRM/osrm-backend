@@ -26,16 +26,16 @@ export default class SharedSteps {
     assert.equal(typeof this.json.status, 'number');
   }
 
-  WhenIRouteIShouldGet(table, callback) {
-    this.reprocessAndLoadData((e) => {
-      if (e) return callback(e);
-      const headers = new Set(table.raw()[0]);
+  async WhenIRouteIShouldGet(table) {
+    await this.reprocessAndLoadData();
+    const headers = new Set(table.raw()[0]);
 
-      const requestRow = (row, ri, cb) => {
+    const requestRow = (row, _ri) => {
+      return new Promise((resolve, reject) => {
         let got;
 
         const afterRequest = (err, res, body) => {
-          if (err) return cb(err);
+          if (err) return reject(err);
           if (body && body.length) {
             let destinations,
               exits,
@@ -130,7 +130,7 @@ export default class SharedSteps {
             if (headers.has('distance')) {
               if (row.distance.length) {
                 if (!row.distance.match(/\d+m/))
-                  return cb(
+                  return reject(
                     new Error(
                       '*** Distance must be specified in meters. (ex: 250m)',
                     ),
@@ -144,7 +144,7 @@ export default class SharedSteps {
             if (headers.has('weight')) {
               if (row.weight.length) {
                 if (!row.weight.match(/[\d.]+/))
-                  return cb(
+                  return reject(
                     new Error(
                       '*** Weight must be specified as a numeric value. (ex: 8)',
                     ),
@@ -157,8 +157,8 @@ export default class SharedSteps {
 
             if (headers.has('time')) {
               if (!row.time.match(/\d+s/))
-                return cb(
-                  new Error('*** Time must be specied in seconds. (ex: 60s)'),
+                return reject(
+                  new Error('*** Time must be specified in seconds. (ex: 60s)'),
                 );
               got.time = instructions ? util.format('%ds', time) : '';
             }
@@ -170,9 +170,9 @@ export default class SharedSteps {
             if (headers.has('speed')) {
               if (row.speed !== '' && instructions) {
                 if (!row.speed.match(/\d+ km\/h/))
-                  cb(
+                  return reject(
                     new Error(
-                      '*** Speed must be specied in km/h. (ex: 50 km/h)',
+                      '*** Speed must be specified in km/h. (ex: 50 km/h)',
                     ),
                   );
                 const speed =
@@ -216,22 +216,22 @@ export default class SharedSteps {
               if (k.match(/^a:/)) {
                 const a_type = k.slice(2);
                 if (whitelist.indexOf(a_type) == -1)
-                  return cb(new Error('Unrecognized annotation field', a_type));
+                  return reject(new Error(`Unrecognized annotation field: ${a_type}`));
                 if (annotation && !annotation[a_type])
-                  return cb(
-                    new Error('Annotation not found in response', a_type),
+                  return reject(
+                    new Error(`Annotation not found in response: ${a_type}`),
                   );
                 got[k] = (annotation && annotation[a_type]) || '';
               } else if (k.match(/^am:/)) {
                 const a_type = k.slice(3);
                 if (metadata_whitelist.indexOf(a_type) == -1)
-                  return cb(new Error('Unrecognized annotation field', a_type));
+                  return reject(new Error(`Unrecognized annotation field: ${a_type}`));
                 if (
                   annotation &&
                   (!annotation.metadata || !annotation.metadata[a_type])
                 )
-                  return cb(
-                    new Error('Annotation not found in response', a_type),
+                  return reject(
+                    new Error(`Annotation not found in response: ${a_type}`),
                   );
                 got[k] =
                   (annotation &&
@@ -269,9 +269,9 @@ export default class SharedSteps {
                 got[key] = row[key];
               }
             }
-            cb(null, got);
+            resolve(got);
           } else {
-            cb(new Error('request failed to return valid body'));
+            reject(new Error('request failed to return valid body'));
           }
         };
 
@@ -312,14 +312,14 @@ export default class SharedSteps {
           if (row.from && row.to) {
             const fromNode = this.findNodeByName(row.from);
             if (!fromNode)
-              return cb(
+              return reject(
                 new Error(util.format('*** unknown from-node "%s"', row.from)),
               );
             waypoints.push(fromNode);
 
             const toNode = this.findNodeByName(row.to);
             if (!toNode)
-              return cb(
+              return reject(
                 new Error(util.format('*** unknown to-node "%s"', row.to)),
               );
             waypoints.push(toNode);
@@ -337,7 +337,7 @@ export default class SharedSteps {
             row.waypoints.split(',').forEach((n) => {
               const node = this.findNodeByName(n.trim());
               if (!node)
-                return cb(
+                return reject(
                   new Error(
                     util.format('*** unknown waypoint node "%s"', n.trim()),
                   ),
@@ -353,12 +353,12 @@ export default class SharedSteps {
               afterRequest,
             );
           } else {
-            return cb(new Error('*** no waypoints'));
+            return reject(new Error('*** no waypoints'));
           }
         }
-      };
+      });
+    };
 
-      this.processRowsAndDiff(table, requestRow, callback);
-    });
+    await this.processRowsAndDiff(table, requestRow);
   }
 }

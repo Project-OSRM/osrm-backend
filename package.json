@@ -44,7 +44,6 @@
     "command-line-args": "6.0.1",
     "command-line-usage": "7.0.3",
     "csv-stringify": "^6.6.0",
-    "d3-queue": "3.0.7",
     "eslint": "^10.0.0",
     "express": "^5.2.1",
     "faucet": "^0.0.4",
@@ -83,6 +82,9 @@
   },
   "overrides": {
     "esbuild": "0.27.2",
+    "eslint": {
+      "ajv": "^6"
+    },
     "glob": "^13.0.0",
     "ajv": ">=6.14.0",
     "minimatch": ">=10.2.1",
