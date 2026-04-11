@@ -6,7 +6,7 @@ Feature: Foot - Conveying tag on escalators and moving walkways
         Given the profile "foot"
         Given a grid size of 10 meters
 
-    Scenario: Foot - Escalator with conveying=forward: faster in forward direction
+    Scenario: Foot - Escalator with conveying=forward: only traversable in forward direction
         Given the node map
             """
             a b c
@@ -19,9 +19,12 @@ Feature: Foot - Conveying tag on escalators and moving walkways
         When I route I should get
             | from | to | route   | time  |
             | a    | c  | abc,abc | 14.4s |
-            | c    | a  | abc,abc | 36s   |
 
-    Scenario: Foot - Escalator with conveying=backward: faster in backward direction
+        When I route I should get
+            | from | to | status |
+            | c    | a  | 400    |
+
+    Scenario: Foot - Escalator with conveying=backward: only traversable in backward direction
         Given the node map
             """
             a b c
@@ -33,8 +36,11 @@ Feature: Foot - Conveying tag on escalators and moving walkways
 
         When I route I should get
             | from | to | route   | time  |
-            | a    | c  | abc,abc | 36s   |
             | c    | a  | abc,abc | 14.4s |
+
+        When I route I should get
+            | from | to | status |
+            | a    | c  | 400    |
 
     Scenario: Foot - Escalator with conveying=reversible: equal time both ways
         Given the node map
@@ -51,7 +57,7 @@ Feature: Foot - Conveying tag on escalators and moving walkways
             | a    | c  | abc,abc | 14.4s |
             | c    | a  | abc,abc | 14.4s |
 
-    Scenario: Foot - Moving walkway with conveying=forward: faster in forward direction
+    Scenario: Foot - Moving walkway with conveying=forward: only traversable in forward direction
         Given the node map
             """
             a b c
@@ -64,7 +70,10 @@ Feature: Foot - Conveying tag on escalators and moving walkways
         When I route I should get
             | from | to | route   | time  |
             | a    | c  | abc,abc | 14.4s |
-            | c    | a  | abc,abc | 36s   |
+
+        When I route I should get
+            | from | to | status |
+            | c    | a  | 400    |
 
     Scenario: Foot - No conveying tag: equal time both directions
         Given the node map
@@ -111,6 +120,21 @@ Feature: Foot - Conveying tag on escalators and moving walkways
             | a    | c  | abc,abc | 14.4s |
             | c    | a  | abc,abc | 14.4s |
 
+    Scenario: Foot - Escalator with oneway=no allows bidirectional travel
+        Given the node map
+            """
+            a b c
+            """
+
+        And the ways
+            | nodes | highway | conveying | oneway |
+            | abc   | steps   | forward   | no     |
+
+        When I route I should get
+            | from | to | route   | time  |
+            | a    | c  | abc,abc | 14.4s |
+            | c    | a  | abc,abc | 14.4s |
+
     Scenario: Foot - Prefer escalator with favorable conveying direction
         Given the node map
             """
@@ -128,4 +152,7 @@ Feature: Foot - Conveying tag on escalators and moving walkways
         When I route I should get
             | from | to | route       |
             | a    | c  | abc,abc     |
-            | c    | a  | abc,abc     |
+
+        When I route I should get
+            | from | to | status |
+            | c    | a  | 400    |
