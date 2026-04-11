@@ -734,6 +734,38 @@ function WayHandlers.driving_side(profile, way, result, data)
    end
 end
 
+-- Handle conveying tag on escalators and moving walkways
+-- The conveying tag indicates the direction of movement on a conveyor device
+-- Only applies to highway=steps (escalators) and highway=footway (moving walkways)
+-- conveying=forward: movement in way direction
+-- conveying=backward: movement opposite to way direction
+-- conveying=reversible: movement can go either direction
+-- When traveling against the conveyor direction, apply a significant speed penalty
+function WayHandlers.conveying(profile, way, result, data)
+  local conveying = way:get_value_by_key("conveying")
+  
+  if not conveying or conveying == "yes" then
+    return
+  end
+  
+  local highway = data.highway
+  if highway ~= "steps" and highway ~= "footway" then
+    return
+  end
+  
+  local conveyor_penalty = 0.4
+  
+  if conveying == "forward" then
+    if result.backward_speed > 0 then
+      result.backward_speed = result.backward_speed * conveyor_penalty
+    end
+  elseif conveying == "backward" then
+    if result.forward_speed > 0 then
+      result.forward_speed = result.forward_speed * conveyor_penalty
+    end
+  end
+end
+
 
 -- Call a sequence of handlers, aborting in case a handler returns false. Example:
 --
