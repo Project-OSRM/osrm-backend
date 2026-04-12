@@ -216,6 +216,9 @@ jobs:
           echo "✗ Timed out waiting for CI workflow to complete for tag $TAG"
           exit 1
 
+      - name: Install dependencies
+        run: npm install
+
       - name: Publish to npm
         run: npm publish
 
