@@ -7,7 +7,7 @@ on:
   workflow_dispatch:
     inputs:
       version_override:
-        description: 'Override version (YYYY-MM-patchlevel format, e.g., 2026-04-0). Leave empty to auto-calculate.'
+        description: 'Override version (semver format, e.g., 26.4.0). Leave empty to auto-calculate.'
         required: false
         type: string
       branch:
@@ -40,9 +40,9 @@ jobs:
       - name: Validate inputs
         run: |
           if [ -n "${{ inputs.version_override }}" ]; then
-            # Validate version_override matches YYYY-MM-patchlevel format
-            if ! echo "${{ inputs.version_override }}" | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]+$' > /dev/null; then
-              echo "Error: version_override must be in YYYY-MM-patchlevel format (e.g., 2026-04-0)"
+            # Validate version_override matches semver format
+            if ! echo "${{ inputs.version_override }}" | grep -E '^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]+$' > /dev/null; then
+              echo "Error: version_override must be in semver format (e.g., 26.4.0)"
               exit 1
             fi
           fi
@@ -60,22 +60,24 @@ jobs:
           if [ -n "${{ inputs.version_override }}" ]; then
             VERSION="${{ inputs.version_override }}"
           else
-            # Calculate YYYY-MM-patchlevel automatically
+            # Calculate semver version automatically
+            # Use (YYYY-2000).MM.patchlevel format
             YEAR=$(date -u +%Y)
             MONTH=$(date -u +%m)
+            YEAR_OFFSET=$((YEAR - 2000))
             
             # Find highest patchlevel for this month
-            LATEST_TAG=$(git tag -l "v${YEAR}-${MONTH}-*" --sort=-version:refname | head -1)
+            LATEST_TAG=$(git tag -l "v${YEAR_OFFSET}.${MONTH}.*" --sort=-version:refname | head -1)
             
             if [ -z "$LATEST_TAG" ]; then
               PATCHLEVEL=0
             else
-              # Extract patchlevel from tag (e.g., v2026-04-5 -> 5)
-              PATCHLEVEL=${LATEST_TAG##*-}
+              # Extract patchlevel from tag (e.g., v26.4.5 -> 5)
+              PATCHLEVEL=${LATEST_TAG##*.}
               PATCHLEVEL=$((PATCHLEVEL + 1))
             fi
             
-            VERSION="${YEAR}-${MONTH}-${PATCHLEVEL}"
+            VERSION="${YEAR_OFFSET}.${MONTH}.${PATCHLEVEL}"
           fi
           
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
@@ -90,17 +92,10 @@ jobs:
             const pkg = require('./package.json');
             const oldVersion = pkg.version;
             
-            // Convert YYYY-MM-patchlevel to semver-compatible format (YYYY-2000).MM.patchlevel
-            // This allows npm/node-pre-gyp to parse the version correctly
-            const parts = process.env.VERSION.split('-');
-            const year = parseInt(parts[0]) - 2000;
-            const month = parseInt(parts[1]);
-            const patch = parts[2];
-            const semverVersion = year + '.' + month + '.' + patch;
-            
-            pkg.version = semverVersion;
+            // Update package.json with the new semver version
+            pkg.version = process.env.VERSION;
             fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
-            console.log('Updated version from ' + oldVersion + ' to ' + semverVersion + ' (from ' + process.env.VERSION + ')');
+            console.log('Updated version from ' + oldVersion + ' to ' + process.env.VERSION);
           "
 
       - name: Check for changes

@@ -1,31 +1,26 @@
 # Releasing a new OSRM version
 
-We use a **YYYY-MM-patchlevel** versioning scheme for all releases, with a dual-format approach:
-- **Git tags & releases:** YYYY-MM-patchlevel format (e.g., `v2026-04-0`, `v2026-04-1`)
-- **npm package:** Semver-compatible format (YYYY-2000).MM.patchlevel (e.g., `26.4.0`, `26.4.1`)
-
-This approach allows git tags to use human-readable year-month formatting while maintaining npm/node-pre-gyp compatibility.
+We use a **unified semver versioning scheme** for all releases: `(YYYY-2000).MM.patchlevel`
+- **Format:** `X.MM.patchlevel` where X = year - 2000
+- **Example:** `26.4.0` represents April 2026, first release
+- **Git tags and npm packages use the same format** (no format mismatch)
 
 ## Versioning Scheme
 
 ### Format
 
-**Git Tags:** `vYYYY-MM-patchlevel` (e.g., v2026-04-0)
-- **YYYY:** Current year (4 digits)
-- **MM:** Current month (01-12)
+**All releases (Git tags & npm):** `(YYYY-2000).MM.patchlevel` (e.g., `26.4.0`)
+- **YYYY-2000:** Year offset (26 = 2026, 27 = 2027, etc.)
+- **MM:** Month (01-12, zero-padded)
 - **patchlevel:** Incremental counter starting at 0 per month (0, 1, 2, ...)
-
-**npm Package:** `(YYYY-2000).MM.patchlevel` (e.g., 26.4.0)
-- **YYYY-2000:** Year offset (fits in uint8_t for fingerprinting)
-- **MM:** Month (01-12)
-- **patchlevel:** Counter (0, 1, 2, ...)
 
 ### Examples
 
-Git tags and npm versions:
-- April 2026, 1st release: tag `v2026-04-0`, npm `26.4.0`
-- April 2026, 2nd release: tag `v2026-04-1`, npm `26.4.1`
-- May 2026, 1st release: tag `v2026-05-0`, npm `26.5.0`
+Git tags, GitHub releases, and npm versions are all identical:
+- April 2026, 1st release: `v26.4.0`
+- April 2026, 2nd release: `v26.4.1`
+- May 2026, 1st release: `v26.5.0`
+- January 2027, 1st release: `v27.1.0`
 
 ## Release Compatibility Guarantees
 
@@ -58,9 +53,9 @@ Git tags and npm versions:
 Releases are created automatically every month on a scheduled basis:
 
 1. A GitHub Actions workflow runs on the 1st of each month at 08:00 UTC
-2. Version is calculated as `YYYY-MM-patchlevel`
+2. Version is calculated as `(YYYY-2000).MM.patchlevel`
 3. `package.json` version is updated
-4. A git tag is created and pushed (e.g., `v2026-04-0`)
+4. A git tag is created and pushed (e.g., `v26.4.0`)
 5. A GitHub Release is published with auto-generated release notes
 6. The package is published to npm
 
@@ -71,7 +66,7 @@ You can also trigger a release manually on any branch:
 1. Go to **Actions** → **Monthly Release** workflow
 2. Click **Run workflow**
 3. Select your branch (defaults to `master`)
-4. Optionally override the version (format: `YYYY-MM-patchlevel`)
+4. Optionally override the version (format: semver `26.4.0`)
 5. Click **Run workflow**
 
 This is useful for:
@@ -85,7 +80,7 @@ When releasing (automated or manual):
 
 1. ✅ All GitHub Actions CI checks pass
 2. ✅ The target branch is in a releasable state
-3. ✅ For manual releases: verify the version format is correct (`YYYY-MM-patchlevel`)
+3. ✅ For manual releases: verify the version format is correct (semver `X.MM.patchlevel`)
 4. ✅ The release is created automatically with:
    - Git tag
    - GitHub Release (with auto-generated release notes)

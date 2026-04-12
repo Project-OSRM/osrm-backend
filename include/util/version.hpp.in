@@ -6,22 +6,11 @@
 #define OSRM_VERSION_PATCH               @OSRM_VERSION_PATCH@
 #define OSRM_VERSION_PRERELEASE_BUILD    "@OSRM_VERSION_PRERELEASE_BUILD@"
 
-// Detect version format at compile time (YYYY-MM-patchlevel vs semver)
-// YYYY-MM-patchlevel versions have MAJOR >= 2000-2255 in source, but mapped to 0-255 in CMake
-// Semver versions have MAJOR < 100
-// We detect this by checking the PRERELEASE_BUILD: it's empty for YYYY-MM-patchlevel
-#if !defined(OSRM_VERSION_PRERELEASE_BUILD) || OSRM_VERSION_PRERELEASE_BUILD[0] == '\0'
-  // YYYY-MM-patchlevel format: use hyphens to match tag format (vYYYY-MM-patchlevel)
-  // Reconstruct YYYY from offset: major + 2000
-  #define OSRM_VERSION_RECONSTRUCTED_MAJOR (OSRM_VERSION_MAJOR + 2000)
-  #define OSRM_VERSION__(Y,M,P,D) "v" #Y "-" #M "-" #P
-  #define OSRM_VERSION_(Y,M,P,D) OSRM_VERSION__(Y,M,P,D)
-  #define OSRM_VERSION OSRM_VERSION_(OSRM_VERSION_RECONSTRUCTED_MAJOR, OSRM_VERSION_MINOR, OSRM_VERSION_PATCH, "")
-#else
-  // Semver format: use dots (vMAJOR.MINOR.PATCH)
-  #define OSRM_VERSION__(A,B,C,D) "v" #A "." #B "." #C D
-  #define OSRM_VERSION_(A,B,C,D) OSRM_VERSION__(A,B,C,D)
-  #define OSRM_VERSION OSRM_VERSION_(OSRM_VERSION_MAJOR, OSRM_VERSION_MINOR, OSRM_VERSION_PATCH, OSRM_VERSION_PRERELEASE_BUILD)
-#endif
+// Unified semver version format: (YYYY-2000).MM.patchlevel
+// OSRM_VERSION_MAJOR is already offset (year - 2000)
+// e.g., 26.4.0 represents April 2026, patch level 0
+#define OSRM_VERSION__(A,B,C) "v" #A "." #B "." #C
+#define OSRM_VERSION_(A,B,C) OSRM_VERSION__(A,B,C)
+#define OSRM_VERSION OSRM_VERSION_(OSRM_VERSION_MAJOR, OSRM_VERSION_MINOR, OSRM_VERSION_PATCH)
 
 #endif // VERSION_HPP
