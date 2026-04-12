@@ -123,6 +123,8 @@ jobs:
 
       - name: Create git tag
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.version }}"
 
       - name: Push changes and tag
