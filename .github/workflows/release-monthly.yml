@@ -133,14 +133,36 @@ jobs:
           git push origin "$BRANCH"
           git push origin "${{ steps.version.outputs.tag }}"
 
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CURRENT_TAG="${{ steps.version.outputs.tag }}"
+          
+          # Get the previous release tag
+          PREVIOUS_TAG=$(git tag -l 'v*' --sort=-version:refname --merged "$CURRENT_TAG" | head -2 | tail -1)
+          
+          if [ -z "$PREVIOUS_TAG" ] || [ "$PREVIOUS_TAG" = "$CURRENT_TAG" ]; then
+            # No previous release, or selection resolved to the current tag; show all commits
+            CHANGELOG=$(git log "$CURRENT_TAG" --pretty=format:"* %h - %s")
+          else
+            # Show commits since last release
+            CHANGELOG=$(git log "${PREVIOUS_TAG}..$CURRENT_TAG" --pretty=format:"* %h - %s")
+          fi
+          
+          # Output as multiline variable using a unique delimiter to avoid collisions
+          DELIMITER=$(cat /proc/sys/kernel/random/uuid)
+          echo "body<<$DELIMITER" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "$DELIMITER" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.version.outputs.tag }}
           name: Release ${{ steps.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.body }}
           draft: false
           prerelease: false
-          generateReleaseNotes: true
 
       - name: Wait for CI to complete
         env:
@@ -154,7 +176,7 @@ jobs:
           
           echo "Waiting for CI workflow to complete for tag $TAG (commit $TAG_SHA)"
           
-          MAX_WAIT=300  # 5 minutes
+          MAX_WAIT=3600  # 1 hour
           ELAPSED=0
           POLL_INTERVAL=10
           
