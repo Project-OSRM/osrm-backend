@@ -228,7 +228,8 @@ struct Annotation FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
     VT_NODES = 10,
     VT_WEIGHT = 12,
     VT_SPEED = 14,
-    VT_METADATA = 16
+    VT_WAY_IDS = 16,
+    VT_METADATA = 18
   };
   const ::flatbuffers::Vector<uint32_t> *distance() const {
     return GetPointer<const ::flatbuffers::Vector<uint32_t> *>(VT_DISTANCE);
@@ -248,6 +249,9 @@ struct Annotation FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
   const ::flatbuffers::Vector<float> *speed() const {
     return GetPointer<const ::flatbuffers::Vector<float> *>(VT_SPEED);
   }
+  const ::flatbuffers::Vector<uint64_t> *way_ids() const {
+    return GetPointer<const ::flatbuffers::Vector<uint64_t> *>(VT_WAY_IDS);
+  }
   const osrm::engine::api::fbresult::Metadata *metadata() const {
     return GetPointer<const osrm::engine::api::fbresult::Metadata *>(VT_METADATA);
   }
@@ -265,6 +269,8 @@ struct Annotation FLATBUFFERS_FINAL_CLASS : private ::flatbuffers::Table {
            verifier.VerifyVector(weight()) &&
            VerifyOffset(verifier, VT_SPEED) &&
            verifier.VerifyVector(speed()) &&
+           VerifyOffset(verifier, VT_WAY_IDS) &&
+           verifier.VerifyVector(way_ids()) &&
            VerifyOffset(verifier, VT_METADATA) &&
            verifier.VerifyTable(metadata()) &&
            verifier.EndTable();
@@ -293,6 +299,9 @@ struct AnnotationBuilder {
   void add_speed(::flatbuffers::Offset<::flatbuffers::Vector<float>> speed) {
     fbb_.AddOffset(Annotation::VT_SPEED, speed);
   }
+  void add_way_ids(::flatbuffers::Offset<::flatbuffers::Vector<uint64_t>> way_ids) {
+    fbb_.AddOffset(Annotation::VT_WAY_IDS, way_ids);
+  }
   void add_metadata(::flatbuffers::Offset<osrm::engine::api::fbresult::Metadata> metadata) {
     fbb_.AddOffset(Annotation::VT_METADATA, metadata);
   }
@@ -315,9 +324,11 @@ inline ::flatbuffers::Offset<Annotation> CreateAnnotation(
     ::flatbuffers::Offset<::flatbuffers::Vector<uint32_t>> nodes = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<uint32_t>> weight = 0,
     ::flatbuffers::Offset<::flatbuffers::Vector<float>> speed = 0,
+    ::flatbuffers::Offset<::flatbuffers::Vector<uint64_t>> way_ids = 0,
     ::flatbuffers::Offset<osrm::engine::api::fbresult::Metadata> metadata = 0) {
   AnnotationBuilder builder_(_fbb);
   builder_.add_metadata(metadata);
+  builder_.add_way_ids(way_ids);
   builder_.add_speed(speed);
   builder_.add_weight(weight);
   builder_.add_nodes(nodes);
@@ -335,6 +346,7 @@ inline ::flatbuffers::Offset<Annotation> CreateAnnotationDirect(
     const std::vector<uint32_t> *nodes = nullptr,
     const std::vector<uint32_t> *weight = nullptr,
     const std::vector<float> *speed = nullptr,
+    const std::vector<uint64_t> *way_ids = nullptr,
     ::flatbuffers::Offset<osrm::engine::api::fbresult::Metadata> metadata = 0) {
   auto distance__ = distance ? _fbb.CreateVector<uint32_t>(*distance) : 0;
   auto duration__ = duration ? _fbb.CreateVector<uint32_t>(*duration) : 0;
@@ -342,6 +354,7 @@ inline ::flatbuffers::Offset<Annotation> CreateAnnotationDirect(
   auto nodes__ = nodes ? _fbb.CreateVector<uint32_t>(*nodes) : 0;
   auto weight__ = weight ? _fbb.CreateVector<uint32_t>(*weight) : 0;
   auto speed__ = speed ? _fbb.CreateVector<float>(*speed) : 0;
+  auto way_ids__ = way_ids ? _fbb.CreateVector<uint64_t>(*way_ids) : 0;
   return osrm::engine::api::fbresult::CreateAnnotation(
       _fbb,
       distance__,
@@ -350,6 +363,7 @@ inline ::flatbuffers::Offset<Annotation> CreateAnnotationDirect(
       nodes__,
       weight__,
       speed__,
+      way_ids__,
       metadata);
 }
 

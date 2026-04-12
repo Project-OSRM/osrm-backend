@@ -589,7 +589,8 @@ void test_manual_setting_of_annotations_property(bool use_json_only_api)
                     .values[0])
                 .values["annotation"])
             .values;
-    BOOST_CHECK_EQUAL(annotations.size(), 7);
+    BOOST_CHECK_EQUAL(annotations.size(), 8);
+    BOOST_CHECK(annotations.contains("way_ids"));
 }
 BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property_old_api)
 {

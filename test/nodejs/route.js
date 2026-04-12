@@ -232,8 +232,8 @@ test('route: routes Monaco with speed annotations options', (assert) => {
   });
 });
 
-test('route: routes Monaco with several (duration, distance, nodes) annotations options', (assert) => {
-  assert.plan(17);
+test('route: routes Monaco with several (duration, distance, nodes, way_ids) annotations options', (assert) => {
+  assert.plan(18);
   const osrm = new OSRM(monaco_path);
   const options = {
     coordinates: two_test_coordinates,
@@ -241,7 +241,7 @@ test('route: routes Monaco with several (duration, distance, nodes) annotations 
     overview: 'false',
     geometries: 'polyline',
     steps: true,
-    annotations: ['duration', 'distance', 'nodes']
+    annotations: ['duration', 'distance', 'nodes', 'way_ids']
   };
   osrm.route(options, (err, first) => {
     assert.ifError(err);
@@ -255,6 +255,7 @@ test('route: routes Monaco with several (duration, distance, nodes) annotations 
     assert.ok(first.routes[0].legs.every(l => { return l.annotation.distance;}), 'every leg has annotations for distance');
     assert.ok(first.routes[0].legs.every(l => { return l.annotation.duration;}), 'every leg has annotations for durations');
     assert.ok(first.routes[0].legs.every(l => { return l.annotation.nodes;}), 'every leg has annotations for nodes');
+    assert.ok(first.routes[0].legs.every(l => { return l.annotation.way_ids;}), 'every leg has annotations for way ids');
     assert.notOk(first.routes[0].legs.every(l => { return l.annotation.weight; }), 'has no annotations for weight');
     assert.notOk(first.routes[0].legs.every(l => { return l.annotation.datasources; }), 'has no annotations for datasources');
     assert.notOk(first.routes[0].legs.every(l => { return l.annotation.speed; }), 'has no annotations for speed');
@@ -272,7 +273,7 @@ test('route: routes Monaco with several (duration, distance, nodes) annotations 
 });
 
 test('route: routes Monaco with options', (assert) => {
-  assert.plan(17);
+  assert.plan(18);
   const osrm = new OSRM(monaco_path);
   const options = {
     coordinates: two_test_coordinates,
@@ -297,6 +298,7 @@ test('route: routes Monaco with options', (assert) => {
     assert.ok(first.routes[0].legs.every(l => { return l.annotation.weight; }), 'every leg has annotations for weight');
     assert.ok(first.routes[0].legs.every(l => { return l.annotation.datasources; }), 'every leg has annotations for datasources');
     assert.ok(first.routes[0].legs.every(l => { return l.annotation.speed; }), 'every leg has annotations for speed');
+    assert.ok(first.routes[0].legs.every(l => { return l.annotation.way_ids;}), 'every leg has annotations for way ids');
 
     options.overview = 'full';
     osrm.route(options, (err, full) => {

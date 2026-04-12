@@ -19,8 +19,8 @@ using Graph = util::NodeBasedDynamicGraph;
 BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 {
     std::vector<NodeBasedEdgeAnnotation> annotations{
-        {EMPTY_STRINGVIEWID, 0, INVALID_CLASS_DATA, TRAVEL_MODE_DRIVING, false},
-        {EMPTY_STRINGVIEWID, 1, INVALID_CLASS_DATA, TRAVEL_MODE_DRIVING, false}};
+        {EMPTY_STRINGVIEWID, 0, INVALID_CLASS_DATA, SPECIAL_OSM_WAYID, TRAVEL_MODE_DRIVING, false},
+        {EMPTY_STRINGVIEWID, 1, INVALID_CLASS_DATA, SPECIAL_OSM_WAYID, TRAVEL_MODE_DRIVING, false}};
     std::vector<TurnRestriction> restrictions{TurnRestriction{{ViaNodePath{0, 2, 1}}, false}};
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;
@@ -146,7 +146,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
 
 BOOST_AUTO_TEST_CASE(roundabout_intersection_connectivity)
 {
-    std::vector<NodeBasedEdgeAnnotation> annotations;
+    std::vector<NodeBasedEdgeAnnotation> annotations(1);
     std::vector<TurnRestriction> restrictions;
     CompressedEdgeContainer container;
     test::MockScriptingEnvironment scripting_environment;

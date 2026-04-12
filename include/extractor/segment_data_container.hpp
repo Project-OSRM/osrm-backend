@@ -51,6 +51,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     using SegmentWeightVector = PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS>;
     using SegmentDurationVector = PackedVector<SegmentDuration, SEGMENT_DURATION_BITS>;
     using SegmentDatasourceVector = Vector<DatasourceID>;
+    using SegmentWayIDVector = Vector<OSMWayID>;
 
     SegmentDataContainerImpl() = default;
 
@@ -61,11 +62,14 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
                              SegmentDurationVector fwd_durations_,
                              SegmentDurationVector rev_durations_,
                              SegmentDatasourceVector fwd_datasources_,
-                             SegmentDatasourceVector rev_datasources_)
+                             SegmentDatasourceVector rev_datasources_,
+                             SegmentWayIDVector fwd_way_ids_,
+                             SegmentWayIDVector rev_way_ids_)
         : index(std::move(index_)), nodes(std::move(nodes_)), fwd_weights(std::move(fwd_weights_)),
           rev_weights(std::move(rev_weights_)), fwd_durations(std::move(fwd_durations_)),
           rev_durations(std::move(rev_durations_)), fwd_datasources(std::move(fwd_datasources_)),
-          rev_datasources(std::move(rev_datasources_))
+          rev_datasources(std::move(rev_datasources_)), fwd_way_ids(std::move(fwd_way_ids_)),
+          rev_way_ids(std::move(rev_way_ids_))
     {
     }
 
@@ -122,10 +126,26 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         return std::ranges::subrange(begin, end);
     }
 
+    auto GetForwardWayIDs(const DirectionalGeometryID id)
+    {
+        const auto begin = fwd_way_ids.begin() + index[id] + 1;
+        const auto end = fwd_way_ids.begin() + index[id + 1];
+
+        return std::ranges::subrange(begin, end);
+    }
+
     auto GetReverseDatasources(const DirectionalGeometryID id)
     {
         const auto begin = rev_datasources.begin() + index[id];
         const auto end = rev_datasources.begin() + index[id + 1] - 1;
+
+        return std::ranges::subrange(begin, end) | std::views::reverse;
+    }
+
+    auto GetReverseWayIDs(const DirectionalGeometryID id)
+    {
+        const auto begin = rev_way_ids.begin() + index[id];
+        const auto end = rev_way_ids.begin() + index[id + 1] - 1;
 
         return std::ranges::subrange(begin, end) | std::views::reverse;
     }
@@ -183,10 +203,26 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         return std::ranges::subrange(begin, end);
     }
 
+    auto GetForwardWayIDs(const DirectionalGeometryID id) const
+    {
+        const auto begin = fwd_way_ids.cbegin() + index[id] + 1;
+        const auto end = fwd_way_ids.cbegin() + index[id + 1];
+
+        return std::ranges::subrange(begin, end);
+    }
+
     auto GetReverseDatasources(const DirectionalGeometryID id) const
     {
         const auto begin = rev_datasources.cbegin() + index[id];
         const auto end = rev_datasources.cbegin() + index[id + 1] - 1;
+
+        return std::ranges::subrange(begin, end) | std::views::reverse;
+    }
+
+    auto GetReverseWayIDs(const DirectionalGeometryID id) const
+    {
+        const auto begin = rev_way_ids.cbegin() + index[id];
+        const auto end = rev_way_ids.cbegin() + index[id + 1] - 1;
 
         return std::ranges::subrange(begin, end) | std::views::reverse;
     }
@@ -212,6 +248,8 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     SegmentDurationVector rev_durations;
     SegmentDatasourceVector fwd_datasources;
     SegmentDatasourceVector rev_datasources;
+    SegmentWayIDVector fwd_way_ids;
+    SegmentWayIDVector rev_way_ids;
 };
 } // namespace detail
 

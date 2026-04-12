@@ -40,7 +40,8 @@ inline const auto annotations_type = []()
     x3::symbols<AnnotationsType> sym;
     sym.add("duration", AnnotationsType::Duration)("nodes", AnnotationsType::Nodes)(
         "distance", AnnotationsType::Distance)("weight", AnnotationsType::Weight)(
-        "datasources", AnnotationsType::Datasources)("speed", AnnotationsType::Speed);
+        "datasources", AnnotationsType::Datasources)("speed", AnnotationsType::Speed)(
+        "way_ids", AnnotationsType::WayIds);
     return sym;
 }();
 
