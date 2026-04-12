@@ -40,9 +40,10 @@ jobs:
       - name: Validate inputs
         run: |
           if [ -n "${{ inputs.version_override }}" ]; then
-            # Validate version_override matches semver format
-            if ! echo "${{ inputs.version_override }}" | grep -E '^[0-9]{1,2}\.[0-9]{1,2}\.[0-9]+$' > /dev/null; then
-              echo "Error: version_override must be in semver format (e.g., 26.4.0)"
+            # Validate version_override matches semver format (YYYY-2000).M.patchlevel
+            # Month must be 1-12, no leading zeros except single digit 0 for patchlevel
+            if ! echo "${{ inputs.version_override }}" | grep -E '^(0|[1-9][0-9]?)\.(1[0-2]|[1-9])\.(0|[1-9][0-9]*)$' > /dev/null; then
+              echo "Error: version_override must be in format (YYYY-2000).M.patchlevel with month 1-12 and no leading zeros (e.g., 26.4.0)"
               exit 1
             fi
           fi
@@ -61,9 +62,9 @@ jobs:
             VERSION="${{ inputs.version_override }}"
           else
             # Calculate semver version automatically
-            # Use (YYYY-2000).MM.patchlevel format
+            # Use (YYYY-2000).M.patchlevel format (no leading zeros for month/patch)
             YEAR=$(date -u +%Y)
-            MONTH=$(date -u +%m)
+            MONTH=$(date -u +%-m)
             YEAR_OFFSET=$((YEAR - 2000))
             
             # Find highest patchlevel for this month
@@ -83,29 +84,32 @@ jobs:
           echo "version=${VERSION}" >> $GITHUB_OUTPUT
           echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
 
-      - name: Update package.json
+      - name: Update package.json and package-lock.json
         env:
           VERSION: ${{ steps.version.outputs.version }}
         run: |
           node -e "
             const fs = require('fs');
             const pkg = require('./package.json');
+            const lock = require('./package-lock.json');
             const oldVersion = pkg.version;
             
-            // Update package.json with the new semver version
+            // Update both package.json and package-lock.json
             pkg.version = process.env.VERSION;
+            lock.version = process.env.VERSION;
             fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+            fs.writeFileSync('./package-lock.json', JSON.stringify(lock, null, 2) + '\n');
             console.log('Updated version from ' + oldVersion + ' to ' + process.env.VERSION);
           "
 
       - name: Check for changes
         id: check_changes
         run: |
-          if git diff --quiet package.json; then
-            echo "No changes to package.json (version unchanged)"
+          if git diff --quiet package.json package-lock.json; then
+            echo "No changes to package files (version unchanged)"
             echo "has_changes=false" >> $GITHUB_OUTPUT
           else
-            echo "Changes detected in package.json"
+            echo "Changes detected in package files"
             echo "has_changes=true" >> $GITHUB_OUTPUT
           fi
 
@@ -114,7 +118,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add package.json
+          git add package.json package-lock.json
           git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
 
       - name: Create git tag
