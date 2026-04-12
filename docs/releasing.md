@@ -55,6 +55,12 @@ Git tags and npm versions for the same release:
 - Forward-compatible node-osrm API
 - No compatibility between OSRM datasets (needs new processing)
 
+## Conventional Commits
+
+Pull request titles must follow [Conventional Commits](https://www.conventionalcommits.org/) format with types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `ci`, `chore`, `build`. This is validated in CI and helps organize the commit history.
+
+Breaking changes should be indicated with the `!` suffix in the PR title (e.g., `feat!: remove deprecated API`) so they are called out in release notes.
+
 ## Release Management
 
 - The `master` branch is for development and should always be green
