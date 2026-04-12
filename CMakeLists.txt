@@ -101,7 +101,7 @@ sbeParseJson(packagejson packagejsonraw)
 # The CMake build system also supports legacy semver (e.g., 6.0.0) for backward compatibility
 
 # Try semver format: (YYYY-2000).MM.patchlevel (e.g., 26.4.0)
-if (packagejson.version MATCHES "^([0-9]{1,2})\\.([0-9]{1,2})\\.([0-9]+)$")
+if (packagejson.version MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)$")
   # Semver format: (YYYY-2000).MM.patchlevel
   # MAJOR is already offset (year - 2000)
   set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
