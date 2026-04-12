@@ -760,12 +760,12 @@ function WayHandlers.conveying(profile, way, result, data)
   if conveying == "forward" then
     -- Block backward travel unless explicitly allowed by oneway=no
     if not allow_reverse then
-      result.backward_speed = 0
+      result.backward_mode = mode.inaccessible
     end
   elseif conveying == "backward" then
     -- Block forward travel unless explicitly allowed by oneway=no
     if not allow_reverse then
-      result.forward_speed = 0
+      result.forward_mode = mode.inaccessible
     end
   end
 end
