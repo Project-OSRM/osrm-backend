@@ -141,27 +141,56 @@ jobs:
           generateReleaseNotes: true
 
       - name: Wait for CI to complete
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           # Wait for tag CI to complete before publishing npm package
-          # The CI workflow is triggered by the tag push and must complete
-          # to upload release assets (prebuilt binaries)
-          echo "Waiting for CI workflow to complete..."
-          
-          # Poll workflow runs for this tag
+          # The osrm-backend.yml workflow is triggered by the tag push
+          # and uploads prebuilt binaries to the release assets
           TAG="${{ steps.version.outputs.tag }}"
+          TAG_SHA="$(git rev-list -n 1 "$TAG")"
+          
+          echo "Waiting for CI workflow to complete for tag $TAG (commit $TAG_SHA)"
+          
           MAX_WAIT=300  # 5 minutes
           ELAPSED=0
           POLL_INTERVAL=10
           
-          while [ $ELAPSED -lt $MAX_WAIT ]; do
-            RUNS=$(gh run list --workflow=osrm-backend.yml --status=completed --json conclusion,status,name 2>/dev/null | jq -r ". | length")
-            if [ "$RUNS" != "0" ]; then
-              echo "CI workflow completed, proceeding with npm publish"
-              break
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            # Query runs for the osrm-backend.yml workflow for this tag's commit
+            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,displayTitle 2>/dev/null || echo '[]')"
+            
+            # Find run matching this tag's commit SHA
+            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha) | @json' | head -1)"
+            
+            if [ -n "$MATCHING_RUN" ] && [ "$MATCHING_RUN" != "null" ]; then
+              STATUS="$(echo "$MATCHING_RUN" | jq -r '.status')"
+              CONCLUSION="$(echo "$MATCHING_RUN" | jq -r '.conclusion // empty')"
+              RUN_ID="$(echo "$MATCHING_RUN" | jq -r '.databaseId')"
+              
+              echo "Found matching CI run $RUN_ID: status=$STATUS conclusion=$CONCLUSION"
+              
+              if [ "$STATUS" = "completed" ]; then
+                if [ "$CONCLUSION" = "success" ]; then
+                  echo "✓ CI workflow completed successfully, proceeding with npm publish"
+                  exit 0
+                else
+                  echo "✗ CI workflow completed with conclusion=$CONCLUSION (expected success)"
+                  exit 1
+                fi
+              else
+                echo "CI workflow still running (status=$STATUS), waiting..."
+              fi
+            else
+              echo "No matching CI run found yet, waiting for workflow to start..."
             fi
-            sleep $POLL_INTERVAL
+            
+            sleep "$POLL_INTERVAL"
             ELAPSED=$((ELAPSED + POLL_INTERVAL))
           done
+          
+          echo "✗ Timed out waiting for CI workflow to complete for tag $TAG"
+          exit 1
 
       - name: Publish to npm
         env:
