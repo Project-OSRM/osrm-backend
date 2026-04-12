@@ -5,6 +5,17 @@ We use a **unified semver versioning scheme** for all releases: `(YYYY-2000).MM.
 - **Example:** `26.4.0` represents April 2026, first release
 - **Git tags and npm packages use the same format** (no format mismatch)
 
+## Version History
+
+**Previous scheme (ended 2025):** Traditional semantic versioning (v6.0, v6.0.1, v6.0.2, etc.)
+- Last release: v6.0.0 in December 2025
+- Manual release process
+
+**New scheme (started 2026):** Monthly date-based versioning with automated releases
+- First release: v26.1.0 (January 2026)
+- Automatic monthly releases on the 1st of each month at 08:00 UTC
+- Year offset: 2026 → 26, 2027 → 27, etc.
+
 ## Versioning Scheme
 
 ### Format
