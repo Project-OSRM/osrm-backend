@@ -216,8 +216,8 @@ jobs:
           echo "✗ Timed out waiting for CI workflow to complete for tag $TAG"
           exit 1
 
-      - name: Install dependencies
-        run: npm install
+      - name: Install dependencies (skip native build scripts)
+        run: npm ci --ignore-scripts
 
       - name: Publish to npm
         run: npm publish
