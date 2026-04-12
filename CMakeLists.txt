@@ -95,17 +95,30 @@ include(JSONParser)
 file(READ "package.json" packagejsonraw)
 sbeParseJson(packagejson packagejsonraw)
 
-# This regex is not strict enough, but the correct one is too complicated for cmake matching.
-# https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-if (packagejson.version MATCHES "^([0-9]+)\.([0-9]+)\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
+# This regex supports multiple semver version formats:
+# - (YYYY-2000).M.patchlevel: Monthly releases, e.g., 26.4.0 (April 2026)
+#   MAJOR is the year offset (year - 2000)
+# - Legacy semver: traditional major.minor.patch with optional prerelease, e.g., 6.0.0, 6.0.0-rc1
+
+# Try monthly release format: (YYYY-2000).M.patchlevel with month 1-12, no leading zeros
+if (packagejson.version MATCHES "^([0-9]+)\\.(1[0-2]|[1-9])\\.(0|[1-9][0-9]*)$")
+  # Monthly format: (YYYY-2000).M.patchlevel
+  # MAJOR is already offset (year - 2000)
+  set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
+  set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
+  set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
+  set(OSRM_VERSION_PRERELEASE_BUILD "")
+  set(OSRM_VERSION "${packagejson.version}")
+# Try legacy semver format (major.minor.patch with optional prerelease/build)
+elseif (packagejson.version MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
+  # Legacy semver format: major.minor.patch[-+prerelease]
   set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
   set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
   set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
   set(OSRM_VERSION_PRERELEASE_BUILD ${CMAKE_MATCH_4})
-
-  set(OSRM_VERSION packagejson.version)
+  set(OSRM_VERSION "${packagejson.version}")
 else()
-  message(FATAL_ERROR "Version from package.json cannot be parsed, expected semver compatible label, but found ${packagejson.version}")
+  message(FATAL_ERROR "Version from package.json cannot be parsed. Expected one of:\n  - Monthly release format: (YYYY-2000).M.patchlevel with month 1-12, no leading zeros (e.g., 26.4.0)\n  - Legacy semver format: major.minor.patch with optional prerelease (e.g., 6.0.0 or 6.0.0-rc1)\nBut found: ${packagejson.version}")
 endif()
 
 if (MSVC)
