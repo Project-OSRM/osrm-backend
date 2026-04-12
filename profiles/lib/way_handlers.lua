@@ -745,18 +745,17 @@ function WayHandlers.conveying(profile, way, result, data)
   local conveying = way:get_value_by_key("conveying")
   
   if not conveying or conveying == "yes" then
+
+  if not conveying or conveying == "yes" then
     return
   end
-  
+
   local highway = data.highway
   if highway ~= "steps" and highway ~= "footway" then
     return
   end
-  
-  -- Check if oneway=no explicitly allows bidirectional travel on this conveying way
-  local oneway = way:get_value_by_key("oneway")
-  local allow_reverse = (oneway == "no")
-  
+
+  local conveyor_penalty = 0.4
   if conveying == "forward" then
     -- Block backward travel unless explicitly allowed by oneway=no
     if not allow_reverse then
