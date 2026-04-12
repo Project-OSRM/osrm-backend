@@ -26,6 +26,7 @@ jobs:
     permissions:
       contents: write
       id-token: write
+      actions: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -133,6 +134,15 @@ jobs:
           git push origin "$BRANCH"
           git push origin "${{ steps.version.outputs.tag }}"
 
+      - name: Trigger CI for tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GITHUB_TOKEN pushes don't trigger workflow runs (prevents loops).
+          # Explicitly dispatch CI on the tag so binaries get built and uploaded.
+          gh workflow run osrm-backend.yml --ref "${{ steps.version.outputs.tag }}"
+          echo "Dispatched osrm-backend.yml on ${{ steps.version.outputs.tag }}"
+
       - name: Generate changelog
         id: changelog
         run: |
@@ -220,5 +230,7 @@ jobs:
         run: npm ci --ignore-scripts
 
       - name: Publish to npm
-        run: npm publish
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish --access public
 

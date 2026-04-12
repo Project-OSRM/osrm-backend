@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 env:
   CCACHE_TEMPDIR: /tmp/.ccache-temp
