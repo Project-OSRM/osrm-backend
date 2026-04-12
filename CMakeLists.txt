@@ -95,17 +95,42 @@ include(JSONParser)
 file(READ "package.json" packagejsonraw)
 sbeParseJson(packagejson packagejsonraw)
 
-# This regex is not strict enough, but the correct one is too complicated for cmake matching.
-# https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-if (packagejson.version MATCHES "^([0-9]+)\.([0-9]+)\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
+# This regex supports multiple version formats:
+# - YYYY-MM-patchlevel: Git tag format (e.g., v2026-04-0)
+# - Semver-offset: npm package format (YYYY-2000).MM.patchlevel (e.g., 26.4.0)
+#   This allows npm/node-pre-gyp to parse versions correctly
+# - Legacy Semver: major.minor.patch (e.g., 6.0.0)
+
+# Try YYYY-MM-patchlevel format (validated month 01-12)
+if (packagejson.version MATCHES "^([0-9]{4})-(0[1-9]|1[0-2])-([0-9]+)$")
+  # YYYY-MM-patchlevel format (git tag format)
+  # Map year to uint8_t range: use (year - 2000) as major version
+  set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
+  math(EXPR OSRM_VERSION_MAJOR "${OSRM_VERSION_MAJOR} - 2000")
+  set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
+  set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
+  set(OSRM_VERSION_PRERELEASE_BUILD "")
+  set(OSRM_VERSION packagejson.version)
+# Try semver-offset format (YYYY-2000).MM.patchlevel (npm package format)
+elseif (packagejson.version MATCHES "^([0-9]{1,2})\\.([0-9]{1,2})\\.([0-9]+)$")
+  # Semver-offset format: (YYYY-2000).MM.patchlevel (e.g., 26.4.0)
+  # This is the format used in package.json for npm compatibility
+  # MAJOR is already offset (year - 2000)
+  set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
+  set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
+  set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
+  set(OSRM_VERSION_PRERELEASE_BUILD "")
+  set(OSRM_VERSION packagejson.version)
+# Try legacy semver format (major.minor.patch)
+elseif (packagejson.version MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
+  # Legacy semver format (e.g., 6.0.0)
   set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
   set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
   set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
   set(OSRM_VERSION_PRERELEASE_BUILD ${CMAKE_MATCH_4})
-
   set(OSRM_VERSION packagejson.version)
 else()
-  message(FATAL_ERROR "Version from package.json cannot be parsed, expected semver compatible label, but found ${packagejson.version}")
+  message(FATAL_ERROR "Version from package.json cannot be parsed. Expected one of:\n  - YYYY-MM-patchlevel format (git tags, e.g., 2026-04-0)\n  - Semver-offset format (npm, e.g., 26.4.0 where 26=year-2000)\n  - Legacy semver format (e.g., 6.0.0)\nBut found: ${packagejson.version}")
 endif()
 
 if (MSVC)

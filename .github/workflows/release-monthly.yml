@@ -1,0 +1,171 @@
+name: Monthly Release
+
+on:
+  schedule:
+    # 1st of each month at 08:00 UTC
+    - cron: '0 8 1 * *'
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: 'Override version (YYYY-MM-patchlevel format, e.g., 2026-04-0). Leave empty to auto-calculate.'
+        required: false
+        type: string
+      branch:
+        description: 'Branch to release from (defaults to master)'
+        required: false
+        type: string
+        default: 'master'
+
+concurrency:
+  group: release-monthly-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      packages: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch || 'master' }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 22
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Validate inputs
+        run: |
+          if [ -n "${{ inputs.version_override }}" ]; then
+            # Validate version_override matches YYYY-MM-patchlevel format
+            if ! echo "${{ inputs.version_override }}" | grep -E '^[0-9]{4}-[0-9]{2}-[0-9]+$' > /dev/null; then
+              echo "Error: version_override must be in YYYY-MM-patchlevel format (e.g., 2026-04-0)"
+              exit 1
+            fi
+          fi
+          
+          # Validate branch input (prevent shell injection)
+          BRANCH="${{ inputs.branch || 'master' }}"
+          if ! echo "$BRANCH" | grep -E '^[a-zA-Z0-9._/-]+$' > /dev/null; then
+            echo "Error: branch name contains invalid characters"
+            exit 1
+          fi
+
+      - name: Calculate version
+        id: version
+        run: |
+          if [ -n "${{ inputs.version_override }}" ]; then
+            VERSION="${{ inputs.version_override }}"
+          else
+            # Calculate YYYY-MM-patchlevel automatically
+            YEAR=$(date -u +%Y)
+            MONTH=$(date -u +%m)
+            
+            # Find highest patchlevel for this month
+            LATEST_TAG=$(git tag -l "v${YEAR}-${MONTH}-*" --sort=-version:refname | head -1)
+            
+            if [ -z "$LATEST_TAG" ]; then
+              PATCHLEVEL=0
+            else
+              # Extract patchlevel from tag (e.g., v2026-04-5 -> 5)
+              PATCHLEVEL=${LATEST_TAG##*-}
+              PATCHLEVEL=$((PATCHLEVEL + 1))
+            fi
+            
+            VERSION="${YEAR}-${MONTH}-${PATCHLEVEL}"
+          fi
+          
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Update package.json
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = require('./package.json');
+            const oldVersion = pkg.version;
+            
+            // Convert YYYY-MM-patchlevel to semver-compatible format (YYYY-2000).MM.patchlevel
+            // This allows npm/node-pre-gyp to parse the version correctly
+            const parts = process.env.VERSION.split('-');
+            const year = parseInt(parts[0]) - 2000;
+            const month = parseInt(parts[1]);
+            const patch = parts[2];
+            const semverVersion = year + '.' + month + '.' + patch;
+            
+            pkg.version = semverVersion;
+            fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+            console.log('Updated version from ' + oldVersion + ' to ' + semverVersion + ' (from ' + process.env.VERSION + ')');
+          "
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet package.json; then
+            echo "No changes to package.json (version unchanged)"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected in package.json"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit version update
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+
+      - name: Create git tag
+        run: |
+          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.version }}"
+
+      - name: Push changes and tag
+        run: |
+          BRANCH="${{ inputs.branch || 'master' }}"
+          git push origin "$BRANCH"
+          git push origin "${{ steps.version.outputs.tag }}"
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.version }}
+          draft: false
+          prerelease: false
+          generateReleaseNotes: true
+
+      - name: Wait for CI to complete
+        run: |
+          # Wait for tag CI to complete before publishing npm package
+          # The CI workflow is triggered by the tag push and must complete
+          # to upload release assets (prebuilt binaries)
+          echo "Waiting for CI workflow to complete..."
+          
+          # Poll workflow runs for this tag
+          TAG="${{ steps.version.outputs.tag }}"
+          MAX_WAIT=300  # 5 minutes
+          ELAPSED=0
+          POLL_INTERVAL=10
+          
+          while [ $ELAPSED -lt $MAX_WAIT ]; do
+            RUNS=$(gh run list --workflow=osrm-backend.yml --status=completed --json conclusion,status,name 2>/dev/null | jq -r ". | length")
+            if [ "$RUNS" != "0" ]; then
+              echo "CI workflow completed, proceeding with npm publish"
+              break
+            fi
+            sleep $POLL_INTERVAL
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+      - name: Publish to npm
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+        run: npm publish
+

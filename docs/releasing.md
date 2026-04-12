@@ -1,26 +1,35 @@
 # Releasing a new OSRM version
 
-We are using http://semver.org/ for versioning with major, minor and patch versions.
+We use a **YYYY-MM-patchlevel** versioning scheme for all releases, with a dual-format approach:
+- **Git tags & releases:** YYYY-MM-patchlevel format (e.g., `v2026-04-0`, `v2026-04-1`)
+- **npm package:** Semver-compatible format (YYYY-2000).MM.patchlevel (e.g., `26.4.0`, `26.4.1`)
 
-## Guarantees
+This approach allows git tags to use human-readable year-month formatting while maintaining npm/node-pre-gyp compatibility.
 
-We are giving the following guarantees between versions:
+## Versioning Scheme
 
-### Major version change
+### Format
 
-- There are no guarantees about compatiblity of APIs or datasets
-- Breaking changes will be noted as `BREAKING` in the changelog
+**Git Tags:** `vYYYY-MM-patchlevel` (e.g., v2026-04-0)
+- **YYYY:** Current year (4 digits)
+- **MM:** Current month (01-12)
+- **patchlevel:** Incremental counter starting at 0 per month (0, 1, 2, ...)
 
-### Minor version change
+**npm Package:** `(YYYY-2000).MM.patchlevel` (e.g., 26.4.0)
+- **YYYY-2000:** Year offset (fits in uint8_t for fingerprinting)
+- **MM:** Month (01-12)
+- **patchlevel:** Counter (0, 1, 2, ...)
 
-We may introduce forward-compatible changes: query parameters and response properties may be added in responses, but existing properties may not be changed or removed. One exception to this is the addition of new turn types, which we see as forward-compatible changes.
+### Examples
 
-- Forward-compatible HTTP API
-- Forward-compatible C++ library API
-- Forward-compatible node-osrm API
-- No compatiblity between OSRM datasets (needs new processing)
+Git tags and npm versions:
+- April 2026, 1st release: tag `v2026-04-0`, npm `26.4.0`
+- April 2026, 2nd release: tag `v2026-04-1`, npm `26.4.1`
+- May 2026, 1st release: tag `v2026-05-0`, npm `26.5.0`
 
-### Patch version change
+## Release Compatibility Guarantees
+
+### Patch version change (new patchlevel in same month)
 
 - No change of query parameters or response formats
 - Compatible HTTP API
@@ -28,32 +37,69 @@ We may introduce forward-compatible changes: query parameters and response prope
 - Compatible node-osrm API
 - Compatible OSRM datasets
 
-## Release and branch management
+### Month change (new YYYY-MM)
 
-- The `master` branch is for the bleeding edge development
-- We create and maintain release branches `x.y` to control the release flow
-- We create the release branch once we create release branches once we want to release the first RC
-- RCs go in the release branch, commits needs to be cherry-picked from master
-- No minor or major version will be released without a code-equal release candidates
-- For quality assurance, release candidates need to be staged beforing tagging a final release
-- Patch versions may be released without a release candidate
-- We may backport fixes to older versions and release them as patch versions
+- May introduce forward-compatible changes: query parameters and response properties may be added in responses, but existing properties may not be changed or removed
+- Forward-compatible HTTP API
+- Forward-compatible C++ library API
+- Forward-compatible node-osrm API
+- No compatibility between OSRM datasets (needs new processing)
 
-## Releasing a version
+## Release Management
 
-1. Check out the appropriate release branch `x.y`
-2. Make sure `CHANGELOG.md` is up to date.
-3. Make sure the `package.json` on branch `x.y` has been committed.
-4. Make sure all tests are passing (e.g. Github Actions CI gives you a :heavy_check_mark:)
-5. Use an annotated tag to mark the release: `git tag vx.y.z -a` Body of the tag description should be the changelog entries. Commit should be one in which the `package.json` version matches the version you want to release.
-6. Use `npm run docs` to generate the API documentation.  Copy `build/docs/*` to `https://github.com/Project-OSRM/project-osrm.github.com` in the `docs/vN.N.N/api` directory
-7. Push tags and commits: `git push; git push --tags`
-8. On https://github.com/Project-OSRM/osrm-backend/releases press `Draft a new release`,
-   write the release tag `vx.y.z` in the `Tag version` field, write the changelog entries in the `Describe this release` field
-   and press `Publish release`. Note that Github Actions CI deployments will create a release when publishing node binaries, so the release
-   may already exist. In which case the description should be updated with the changelog entries.
-9. If not a release-candidate: Write a mailing-list post to osrm-talk@openstreetmap.org to announce the release
-10. Wait until the Github Actions build has been completed and check if the node binaries were published by doing:
-    `rm -rf node_modules && npm install` locally.
-11. For final releases run `npm publish` or `npm publish --tag next` for release candidates.
-12. Bump version in `package.json` to `{MAJOR}.{MINOR+1}.0-unreleased` on the `master` branch after the release.
+- The `master` branch is for development and should always be green
+- **Automated monthly releases** occur on the **1st of each month at 08:00 UTC**
+- All changes in master will be automatically released monthly
+- No release candidates are used; the master branch is the quality gate
+- Patch versions within the same month can be released manually at any time
+
+## Automated Release Process
+
+Releases are created automatically every month on a scheduled basis:
+
+1. A GitHub Actions workflow runs on the 1st of each month at 08:00 UTC
+2. Version is calculated as `YYYY-MM-patchlevel`
+3. `package.json` version is updated
+4. A git tag is created and pushed (e.g., `v2026-04-0`)
+5. A GitHub Release is published with auto-generated release notes
+6. The package is published to npm
+
+## Manual Release Trigger
+
+You can also trigger a release manually on any branch:
+
+1. Go to **Actions** → **Monthly Release** workflow
+2. Click **Run workflow**
+3. Select your branch (defaults to `master`)
+4. Optionally override the version (format: `YYYY-MM-patchlevel`)
+5. Click **Run workflow**
+
+This is useful for:
+- Out-of-schedule patch releases within the same month
+- Emergency releases from other branches
+- Backports to older versions
+
+## Release Checklist
+
+When releasing (automated or manual):
+
+1. ✅ All GitHub Actions CI checks pass
+2. ✅ The target branch is in a releasable state
+3. ✅ For manual releases: verify the version format is correct (`YYYY-MM-patchlevel`)
+4. ✅ The release is created automatically with:
+   - Git tag
+   - GitHub Release (with auto-generated release notes)
+   - npm publication
+
+## After Release
+
+No additional manual steps are required. The automated workflow handles:
+- Version bumping in `package.json`
+- Git commit and tag creation
+- GitHub Release publishing
+- npm package publication
+
+For non-automated releases, monitor:
+- GitHub Actions to verify the release completed successfully
+- npm registry to confirm the new version is published
+
