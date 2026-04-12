@@ -136,21 +136,24 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          # Get the previous release tag
-          PREVIOUS_TAG=$(git tag -l 'v*' --sort=-version:refname --merged "${{ steps.version.outputs.tag }}" | head -2 | tail -1)
+          CURRENT_TAG="${{ steps.version.outputs.tag }}"
           
-          if [ -z "$PREVIOUS_TAG" ]; then
-            # No previous release, show all commits
-            CHANGELOG=$(git log --oneline "${{ steps.version.outputs.tag }}" --pretty=format:"* %h - %s")
+          # Get the previous release tag
+          PREVIOUS_TAG=$(git tag -l 'v*' --sort=-version:refname --merged "$CURRENT_TAG" | head -2 | tail -1)
+          
+          if [ -z "$PREVIOUS_TAG" ] || [ "$PREVIOUS_TAG" = "$CURRENT_TAG" ]; then
+            # No previous release, or selection resolved to the current tag; show all commits
+            CHANGELOG=$(git log "$CURRENT_TAG" --pretty=format:"* %h - %s")
           else
             # Show commits since last release
-            CHANGELOG=$(git log --oneline "${PREVIOUS_TAG}...${{ steps.version.outputs.tag }}" --pretty=format:"* %h - %s")
+            CHANGELOG=$(git log "${PREVIOUS_TAG}..$CURRENT_TAG" --pretty=format:"* %h - %s")
           fi
           
-          # Output as multiline variable
-          echo "body<<EOF" >> $GITHUB_OUTPUT
+          # Output as multiline variable using a unique delimiter to avoid collisions
+          DELIMITER=$(cat /proc/sys/kernel/random/uuid)
+          echo "body<<$DELIMITER" >> $GITHUB_OUTPUT
           echo "$CHANGELOG" >> $GITHUB_OUTPUT
-          echo "EOF" >> $GITHUB_OUTPUT
+          echo "$DELIMITER" >> $GITHUB_OUTPUT
 
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
