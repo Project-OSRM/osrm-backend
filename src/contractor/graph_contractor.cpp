@@ -297,6 +297,7 @@ void ContractNode(ContractorThreadData *data,
                 }
             }
         }
+        data->max_heap_occupancy = std::max(heap.Occupancy(), data->max_heap_occupancy);
     }
 
     // Check For One-Way Streets to decide on the creation of self-loops
@@ -336,7 +337,6 @@ void ContractNode(ContractorThreadData *data,
         }
         inserted_edges.resize(inserted_edges_size);
     }
-    data->max_heap_occupancy = std::max(heap.Occupancy(), data->max_heap_occupancy);
 }
 
 void ContractNode(ContractorThreadData *data,

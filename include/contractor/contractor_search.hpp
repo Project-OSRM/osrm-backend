@@ -30,7 +30,7 @@ static_assert((HASH_MAP_CAPACITY & (HASH_MAP_CAPACITY - 1)) == 0,
               "HASH_MAP_CAPACITY must be a power of two");
 /**
  * Stop search after this many relaxed nodes during contraction. Protection against heap
- * storage overflow. Must be less than HEAP_SIZE. Should be 50-75% of HEAP_SIZE.
+ * storage overflow. Must be less than HASH_MAP_CAPACITY. Should be 50-75% of HASH_MAP_CAPACITY.
  */
 constexpr std::size_t RELAXED_NODE_LIMIT = HASH_MAP_CAPACITY * 0.75;
 

@@ -39,7 +39,7 @@ bool relaxNode(ContractorHeap &heap,
             {
                 continue;
             }
-            if (heap.Occupancy() > RELAXED_NODE_LIMIT)
+            if (heap.Occupancy() >= RELAXED_NODE_LIMIT)
                 return true; // stop search
             heap.Insert(to, to_weight, ContractorHeapData{current_hop, false});
         }
