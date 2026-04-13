@@ -6,16 +6,15 @@ import { osrm } from '../support/fbresult_generated.js';
 const FBResult = osrm.engine.api.fbresult.FBResult;
 import { When } from '@cucumber/cucumber';
 
-When(/^I request nearest I should get$/, function (table, callback) {
-  this.reprocessAndLoadData((e) => {
-    if (e) return callback(e);
-    const testRow = function (row, ri, cb) {
-
+When(/^I request nearest I should get$/, async function (table) {
+  await this.reprocessAndLoadData();
+  const testRow = function (row, ri) {
+    return new Promise((resolve, reject) => {
       const inNode = this.findNodeByName(row.in);
-      if (!inNode) throw new Error(util.format('*** unknown in-node "%s"', row.in));
+      if (!inNode) return reject(new Error(util.format('*** unknown in-node "%s"', row.in)));
 
       this.requestNearest(inNode, this.queryParams, (err, response, body) => {
-        if (err) return cb(err);
+        if (err) return reject(err);
         let coord;
         const headers = new Set(table.raw()[0]);
 
@@ -37,7 +36,7 @@ When(/^I request nearest I should get$/, function (table, callback) {
               got.out = row.out;
 
               const outNode = this.findNodeByName(row.out);
-              if (!outNode) throw new Error(util.format('*** unknown out-node "%s"', row.out));
+              if (!outNode) return reject(new Error(util.format('*** unknown out-node "%s"', row.out)));
 
               Object.keys(row).forEach((key) => {
                 if (key === 'out') {
@@ -66,31 +65,31 @@ When(/^I request nearest I should get$/, function (table, callback) {
             }
 
           }
-          cb(null, got);
+          resolve(got);
         }
         else {
-          cb();
+          resolve();
         }
       });
-    }.bind(this);
+    });
+  }.bind(this);
 
-    this.processRowsAndDiff(table, testRow, callback);
-  });
+  await this.processRowsAndDiff(table, testRow);
 });
 
-When(/^I request nearest with flatbuffers I should get$/, function (table, callback) {
-  this.reprocessAndLoadData((e) => {
-    if (e) return callback(e);
-    const testRow = function (row, ri, cb) {
+When(/^I request nearest with flatbuffers I should get$/, async function (table) {
+  await this.reprocessAndLoadData();
+  const testRow = function (row, ri) {
+    return new Promise((resolve, reject) => {
       const inNode = this.findNodeByName(row.in);
-      if (!inNode) throw new Error(util.format('*** unknown in-node "%s"', row.in));
+      if (!inNode) return reject(new Error(util.format('*** unknown in-node "%s"', row.in)));
 
       const outNode = this.findNodeByName(row.out);
-      if (!outNode) throw new Error(util.format('*** unknown out-node "%s"', row.out));
+      if (!outNode) return reject(new Error(util.format('*** unknown out-node "%s"', row.out)));
 
       this.queryParams.output = 'flatbuffers';
       this.requestNearest(inNode, this.queryParams, (err, response, body) => {
-        if (err) return cb(err);
+        if (err) return reject(err);
         let coord;
 
         if (response.statusCode === 200 && body.length) {
@@ -116,14 +115,14 @@ When(/^I request nearest with flatbuffers I should get$/, function (table, callb
             }
           });
 
-          cb(null, got);
+          resolve(got);
         }
         else {
-          cb();
+          resolve();
         }
       });
-    }.bind(this);
+    });
+  }.bind(this);
 
-    this.processRowsAndDiff(table, testRow, callback);
-  });
+  await this.processRowsAndDiff(table, testRow);
 });

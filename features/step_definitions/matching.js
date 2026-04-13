@@ -4,14 +4,14 @@ import util from 'util';
 import polyline from '@mapbox/polyline';
 import { When } from '@cucumber/cucumber';
 
-When(/^I match I should get$/, function (table, callback) {
+When(/^I match I should get$/, async function (table) {
   let got;
 
-  this.reprocessAndLoadData((e) => {
-    if (e) return callback(e);
-    const testRow = function (row, ri, cb) {
+  await this.reprocessAndLoadData();
+  const testRow = function (row, ri) {
+    return new Promise((resolve, reject) => {
       const afterRequest = function (err, res, body) {
-        if (err) return cb(err);
+        if (err) return reject(err);
         let json;
 
         const headers = new Set(table.raw()[0]);
@@ -152,11 +152,11 @@ When(/^I match I should get$/, function (table, callback) {
           if (k.match(/^a:/)) {
             const a_type = k.slice(2);
             if (whitelist.indexOf(a_type) == -1)
-              return cb(
+              return reject(
                 new Error(`*** Unrecognized annotation field: ${a_type}`),
               );
             if (!annotation[a_type])
-              return cb(
+              return reject(
                 new Error(`*** Annotation not found in response: ${a_type}`),
               );
             got[k] = annotation[a_type];
@@ -214,7 +214,7 @@ When(/^I match I should get$/, function (table, callback) {
 
         if (headers.has('matchings')) {
           if (subMatchings.length != row.matchings.split(',').length) {
-            return cb(
+            return reject(
               new Error(
                 '*** table matchings and api response are not the same',
               ),
@@ -236,7 +236,7 @@ When(/^I match I should get$/, function (table, callback) {
           }
 
           if (row.waypoints.length != got_loc.length)
-            return cb(
+            return reject(
               new Error(
                 `Expected ${row.waypoints.length} waypoints, got ${got_loc.length}`,
               ),
@@ -273,7 +273,7 @@ When(/^I match I should get$/, function (table, callback) {
           row.matchings = extendedTarget;
         }
 
-        cb(null, got);
+        resolve(got);
       }.bind(this);
 
       if (row.request) {
@@ -315,11 +315,11 @@ When(/^I match I should get$/, function (table, callback) {
           got.trace = row.trace;
           this.requestMatching(trace, timestamps, params, afterRequest);
         } else {
-          throw new Error('*** no trace');
+          return reject(new Error('*** no trace'));
         }
       }
-    }.bind(this);
+    });
+  }.bind(this);
 
-    this.processRowsAndDiff(table, testRow, callback);
-  });
+  await this.processRowsAndDiff(table, testRow);
 });
