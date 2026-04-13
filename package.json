@@ -1,6 +1,6 @@
 {
   "name": "@project-osrm/osrm",
-  "version": "6.0.0",
+  "version": "26.4.0",
   "private": false,
   "type": "module",
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
@@ -29,7 +29,7 @@
   },
   "homepage": "https://github.com/Project-OSRM/osrm-backend",
   "engines": {
-    "node": ">=20.0.0"
+    "node": "^20.17.0 || >=22.9.0"
   },
   "devDependencies": {
     "@babel/core": "^7.29.0",
@@ -41,19 +41,19 @@
     "ansi-escape-sequences": "6.2.4",
     "chalk": "^5.6.2",
     "cheap-ruler": "^4.0.0",
+    "cmake-js": "^8.0.0",
     "command-line-args": "6.0.1",
     "command-line-usage": "7.0.3",
     "csv-stringify": "^6.6.0",
-    "d3-queue": "3.0.7",
     "eslint": "^10.0.0",
     "express": "^5.2.1",
+    "fast-xml-parser": "^5.5.11",
     "faucet": "^0.0.4",
     "flatbuffers": "^25.9.23",
     "husky": "^9.1.7",
     "jsonpath-plus": "^10.4.0",
     "lint-staged": "^16.2.7",
     "node-addon-api": "^8.5.0",
-    "node-cmake": "^2.5.1",
     "strip-ansi": "^7.1.0",
     "tape": "5.9.0",
     "vitepress": "^1.6.4",
@@ -82,7 +82,13 @@
     "access": "public"
   },
   "overrides": {
+    "vitepress": {
+      "vite": "6.4.2"
+    },
     "esbuild": "0.27.2",
+    "eslint": {
+      "ajv": "^6"
+    },
     "glob": "^13.0.0",
     "ajv": ">=6.14.0",
     "minimatch": ">=10.2.1",

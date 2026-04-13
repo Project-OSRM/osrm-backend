@@ -1,8 +1,8 @@
 #ifndef EXTRACTION_HELPER_FUNCTIONS_HPP
 #define EXTRACTION_HELPER_FUNCTIONS_HPP
 
-#include <boost/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/fusion/include/at_c.hpp>
+#include <boost/spirit/home/x3.hpp>
 
 #include <boost/algorithm/string/replace.hpp>
 
@@ -20,86 +20,145 @@ namespace osrm::extractor
 namespace detail
 {
 
-namespace qi = boost::spirit::qi;
+namespace x3 = boost::spirit::x3;
 
-template <typename Iterator> struct iso_8601_grammar : qi::grammar<Iterator, unsigned()>
-{
-    iso_8601_grammar() : iso_8601_grammar::base_type(root)
+inline x3::uint_parser<unsigned, 10, 1, 2> const uint_p{};
+inline x3::uint_parser<unsigned, 10, 2, 2> const uint2_p{};
 
+inline const auto hh = x3::rule<struct hh_tag, unsigned>{"hh"} = uint2_p[(
+    [](auto &ctx)
     {
-        using qi::_1;
-        using qi::_a;
-        using qi::_b;
-        using qi::_c;
-        using qi::_pass;
-        using qi::_val;
-        using qi::char_;
-        using qi::eoi;
-        using qi::eps;
-        using qi::uint_;
+        if (x3::_attr(ctx) >= 24)
+        {
+            x3::_pass(ctx) = false;
+            return;
+        }
+        x3::_val(ctx) = x3::_attr(ctx);
+    })];
 
-        hh = uint2_p[_pass = bind([](unsigned x) { return x < 24; }, _1), _val = _1];
-        mm = uint2_p[_pass = bind([](unsigned x) { return x < 60; }, _1), _val = _1];
-        ss = uint2_p[_pass = bind([](unsigned x) { return x < 60; }, _1), _val = _1];
+inline const auto mm = x3::rule<struct mm_tag, unsigned>{"mm"} = uint2_p[(
+    [](auto &ctx)
+    {
+        if (x3::_attr(ctx) >= 60)
+        {
+            x3::_pass(ctx) = false;
+            return;
+        }
+        x3::_val(ctx) = x3::_attr(ctx);
+    })];
 
-        osm_time = (uint_p[_a = _1] >> eoi)[_val = _a * 60] |
-                   (uint_p[_a = _1] >> ':' >> uint_p[_b = _1] >> eoi)[_val = _a * 3600 + _b * 60] |
-                   (uint_p[_a = _1] >> ':' >> uint_p[_b = _1] >> ':' >> uint_p[_c = _1] >>
-                    eoi)[_val = _a * 3600 + _b * 60 + _c];
+inline const auto ss = x3::rule<struct ss_tag, unsigned>{"ss"} = uint2_p[(
+    [](auto &ctx)
+    {
+        if (x3::_attr(ctx) >= 60)
+        {
+            x3::_pass(ctx) = false;
+            return;
+        }
+        x3::_val(ctx) = x3::_attr(ctx);
+    })];
 
-        alternative_time =
-            ('T' >> hh[_a = _1] >> mm[_b = _1] >> ss[_c = _1])[_val = _a * 3600 + _b * 60 + _c];
+// "H:M:S" or "H:M" or "M" (bare number = minutes)
+inline const auto osm_time = x3::rule<struct osm_time_tag, unsigned>{"osm_time"} =
+    (uint_p >> ':' >> uint_p >> ':' >> uint_p >> x3::eoi)[(
+        [](auto &ctx)
+        {
+            auto &a = x3::_attr(ctx);
+            x3::_val(ctx) = boost::fusion::at_c<0>(a) * 3600 + boost::fusion::at_c<1>(a) * 60 +
+                            boost::fusion::at_c<2>(a);
+        })] |
+    (uint_p >> ':' >> uint_p >> x3::eoi)[(
+        [](auto &ctx)
+        {
+            auto &a = x3::_attr(ctx);
+            x3::_val(ctx) = boost::fusion::at_c<0>(a) * 3600 + boost::fusion::at_c<1>(a) * 60;
+        })] |
+    (uint_p >> x3::eoi)[([](auto &ctx) { x3::_val(ctx) = x3::_attr(ctx) * 60; })];
 
-        extended_time = ('T' >> hh[_a = _1] >> ':' >> mm[_b = _1] >> ':' >>
-                         ss[_c = _1])[_val = _a * 3600 + _b * 60 + _c];
+// Thhmmss (compact)
+inline const auto alternative_time = x3::rule<struct alt_time_tag, unsigned>{"alternative_time"} =
+    ('T' >> hh >> mm >> ss)[(
+        [](auto &ctx)
+        {
+            auto &a = x3::_attr(ctx);
+            x3::_val(ctx) = boost::fusion::at_c<0>(a) * 3600 + boost::fusion::at_c<1>(a) * 60 +
+                            boost::fusion::at_c<2>(a);
+        })];
 
-        standard_time =
-            ('T' >> -(uint_ >> char_("Hh"))[_a = _1] >> -(uint_ >> char_("Mm"))[_b = _1] >>
-             -(uint_ >> char_("Ss"))[_c = _1])[_val = _a * 3600 + _b * 60 + _c];
+// Thh:mm:ss (extended)
+inline const auto extended_time = x3::rule<struct ext_time_tag, unsigned>{"extended_time"} =
+    ('T' >> hh >> ':' >> mm >> ':' >> ss)[(
+        [](auto &ctx)
+        {
+            auto &a = x3::_attr(ctx);
+            x3::_val(ctx) = boost::fusion::at_c<0>(a) * 3600 + boost::fusion::at_c<1>(a) * 60 +
+                            boost::fusion::at_c<2>(a);
+        })];
 
-        standard_date = (uint_ >> char_("Dd"))[_val = _1 * 86400];
+// T[nH][nM][nS] (ISO 8601 designator form)
+inline const auto standard_time = x3::rule<struct std_time_tag, unsigned>{"standard_time"} =
+    ('T' >> -(x3::uint_ >> x3::char_("Hh")) >> -(x3::uint_ >> x3::char_("Mm")) >>
+     -(x3::uint_ >> x3::char_("Ss")))[(
+        [](auto &ctx)
+        {
+            auto &a = x3::_attr(ctx);
+            unsigned h = 0, m = 0, s = 0;
+            if (auto &oh = boost::fusion::at_c<0>(a))
+                h = boost::fusion::at_c<0>(*oh);
+            if (auto &om = boost::fusion::at_c<1>(a))
+                m = boost::fusion::at_c<0>(*om);
+            if (auto &os = boost::fusion::at_c<2>(a))
+                s = boost::fusion::at_c<0>(*os);
+            x3::_val(ctx) = h * 3600 + m * 60 + s;
+        })];
 
-        standard_week = (uint_ >> char_("Ww"))[_val = _1 * 604800];
+inline const auto standard_date = x3::rule<struct std_date_tag, unsigned>{"standard_date"} =
+    (x3::uint_ >> x3::char_("Dd"))[(
+        [](auto &ctx) { x3::_val(ctx) = boost::fusion::at_c<0>(x3::_attr(ctx)) * 86400; })];
 
-        iso_period =
-            osm_time[_val = _1] | ('P' >> standard_week >> eoi)[_val = _1] |
-            ('P' >> (alternative_time[_a = 0, _b = _1] | extended_time[_a = 0, _b = _1] |
-                     (eps[_a = 0, _b = 0] >> -standard_date[_a = _1] >> -standard_time[_b = _1])) >>
-             eoi)[_val = _a + _b];
+inline const auto standard_week = x3::rule<struct std_week_tag, unsigned>{"standard_week"} =
+    (x3::uint_ >> x3::char_("Ww"))[(
+        [](auto &ctx) { x3::_val(ctx) = boost::fusion::at_c<0>(x3::_attr(ctx)) * 604800; })];
 
-        root = iso_period;
-    }
+// Collapse date+time into single value
+inline const auto date_time_duration = x3::rule<struct dt_dur_tag, unsigned>{"date_time_duration"} =
+    (-standard_date >> -standard_time)[(
+        [](auto &ctx)
+        {
+            auto &a = x3::_attr(ctx);
+            unsigned d = 0, t = 0;
+            if (boost::fusion::at_c<0>(a))
+                d = *boost::fusion::at_c<0>(a);
+            if (boost::fusion::at_c<1>(a))
+                t = *boost::fusion::at_c<1>(a);
+            x3::_val(ctx) = d + t;
+        })];
 
-    qi::rule<Iterator, unsigned()> root;
-    qi::rule<Iterator, unsigned(), qi::locals<unsigned, unsigned>> iso_period;
-    qi::rule<Iterator, unsigned(), qi::locals<unsigned, unsigned, unsigned>> osm_time,
-        standard_time, alternative_time, extended_time;
-    qi::rule<Iterator, unsigned()> standard_date, standard_week;
-    qi::rule<Iterator, unsigned()> hh, mm, ss;
+// Collapse time alternatives into single typed rule
+inline const auto time_or_datetime = x3::rule<struct tod_tag, unsigned>{"time_or_datetime"} =
+    alternative_time | extended_time | date_time_duration;
 
-    qi::uint_parser<unsigned, 10, 1, 2> uint_p;
-    qi::uint_parser<unsigned, 10, 2, 2> uint2_p;
-};
+inline const auto iso_period = x3::rule<struct iso_period_tag, unsigned>{"iso_period"} =
+    osm_time | ('P' >> standard_week >> x3::eoi) | ('P' >> time_or_datetime >> x3::eoi);
+
 } // namespace detail
 
 inline bool durationIsValid(const std::string &s)
 {
-    static detail::iso_8601_grammar<std::string::const_iterator> const iso_8601_grammar;
-
+    namespace x3 = boost::spirit::x3;
     std::string::const_iterator iter = s.begin();
     unsigned duration = 0;
-    boost::spirit::qi::parse(iter, s.end(), iso_8601_grammar, duration);
+    x3::parse(iter, s.end(), detail::iso_period, duration);
 
     return !s.empty() && iter == s.end();
 }
 
 inline unsigned parseDuration(const std::string &s)
 {
-    static detail::iso_8601_grammar<std::string::const_iterator> const iso_8601_grammar;
-
+    namespace x3 = boost::spirit::x3;
     std::string::const_iterator iter = s.begin();
     unsigned duration = 0;
-    boost::spirit::qi::parse(iter, s.end(), iso_8601_grammar, duration);
+    x3::parse(iter, s.end(), detail::iso_period, duration);
 
     return !s.empty() && iter == s.end() ? duration : std::numeric_limits<unsigned>::max();
 }

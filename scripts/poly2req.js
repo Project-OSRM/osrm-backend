@@ -2,75 +2,95 @@
 // Polygon-to-requests generator - creates random routing queries within geographic boundaries
 
 import fs from 'fs';
+import cla from 'command-line-args';
+import clu from 'command-line-usage';
+import ansi from 'ansi-escape-sequences';
 
-let VERSION = 'route_5.0';
-let SAMPLE_SIZE = 20;
-let NUM_REQUEST = 100;
-let NUM_COORDS = 2;
-let PORT = 5000;
-let url_templates = {
-  'route_5.0': 'http://127.0.0.1:{port}/route/v1/driving/{coords}?steps=false&alternatives=false',
-  'route_4.9': 'http://127.0.0.1:{port}/viaroute?{coords}&instructions=false&alt=false',
-  'table_5.0': 'http://127.0.0.1:{port}/table/v1/driving/{coords}',
-  'table_4.9': 'http://127.0.0.1:{port}/table?{coords}'
+const url_templates = {
+  'route': '/route/v1/driving/{coords}?steps=false&alternatives=false',
+  'table': '/table/v1/driving/{coords}'
 };
 
-let coord_templates =  {
-  'route_5.0': '{lon},{lat}',
-  'route_4.9': 'loc={lat},{lon}',
-  'table_5.0': '{lon},{lat}',
-  'table_4.9': 'loc={lat},{lon}'
+const coord_template = '{lon},{lat}';
+const coords_separator = ';';
+
+// Predefined bounding boxes
+const bboxes = {
+  'planet': [-180., -85., 180., 85.],
+  'us': [-127., 24., -67., 48.],
+  'germany': [5.9, 47.3, 15.0, 55.1],
+  'dc': [-77.138, 38.808, -76.909, 38.974]
 };
 
-let coords_separators = {
-  'route_5.0': ';',
-  'route_4.9': '&',
-  'table_5.0': ';',
-  'table_4.9': '&'
-};
-let axis = 'distance';
+// Command line argument definitions
+const optionsList = [
+  {name: 'help', alias: 'h', type: Boolean, description: 'Display this usage guide.', defaultValue: false},
+  {name: 'type', alias: 't', type: String, defaultValue: 'route', description: 'Query type: route or table', typeLabel: '{underline route|table}'},
+  {name: 'host', type: String, defaultValue: '127.0.0.1', description: 'OSRM server hostname', typeLabel: '{underline hostname}'},
+  {name: 'port', alias: 'p', type: Number, defaultValue: 5000, description: 'OSRM server port', typeLabel: '{underline number}'},
+  {name: 'coords', alias: 'c', type: Number, defaultValue: 2, description: 'Number of coordinates per query', typeLabel: '{underline number}'},
+  {name: 'number', alias: 'n', type: Number, defaultValue: 1000, description: 'Number of queries to generate', typeLabel: '{underline number}'},
+  {name: 'sample-size', alias: 's', type: Number, defaultValue: 1000, description: 'Sample size for waypoints mode', typeLabel: '{underline number}'},
+  {name: 'bbox', alias: 'b', type: String, defaultOption: true, description: 'Bounding box: planet, us, germany, dc, or path to .poly file', typeLabel: '{underline region|file}'},
+  {name: 'axis', alias: 'a', type: String, defaultValue: 'distance', description: 'Query generation mode: distance or waypoints', typeLabel: '{underline distance|waypoints}'}
+];
+
+const options = cla(optionsList);
+
+if (options.help) {
+  const banner = `\
+ ____   ___  __   ______ ____  ____  ____ ____    _________
+/ __ \\ / _ \\/ /  / /_/  |/_  // __ \\/ __// __ \\  / / / __(_)
+/ /_/ // // / /__/ __/_>  </ // /_/ / _/ / /_/ /_/ /_\\ \\
+/ .___/ \\___/____/\\__/_/|_/___|____/___/ \\___\\/___(_)__/
+/_/                         |___/`;
+  const usage = clu([
+    { content: ansi.format(banner, 'green'), raw: true },
+    { header: 'Generate OSRM routing/table queries within geographic boundaries', content: 'Outputs queries in CSV format compatible with osrm-runner.js' },
+    { header: 'Options', optionList: optionsList },
+    { header: 'Examples', content: [
+      '$ poly2req.js --bbox germany --number 100',
+      '$ poly2req.js -b us -t table -c 10',
+      '$ poly2req.js --bbox /path/to/region.poly --axis waypoints'
+    ]}
+  ]);
+  process.stdout.write(`${usage}\n`);
+  process.exit(0);
+}
 
 // Bounding box coordinates (southwest and northeast corners)
 let sw = [Number.MAX_VALUE, Number.MAX_VALUE];
-let ne = [Number.MIN_VALUE, Number.MIN_VALUE];
+let ne = [-Infinity, -Infinity];
 
-if (process.argv.length > 2 && process.argv[2] == 'planet')
-{
-  sw = [-180., -85.];
-  ne = [180., 85.];
-}
-if (process.argv.length > 2 && process.argv[2] == 'us')
-{
-  sw = [-127., 24.];
-  ne = [-67., 48.];
-}
-else if (process.argv.length > 2 && process.argv[2] == 'dc')
-{
-  sw = [-77.138, 38.808];
-  ne = [-76.909, 38.974];
-}
-else if (process.argv.length > 2)
-{
-  let poly_path = process.argv[2];
-  let poly_data = fs.readFileSync(poly_path, 'utf-8');
+if (options.bbox) {
+  if (bboxes[options.bbox]) {
+    // Use predefined bounding box
+    const bbox = bboxes[options.bbox];
+    sw = [bbox[0], bbox[1]];
+    ne = [bbox[2], bbox[3]];
+  } else {
+    // Try to load as .poly file
+    const poly_path = options.bbox;
+    const poly_data = fs.readFileSync(poly_path, 'utf-8');
 
-  let coordinates = poly_data.split('\n')
-    .filter((l) => l != '')
-    .slice(2, -2).map((coord_line) => coord_line.split(' ')
-      .filter((elem) => elem != ''))
-    .map((coord) => [parseFloat(coord[0]), parseFloat(coord[1])]);
+    const coordinates = poly_data.split('\n')
+      .filter((l) => l != '')
+      .slice(2, -2).map((coord_line) => coord_line.split(' ')
+        .filter((elem) => elem != ''))
+      .map((coord) => [parseFloat(coord[0]), parseFloat(coord[1])]);
 
-  coordinates.forEach((c) => {
-    sw[0] = Math.min(sw[0], c[0]);
-    sw[1] = Math.min(sw[1], c[1]);
-    ne[0] = Math.max(ne[0], c[0]);
-    ne[1] = Math.max(ne[1], c[1]);
-  });
-}
-
-if (process.argv.length > 3)
-{
-  axis = process.argv[3];
+    coordinates.forEach((c) => {
+      sw[0] = Math.min(sw[0], c[0]);
+      sw[1] = Math.min(sw[1], c[1]);
+      ne[0] = Math.max(ne[0], c[0]);
+      ne[1] = Math.max(ne[1], c[1]);
+    });
+  }
+} else {
+  // Default to germany if no bbox specified
+  const bbox = bboxes['germany'];
+  sw = [bbox[0], bbox[1]];
+  ne = [bbox[2], bbox[3]];
 }
 
 console.error(sw);
@@ -93,24 +113,26 @@ function getRandomCoordinate() {
 
 // Build OSRM API query URL from coordinate array
 function makeQuery(coords) {
-  let coords_string = coords.map((c) => coord_templates[VERSION].replace('{lon}', c[0]).replace('{lat}', c[1])).join(coords_separators[VERSION]);
-  return url_templates[VERSION].replace('{coords}', coords_string).replace('{port}', PORT);
+  const coords_string = coords.map((c) => coord_template.replace('{lon}', c[0]).replace('{lat}', c[1])).join(coords_separator);
+  const path = url_templates[options.type].replace('{coords}', coords_string);
+  return `http://${options.host}:${options.port}${path}`;
 }
 
 // Generate queries based on distance or waypoint count
-if (axis == 'distance')
+// Output in CSV format (quoted) for compatibility with osrm-runner.js
+if (options.axis == 'distance')
 {
-  for (let i = 0; i < NUM_REQUEST; ++i)
+  for (let i = 0; i < options.number; ++i)
   {
     let coords = [];
-    for (let j = 0; j < NUM_COORDS; ++j)
+    for (let j = 0; j < options.coords; ++j)
     {
       coords.push(getRandomCoordinate());
     }
-    console.log(makeQuery(coords));
+    console.log(`"${makeQuery(coords)}"`);
   }
 }
-else if (axis == 'waypoints')
+else if (options.axis == 'waypoints')
 {
   for (let power = 0; power <= 1; ++power)
   {
@@ -118,14 +140,14 @@ else if (axis == 'waypoints')
     {
       let num_coords = factor*Math.pow(10, power);
       console.error(num_coords);
-      for (let i = 0; i < SAMPLE_SIZE; ++i)
+      for (let i = 0; i < options['sample-size']; ++i)
       {
         let coords = [];
         for (let j = 0; j < num_coords; ++j)
         {
           coords.push(getRandomCoordinate());
         }
-        console.log(makeQuery(coords));
+        console.log(`"${makeQuery(coords)}"`);
       }
     }
   }
