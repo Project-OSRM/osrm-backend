@@ -6,6 +6,7 @@
 #include "engine/routing_algorithms/routing_base.hpp"
 #include "engine/search_engine_data.hpp"
 
+#include "util/log.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/assert.hpp>
@@ -120,40 +121,35 @@ void routingStep(const DataFacade<Algorithm> &facade,
     if (reverseHeapNode)
     {
         const EdgeWeight new_weight = reverseHeapNode->weight + heapNode.weight;
-        if (new_weight < upper_bound)
+
+        if (new_weight >= EdgeWeight{0} && new_weight <= upper_bound &&
+            !shouldForceStep(force_step_nodes, heapNode, *reverseHeapNode))
         {
-            if (shouldForceStep(force_step_nodes, heapNode, *reverseHeapNode) ||
-                // in this case we are looking at a bi-directional way where the source
-                // and target phantom are on the same edge based node
-                new_weight < EdgeWeight{0})
+            middle_node_id = heapNode.node;
+            upper_bound = new_weight;
+        }
+        else
+        {
+            // The two identical nodes did not match after all.
+            // Before forcing step, check whether there is a loop present at the node.
+            // We may find a valid weight path by following the loop.
+            for (const auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
             {
-                // Before forcing step, check whether there is a loop present at the node.
-                // We may find a valid weight path by following the loop.
-                for (const auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
+                const auto &data = facade.GetEdgeData(edge);
+                if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
                 {
-                    const auto &data = facade.GetEdgeData(edge);
-                    if (DIRECTION == FORWARD_DIRECTION ? data.forward : data.backward)
+                    const NodeID to = facade.GetTarget(edge);
+                    if (to == heapNode.node)
                     {
-                        const NodeID to = facade.GetTarget(edge);
-                        if (to == heapNode.node)
+                        const EdgeWeight edge_weight = data.weight;
+                        const EdgeWeight loop_weight = new_weight + edge_weight;
+                        if (loop_weight >= EdgeWeight{0} && loop_weight < upper_bound)
                         {
-                            const EdgeWeight edge_weight = data.weight;
-                            const EdgeWeight loop_weight = new_weight + edge_weight;
-                            if (loop_weight >= EdgeWeight{0} && loop_weight < upper_bound)
-                            {
-                                middle_node_id = heapNode.node;
-                                upper_bound = loop_weight;
-                            }
+                            middle_node_id = heapNode.node;
+                            upper_bound = loop_weight;
                         }
                     }
                 }
-            }
-            else
-            {
-                BOOST_ASSERT(new_weight >= EdgeWeight{0});
-
-                middle_node_id = heapNode.node;
-                upper_bound = new_weight;
             }
         }
     }
@@ -389,6 +385,17 @@ void unpackPath(const FacadeT &facade,
     }
 
     annotatePath(facade, route_endpoints, unpacked_nodes, unpacked_edges, unpacked_path);
+
+#ifndef NDEBUG
+    {
+        auto log = util::Log(logDEBUG);
+        log << "unpacked path =";
+        for (const auto &p : unpacked_path)
+        {
+            log << " " << p.from_edge_based_node;
+        }
+    }
+#endif
 }
 
 /**
