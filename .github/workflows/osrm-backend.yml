@@ -93,7 +93,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   format-taginfo-docs:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     steps:
     - uses: actions/checkout@v6
     - name: Use Node.js
