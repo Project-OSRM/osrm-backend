@@ -11,7 +11,7 @@ This documentation describes the technical aspects of our cucumber test suite.
 Run the Cucumber tests with:
 
 ``` bash
-$ npm test -- --parallel 16
+$ npm test
 ```
 
 ## Single OSRM Configuration
@@ -74,7 +74,7 @@ configured port number (eg. at ports 5000--5000+N).
 We provide a shortcut to run all 6 configurations:
 
 ``` bash
-$ npm test -- --parallel 16
+$ npm test
 ```
 This is how the tests are run on the CI server. You can pass the same arguments as
 mentioned above.
@@ -129,7 +129,7 @@ arbitrarily although it is best to conform to the tags already used. Eg. the tag
 `@guidance` can be used to run only those tests related to the guidance feature:
 
 ``` bash
-$ npm test -- --parallel 16 --tags @guidance
+$ npm test -- --tags @guidance
 ```
 
 We also support following special tags:
