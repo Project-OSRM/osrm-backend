@@ -16,9 +16,11 @@ jobs:
       matrix:
         docker-base-image: ["debian", "alpine"]
     runs-on: ubuntu-latest
-    steps:       
+    steps:
       - name: Check out the repo
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
