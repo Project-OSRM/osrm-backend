@@ -4,6 +4,11 @@ on:
     tags:
       - 'v*'
   workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref (tag) to build the images from'
+        required: true
+        type: string
 
 jobs:
   publish:
