@@ -33,6 +33,11 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.ref }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
       - name: Docker meta - debug
         id: metadebug
@@ -42,6 +47,11 @@ jobs:
           flavor: |
             latest=true
             suffix=-debug,onlatest=true
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.ref }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
       - name: Docker meta - assertions
         id: metaassertions
@@ -50,7 +60,12 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=true
-            suffix=-assertions,onlatest=true        
+            suffix=-assertions,onlatest=true
+          tags: |
+            type=semver,pattern={{version}},value=${{ inputs.ref }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
       - name: Log in to GitHub Docker Registry
         uses: docker/login-action@v4
