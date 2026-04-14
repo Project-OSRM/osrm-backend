@@ -337,8 +337,8 @@ jobs:
             node: 24
             runs-on: ubuntu-24.04-arm
             BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             ENABLE_CONAN: ON
             ENABLE_LTO: OFF
 
@@ -465,11 +465,6 @@ jobs:
           # Update package list
           if [[ "${RUNNER_OS}" == "Linux" || "${ENABLE_CONAN}" != "ON" ]]; then
             sudo apt-get update -y
-          fi
-
-          # Clean up conflicting packages on ARM64 (known Ubuntu noble issue)
-          if [[ "$(uname -m)" == "aarch64" ]]; then
-            sudo apt-get remove -y libopencl-clang-14-dev libopencl-clang-15-dev libopencl-clang-16-dev libopencl-clang-17-dev python3-clang-14 python3-clang-15 python3-clang-16 python3-clang-17 python3-clang-18 python3-clang-19 python3-clang-20 || true
           fi
 
           # Install compiler and ccache
