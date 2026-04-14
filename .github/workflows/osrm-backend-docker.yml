@@ -31,10 +31,10 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }},suffix=-amd64
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }},suffix=-amd64
-            type=ref,event=tag,suffix=-amd64
-            type=ref,event=branch,enable=${{ inputs.ref == '' }},suffix=-amd64
+            type=semver,pattern={{version}},value=${{ inputs.ref }},suffix=-amd64-${{ matrix.docker-base-image }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }},suffix=-amd64-${{ matrix.docker-base-image }}
+            type=ref,event=tag,suffix=-amd64-${{ matrix.docker-base-image }}
+            type=ref,event=branch,enable=${{ inputs.ref == '' }},suffix=-amd64-${{ matrix.docker-base-image }}
 
       - name: Docker meta - debug
         id: metadebug
@@ -43,7 +43,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=false
-            suffix=-debug-amd64,onlatest=false
+            suffix=-debug-amd64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
             type=semver,pattern={{version}},value=${{ inputs.ref }}
             type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
@@ -57,7 +57,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=false
-            suffix=-assertions-amd64,onlatest=false
+            suffix=-assertions-amd64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
             type=semver,pattern={{version}},value=${{ inputs.ref }}
             type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
@@ -121,10 +121,10 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }},suffix=-arm64
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }},suffix=-arm64
-            type=ref,event=tag,suffix=-arm64
-            type=ref,event=branch,enable=${{ inputs.ref == '' }},suffix=-arm64
+            type=semver,pattern={{version}},value=${{ inputs.ref }},suffix=-arm64-${{ matrix.docker-base-image }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }},suffix=-arm64-${{ matrix.docker-base-image }}
+            type=ref,event=tag,suffix=-arm64-${{ matrix.docker-base-image }}
+            type=ref,event=branch,enable=${{ inputs.ref == '' }},suffix=-arm64-${{ matrix.docker-base-image }}
 
       - name: Docker meta - debug
         id: metadebug
@@ -133,7 +133,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=false
-            suffix=-debug-arm64,onlatest=false
+            suffix=-debug-arm64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
             type=semver,pattern={{version}},value=${{ inputs.ref }}
             type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
@@ -147,7 +147,7 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=false
-            suffix=-assertions-arm64,onlatest=false
+            suffix=-assertions-arm64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
             type=semver,pattern={{version}},value=${{ inputs.ref }}
             type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
@@ -195,6 +195,9 @@ jobs:
     needs: [build-amd64, build-arm64]
     runs-on: ubuntu-latest
     steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
       - name: Log in to GitHub Docker Registry
         uses: docker/login-action@v4
         with:
@@ -204,57 +207,54 @@ jobs:
 
       - name: Create and push manifests
         run: |
-          # Extract base tags from arch-suffixed images
           REGISTRY="ghcr.io/${{ github.repository }}"
           
-          # Determine tags based on trigger type
+          # Determine tag name based on trigger type
           if [ "${{ inputs.ref }}" != "" ]; then
-            # workflow_dispatch with explicit ref
-            REF="${{ inputs.ref }}"
-          else
+            # workflow_dispatch with explicit ref/tag
+            RAW_REF="${{ inputs.ref }}"
+          elif [ "${{ github.ref_name }}" != "" ]; then
             # push:tags trigger
-            REF="${{ github.ref }}"
+            RAW_REF="${{ github.ref_name }}"
+          else
+            RAW_REF="${{ github.ref }}"
           fi
           
-          # Parse semver from ref (v26.4.0 -> 26.4.0, 26.4)
-          if [[ "$REF" =~ ^refs/tags/v?([0-9]+\.[0-9]+\.[0-9]+) ]]; then
+          # Normalize refs/tags/v26.4.0 -> v26.4.0
+          REF_NAME="${RAW_REF#refs/tags/}"
+          
+          if [ -z "$REF_NAME" ]; then
+            echo "Unable to determine tag name from ref: $RAW_REF" >&2
+            exit 1
+          fi
+          
+          # Always create a manifest for the exact pushed tag, and also
+          # keep the existing semver aliases for plain release tags.
+          TAGS=("$REF_NAME")
+          if [[ "$REF_NAME" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
             VERSION="${BASH_REMATCH[1]}"
             MAJOR_MINOR="${VERSION%.*}"
+            TAGS+=("$VERSION" "$MAJOR_MINOR")
           fi
+          
+          # Deduplicate tags while preserving order
+          MANIFEST_TAGS=()
+          declare -A SEEN_TAGS=()
+          for TAG in "${TAGS[@]}"; do
+            if [ -n "$TAG" ] && [ -z "${SEEN_TAGS[$TAG]}" ]; then
+              MANIFEST_TAGS+=("$TAG")
+              SEEN_TAGS[$TAG]=1
+            fi
+          done
           
           for BASE_IMAGE in debian alpine; do
             echo "Creating manifests for $BASE_IMAGE..."
             
-            # Normal image manifests
-            if [ ! -z "$VERSION" ]; then
-              docker buildx imagetools create -t "$REGISTRY:$VERSION-$BASE_IMAGE" \
-                "$REGISTRY:$VERSION-amd64-$BASE_IMAGE" \
-                "$REGISTRY:$VERSION-arm64-$BASE_IMAGE"
-              
-              docker buildx imagetools create -t "$REGISTRY:$MAJOR_MINOR-$BASE_IMAGE" \
-                "$REGISTRY:$MAJOR_MINOR-amd64-$BASE_IMAGE" \
-                "$REGISTRY:$MAJOR_MINOR-arm64-$BASE_IMAGE"
-            fi
-            
-            # Debug image manifests
-            if [ ! -z "$VERSION" ]; then
-              docker buildx imagetools create -t "$REGISTRY:$VERSION-debug-$BASE_IMAGE" \
-                "$REGISTRY:$VERSION-debug-amd64-$BASE_IMAGE" \
-                "$REGISTRY:$VERSION-debug-arm64-$BASE_IMAGE"
-              
-              docker buildx imagetools create -t "$REGISTRY:$MAJOR_MINOR-debug-$BASE_IMAGE" \
-                "$REGISTRY:$MAJOR_MINOR-debug-amd64-$BASE_IMAGE" \
-                "$REGISTRY:$MAJOR_MINOR-debug-arm64-$BASE_IMAGE"
-            fi
-            
-            # Assertions image manifests
-            if [ ! -z "$VERSION" ]; then
-              docker buildx imagetools create -t "$REGISTRY:$VERSION-assertions-$BASE_IMAGE" \
-                "$REGISTRY:$VERSION-assertions-amd64-$BASE_IMAGE" \
-                "$REGISTRY:$VERSION-assertions-arm64-$BASE_IMAGE"
-              
-              docker buildx imagetools create -t "$REGISTRY:$MAJOR_MINOR-assertions-$BASE_IMAGE" \
-                "$REGISTRY:$MAJOR_MINOR-assertions-amd64-$BASE_IMAGE" \
-                "$REGISTRY:$MAJOR_MINOR-assertions-arm64-$BASE_IMAGE"
-            fi
+            for IMAGE_SUFFIX in "" "-debug" "-assertions"; do
+              for TAG in "${MANIFEST_TAGS[@]}"; do
+                docker buildx imagetools create -t "$REGISTRY:${TAG}${IMAGE_SUFFIX}-$BASE_IMAGE" \
+                  "$REGISTRY:${TAG}${IMAGE_SUFFIX}-amd64-$BASE_IMAGE" \
+                  "$REGISTRY:${TAG}${IMAGE_SUFFIX}-arm64-$BASE_IMAGE"
+              done
+            done
           done
