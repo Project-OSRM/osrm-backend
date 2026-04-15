@@ -45,8 +45,8 @@ jobs:
             latest=false
             suffix=-debug-amd64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
             type=ref,event=tag
             type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
@@ -135,8 +135,8 @@ jobs:
             latest=false
             suffix=-debug-arm64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
             type=ref,event=tag
             type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
@@ -149,8 +149,8 @@ jobs:
             latest=false
             suffix=-assertions-arm64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
             type=ref,event=tag
             type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
@@ -168,6 +168,7 @@ jobs:
           platforms: linux/arm64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metadebug.outputs.tags  }}
+          labels: ${{ steps.metadebug.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -178,6 +179,7 @@ jobs:
           platforms: linux/arm64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metaassertions.outputs.tags  }}
+          labels: ${{ steps.metaassertions.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -188,6 +190,7 @@ jobs:
           platforms: linux/arm64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.meta.outputs.tags  }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
