@@ -109,6 +109,8 @@ jobs:
           ${{ runner.os }}-node-
     - name: Prepare environment
       run: |
+        sudo apt-get update -y
+        sudo apt-get install -y clang-format-18
         npm ci --ignore-scripts
         clang-format-18 --version
     - name: Check PR title format
