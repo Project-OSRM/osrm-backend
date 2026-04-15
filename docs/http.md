@@ -188,7 +188,7 @@ curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?numb
          "location" : [
             13.388775,
             52.51717
-         ],
+         ]
       }
    ],
    "code" : "Ok"
@@ -476,7 +476,7 @@ The returned path does not have to be the fastest one. As TSP is NP-hard it only
 Note that all input coordinates have to be connected for the trip service to work.
 
 ```endpoint
-GET /trip/v1/{profile}/{coordinates}?roundtrip={true|false}&source{any|first}&destination{any|last}&steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}'
+GET /trip/v1/{profile}/{coordinates}?roundtrip={true|false}&source={any|first}&destination={any|last}&steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}
 ```
 
 In addition to the [general options](#general-options) the following options are supported for this service:
