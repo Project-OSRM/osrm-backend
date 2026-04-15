@@ -34,8 +34,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
             type=ref,event=tag
             type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
@@ -48,8 +48,8 @@ jobs:
             latest=true
             suffix=-debug,onlatest=true
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
             type=ref,event=tag
             type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
@@ -62,8 +62,8 @@ jobs:
             latest=true
             suffix=-assertions,onlatest=true
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
             type=ref,event=tag
             type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
