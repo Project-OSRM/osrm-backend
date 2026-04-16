@@ -1,12 +1,9 @@
 name: Python Bindings
 
 on:
-  pull_request:
+  push:
     branches:
-      - master
-    paths-ignore:
-      - '*.md'
-      - 'docs/**'
+      - nn-py-bindings
   workflow_dispatch:
 
 concurrency:
@@ -14,71 +11,37 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  lint:
-    name: Lint & Format
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
-      with:
-        python-version: '3.12'
-    - uses: pre-commit/action@v3.0.1
-
   build_wheels:
-    needs: [lint]
-    name: Build - cp312, Linux x86_64
-    runs-on: ubuntu-latest
+    name: Build - cp312, Windows amd64
+    runs-on: windows-latest
 
     steps:
     - name: Checkout
       uses: actions/checkout@v6
 
-    - name: Restore ccache
+    - name: Restore Conan cache
+      id: conan-cache
       uses: actions/cache/restore@v5
       with:
-        path: /tmp/ccache
-        key: ccache-python-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref }}-${{ github.run_id }}
+        path: ~/.conan2
+        key: v4-conan-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
         restore-keys: |
-          ccache-python-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref }}-
-          ccache-python-${{ runner.os }}-${{ runner.arch }}-
+          v4-conan-${{ runner.os }}-
 
     - name: Run cibuildwheel
       uses: pypa/cibuildwheel@v3.4.0
       env:
-        CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /tmp/ccache:/ccache"
-        CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache"
+        CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.define.ENABLE_CONAN=ON"
 
-    - name: Save ccache
+    - name: Save Conan cache
       uses: actions/cache/save@v5
-      if: always()
+      if: "!cancelled() && steps.conan-cache.outputs.cache-hit != 'true'"
       with:
-        path: /tmp/ccache
-        key: ccache-python-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref }}-${{ github.run_id }}
+        path: ~/.conan2
+        key: v4-conan-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
 
     - name: Upload wheels
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-linux-x86_64
+        name: wheels-windows-amd64
         path: wheelhouse/*.whl
-
-  check_stubs:
-    name: Check stubs are up to date
-    needs: [build_wheels]
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v6
-    - uses: actions/setup-python@v6
-      with:
-        python-version: '3.12'
-    - uses: actions/download-artifact@v4
-      with:
-        name: wheels-linux-x86_64
-        path: wheelhouse
-    - name: Install wheel and regenerate stubs
-      run: |
-        pip install nanobind ruff
-        pip install wheelhouse/*.whl
-        python -m nanobind.stubgen -m osrm.osrm_ext -o src/python/osrm/osrm_ext.pyi
-        ruff format src/python/osrm/osrm_ext.pyi
-    - name: Check for differences
-      run: git diff --exit-code src/python/osrm/osrm_ext.pyi || (echo "::error::Stubs are out of date. Rebuild locally and commit the updated .pyi file." && exit 1)

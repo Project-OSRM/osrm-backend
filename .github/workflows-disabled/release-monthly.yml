@@ -232,3 +232,79 @@ jobs:
       - name: Publish to npm
         run: npm publish
 
+  build_python_wheels:
+    name: Python wheels - ${{ matrix.name }}
+    needs: [release]
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: true
+      matrix:
+        include:
+          - name: Linux x86_64
+            runner: ubuntu-latest
+          - name: Linux aarch64
+            runner: ubuntu-24.04-arm
+          - name: macOS arm64
+            runner: macos-latest
+          - name: Windows amd64
+            runner: windows-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+
+    - name: Restore ccache
+      if: runner.os != 'Windows'
+      uses: actions/cache/restore@v5
+      with:
+        path: /tmp/ccache
+        key: ccache-python-${{ runner.os }}-${{ runner.arch }}-master
+        restore-keys: |
+          ccache-python-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Restore Conan cache
+      id: conan-cache
+      if: runner.os == 'Windows'
+      uses: actions/cache/restore@v5
+      with:
+        path: ~/.conan2
+        key: v4-conan-${{ runner.os }}-${{ hashFiles('pyproject.toml') }}
+        restore-keys: |
+          v4-conan-${{ runner.os }}-
+
+    - name: Run cibuildwheel
+      uses: pypa/cibuildwheel@v3.4.0
+      env:
+        CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /tmp/ccache:/ccache"
+        CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache"
+        CIBW_CONFIG_SETTINGS_MACOS: "cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake.define.CMAKE_C_COMPILER_LAUNCHER=ccache"
+        CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.define.ENABLE_CONAN=ON"
+
+    - name: Upload wheels
+      uses: actions/upload-artifact@v4
+      with:
+        name: python-wheels-${{ matrix.name }}
+        path: wheelhouse/*.whl
+
+  publish_python:
+    name: Publish Python wheels to PyPI
+    needs: [build_python_wheels]
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+
+    steps:
+    - uses: actions/download-artifact@v4
+      with:
+        pattern: python-wheels-*
+        path: dist
+        merge-multiple: true
+
+    - name: Publish to PyPI
+      uses: pypa/gh-action-pypi-publish@v1.13.0
+      with:
+        verbose: true
+        # repository-url: https://test.pypi.org/legacy/
+
