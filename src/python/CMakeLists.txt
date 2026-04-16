@@ -52,12 +52,13 @@ set_target_properties(${EXT_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION FALSE)
 # differences between nanobind's type_caster and NB_MAKE_OPAQUE macros.
 target_link_options(${EXT_NAME} PRIVATE -Wno-error)
 
-# nanobind's internal sources trigger warnings under OSRM's strict -Werror flags.
-# Suppress -Werror for the nanobind static library target.
+# nanobind's internal sources trigger warnings under OSRM's strict -Werror flags
+# (inherited via CMAKE_CXX_FLAGS). Suppress for the nanobind static library target.
+set(_nb_suppress -Wno-error -Wno-suggest-destructor-override -Wno-redundant-decls)
 if(TARGET nanobind-static-abi3)
-  target_compile_options(nanobind-static-abi3 PRIVATE -Wno-error)
+  target_compile_options(nanobind-static-abi3 PRIVATE ${_nb_suppress})
 elseif(TARGET nanobind-static)
-  target_compile_options(nanobind-static PRIVATE -Wno-error)
+  target_compile_options(nanobind-static PRIVATE ${_nb_suppress})
 endif()
 
 # Binding headers live in src/python/include/python/
