@@ -1,0 +1,103 @@
+[build-system]
+requires = [
+  "scikit-build-core >=0.12.0",
+  "nanobind >=2.12.0",
+  "setuptools-scm >=10",
+  "cmake",
+  "ninja",
+  "conan==2.27.0; sys_platform == 'win32'",
+]
+build-backend = "scikit_build_core.build"
+
+[project]
+name = "osrm-bindings"
+dynamic = ["version"]
+description = "Python bindings for the osrm-backend project"
+readme = "src/python/README.md"
+requires-python = ">=3.10"
+authors = [{name = "Doo Woong Chung"}, { name = "Nils Nolde" }]
+license = { file = "LICENSE.TXT" }
+
+[project.optional-dependencies]
+dev = ["pytest", "pre-commit", "ruff"]
+
+[project.urls]
+repository = "https://github.com/Project-OSRM/osrm-backend"
+
+[tool.ruff]
+exclude = [".venv", "build"]
+extend-exclude = [
+    "dist",
+    "wheelhouse",
+    "*build*",
+    "*.egg-info",
+]
+line-length = 105
+lint.ignore = ["E731", "F811", "E741"]
+
+[tool.scikit-build.metadata]
+version.provider = "scikit_build_core.metadata.setuptools_scm"
+
+[tool.setuptools_scm]
+version_scheme = "no-guess-dev"
+local_scheme = "no-local-version"
+
+[tool.scikit-build]
+minimum-version = "0.4"
+build-dir = "build/{wheel_tag}"
+cmake.build-type = "Release"
+wheel.py-api = "cp312"
+wheel.packages = ["src/python/osrm"]
+wheel.exclude = ["include/**", "lib/**", "bin/**", "share/**"]
+sdist.include = ["pyproject.toml"]
+sdist.exclude = ["test", "dist", "wheelhouse"]
+
+[tool.scikit-build.cmake.define]
+ENABLE_PYTHON_BINDINGS = "ON"
+CMAKE_BUILD_TYPE = "Release"
+CMAKE_CXX_SCAN_FOR_MODULES = "OFF"
+
+[tool.cibuildwheel]
+archs = ["native"]
+build = "cp312-*"
+build-verbosity = 1
+skip = "*musllinux*"
+# TODO(nils): should we leave it here or push to osrm org?
+manylinux-x86_64-image = "ghcr.io/nilsnolde/manylinux:2_28_osrm_python"
+manylinux-aarch64-image = "ghcr.io/nilsnolde/manylinux:2_28_osrm_python"
+test-requires = "pytest"
+test-command = [
+  "cd {project}/test/data && python -m osrm extract -p {project}/profiles/car.lua monaco.osm.pbf",
+  "mkdir -p {project}/test/data/ch && cp {project}/test/data/monaco.osrm* {project}/test/data/ch/",
+  "python -m osrm contract {project}/test/data/ch/monaco.osrm",
+  "mkdir -p {project}/test/data/mld && cp {project}/test/data/monaco.osrm* {project}/test/data/mld/",
+  "python -m osrm partition {project}/test/data/mld/monaco.osrm",
+  "python -m osrm customize {project}/test/data/mld/monaco.osrm",
+  "python -m osrm datastore {project}/test/data/ch/monaco",
+  "pytest {project}/test/python"
+]
+
+[tool.cibuildwheel.linux]
+environment = "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH}"
+before-build = "ccache -s && ccache -M 500M"
+repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
+
+[tool.cibuildwheel.macos]
+environment = "MACOSX_DEPLOYMENT_TARGET=15 CCACHE_DIR=/tmp/ccache"
+before-build = "ccache -s && ccache -M 500M"
+before-all = """
+  export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1
+  brew install lua tbb boost@1.90 ccache
+  brew link boost@1.90
+"""
+
+[tool.cibuildwheel.windows]
+before-build = "pip install conan==2.27.0 delvewheel && conan profile detect --force"
+config-settings = "cmake.define.ENABLE_CONAN=ON"
+repair-wheel-command = 'call build\cp312-abi3-win_amd64\_deps\libosrm-build\conanrun.bat && delvewheel repair --analyze-existing-exes --add-dll hwloc.dll --no-mangle tbb12.dll --no-mangle hwloc.dll -w {dest_dir} {wheel}'
+test-command = [
+  "cd /d {project}/test/data",
+  "windows-build-test-data.bat",
+  "python -m osrm datastore {project}/test/data/ch/monaco",
+  "pytest {project}/test/python"
+]

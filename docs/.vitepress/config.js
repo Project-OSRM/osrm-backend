@@ -14,7 +14,11 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'HTTP API', link: '/http' },
-      { text: 'Node.js API', link: '/nodejs/api' }
+      { text: 'Node.js API', link: '/nodejs/api' },
+      { text: 'Python', items: [
+        { text: 'API', link: '/python/api' },
+        { text: 'Development', link: '/python/development' }
+      ]}
     ],
 
     sidebar: [
@@ -24,7 +28,8 @@ export default defineConfig({
           { text: 'Tool options', link: '/tools'},
           { text: 'Developing', link: '/developing' },
           { text: 'Testing', link: '/testing' },
-          { text: 'Releasing', link: '/releasing' }
+          { text: 'Releasing', link: '/releasing' },
+          { text: 'Python Development', link: '/python/development' }
         ]
       },
       {
@@ -33,6 +38,7 @@ export default defineConfig({
           { text: 'HTTP API', link: '/http' },
           { text: 'Node.js API', link: '/nodejs/api' },
           { text: 'libosrm C++ API', link: '/libosrm' },
+          { text: 'Python API', link: '/python/api' },
         ]
       },
       {

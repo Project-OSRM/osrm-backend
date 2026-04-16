@@ -111,6 +111,11 @@ debug.lua
 ##########################
 lib/binding_napi_v8
 
+# Python
+##########################
+__pycache__/
+*.whl
+
 # documentation related files
 ##########################
 .vitepress/cache
