@@ -1,29 +1,20 @@
-name: Python Bindings
+name: Monthly Release
 
 on:
-  push:
-    branches:
-      - nn-py-bindings
   workflow_dispatch:
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
-  cancel-in-progress: true
+  group: release-monthly-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  build_wheels:
-    name: Build - cp312, ${{ matrix.name }}
+  build_python_wheels:
+    name: Python wheels - ${{ matrix.name }}
     runs-on: ${{ matrix.runner }}
     strategy:
-      fail-fast: false
+      fail-fast: true
       matrix:
         include:
-          - name: Linux x86_64
-            runner: ubuntu-latest
-          - name: Linux aarch64
-            runner: ubuntu-24.04-arm
-          - name: macOS arm64
-            runner: macos-14
           - name: Windows amd64
             runner: windows-latest
 
@@ -61,24 +52,5 @@ jobs:
     - name: Upload wheels
       uses: actions/upload-artifact@v4
       with:
-        name: wheels-${{ matrix.name }}
+        name: python-wheels-${{ matrix.name }}
         path: wheelhouse/*.whl
-
-  publish_test_pypi:
-    name: Publish to TestPyPI
-    needs: [build_wheels]
-    runs-on: ubuntu-latest
-    permissions:
-      id-token: write
-    steps:
-    - uses: actions/download-artifact@v4
-      with:
-        path: dist
-        pattern: wheels-*
-        merge-multiple: true
-
-    - name: Publish to TestPyPI
-      uses: pypa/gh-action-pypi-publish@v1.13.0
-      with:
-        repository-url: https://test.pypi.org/legacy/
-        verbose: true
