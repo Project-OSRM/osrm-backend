@@ -1,0 +1,84 @@
+name: Python Bindings
+
+on:
+  pull_request:
+    branches:
+      - master
+    paths-ignore:
+      - '*.md'
+      - 'docs/**'
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  lint:
+    name: Lint & Format
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+    - uses: pre-commit/action@v3.0.1
+
+  build_wheels:
+    needs: [lint]
+    name: Build - cp312, Linux x86_64
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+
+    - name: Restore ccache
+      uses: actions/cache/restore@v5
+      with:
+        path: /tmp/ccache
+        key: ccache-python-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref }}-${{ github.run_id }}
+        restore-keys: |
+          ccache-python-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref }}-
+          ccache-python-${{ runner.os }}-${{ runner.arch }}-
+
+    - name: Run cibuildwheel
+      uses: pypa/cibuildwheel@v3.4.0
+      env:
+        CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /tmp/ccache:/ccache"
+        CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache"
+
+    - name: Save ccache
+      uses: actions/cache/save@v5
+      if: always()
+      with:
+        path: /tmp/ccache
+        key: ccache-python-${{ runner.os }}-${{ runner.arch }}-${{ github.head_ref }}-${{ github.run_id }}
+
+    - name: Upload wheels
+      uses: actions/upload-artifact@v4
+      with:
+        name: wheels-linux-x86_64
+        path: wheelhouse/*.whl
+
+  check_stubs:
+    name: Check stubs are up to date
+    needs: [build_wheels]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+    - uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+    - uses: actions/download-artifact@v4
+      with:
+        name: wheels-linux-x86_64
+        path: wheelhouse
+    - name: Install wheel and regenerate stubs
+      run: |
+        pip install nanobind ruff
+        pip install wheelhouse/*.whl
+        python -m nanobind.stubgen -m osrm.osrm_ext -o src/python/osrm/osrm_ext.pyi
+        ruff format src/python/osrm/osrm_ext.pyi
+    - name: Check for differences
+      run: git diff --exit-code src/python/osrm/osrm_ext.pyi || (echo "::error::Stubs are out of date. Rebuild locally and commit the updated .pyi file." && exit 1)
