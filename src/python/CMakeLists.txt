@@ -47,6 +47,11 @@ nanobind_add_module(
 # flagged as errors during LTO). Disable IPO for the extension module — nanobind's
 # own LTO flag (passed to nanobind_add_module above) handles LTO for the binding.
 set_target_properties(${EXT_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION FALSE)
+# Suppress warnings from nanobind headers included by our binding sources.
+target_compile_options(${EXT_NAME} PRIVATE
+  -Wno-suggest-destructor-override
+  -Wno-redundant-decls
+)
 # Also suppress LTO warnings-as-errors at link time, since the osrm library
 # is compiled with fat LTO objects and GCC's LTO linker plugin sees ODR
 # differences between nanobind's type_caster and NB_MAKE_OPAQUE macros.
