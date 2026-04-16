@@ -105,7 +105,7 @@ jobs:
     strategy:
       matrix:
         docker-base-image: ["debian", "alpine"]
-    runs-on: ubuntu-latest-arm64
+    runs-on: ubuntu-24.04-arm
     steps:
       - name: Check out the repo
         uses: actions/checkout@v6
