@@ -94,7 +94,7 @@ before-all = """
 [tool.cibuildwheel.windows]
 before-build = "pip install conan==2.27.0 delvewheel && conan profile detect --force"
 config-settings = "cmake.define.ENABLE_CONAN=ON"
-repair-wheel-command = 'call build\cp312-abi3-win_amd64\_deps\libosrm-build\conanrun.bat && delvewheel repair --analyze-existing-exes --add-dll hwloc.dll --no-mangle tbb12.dll --no-mangle hwloc.dll -w {dest_dir} {wheel}'
+repair-wheel-command = 'call build\cp312-abi3-win_amd64\conanrun.bat && delvewheel repair --analyze-existing-exes --add-dll hwloc.dll --no-mangle tbb12.dll --no-mangle hwloc.dll -w {dest_dir} {wheel}'
 test-command = [
   "cd /d {project}/test/data",
   "windows-build-test-data.bat",
