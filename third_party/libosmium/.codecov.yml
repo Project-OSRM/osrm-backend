@@ -1,7 +1,0 @@
-
-ignore:
-    - "include/gdalcpp.hpp"
-    - "include/protozero"
-    - "include/utf8"
-    - "test/include/catch.hpp"
-
