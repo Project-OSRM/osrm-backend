@@ -15,6 +15,9 @@ hero:
     - theme: alt
       text: View on GitHub
       link: https://github.com/Project-OSRM/osrm-backend
+    - theme: alt
+      text: Sponsor ❤
+      link: https://github.com/sponsors/Project-OSRM
 
 features:
   - icon: 🚗
