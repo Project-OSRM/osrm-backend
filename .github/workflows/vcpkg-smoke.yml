@@ -60,5 +60,8 @@ jobs:
           # Pinned to vcpkg-configuration.json baseline (2026.03.18).
           vcpkgGitCommitId: c3867e714dd3a51c272826eea77267876517ed99
           runVcpkgInstall: true
+          # Pin to top-level manifest; the default glob **/vcpkg.json would
+          # otherwise pick up overlay port manifests in vcpkg-overlay-ports/.
+          vcpkgJsonGlob: 'vcpkg.json'
         env:
           VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
