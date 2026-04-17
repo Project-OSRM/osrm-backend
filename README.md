@@ -178,6 +178,24 @@ For usage details have a look [these API docs](docs/nodejs/api.md).
 
 An exemplary implementation by a 3rd party with Docker and Node.js can be found [here](https://github.com/door2door-io/osrm-express-server-demo).
 
+### Using the Python Bindings
+
+The Python bindings provide read-only access to the routing engine via [nanobind](https://github.com/wjakob/nanobind).
+
+You can install the Python bindings from PyPI via
+
+    pip install osrm-bindings
+
+We distribute `abi3` wheels for CPython 3.12+ on Linux (x86_64, aarch64), macOS (arm64) and Windows (x86_64). On other platforms `pip` will fall back to building from source, which requires CPython 3.10+ and the OSRM build dependencies.
+
+To build from source from this repository:
+
+    pip install .
+
+#### Package docs
+
+For usage details and examples have a look at [the Python bindings README](src/python/README.md).
+
 ## References in publications
 
 When using the code in a (scientific) publication, please cite

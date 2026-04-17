@@ -32,6 +32,7 @@ option(ENABLE_DEBUG_LOGGING "Use debug logging in release mode" OFF)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_LTO "Use Link Time Optimisation" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
+option(ENABLE_PYTHON_BINDINGS "Build Python bindings" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 
 if (ENABLE_CONAN)
@@ -717,6 +718,10 @@ add_subdirectory(src/benchmarks)
 
 if (ENABLE_NODE_BINDINGS)
   add_subdirectory(src/nodejs)
+endif()
+
+if (ENABLE_PYTHON_BINDINGS)
+  add_subdirectory(src/python)
 endif()
 
 if (ENABLE_FUZZING)

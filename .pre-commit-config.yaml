@@ -1,0 +1,17 @@
+repos:
+  - repo: https://github.com/pre-commit/mirrors-clang-format
+    # matches (more or less) the current clang-format on OSRM CI
+    # TODO(nils): we should change to pypi's clang tools for reproducibility
+    rev: v18.1.8
+    hooks:
+      - id: clang-format
+        types_or: [c, c++]
+        files: ^src/python/
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.11.5
+    hooks:
+      - id: ruff
+        args: [--fix]
+        files: ^(src/python/|test/python/)
+      - id: ruff-format
+        files: ^(src/python/|test/python/)
