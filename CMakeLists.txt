@@ -41,8 +41,47 @@ if (ENABLE_CONAN)
   if (NOT CONAN_EXECUTABLE)
     message(FATAL_ERROR "Conan not found! Please install Conan 2.x and try again.")
   else()
+    set(conan_install_command
+      ${CONAN_EXECUTABLE}
+      install
+      ${CMAKE_CURRENT_SOURCE_DIR}
+      --output-folder=.
+      --build=missing
+      --settings compiler.cppstd=20
+      --settings build_type=${CMAKE_BUILD_TYPE}
+    )
+
+    if (CMAKE_HOST_SYSTEM_NAME STREQUAL "Darwin")
+      if (DEFINED ENV{CC} AND NOT "$ENV{CC}" STREQUAL "")
+        separate_arguments(conan_cc_command NATIVE_COMMAND "$ENV{CC}")
+      else()
+        find_program(CONAN_CLANG_EXECUTABLE NAMES clang)
+        if (CONAN_CLANG_EXECUTABLE)
+          set(conan_cc_command "${CONAN_CLANG_EXECUTABLE}")
+        endif()
+      endif()
+
+      if (conan_cc_command)
+        execute_process(
+          COMMAND ${conan_cc_command} --version
+          OUTPUT_VARIABLE conan_cc_version_output
+          ERROR_QUIET
+          OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        if (conan_cc_version_output MATCHES "Apple (clang|LLVM) version ([0-9]+)")
+          set(conan_apple_clang_major "${CMAKE_MATCH_2}")
+          if (conan_apple_clang_major GREATER 17)
+            list(APPEND conan_install_command --settings compiler.version=17)
+            message(STATUS
+              "Detected Apple Clang ${conan_apple_clang_major}; overriding Conan compiler.version to 17 until Conan adds support for newer Apple Clang versions.")
+          endif()
+        endif()
+      endif()
+    endif()
+
     execute_process(
-      COMMAND ${CONAN_EXECUTABLE} install ${CMAKE_CURRENT_SOURCE_DIR} --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}
+      COMMAND ${conan_install_command}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       OUTPUT_VARIABLE conan_stdout
       ERROR_VARIABLE conan_stderr
