@@ -19,8 +19,11 @@ env:
   # vcpkg baseline is also pinned in vcpkg-configuration.json; this env var
   # is what lukka/run-vcpkg consumes to pick the vcpkg tool version.
   VCPKG_COMMIT_ID: c3867e714dd3a51c272826eea77267876517ed99
-  # Use GitHub Actions cache as the vcpkg binary cache backend.
-  VCPKG_BINARY_SOURCES: "clear;x-gha,readwrite"
+  # Use a local filesystem directory as vcpkg's binary cache. The directory
+  # itself is persisted across CI runs via actions/cache@v5. The x-gha
+  # backend was removed upstream; files+actions/cache is the replacement.
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/.vcpkg-bincache
+  VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/.vcpkg-bincache,readwrite"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
@@ -41,12 +44,13 @@ jobs:
           node-version: 24
       - run: node --version
       - run: npm --version
-      - name: Export GitHub Actions cache env (vcpkg binary cache)
-        uses: actions/github-script@v7
+      - name: Enable vcpkg binary cache
+        uses: actions/cache@v5
         with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL',    process.env.ACTIONS_CACHE_URL    || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: ${{ github.workspace }}/.vcpkg-bincache
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-${{ runner.arch }}-
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
@@ -153,9 +157,20 @@ jobs:
           key: v1-berlin-osm-pbf
           restore-keys: |
             v1-berlin-osm-pbf
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Docker build
-        run: |
-          docker build -t osrm-backend-local -f docker/Dockerfile-${{ matrix.docker-base-image }} .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile-${{ matrix.docker-base-image }}
+          tags: osrm-backend-local
+          load: true
+          # Persist BuildKit layer + vcpkg/ccache mount cache across runs via
+          # GitHub Actions cache. Scope per base image so alpine/debian don't
+          # collide.
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
+          cache-to: type=gha,mode=max,scope=docker-${{ matrix.docker-base-image }}
       - name: Test Docker image
         run: |
           if [ ! -f "${PWD}/berlin-latest.osm.pbf" ]; then
@@ -389,12 +404,13 @@ jobs:
           key: ccache-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.name }}-
-      - name: Export GitHub Actions cache env (vcpkg binary cache)
-        uses: actions/github-script@v7
+      - name: Enable vcpkg binary cache
+        uses: actions/cache@v5
         with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL',    process.env.ACTIONS_CACHE_URL    || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: ${{ github.workspace }}/.vcpkg-bincache
+          key: vcpkg-${{ matrix.name }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
+          restore-keys: |
+            vcpkg-${{ matrix.name }}-
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
