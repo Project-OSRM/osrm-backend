@@ -50,7 +50,7 @@ wheel.py-api = "cp312"
 wheel.packages = ["src/python/osrm"]
 wheel.exclude = ["include/**", "lib/**", "bin/**", "share/**"]
 sdist.include = ["pyproject.toml"]
-sdist.exclude = ["test", "dist", "wheelhouse"]
+sdist.exclude = ["dist", "wheelhouse"]
 
 [tool.scikit-build.cmake.define]
 ENABLE_PYTHON_BINDINGS = "ON"
