@@ -61,11 +61,6 @@
       "$comment": "Lua 5.5 is too new for sol2 3.3.1 (removed LUA_ERRGCMM, new lua_newstate signature). Pin to latest 5.4.",
       "name": "lua",
       "version": "5.4.8"
-    },
-    {
-      "$comment": "Generated flatbuffers headers in generated/ are pinned to 25.9.23; vcpkg default is 25.12.19. Regenerate the .h files to move this pin forward.",
-      "name": "flatbuffers",
-      "version": "25.9.23"
     }
   ]
 }
