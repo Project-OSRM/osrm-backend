@@ -646,7 +646,7 @@ jobs:
         run: echo "path=$(ls dist/*.tar.gz | head -n1)" >> "$GITHUB_OUTPUT"
 
       - name: Run cibuildwheel
-        uses: pypa/cibuildwheel@v3
+        uses: pypa/cibuildwheel@v3.4.1
         if: ${{ env.BUILD_BINDINGS }}
         with:
           # for linux build the wheel from the sdist
