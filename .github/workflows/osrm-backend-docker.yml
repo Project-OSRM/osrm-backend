@@ -3,6 +3,12 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref (tag) to build the images from'
+        required: true
+        type: string
 
 jobs:
   publish:
@@ -10,9 +16,11 @@ jobs:
       matrix:
         docker-base-image: ["debian", "alpine"]
     runs-on: ubuntu-latest
-    steps:       
+    steps:
       - name: Check out the repo
         uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v1
@@ -25,6 +33,11 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
       - name: Docker meta - debug
         id: metadebug
@@ -34,6 +47,11 @@ jobs:
           flavor: |
             latest=true
             suffix=-debug,onlatest=true
+          tags: |
+            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
       - name: Docker meta - assertions
         id: metaassertions
@@ -42,7 +60,12 @@ jobs:
           images: ghcr.io/${{ github.repository }}
           flavor: |
             latest=true
-            suffix=-assertions,onlatest=true        
+            suffix=-assertions,onlatest=true
+          tags: |
+            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
+            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
       - name: Log in to GitHub Docker Registry
         uses: docker/login-action@v4
@@ -58,6 +81,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metadebug.outputs.tags  }}
+          labels: ${{ steps.metadebug.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -69,6 +93,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metaassertions.outputs.tags  }}
+          labels: ${{ steps.metaassertions.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -80,5 +105,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.meta.outputs.tags  }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}
