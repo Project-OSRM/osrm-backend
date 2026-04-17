@@ -124,9 +124,10 @@ add_executable(util-tests
 	${UtilTestsSources}
         $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:MICROTAR>)
 
-if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
-  add_definitions(-DBOOST_TEST_DYN_LINK)
-endif()
+# vcpkg builds boost statically on every platform, so BOOST_TEST_DYN_LINK
+# must never be defined — the dyn-link path expects a different
+# unit_test_main() signature than the static library exports, and enabling
+# it produces undefined references at link time.
 
 set(UPDATER_TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/unit_tests/updater")
 set(TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/test/data")
