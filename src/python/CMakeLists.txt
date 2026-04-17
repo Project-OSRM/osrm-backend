@@ -47,23 +47,25 @@ nanobind_add_module(
 # flagged as errors during LTO). Disable IPO for the extension module — nanobind's
 # own LTO flag (passed to nanobind_add_module above) handles LTO for the binding.
 set_target_properties(${EXT_NAME} PROPERTIES INTERPROCEDURAL_OPTIMIZATION FALSE)
-# Suppress warnings from nanobind headers included by our binding sources.
-target_compile_options(${EXT_NAME} PRIVATE
-  -Wno-suggest-destructor-override
-  -Wno-redundant-decls
-)
-# Also suppress LTO warnings-as-errors at link time, since the osrm library
-# is compiled with fat LTO objects and GCC's LTO linker plugin sees ODR
-# differences between nanobind's type_caster and NB_MAKE_OPAQUE macros.
-target_link_options(${EXT_NAME} PRIVATE -Wno-error)
+if(NOT MSVC)
+  # Suppress warnings from nanobind headers included by our binding sources.
+  target_compile_options(${EXT_NAME} PRIVATE
+    -Wno-suggest-destructor-override
+    -Wno-redundant-decls
+  )
+  # Also suppress LTO warnings-as-errors at link time, since the osrm library
+  # is compiled with fat LTO objects and GCC's LTO linker plugin sees ODR
+  # differences between nanobind's type_caster and NB_MAKE_OPAQUE macros.
+  target_link_options(${EXT_NAME} PRIVATE -Wno-error)
 
-# nanobind's internal sources trigger warnings under OSRM's strict -Werror flags
-# (inherited via CMAKE_CXX_FLAGS). Suppress for the nanobind static library target.
-set(_nb_suppress -Wno-error -Wno-suggest-destructor-override -Wno-redundant-decls)
-if(TARGET nanobind-static-abi3)
-  target_compile_options(nanobind-static-abi3 PRIVATE ${_nb_suppress})
-elseif(TARGET nanobind-static)
-  target_compile_options(nanobind-static PRIVATE ${_nb_suppress})
+  # nanobind's internal sources trigger warnings under OSRM's strict -Werror flags
+  # (inherited via CMAKE_CXX_FLAGS). Suppress for the nanobind static library target.
+  set(_nb_suppress -Wno-error -Wno-suggest-destructor-override -Wno-redundant-decls)
+  if(TARGET nanobind-static-abi3)
+    target_compile_options(nanobind-static-abi3 PRIVATE ${_nb_suppress})
+  elseif(TARGET nanobind-static)
+    target_compile_options(nanobind-static PRIVATE ${_nb_suppress})
+  endif()
 endif()
 
 # Binding headers live in src/python/include/python/
