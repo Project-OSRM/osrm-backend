@@ -743,10 +743,8 @@ end
 -- Escalators and moving walkways are directional and block travel in the opposite direction
 function WayHandlers.conveying(profile, way, result, data)
   local conveying = way:get_value_by_key("conveying")
-  
-  if not conveying or conveying == "yes" then
 
-  if not conveying or conveying == "yes" then
+  if not conveying or conveying == "yes" or conveying == "reversible" then
     return
   end
 
@@ -755,7 +753,8 @@ function WayHandlers.conveying(profile, way, result, data)
     return
   end
 
-  local conveyor_penalty = 0.4
+  local oneway = data.oneway or way:get_value_by_key("oneway")
+  local allow_reverse = oneway == "no"
   if conveying == "forward" then
     -- Block backward travel unless explicitly allowed by oneway=no
     if not allow_reverse then
