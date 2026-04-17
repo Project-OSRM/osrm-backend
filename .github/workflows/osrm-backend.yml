@@ -520,6 +520,10 @@ jobs:
             source .venv/bin/activate
             python3 -m pip install conan==2.27.1
             conan profile detect --force
+            if [[ "${RUNNER_OS}" == "macOS" ]]; then
+              CONAN_DEFAULT_PROFILE="$(conan profile path default)"
+              perl -0pi -e 's/^compiler\.version=.*/compiler.version=17/m' "${CONAN_DEFAULT_PROFILE}"
+            fi
           fi
 
           ccache --zero-stats
