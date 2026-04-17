@@ -8,7 +8,7 @@ When(/^I match I should get$/, async function (table) {
   let got;
 
   await this.reprocessAndLoadData();
-  const testRow = function (row, ri) {
+  const testRow = function (row, _ri) {
     return new Promise((resolve, reject) => {
       const afterRequest = function (err, res, body) {
         if (err) return reject(err);
