@@ -8,7 +8,7 @@ namespace osrm::contractor
 
 namespace
 {
-void relaxNode(ContractorHeap &heap,
+bool relaxNode(ContractorHeap &heap,
                const ContractorGraph &graph,
                const std::vector<bool> &contractable,
                const NodeID node,
@@ -39,6 +39,8 @@ void relaxNode(ContractorHeap &heap,
             {
                 continue;
             }
+            if (heap.Occupancy() >= RELAXED_NODE_LIMIT)
+                return true; // stop search
             heap.Insert(to, to_weight, ContractorHeapData{current_hop, false});
         }
         // Found a shorter Path -> Update weight
@@ -49,6 +51,7 @@ void relaxNode(ContractorHeap &heap,
             toHeapNode->data.hop = current_hop;
         }
     }
+    return false;
 }
 } // namespace
 
@@ -56,18 +59,18 @@ void search(ContractorHeap &heap,
             const ContractorGraph &graph,
             const std::vector<bool> &contractable,
             const unsigned number_of_targets,
-            const int node_limit,
+            const int settled_node_limit,
             const EdgeWeight weight_limit,
             const NodeID forbidden_node)
 {
-    int nodes = 0;
+    int settled_nodes = 0;
     unsigned number_of_targets_found = 0;
     while (!heap.Empty())
     {
         const NodeID node = heap.DeleteMin();
         BOOST_ASSERT(node != SPECIAL_NODEID);
         const auto node_weight = heap.GetKey(node);
-        if (++nodes > node_limit)
+        if (++settled_nodes > settled_node_limit)
         {
             return;
         }
@@ -85,8 +88,8 @@ void search(ContractorHeap &heap,
                 return;
             }
         }
-
-        relaxNode(heap, graph, contractable, node, node_weight, forbidden_node);
+        if (relaxNode(heap, graph, contractable, node, node_weight, forbidden_node))
+            return;
     }
 }
 } // namespace osrm::contractor

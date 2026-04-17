@@ -25,7 +25,8 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      packages: write
+      id-token: write
+      actions: write
     steps:
       - uses: actions/checkout@v6
         with:
@@ -34,7 +35,7 @@ jobs:
 
       - uses: actions/setup-node@v6
         with:
-          node-version: 22
+          node-version: 24
           registry-url: 'https://registry.npmjs.org'
 
       - name: Validate inputs
@@ -123,6 +124,8 @@ jobs:
 
       - name: Create git tag
         run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
           git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.version }}"
 
       - name: Push changes and tag
@@ -131,14 +134,45 @@ jobs:
           git push origin "$BRANCH"
           git push origin "${{ steps.version.outputs.tag }}"
 
+      - name: Trigger CI for tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GITHUB_TOKEN pushes don't trigger workflow runs (prevents loops).
+          # Explicitly dispatch CI on the tag so binaries get built and uploaded.
+          gh workflow run osrm-backend.yml --ref "${{ steps.version.outputs.tag }}"
+          echo "Dispatched osrm-backend.yml on ${{ steps.version.outputs.tag }}"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CURRENT_TAG="${{ steps.version.outputs.tag }}"
+          
+          # Get the previous release tag
+          PREVIOUS_TAG=$(git tag -l 'v*' --sort=-version:refname --merged "$CURRENT_TAG" | head -2 | tail -1)
+          
+          if [ -z "$PREVIOUS_TAG" ] || [ "$PREVIOUS_TAG" = "$CURRENT_TAG" ]; then
+            # No previous release, or selection resolved to the current tag; show all commits
+            CHANGELOG=$(git log "$CURRENT_TAG" --pretty=format:"* %h - %s")
+          else
+            # Show commits since last release
+            CHANGELOG=$(git log "${PREVIOUS_TAG}..$CURRENT_TAG" --pretty=format:"* %h - %s")
+          fi
+          
+          # Output as multiline variable using a unique delimiter to avoid collisions
+          DELIMITER=$(cat /proc/sys/kernel/random/uuid)
+          echo "body<<$DELIMITER" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "$DELIMITER" >> $GITHUB_OUTPUT
+
       - name: Create GitHub Release
         uses: ncipollo/release-action@v1
         with:
           tag: ${{ steps.version.outputs.tag }}
           name: Release ${{ steps.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.body }}
           draft: false
           prerelease: false
-          generateReleaseNotes: true
 
       - name: Wait for CI to complete
         env:
@@ -152,7 +186,7 @@ jobs:
           
           echo "Waiting for CI workflow to complete for tag $TAG (commit $TAG_SHA)"
           
-          MAX_WAIT=300  # 5 minutes
+          MAX_WAIT=3600  # 1 hour
           ELAPSED=0
           POLL_INTERVAL=10
           
@@ -192,8 +226,9 @@ jobs:
           echo "✗ Timed out waiting for CI workflow to complete for tag $TAG"
           exit 1
 
+      - name: Install dependencies (skip native build scripts)
+        run: npm ci --ignore-scripts
+
       - name: Publish to npm
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
         run: npm publish
 

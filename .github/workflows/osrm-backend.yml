@@ -8,6 +8,7 @@ on:
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 env:
   CCACHE_TEMPDIR: /tmp/.ccache-temp
@@ -330,6 +331,16 @@ jobs:
             CXXCOMPILER: clang++-16
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: conan-linux-arm64-release
+            continue-on-error: false
+            node: 24
+            runs-on: ubuntu-24.04-arm
+            BUILD_TYPE: Release
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
+            ENABLE_CONAN: ON
+            ENABLE_LTO: OFF
 
           - name: conan-macos-x64-release-node
             build_node_package: true
