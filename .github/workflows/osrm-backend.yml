@@ -93,7 +93,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   format-taginfo-docs:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     steps:
     - uses: actions/checkout@v6
     - name: Use Node.js
@@ -109,6 +109,8 @@ jobs:
           ${{ runner.os }}-node-
     - name: Prepare environment
       run: |
+        sudo apt-get update -y
+        sudo apt-get install -y clang-format-18
         npm ci --ignore-scripts
         clang-format-18 --version
     - name: Check PR title format

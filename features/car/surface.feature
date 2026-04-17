@@ -33,6 +33,8 @@ Feature: Car - Surfaces
             | trunk   | asphalt  | x     |
             | trunk   | sett     | x     |
             | trunk   | gravel   | x     |
+            | trunk   | ice      | x     |
+            | trunk   | snow     | x     |
             | trunk   | nonsense | x     |
 
     Scenario: Car - Good surfaces should not grant access
@@ -93,6 +95,8 @@ Feature: Car - Surfaces
             | motorway | no     | rocky           | 20 km/h +-1 | 20 km/h +-1 |
             | motorway | no     | sand            | 20 km/h +-1 | 20 km/h +-1 |
             | motorway | no     | mud             | 10 km/h +-1 | 10 km/h +-1 |
+            | motorway | no     | ice             | 20 km/h +-1 | 20 km/h +-1 |
+            | motorway | no     | snow            | 30 km/h +-1 | 30 km/h +-1 |
 
     Scenario: Car - Tracktypes should reduce speed
         Then routability should be
