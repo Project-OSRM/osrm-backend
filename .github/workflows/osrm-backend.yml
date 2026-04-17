@@ -518,7 +518,7 @@ jobs:
           if [[ "${ENABLE_CONAN}" == "ON" ]]; then
             python3 -m venv .venv
             source .venv/bin/activate
-            python3 -m pip install conan==2.15.1
+            python3 -m pip install conan==2.27.1
             conan profile detect --force
           fi
 
