@@ -10,9 +10,12 @@ on:
         required: true
         type: string
 
+env:
+  SEMVER_REF: ${{ inputs.ref || github.ref }}
+
 jobs:
   build-amd64:
-    strategy:
+    strategy: &docker-base-image-matrix
       matrix:
         docker-base-image: ["debian", "alpine"]
     runs-on: ubuntu-latest
@@ -31,8 +34,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }},suffix=-amd64-${{ matrix.docker-base-image }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }},suffix=-amd64-${{ matrix.docker-base-image }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
             type=ref,event=tag,suffix=-amd64-${{ matrix.docker-base-image }}
             type=ref,event=branch,enable=${{ inputs.ref == '' }},suffix=-amd64-${{ matrix.docker-base-image }}
 
@@ -45,8 +48,8 @@ jobs:
             latest=false
             suffix=-debug-amd64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
-            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
-            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }}
             type=ref,event=tag
             type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
@@ -59,8 +62,8 @@ jobs:
             latest=false
             suffix=-assertions-amd64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }}
             type=ref,event=tag
             type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
@@ -78,6 +81,7 @@ jobs:
           platforms: linux/amd64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metadebug.outputs.tags  }}
+          labels: ${{ steps.metadebug.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -88,6 +92,7 @@ jobs:
           platforms: linux/amd64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metaassertions.outputs.tags  }}
+          labels: ${{ steps.metaassertions.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -98,13 +103,12 @@ jobs:
           platforms: linux/amd64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.meta.outputs.tags  }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
   build-arm64:
-    strategy:
-      matrix:
-        docker-base-image: ["debian", "alpine"]
+    strategy: *docker-base-image-matrix
     runs-on: ubuntu-24.04-arm
     steps:
       - name: Check out the repo
@@ -121,8 +125,8 @@ jobs:
         with:
           images: ghcr.io/${{ github.repository }}
           tags: |
-            type=semver,pattern={{version}},value=${{ inputs.ref }},suffix=-arm64-${{ matrix.docker-base-image }}
-            type=semver,pattern={{major}}.{{minor}},value=${{ inputs.ref }},suffix=-arm64-${{ matrix.docker-base-image }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
             type=ref,event=tag,suffix=-arm64-${{ matrix.docker-base-image }}
             type=ref,event=branch,enable=${{ inputs.ref == '' }},suffix=-arm64-${{ matrix.docker-base-image }}
 
@@ -135,8 +139,8 @@ jobs:
             latest=false
             suffix=-debug-arm64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
-            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
-            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }}
             type=ref,event=tag
             type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
@@ -149,8 +153,8 @@ jobs:
             latest=false
             suffix=-assertions-arm64-${{ matrix.docker-base-image }},onlatest=false
           tags: |
-            type=semver,pattern=v{{version}},value=${{ inputs.ref }}
-            type=semver,pattern=v{{major}}.{{minor}},value=${{ inputs.ref }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }}
             type=ref,event=tag
             type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
@@ -196,6 +200,7 @@ jobs:
 
   combine-manifests:
     needs: [build-amd64, build-arm64]
+    strategy: *docker-base-image-matrix
     runs-on: ubuntu-latest
     steps:
       - name: Set up Docker Buildx
@@ -250,14 +255,12 @@ jobs:
             fi
           done
           
-          for BASE_IMAGE in debian alpine; do
-            echo "Creating manifests for $BASE_IMAGE..."
-            
-            for IMAGE_SUFFIX in "" "-debug" "-assertions"; do
-              for TAG in "${MANIFEST_TAGS[@]}"; do
-                docker buildx imagetools create -t "$REGISTRY:${TAG}${IMAGE_SUFFIX}-$BASE_IMAGE" \
-                  "$REGISTRY:${TAG}${IMAGE_SUFFIX}-amd64-$BASE_IMAGE" \
-                  "$REGISTRY:${TAG}${IMAGE_SUFFIX}-arm64-$BASE_IMAGE"
-              done
+          echo "Creating manifests for ${{ matrix.docker-base-image }}..."
+
+          for IMAGE_SUFFIX in "" "-debug" "-assertions"; do
+            for TAG in "${MANIFEST_TAGS[@]}"; do
+              docker buildx imagetools create -t "$REGISTRY:${TAG}${IMAGE_SUFFIX}-${{ matrix.docker-base-image }}" \
+                "$REGISTRY:${TAG}${IMAGE_SUFFIX}-amd64-${{ matrix.docker-base-image }}" \
+                "$REGISTRY:${TAG}${IMAGE_SUFFIX}-arm64-${{ matrix.docker-base-image }}"
             done
           done
