@@ -389,6 +389,9 @@ jobs:
       BUILD_BINDINGS: ${{ matrix.build_bindings }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - name: Build machine architecture
         run: uname -m
       - name: Use Node.js
