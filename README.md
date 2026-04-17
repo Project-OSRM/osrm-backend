@@ -108,26 +108,35 @@ We support the following images in the Container Registry:
 
 ### Building from Source
 
-The following targets Ubuntu 22.04.
-For instructions how to build on different distributions, macOS or Windows see our [Wiki](https://github.com/Project-OSRM/osrm-backend/wiki).
-
-Install dependencies
-
-```bash
-sudo apt install build-essential git cmake pkg-config \
-libbz2-dev libxml2-dev libzip-dev libboost-all-dev \
-lua5.2 liblua5.2-dev libtbb-dev
-```
-
-Compile and install OSRM binaries
+Dependencies are managed with [vcpkg](https://vcpkg.io/) in manifest mode.
+The required tooling on Linux is minimal — only a C++20 compiler, CMake ≥ 3.25,
+Ninja, and a handful of autotools packages that some vcpkg ports need to
+bootstrap themselves:
 
 ```bash
-mkdir -p build
-cd build
-cmake ..
-cmake --build .
-sudo cmake --build . --target install
+sudo apt install build-essential git cmake ninja-build pkg-config \
+  autoconf automake libtool curl zip unzip tar
 ```
+
+Bootstrap vcpkg once (anywhere on your machine) and point `VCPKG_ROOT` at it:
+
+```bash
+git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
+~/vcpkg/bootstrap-vcpkg.sh
+export VCPKG_ROOT=~/vcpkg
+```
+
+Compile and install OSRM binaries:
+
+```bash
+cmake --preset ci-linux
+cmake --build --preset ci-linux
+sudo cmake --install build
+```
+
+The first configure will build every dependency (boost, tbb, expat, bzip2,
+lua, fmt, libosmium, …) from source. Subsequent configures reuse vcpkg's
+binary cache.
 
 ### Request Against the Demo Server
 
