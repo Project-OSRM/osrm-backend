@@ -26,10 +26,31 @@ jobs:
       with:
         python-version: "3.12"
 
+    - name: Debug git + setuptools_scm
+      run: |
+        echo "=== git --version ==="
+        git --version
+        echo "=== git describe ==="
+        git describe --tags --always --long || echo "describe failed"
+        echo "=== git tags (v*) ==="
+        git tag --list 'v*' | tail -5
+        echo "=== git rev-list --count HEAD ==="
+        git rev-list --count HEAD
+        echo "=== git config --get safe.directory ==="
+        git config --get-all safe.directory || echo "(none)"
+        echo "=== git status of repo ownership ==="
+        ls -la .git | head -3
+        id
+        echo "=== setuptools_scm.get_version() ==="
+        python -m pip install 'setuptools-scm>=10'
+        python -c "from setuptools_scm import get_version; print(get_version())"
+
     - name: Build sdist
       run: |
         python -m pip install build
         python -m build --sdist
+        echo "=== sdist produced ==="
+        ls -la dist/
 
     - name: Upload sdist
       uses: actions/upload-artifact@v4
