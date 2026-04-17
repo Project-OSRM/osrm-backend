@@ -176,142 +176,142 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: clang-20-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-20
-            CXXCOMPILER: clang++-20
-            ENABLE_LTO: OFF
+          # - name: clang-20-release
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-20
+          #   CXXCOMPILER: clang++-20
+          #   ENABLE_LTO: OFF
 
-          - name: clang-19-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
-            ENABLE_LTO: OFF
+          # - name: clang-19-release
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-19
+          #   CXXCOMPILER: clang++-19
+          #   ENABLE_LTO: OFF
 
-          - name: clang-18-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_LTO: OFF
+          # - name: clang-18-release
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_LTO: OFF
 
-          - name: clang-18-debug
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_LTO: OFF
+          # - name: clang-18-debug
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_LTO: OFF
 
-          - name: clang-18-debug-clang-tidy
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CLANG_TIDY: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
-            ENABLE_LTO: OFF
+          # - name: clang-18-debug-clang-tidy
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_CLANG_TIDY: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
+          #   ENABLE_LTO: OFF
 
-          - name: clang-18-debug-asan-ubsan
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_SANITIZER: ON
-            TARGET_ARCH: x86_64-asan-ubsan
-            OSRM_CONNECTION_RETRIES: 10
-            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
+          # - name: clang-18-debug-asan-ubsan
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_SANITIZER: ON
+          #   TARGET_ARCH: x86_64-asan-ubsan
+          #   OSRM_CONNECTION_RETRIES: 10
+          #   OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          - name: clang-17-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
-            ENABLE_LTO: OFF
+          # - name: clang-17-release
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-17
+          #   CXXCOMPILER: clang++-17
+          #   ENABLE_LTO: OFF
 
-          - name: clang-16-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
-            ENABLE_LTO: OFF
+          # - name: clang-16-release
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-16
+          #   CXXCOMPILER: clang++-16
+          #   ENABLE_LTO: OFF
 
-          - name: gcc-14-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-14
-            CXXCOMPILER: g++-14
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          # - name: gcc-14-release
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-14
+          #   CXXCOMPILER: g++-14
+          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-13-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          # - name: gcc-13-release
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-13
+          #   CXXCOMPILER: g++-13
+          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-13-debug-cov
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
-            ENABLE_COVERAGE: ON
+          # - name: gcc-13-debug-cov
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: gcc-13
+          #   CXXCOMPILER: g++-13
+          #   ENABLE_COVERAGE: ON
 
-          - name: gcc-12-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-22.04
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-12
-            CXXCOMPILER: g++-12
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+          # - name: gcc-12-release
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-22.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: gcc-12
+          #   CXXCOMPILER: g++-12
+          #   CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: conan-linux-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
-            ENABLE_LTO: OFF
+          # - name: conan-linux-release
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_CONAN: ON
+          #   ENABLE_LTO: OFF
 
-          - name: conan-linux-debug-asan-ubsan
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
-            ENABLE_SANITIZER: ON
-            ENABLE_LTO: OFF
+          # - name: conan-linux-debug-asan-ubsan
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_CONAN: ON
+          #   ENABLE_SANITIZER: ON
+          #   ENABLE_LTO: OFF
 
           - name: conan-linux-release-node
-            build_node_package: true
+            build_bindings: true
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
@@ -321,29 +321,28 @@ jobs:
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-linux-debug-node
-            build_node_package: true
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
-            ENABLE_CONAN: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
+          # - name: conan-linux-debug-node
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04
+          #   BUILD_TYPE: Debug
+          #   CCOMPILER: clang-16
+          #   CXXCOMPILER: clang++-16
+          #   ENABLE_CONAN: ON
+          #   NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-linux-arm64-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04-arm
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
-            ENABLE_LTO: OFF
+          # - name: conan-linux-arm64-release
+          #   continue-on-error: false
+          #   node: 24
+          #   runs-on: ubuntu-24.04-arm
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang-18
+          #   CXXCOMPILER: clang++-18
+          #   ENABLE_CONAN: ON
+          #   ENABLE_LTO: OFF
 
           - name: conan-macos-x64-release-node
-            build_node_package: true
+            build_bindings: true
             continue-on-error: true
             node: 24
             runs-on: macos-15-intel # x86_64
@@ -354,7 +353,7 @@ jobs:
             ENABLE_CONAN: ON
 
           - name: conan-macos-arm64-release-node
-            build_node_package: true
+            build_bindings: true
             continue-on-error: true
             node: 24
             runs-on: macos-15 # arm64
@@ -384,6 +383,7 @@ jobs:
       OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
       ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
+      BUILD_BINDINGS: ${{ matrix.build_bindings }}
     steps:
       - uses: actions/checkout@v6
       - name: Build machine architecture
@@ -606,10 +606,10 @@ jobs:
           path: test/logs/
 
       - name: Build Node package
-        if: ${{ matrix.build_node_package }}
+        if: ${{ env.BUILD_BINDINGS }}
         run: ./scripts/ci/node_package.sh
       - name: Publish Node package
-        if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+        if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
@@ -621,6 +621,48 @@ jobs:
           omitNameDuringUpdate: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Python bindings
+
+      - name: Set up Python
+        if: ${{ env.BUILD_BINDINGS }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist
+        if: ${{ env.BUILD_BINDINGS && runner.os == 'Linux' }}
+        run: |
+          python -m pip install build
+          python -m build --sdist
+
+      - name: Locate sdist
+        if: ${{ env.BUILD_BINDINGS && runner.os == 'Linux' }}
+        id: sdist
+        shell: bash
+        run: echo "path=$(ls dist/*.tar.gz | head -n1)" >> "$GITHUB_OUTPUT"
+
+      - name: Run cibuildwheel
+        uses: pypa/cibuildwheel@v3
+        if: ${{ env.BUILD_BINDINGS }}
+        with:
+          # for linux build the wheel from the sdist
+          package-dir: ${{ runner.os == 'Linux' && steps.sdist.outputs.path || '.' }}
+          output-dir: dist
+        env:
+          # /tmp/ccache can be cached too, esp useful for linux
+          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /tmp/ccache:/ccache"
+          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache"
+          CIBW_CONFIG_SETTINGS_MACOS: "cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake.define.CMAKE_C_COMPILER_LAUNCHER=ccache"
+          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.define.ENABLE_CONAN=ON"
+
+      - name: Publish to TestPyPI
+        if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
+        uses: pypa/gh-action-pypi-publish@v1.13.0
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
+
       - name: Show CCache statistics
         run: |
           ccache -p
