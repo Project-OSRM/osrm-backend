@@ -366,6 +366,9 @@ jobs:
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
     runs-on: ${{ matrix.runs-on }}
+    # for PyPI trusted publisher
+    permissions:
+      id-token: write
     env:
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       BUILD_SHARED_LIBS: ${{ matrix.BUILD_SHARED_LIBS }}
