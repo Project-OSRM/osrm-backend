@@ -11,8 +11,35 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  build_sdist:
+    name: Build sdist
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+      with:
+        fetch-depth: 0
+        fetch-tags: true
+
+    - name: Set up Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.12"
+
+    - name: Build sdist
+      run: |
+        python -m pip install build
+        python -m build --sdist
+
+    - name: Upload sdist
+      uses: actions/upload-artifact@v4
+      with:
+        name: sdist
+        path: dist/*.tar.gz
+
   build_wheels:
     name: Build - cp312, ${{ matrix.name }}
+    needs: [build_sdist]
     runs-on: ${{ matrix.runner }}
     strategy:
       fail-fast: false
@@ -32,6 +59,20 @@ jobs:
       uses: actions/checkout@v6
       with:
         fetch-depth: 0
+        fetch-tags: true
+
+    - name: Download sdist
+      if: runner.os == 'Linux'
+      uses: actions/download-artifact@v4
+      with:
+        name: sdist
+        path: dist
+
+    - name: Locate sdist
+      if: runner.os == 'Linux'
+      id: sdist
+      shell: bash
+      run: echo "path=$(ls dist/*.tar.gz | head -n1)" >> "$GITHUB_OUTPUT"
 
     - name: Restore Conan cache
       id: conan-cache
@@ -45,6 +86,9 @@ jobs:
 
     - name: Run cibuildwheel
       uses: pypa/cibuildwheel@v3.4.0
+      with:
+        # for linux build the wheel from the sdist
+        package-dir: ${{ runner.os == 'Linux' && steps.sdist.outputs.path || '.' }}
       env:
         CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /tmp/ccache:/ccache"
         CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache"
@@ -71,11 +115,18 @@ jobs:
     permissions:
       id-token: write
     steps:
-    - uses: actions/download-artifact@v4
+    - name: Download wheels
+      uses: actions/download-artifact@v4
       with:
         path: dist
         pattern: wheels-*
         merge-multiple: true
+
+    - name: Download sdist
+      uses: actions/download-artifact@v4
+      with:
+        name: sdist
+        path: dist
 
     - name: Publish to TestPyPI
       uses: pypa/gh-action-pypi-publish@v1.13.0

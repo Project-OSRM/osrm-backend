@@ -20,13 +20,63 @@ Windows | x86_64
 
 ## From Source
 
-osrm-bindings requires **CPython 3.10+** and can be installed from source by running the following command in the repository root:
+osrm-bindings requires **CPython 3.10+** and can be installed from source (e.g. from an sdist on PyPI) by running the following command in the repository root:
 
 ```
 pip install .
 ```
 
 The Python bindings are built alongside the OSRM C++ libraries. The version of the bindings matches the version of osrm-backend.
+
+### System dependencies
+
+A source/sdist build compiles the full OSRM C++ library, so the usual C++ toolchain (CMake ≥ 3.18, a C++20 compiler, Git) plus OSRM's native dependencies must be available. Also a development Python installation has to be in the PATH.
+
+**Debian / Ubuntu**
+
+```
+sudo apt-get install -y \
+    cmake g++ git pkg-config \
+    libboost-all-dev libbz2-dev liblua5.4-dev \
+    libtbb-dev libxml2-dev libzip-dev
+```
+
+**Fedora / RHEL / Rocky / AlmaLinux**
+
+```
+sudo dnf install -y \
+    cmake gcc-c++ git pkgconf-pkg-config \
+    boost-devel bzip2-devel lua-devel \
+    tbb-devel libxml2-devel libzip-devel
+```
+
+**Alpine**
+
+```
+apk add --no-cache \
+    cmake clang make git pkgconf \
+    boost-dev bzip2-dev lua5.4-dev \
+    onetbb-dev libxml2-dev libzip-dev expat-dev
+```
+
+**macOS (Homebrew)**
+
+```
+brew install cmake lua tbb boost@1.90
+brew link boost@1.90
+```
+
+**Windows**
+
+Windows uses [Conan](https://conan.io/) for OSRM's C++ dependencies. Install Conan 2.x and pass `ENABLE_CONAN=ON` to CMake:
+
+```
+pip install conan==2.27.0
+conan profile detect --force
+pip install . -C cmake.define.ENABLE_CONAN=ON
+```
+
+A full Visual Studio 2022 toolchain (or the Build Tools equivalent with the C++ workload) is required.
 
 ## Example
 
