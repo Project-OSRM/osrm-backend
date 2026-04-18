@@ -129,6 +129,8 @@ jobs:
           git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.version }}"
 
       - name: Push changes and tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
         run: |
           BRANCH="${{ inputs.branch || 'master' }}"
           git push origin "$BRANCH"
