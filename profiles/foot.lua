@@ -273,6 +273,9 @@ function process_way(profile, way, result)
     WayHandlers.speed,
     WayHandlers.surface,
 
+    -- handle conveying tag on escalators and moving walkways
+    WayHandlers.conveying,
+
     -- handle turn lanes and road classification, used for guidance
     WayHandlers.classification,
 

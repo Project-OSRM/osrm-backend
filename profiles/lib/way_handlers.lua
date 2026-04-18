@@ -734,6 +734,40 @@ function WayHandlers.driving_side(profile, way, result, data)
    end
 end
 
+-- Handle conveying tag on escalators and moving walkways
+-- The conveying tag indicates the direction of movement on a conveyor device
+-- Only applies to highway=steps (escalators) and highway=footway (moving walkways)
+-- conveying=forward: movement in way direction only (block backward unless oneway=no)
+-- conveying=backward: movement opposite to way direction only (block forward unless oneway=no)
+-- conveying=reversible: movement can go either direction
+-- Escalators and moving walkways are directional and block travel in the opposite direction
+function WayHandlers.conveying(profile, way, result, data)
+  local conveying = way:get_value_by_key("conveying")
+
+  if not conveying or conveying == "yes" or conveying == "reversible" then
+    return
+  end
+
+  local highway = data.highway
+  if highway ~= "steps" and highway ~= "footway" then
+    return
+  end
+
+  local oneway = data.oneway or way:get_value_by_key("oneway")
+  local allow_reverse = oneway == "no"
+  if conveying == "forward" then
+    -- Block backward travel unless explicitly allowed by oneway=no
+    if not allow_reverse then
+      result.backward_mode = mode.inaccessible
+    end
+  elseif conveying == "backward" then
+    -- Block forward travel unless explicitly allowed by oneway=no
+    if not allow_reverse then
+      result.forward_mode = mode.inaccessible
+    end
+  end
+end
+
 
 -- Call a sequence of handlers, aborting in case a handler returns false. Example:
 --
