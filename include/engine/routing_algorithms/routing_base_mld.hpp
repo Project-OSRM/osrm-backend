@@ -656,11 +656,11 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    EdgeWeight &weight,
                    std::vector<NodeID> &unpacked_nodes,
+                   std::vector<EdgeID> &unpacked_edges,
                    const std::vector<NodeID> &force_step_nodes,
                    const PhantomEndpointT &endpoints,
                    const EdgeWeight weight_upper_bound = INVALID_EDGE_WEIGHT)
 {
-    // TODO: change search calling interface to use unpacked_edges result
     auto unpacked_path = search(engine_working_data,
                                 facade,
                                 forward_heap,
@@ -670,6 +670,20 @@ inline void search(SearchEngineData<Algorithm> &engine_working_data,
                                 endpoints);
     weight = unpacked_path.weight;
     unpacked_nodes = std::move(unpacked_path.nodes);
+    unpacked_edges = std::move(unpacked_path.edges);
+}
+
+// Overload that accepts pre-computed unpacked nodes and edges to avoid unnecessary FindEdge calls
+template <typename FacadeT>
+void unpackPath(const FacadeT &facade,
+                const std::vector<NodeID> &unpacked_nodes,
+                const std::vector<EdgeID> &unpacked_edges,
+                const PhantomEndpoints &route_endpoints,
+                std::vector<PathData> &unpacked_path)
+{
+    BOOST_ASSERT(!unpacked_nodes.empty());
+    BOOST_ASSERT(unpacked_nodes.size() == unpacked_edges.size() + 1);
+    annotatePath(facade, route_endpoints, unpacked_nodes, unpacked_edges, unpacked_path);
 }
 
 // TODO: refactor CH-related stub to use unpacked_edges
