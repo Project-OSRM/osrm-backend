@@ -215,7 +215,8 @@ jobs:
 
       - name: Create and push manifests
         run: |
-          REGISTRY="ghcr.io/${{ github.repository }}"
+          REGISTRY_REPOSITORY="$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          REGISTRY="ghcr.io/$REGISTRY_REPOSITORY"
           
           # Determine tag name based on trigger type
           if [ "${{ inputs.ref }}" != "" ]; then
