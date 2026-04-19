@@ -229,19 +229,19 @@ inline unsigned generateServerProgramOptions(const int argc,
         return INIT_FAILED;
     }
 
-    if (option_variables.contains("version"))
+    if ((option_variables.count("version") > 0))
     {
         std::cout << OSRM_VERSION << std::endl;
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 
-    if (option_variables.contains("help"))
+    if ((option_variables.count("help") > 0))
     {
         std::cout << visible_options;
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 
-    if (option_variables.contains("list-inputs"))
+    if ((option_variables.count("list-inputs") > 0))
     {
         storage::StorageConfig storage_config;
         storage_config.ListInputFiles(std::cout);
@@ -255,15 +255,15 @@ inline unsigned generateServerProgramOptions(const int argc,
         max_header_size = server::deriveMaxHeaderSize(config);
     }
 
-    if (!config.use_shared_memory && option_variables.contains("base"))
+    if (!config.use_shared_memory && (option_variables.count("base") > 0))
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (config.use_shared_memory && !option_variables.contains("base"))
+    else if (config.use_shared_memory && !(option_variables.count("base") > 0))
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (config.use_shared_memory && option_variables.contains("base"))
+    else if (config.use_shared_memory && (option_variables.count("base") > 0))
     {
         util::Log(logWARNING) << "Shared memory settings conflict with path settings.";
     }

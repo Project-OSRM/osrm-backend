@@ -146,19 +146,37 @@ foreach(binary ${OSRM_BINARIES})
   list(APPEND ARTIFACTS "${BINDING_DIR}/${binary}")
 endforeach(binary)
 
-# For Conan-enabled builds we copy over tbb's shared objects for packaging.
-# TODO: consider using statically linked tbb library (for node_osrm only!)
-if (ENABLE_CONAN)
-  foreach(libpath ${CONAN_LIB_DIRS_ONETBB})
-    file(GLOB TBBGlob ${libpath}/*.*)
-    foreach(filepath ${TBBGlob})
-      get_filename_component(filename ${filepath} NAME)
-      add_custom_command(OUTPUT "${BINDING_DIR}/${filename}"
-                         COMMAND ${CMAKE_COMMAND} -E copy ${filepath} ${BINDING_DIR}
-                         DEPENDS ${filepath} ${BINDING_DIR})
-      list(APPEND ARTIFACTS "${BINDING_DIR}/${filename}")
-    endforeach()
-  endforeach()
+# Copy TBB's shared object next to node_osrm.node so the binding can load it
+# without relying on system-wide installation. vcpkg provides TBB::tbb as an
+# imported target; $<TARGET_FILE:...> resolves to the .so/.dylib/.dll at build
+# time. TODO: consider statically linking TBB for node_osrm only.
+if (TARGET TBB::tbb)
+  set(_tbb_stamp "${BINDING_DIR}/.tbb-copied.stamp")
+  add_custom_command(OUTPUT "${_tbb_stamp}"
+                     COMMAND ${CMAKE_COMMAND} -E copy_if_different
+                             $<TARGET_FILE:TBB::tbb> ${BINDING_DIR}
+                     COMMAND ${CMAKE_COMMAND} -E touch "${_tbb_stamp}"
+                     DEPENDS TBB::tbb ${BINDING_DIR})
+  list(APPEND ARTIFACTS "${_tbb_stamp}")
+endif()
+
+# On Windows the x64-windows vcpkg triplet builds everything as DLLs (boost,
+# zlib, bz2, lzma, zstd, libxml2, ...). Node's loader searches only the
+# directory of the .node file for dependent DLLs, so every transitive runtime
+# DLL must be next to node_osrm.node. TARGET_RUNTIME_DLLS only walks direct
+# shared-library deps and misses DLLs pulled in through osrm's static link
+# graph (boost_filesystem, zlib1, bz2, expat, ...). Copy the entire vcpkg
+# runtime bin directory instead; node-pre-gyp packages whatever is inside
+# BINDING_DIR, so every loaded .dll ships with the addon.
+if(WIN32)
+  set(_vcpkg_bin_dir "${CMAKE_BINARY_DIR}/vcpkg_installed/${VCPKG_TARGET_TRIPLET}/bin")
+  set(_runtime_dlls_stamp "${BINDING_DIR}/.runtime-dlls-copied.stamp")
+  add_custom_command(OUTPUT "${_runtime_dlls_stamp}"
+                     COMMAND ${CMAKE_COMMAND} -E copy_directory
+                             "${_vcpkg_bin_dir}" "${BINDING_DIR}"
+                     COMMAND ${CMAKE_COMMAND} -E touch "${_runtime_dlls_stamp}"
+                     DEPENDS node_osrm ${BINDING_DIR})
+  list(APPEND ARTIFACTS "${_runtime_dlls_stamp}")
 endif()
 
 
