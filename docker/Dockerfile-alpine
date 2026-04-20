@@ -1,12 +1,9 @@
+# syntax=docker/dockerfile:1.7
 FROM alpine:3.21.2 AS alpine-mimalloc
 
 RUN apk update && \
     apk upgrade && \
-    apk add --no-cache \
-        boost-iostreams \
-        boost-program_options \
-        boost-thread \
-        mimalloc
+    apk add --no-cache mimalloc
 
 ENV LD_PRELOAD=/usr/lib/libmimalloc.so.2
 ENV MIMALLOC_LARGE_OS_PAGES=1
@@ -15,37 +12,87 @@ ENV MIMALLOC_LARGE_OS_PAGES=1
 FROM alpine-mimalloc AS builder
 ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
+# Pinned vcpkg baseline; keep in sync with vcpkg-configuration.json at the repo root.
+ARG VCPKG_COMMIT=c3867e714dd3a51c272826eea77267876517ed99
 
-RUN mkdir -p /src /opt && \
-    apk add --no-cache \
-    boost-dev \
-    boost-filesystem \
-    clang \
-    cmake \
-    expat-dev \
-    git \
-    libbz2 \
-    libxml2 \
-    lua5.4-dev \
-    make \
-    onetbb-dev
+# vcpkg needs system-provided build tools on musl — VCPKG_FORCE_SYSTEM_BINARIES
+# prevents it from downloading glibc-built cmake/ninja that would fail on Alpine.
+RUN apk add --no-cache \
+        autoconf \
+        automake \
+        bash \
+        build-base \
+        ca-certificates \
+        ccache \
+        cmake \
+        curl \
+        g++ \
+        gcc \
+        git \
+        libtool \
+        linux-headers \
+        make \
+        musl-dev \
+        ninja \
+        perl \
+        pkgconfig \
+        tar \
+        unzip \
+        zip
 
-COPY . /src
+# NOTE: VCPKG_ROOT lives outside /opt so the runstage's COPY --from=builder /opt
+# /opt doesn't drag the ~5 GB vcpkg tree along.
+ENV VCPKG_ROOT=/vcpkg \
+    VCPKG_FORCE_SYSTEM_BINARIES=1
+RUN git clone --no-checkout https://github.com/microsoft/vcpkg.git ${VCPKG_ROOT} && \
+    git -C ${VCPKG_ROOT} checkout ${VCPKG_COMMIT} && \
+    ${VCPKG_ROOT}/bootstrap-vcpkg.sh -disableMetrics
+
 WORKDIR /src
 
-RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
+# Install manifest deps as their own layer — see Dockerfile-debian for the
+# rationale. Cache mounts persist across docker builds on the host.
+COPY vcpkg.json vcpkg-configuration.json ./
+RUN --mount=type=cache,target=/root/.cache/vcpkg/archives,sharing=locked \
+    --mount=type=cache,target=/vcpkg/downloads,sharing=locked \
+    --mount=type=cache,target=/vcpkg/buildtrees,sharing=locked \
+    export VCPKG_DEFAULT_BINARY_CACHE=/root/.cache/vcpkg/archives && \
+    mkdir -p build/vcpkg_installed "$VCPKG_DEFAULT_BINARY_CACHE" && \
+    ${VCPKG_ROOT}/vcpkg install \
+        --x-manifest-root=/src \
+        --x-install-root=/src/build/vcpkg_installed \
+        --triplet=x64-linux \
+        --no-print-usage \
+        --clean-buildtrees-after-build \
+        --clean-packages-after-build
+
+COPY . /src
+
+RUN --mount=type=cache,target=/root/.ccache \
+    NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
+    export CCACHE_DIR=/root/.ccache && \
+    export CCACHE_MAXSIZE=2G && \
+    export CCACHE_COMPRESSLEVEL=6 && \
     echo "Building OSRM ${DOCKER_TAG}" && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
     echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
-    mkdir -p build && \
     cd build && \
     BUILD_TYPE="Release" && \
     ENABLE_ASSERTIONS="Off" && \
     case ${DOCKER_TAG} in *"-debug"*) BUILD_TYPE="Debug";; esac && \
     case ${DOCKER_TAG} in *"-assertions"*) BUILD_TYPE="RelWithDebInfo" && ENABLE_ASSERTIONS="On";; esac && \
     echo "Building ${BUILD_TYPE} with ENABLE_ASSERTIONS=${ENABLE_ASSERTIONS}" && \
-    cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS} -DENABLE_LTO=OFF && \
-    make -j${NPROC} install && \
+    cmake .. -G Ninja \
+        -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS} \
+        -DENABLE_LTO=OFF \
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache && \
+    ninja -j${NPROC} install && \
+    ccache -s && \
+    mkdir -p /opt/vcpkg-runtime-libs && \
+    find vcpkg_installed -name 'libtbb*.so*' -exec cp -a {} /opt/vcpkg-runtime-libs/ \; && \
     cd ../profiles && \
     cp -r * /opt && \
     strip /usr/local/bin/* && \
@@ -58,14 +105,13 @@ FROM alpine-mimalloc AS runstage
 
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
+COPY --from=builder /opt/vcpkg-runtime-libs/ /usr/local/lib/
 
 RUN apk add --no-cache \
-    boost-date_time \
-    expat \
-    libcap-setcap \
-    lua5.4 \
-    onetbb && \
-    ldconfig /usr/local/lib
+        libcap-setcap \
+        libgcc \
+        libstdc++ && \
+    ldconfig /usr/local/lib || true
 
 RUN /usr/local/bin/osrm-extract --help && \
     /usr/local/bin/osrm-routed --help && \

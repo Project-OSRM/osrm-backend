@@ -1,42 +1,95 @@
+# syntax=docker/dockerfile:1.7
 FROM debian:bookworm-slim AS builder
 ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
+# Pinned vcpkg baseline; keep in sync with vcpkg-configuration.json at the repo root.
+ARG VCPKG_COMMIT=c3867e714dd3a51c272826eea77267876517ed99
 
-RUN mkdir -p /src /opt && \
-    apt-get update && \
+RUN apt-get update && \
     apt-get -y --no-install-recommends --no-install-suggests install \
+        autoconf \
+        automake \
+        build-essential \
         ca-certificates \
+        ccache \
         cmake \
-        g++ \
-        gcc \
+        curl \
         git \
-        libboost1.81-all-dev \
-        libbz2-dev \
-        liblua5.4-dev \
-        libtbb-dev \
-        libxml2-dev \
-        libzip-dev \
-        lua5.4 \
+        libtool \
+        linux-libc-dev \
         make \
-        pkg-config
+        ninja-build \
+        pkg-config \
+        tar \
+        unzip \
+        zip && \
+    rm -rf /var/lib/apt/lists/*
 
-COPY . /src
+# NOTE: VCPKG_ROOT lives outside /opt so the runstage's COPY --from=builder /opt
+# /opt doesn't drag the ~5 GB vcpkg tree along.
+ENV VCPKG_ROOT=/vcpkg \
+    VCPKG_FORCE_SYSTEM_BINARIES=1
+RUN git clone --no-checkout https://github.com/microsoft/vcpkg.git ${VCPKG_ROOT} && \
+    git -C ${VCPKG_ROOT} checkout ${VCPKG_COMMIT} && \
+    ${VCPKG_ROOT}/bootstrap-vcpkg.sh -disableMetrics
+
 WORKDIR /src
 
-RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
+# Install manifest deps as their own layer so source-only changes don't
+# invalidate the (expensive) vcpkg install. The three cache mounts persist
+# across docker builds on the host:
+#   - /root/.cache/vcpkg/archives : vcpkg's per-package binary cache (the big win)
+#   - /vcpkg/downloads            : upstream tarball cache (avoids re-downloading boost, etc.)
+#   - /vcpkg/buildtrees           : partial builds (helps when a single port fails)
+COPY vcpkg.json vcpkg-configuration.json ./
+RUN --mount=type=cache,target=/root/.cache/vcpkg/archives,sharing=locked \
+    --mount=type=cache,target=/vcpkg/downloads,sharing=locked \
+    --mount=type=cache,target=/vcpkg/buildtrees,sharing=locked \
+    export VCPKG_DEFAULT_BINARY_CACHE=/root/.cache/vcpkg/archives && \
+    mkdir -p build/vcpkg_installed "$VCPKG_DEFAULT_BINARY_CACHE" && \
+    ${VCPKG_ROOT}/vcpkg install \
+        --x-manifest-root=/src \
+        --x-install-root=/src/build/vcpkg_installed \
+        --triplet=x64-linux \
+        --no-print-usage \
+        --clean-buildtrees-after-build \
+        --clean-packages-after-build
+
+# Now copy the rest of the source tree. This layer is the one that gets
+# invalidated by code changes — everything above stays cached.
+COPY . /src
+
+RUN --mount=type=cache,target=/root/.ccache \
+    NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
     export CXXFLAGS="-Wno-array-bounds -Wno-uninitialized -Wno-stringop-overflow" && \
+    export CCACHE_DIR=/root/.ccache && \
+    export CCACHE_MAXSIZE=2G && \
+    export CCACHE_COMPRESSLEVEL=6 && \
     echo "Building OSRM ${DOCKER_TAG}" && \
     git show --format="%H" | head -n1 > /opt/OSRM_GITSHA && \
     echo "Building OSRM gitsha $(cat /opt/OSRM_GITSHA)" && \
-    mkdir -p build && \
     cd build && \
     BUILD_TYPE="Release" && \
     ENABLE_ASSERTIONS="Off" && \
     case ${DOCKER_TAG} in *"-debug"*) BUILD_TYPE="Debug";; esac && \
     case ${DOCKER_TAG} in *"-assertions"*) BUILD_TYPE="RelWithDebInfo" && ENABLE_ASSERTIONS="On";; esac && \
     echo "Building ${BUILD_TYPE} with ENABLE_ASSERTIONS=${ENABLE_ASSERTIONS}" && \
-    cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS} -DENABLE_LTO=On && \
-    make -j${NPROC} install && \
+    cmake .. -G Ninja \
+        -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+        -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
+        -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS} \
+        -DENABLE_LTO=On \
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache && \
+    ninja -j${NPROC} install && \
+    ccache -s && \
+    # Copy the TBB shared lib out of vcpkg so the runstage image can load it
+    # without bringing in the whole vcpkg tree. Boost, expat, bzip2, lua, fmt
+    # etc. all link statically under the x64-linux triplet, so only TBB needs
+    # runtime shipping. In manifest mode vcpkg installs per-build under
+    # build/vcpkg_installed/<triplet>/, not $VCPKG_ROOT/installed/.
+    mkdir -p /opt/vcpkg-runtime-libs && \
+    find vcpkg_installed -name 'libtbb*.so*' -exec cp -a {} /opt/vcpkg-runtime-libs/ \; && \
     cd ../profiles && \
     cp -r * /opt && \
     strip /usr/local/bin/* && \
@@ -44,23 +97,19 @@ RUN NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
 
 
 # Multistage build to reduce image size - https://docs.docker.com/build/building/multi-stage/#use-multi-stage-builds
-# Only the content below ends up in the image, this helps remove /src from the image (which is large)
+# Only the content below ends up in the image, this helps remove /src and vcpkg from the image.
 FROM debian:bookworm-slim AS runstage
 
 COPY --from=builder /usr/local /usr/local
 COPY --from=builder /opt /opt
+COPY --from=builder /opt/vcpkg-runtime-libs/ /usr/local/lib/
 
 RUN apt-get update && \
     apt-get install -y --no-install-recommends --no-install-suggests \
-        expat \
-        libboost-date-time1.81.0 \
-        libboost-iostreams1.81.0 \
-        libboost-program-options1.81.0 \
-        libboost-thread1.81.0 \
-        liblua5.4-0 \
-        libtbb12 && \
+        libgcc-s1 \
+        libstdc++6 && \
     rm -rf /var/lib/apt/lists/* && \
-# Add /usr/local/lib to ldconfig to allow loading libraries from there
+# Add /usr/local/lib to ldconfig so TBB (and any other shared vcpkg libs) load
     ldconfig /usr/local/lib
 
 RUN /usr/local/bin/osrm-extract --help && \
