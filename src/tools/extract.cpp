@@ -126,19 +126,19 @@ return_code parseArguments(int argc,
         return return_code::fail;
     }
 
-    if (option_variables.contains("version"))
+    if ((option_variables.count("version") > 0))
     {
         std::cout << OSRM_VERSION << std::endl;
         return return_code::exit;
     }
 
-    if (option_variables.contains("help"))
+    if ((option_variables.count("help") > 0))
     {
         std::cout << visible_options;
         return return_code::exit;
     }
 
-    if (option_variables.contains("list-inputs"))
+    if ((option_variables.count("list-inputs") > 0))
     {
         extractor::ExtractorConfig config;
         config.ListInputFiles(std::cout);
@@ -147,7 +147,7 @@ return_code parseArguments(int argc,
 
     boost::program_options::notify(option_variables);
 
-    if (!option_variables.contains("input"))
+    if (!(option_variables.count("input") > 0))
     {
         std::cout << visible_options;
         return return_code::exit;

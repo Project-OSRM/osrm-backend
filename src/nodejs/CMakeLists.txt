@@ -160,7 +160,6 @@ if (TARGET TBB::tbb)
   list(APPEND ARTIFACTS "${_tbb_stamp}")
 endif()
 
-
 add_custom_command(OUTPUT ${BINDING_DIR}/node_osrm.node
                    COMMAND ${CMAKE_COMMAND} -E copy $<TARGET_FILE:node_osrm> ${BINDING_DIR}
                    DEPENDS node_osrm ${BINDING_DIR})
