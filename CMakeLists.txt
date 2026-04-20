@@ -209,6 +209,17 @@ add_library(osrm::customize ALIAS osrm_customize)
 add_library(osrm::update ALIAS osrm_update)
 add_library(osrm::store ALIAS osrm_store)
 
+# Public include directories for downstream consumers of the exported osrm
+# target. Public headers are installed under <prefix>/include/osrm/... while
+# some headers use non-prefixed paths like "engine/api/route_parameters.hpp"
+# internally, so the consumer needs both <prefix>/include and <prefix>/include/osrm
+# on the include path (mirroring the historical pkg-config behaviour).
+target_include_directories(osrm INTERFACE
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+  $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/osrm>
+  $<INSTALL_INTERFACE:include>
+  $<INSTALL_INTERFACE:include/osrm>)
+
 # Explicitly set the build type to Release if no other type is specified
 # on the command line.  Without this, cmake defaults to an unoptimized,
 # non-debug build, which almost nobody wants.
@@ -512,7 +523,9 @@ endif()
 # (e.g. nodejs) that expect the same zlib ABI.
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
-set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
+# Use the imported target (not the file-path variable) so it can serialize
+# cleanly into the exported LibOSRMTargets.cmake for downstream consumers.
+set(ZLIB_LIBRARY ZLIB::ZLIB)
 
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
@@ -528,7 +541,7 @@ target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTION
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
     ${BOOST_BASE_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
+    Threads::Threads
     ${EXPAT_LIBRARIES}
     ${LUA_LIBRARIES}
     ${OSMIUM_LIBRARIES}
@@ -537,47 +550,47 @@ set(EXTRACTOR_LIBRARIES
     ${MAYBE_COVERAGE_LIBRARIES})
 set(PARTITIONER_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
+    Threads::Threads
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(CUSTOMIZER_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
     ${ZLIB_LIBRARY}
-    ${CMAKE_THREAD_LIBS_INIT}
+    Threads::Threads
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(UPDATER_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
+    Threads::Threads
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES}
     ${ZLIB_LIBRARY})
 set(CONTRACTOR_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
+    Threads::Threads
     ${LUA_LIBRARIES}
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(ENGINE_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
+    Threads::Threads
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES}
     ${ZLIB_LIBRARY})
 set(STORAGE_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
+    Threads::Threads
     ${TBB_LIBRARIES}
     ${MAYBE_RT_LIBRARY}
     ${MAYBE_COVERAGE_LIBRARIES})
 set(UTIL_LIBRARIES
     ${BOOST_BASE_LIBRARIES}
-    ${CMAKE_THREAD_LIBS_INIT}
+    Threads::Threads
     ${TBB_LIBRARIES}
     ${MAYBE_COVERAGE_LIBRARIES}
     ${ZLIB_LIBRARY})
@@ -646,13 +659,27 @@ install(TARGETS osrm-contract DESTINATION bin)
 install(TARGETS osrm-datastore DESTINATION bin)
 install(TARGETS osrm-routed DESTINATION bin)
 
-install(TARGETS osrm DESTINATION lib)
+# Install osrm as part of an EXPORT set so consumers can find_package(LibOSRM)
+# and link osrm::osrm with its usage requirements (include dirs + transitive
+# deps) baked in. The other osrm_* libraries are build-internal support for
+# the command-line tools; they are still installed for pkg-config / legacy
+# consumers but are not part of the exported CMake package.
+install(TARGETS osrm
+        EXPORT LibOSRMTargets
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+        RUNTIME DESTINATION bin)
 install(TARGETS osrm_extract DESTINATION lib)
 install(TARGETS osrm_partition DESTINATION lib)
 install(TARGETS osrm_customize DESTINATION lib)
 install(TARGETS osrm_update DESTINATION lib)
 install(TARGETS osrm_contract DESTINATION lib)
 install(TARGETS osrm_store DESTINATION lib)
+
+install(EXPORT LibOSRMTargets
+        FILE LibOSRMTargets.cmake
+        NAMESPACE osrm::
+        DESTINATION lib/cmake/LibOSRM)
 
 # Install profiles and support library to /usr/local/share/osrm/profiles by default
 set(DefaultProfilesDir profiles)
@@ -701,7 +728,15 @@ JOIN("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
 
 
 foreach(engine_lib ${ENGINE_LIBRARIES})
-  if(TARGET ${engine_lib})
+  # Translate well-known imported targets to portable pkg-config flags.
+  # Threads::Threads is INTERFACE-only and has no library name to derive a
+  # `-l` flag from; ZLIB::ZLIB would otherwise serialize as an absolute path
+  # via TARGET_LINKER_FILE, which is non-portable across install prefixes.
+  if(engine_lib STREQUAL "Threads::Threads")
+    list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${CMAKE_THREAD_LIBS_INIT}")
+  elseif(engine_lib STREQUAL "ZLIB::ZLIB")
+    list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "-lz")
+  elseif(TARGET ${engine_lib})
     # Some imported targets (e.g. Boost::regex in modern Boost) are
     # INTERFACE-only and have no TARGET_LINKER_FILE. Only embed a linker
     # file for targets that actually produce one.
@@ -733,6 +768,24 @@ if(NOT _is_multi_config)
 
   install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION ${PKGCONFIG_LIBRARY_DIR}/pkgconfig)
 endif()
+
+# CMake package config: downstream users do
+#   find_package(LibOSRM REQUIRED)
+#   target_link_libraries(myapp PRIVATE osrm::osrm)
+# LibOSRMTargets.cmake is written by install(EXPORT ...) above.
+include(CMakePackageConfigHelpers)
+configure_package_config_file(
+  ${CMAKE_CURRENT_SOURCE_DIR}/cmake/LibOSRMConfig.cmake.in
+  ${CMAKE_CURRENT_BINARY_DIR}/LibOSRMConfig.cmake
+  INSTALL_DESTINATION lib/cmake/LibOSRM)
+write_basic_package_version_file(
+  ${CMAKE_CURRENT_BINARY_DIR}/LibOSRMConfigVersion.cmake
+  VERSION ${OSRM_VERSION}
+  COMPATIBILITY SameMinorVersion)
+install(FILES
+  ${CMAKE_CURRENT_BINARY_DIR}/LibOSRMConfig.cmake
+  ${CMAKE_CURRENT_BINARY_DIR}/LibOSRMConfigVersion.cmake
+  DESTINATION lib/cmake/LibOSRM)
 
 # uninstall target
 configure_file(
