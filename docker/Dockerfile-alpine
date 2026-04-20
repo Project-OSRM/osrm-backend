@@ -53,6 +53,7 @@ WORKDIR /src
 # Install manifest deps as their own layer — see Dockerfile-debian for the
 # rationale. Cache mounts persist across docker builds on the host.
 COPY vcpkg.json vcpkg-configuration.json ./
+COPY vcpkg-overlay-ports/ ./vcpkg-overlay-ports/
 RUN --mount=type=cache,target=/root/.cache/vcpkg/archives,sharing=locked \
     --mount=type=cache,target=/vcpkg/downloads,sharing=locked \
     --mount=type=cache,target=/vcpkg/buildtrees,sharing=locked \

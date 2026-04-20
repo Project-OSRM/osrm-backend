@@ -682,13 +682,20 @@ endforeach(engine_lib)
 JOIN("${PKGCONFIG_DEPENDENT_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in pkgconfig.configured @ONLY)
-file(GENERATE
-     OUTPUT
-     ${PROJECT_BINARY_DIR}/libosrm.pc
-     INPUT
-     ${PROJECT_BINARY_DIR}/pkgconfig.configured)
+# Multi-config generators (e.g. Visual Studio) produce different values for
+# $<TARGET_LINKER_FILE:...> per configuration, which causes file(GENERATE) to
+# fail when writing a single output path. pkgconfig is not used on Windows, so
+# skip generation for multi-config generators.
+get_property(_is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(NOT _is_multi_config)
+  file(GENERATE
+       OUTPUT
+       ${PROJECT_BINARY_DIR}/libosrm.pc
+       INPUT
+       ${PROJECT_BINARY_DIR}/pkgconfig.configured)
 
-install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION ${PKGCONFIG_LIBRARY_DIR}/pkgconfig)
+  install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION ${PKGCONFIG_LIBRARY_DIR}/pkgconfig)
+endif()
 
 # uninstall target
 configure_file(

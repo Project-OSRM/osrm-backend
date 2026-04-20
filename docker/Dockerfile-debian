@@ -42,6 +42,7 @@ WORKDIR /src
 #   - /vcpkg/downloads            : upstream tarball cache (avoids re-downloading boost, etc.)
 #   - /vcpkg/buildtrees           : partial builds (helps when a single port fails)
 COPY vcpkg.json vcpkg-configuration.json ./
+COPY vcpkg-overlay-ports/ ./vcpkg-overlay-ports/
 RUN --mount=type=cache,target=/root/.cache/vcpkg/archives,sharing=locked \
     --mount=type=cache,target=/vcpkg/downloads,sharing=locked \
     --mount=type=cache,target=/vcpkg/buildtrees,sharing=locked \
