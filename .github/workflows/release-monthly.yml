@@ -178,32 +178,38 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          # Wait for tag CI to complete before publishing npm package
-          # The osrm-backend.yml workflow is triggered by the tag push
-          # and uploads prebuilt binaries to the release assets
+          # Wait for tag CI to complete before publishing npm package.
+          # The osrm-backend.yml workflow was dispatched above on the release
+          # tag and uploads prebuilt binaries to the release assets.
+          #
+          # osrm-backend.yml also runs on push-to-master, so filtering solely
+          # by headSha would match the already-completed master run (same
+          # commit, different event) and return success before the tag-
+          # dispatched build has even started. Filter by both headSha AND
+          # event=workflow_dispatch to pick the correct run.
           TAG="${{ steps.version.outputs.tag }}"
           TAG_SHA="$(git rev-list -n 1 "$TAG")"
-          
-          echo "Waiting for CI workflow to complete for tag $TAG (commit $TAG_SHA)"
-          
+
+          echo "Waiting for CI workflow dispatched on tag $TAG (commit $TAG_SHA)"
+
           MAX_WAIT=3600  # 1 hour
           ELAPSED=0
           POLL_INTERVAL=10
-          
+
           while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-            # Query runs for the osrm-backend.yml workflow for this tag's commit
-            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,displayTitle 2>/dev/null || echo '[]')"
-            
-            # Find run matching this tag's commit SHA
-            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha) | @json' | head -1)"
-            
+            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --event=workflow_dispatch --limit 50 --json databaseId,status,conclusion,headSha,event,headBranch,displayTitle 2>/dev/null || echo '[]')"
+
+            # Match on the tag's commit SHA AND workflow_dispatch event so we
+            # don't accidentally pick up the push-to-master run.
+            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha and .event == "workflow_dispatch") | @json' | head -1)"
+
             if [ -n "$MATCHING_RUN" ] && [ "$MATCHING_RUN" != "null" ]; then
               STATUS="$(echo "$MATCHING_RUN" | jq -r '.status')"
               CONCLUSION="$(echo "$MATCHING_RUN" | jq -r '.conclusion // empty')"
               RUN_ID="$(echo "$MATCHING_RUN" | jq -r '.databaseId')"
-              
-              echo "Found matching CI run $RUN_ID: status=$STATUS conclusion=$CONCLUSION"
-              
+
+              echo "Found dispatched CI run $RUN_ID: status=$STATUS conclusion=$CONCLUSION"
+
               if [ "$STATUS" = "completed" ]; then
                 if [ "$CONCLUSION" = "success" ]; then
                   echo "✓ CI workflow completed successfully, proceeding with npm publish"
@@ -216,13 +222,13 @@ jobs:
                 echo "CI workflow still running (status=$STATUS), waiting..."
               fi
             else
-              echo "No matching CI run found yet, waiting for workflow to start..."
+              echo "No matching dispatched CI run found yet, waiting for workflow to start..."
             fi
-            
+
             sleep "$POLL_INTERVAL"
             ELAPSED=$((ELAPSED + POLL_INTERVAL))
           done
-          
+
           echo "✗ Timed out waiting for CI workflow to complete for tag $TAG"
           exit 1
 
@@ -231,4 +237,20 @@ jobs:
 
       - name: Publish to npm
         run: npm publish
+
+      - name: Trigger docker image build for tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Fire-and-forget: multi-arch docker builds (amd64 + arm64 under
+          # QEMU across debian/alpine × normal/debug/assertions) take several
+          # hours and we don't want to block the release job on them.
+          #
+          # The tag push above used GITHUB_TOKEN, which GitHub intentionally
+          # suppresses from triggering other workflows, so osrm-backend-docker's
+          # `push: tags: v*` trigger never fires on automated releases.
+          # Dispatch it explicitly instead.
+          TAG="${{ steps.version.outputs.tag }}"
+          gh workflow run osrm-backend-docker.yml --ref "$TAG" --field ref="$TAG"
+          echo "Dispatched osrm-backend-docker.yml on $TAG (not waiting for completion)"
 
