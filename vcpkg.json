@@ -49,6 +49,7 @@
     "sol2",
     "protozero",
     "flatbuffers",
+    "libarchive",
     "libosmium"
   ],
   "overrides": [
