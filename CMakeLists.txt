@@ -132,7 +132,6 @@ include(GNUInstallDirs)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/generated/include/)
 
 set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
 
@@ -347,6 +346,35 @@ add_compile_definitions(FMT_HEADER_ONLY)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 find_package(flatbuffers CONFIG REQUIRED)
+
+# Generate flatbuffers C++ headers from .fbs schemas at build time.
+# This removes the need to commit pre-generated headers and pin the
+# flatbuffers version — any compatible flatc will regenerate them.
+# BuildFlatBuffers.cmake is shipped alongside flatbuffers-config.cmake
+# but not on CMAKE_MODULE_PATH, so locate it via the package's own dir.
+include("${flatbuffers_DIR}/BuildFlatBuffers.cmake")
+set(FLATBUFFERS_SCHEMAS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/fbresult.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/route.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/table.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/waypoint.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/position.fbs)
+flatbuffers_generate_headers(
+    TARGET osrm_fbs
+    SCHEMAS ${FLATBUFFERS_SCHEMAS}
+    INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers
+    INCLUDE_PREFIX "engine/api/flatbuffers"
+    FLAGS --gen-mutable)
+# Make the generated headers available to all targets (the OBJECT libraries
+# were defined earlier, so we use include_directories + add_dependencies
+# rather than target_link_libraries). Every OBJECT library pulls in these
+# headers transitively via engine/api/base_api.hpp or plugin_base.hpp, so
+# each needs an explicit dependency on the generator or parallel builds
+# race the header generation and fail with "No such file or directory".
+include_directories(SYSTEM $<TARGET_PROPERTY:osrm_fbs,INTERFACE_INCLUDE_DIRECTORIES>)
+foreach(_osrm_obj UTIL EXTRACTOR PARTITIONER CUSTOMIZER CONTRACTOR UPDATER STORAGE ENGINE SERVER)
+    add_dependencies(${_osrm_obj} GENERATE_osrm_fbs)
+endforeach()
 
 # protozero has no CMake config in its vcpkg port — it ships only headers.
 # Locate the include dir via a sentinel header and add it directly.
