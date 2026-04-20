@@ -203,7 +203,7 @@ bool isNameOszillation(const RouteStepIterator step_prior_to_intersection,
           hasModifier(*step_entering_intersection, DirectionModifier::Straight))) &&
         (hasTurnType(*step_leaving_intersection, TurnType::NewName) ||
          (hasTurnType(*step_leaving_intersection, TurnType::Suppressed) &&
-          step_leaving_intersection->name_id == EMPTY_NAMEID) ||
+          step_leaving_intersection->name_id == EMPTY_STRINGVIEWID) ||
          (hasTurnType(*step_leaving_intersection, TurnType::Turn) &&
           hasModifier(*step_leaving_intersection, DirectionModifier::Straight)));
 

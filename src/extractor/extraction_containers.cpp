@@ -2,9 +2,9 @@
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/files.hpp"
-#include "extractor/name_table.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
+#include "extractor/string_table.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
 
@@ -63,15 +63,15 @@ struct CmpEdgeByInternalSourceTargetAndName
         if (lhs.result.target == SPECIAL_NODEID)
             return false;
 
-        auto const lhs_name_id = edge_annotation_data[lhs.result.annotation_data].name_id;
-        auto const rhs_name_id = edge_annotation_data[rhs.result.annotation_data].name_id;
+        auto const lhs_name_id = edge_annotation_data[lhs.result.annotation_data].string_view_id;
+        auto const rhs_name_id = edge_annotation_data[rhs.result.annotation_data].string_view_id;
         if (lhs_name_id == rhs_name_id)
             return false;
 
-        if (lhs_name_id == EMPTY_NAMEID)
+        if (lhs_name_id == EMPTY_STRINGVIEWID)
             return false;
 
-        if (rhs_name_id == EMPTY_NAMEID)
+        if (rhs_name_id == EMPTY_STRINGVIEWID)
             return true;
 
         BOOST_ASSERT(!name_offsets.empty() && name_offsets.back() == name_data.size());
@@ -428,7 +428,7 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     TIMER_START(write_index);
 
     files::writeNames(file_name,
-                      NameTable{NameTable::IndexedData(
+                      StringTable{StringTable::IndexedData(
                           name_offsets.begin(), name_offsets.end(), name_char_data.begin())});
 
     TIMER_STOP(write_index);

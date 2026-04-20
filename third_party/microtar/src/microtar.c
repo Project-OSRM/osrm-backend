@@ -20,6 +20,7 @@
  * IN THE SOFTWARE.
  */
 
+#include <inttypes.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <stddef.h>
@@ -111,13 +112,12 @@ static int raw_to_header(mtar_header_t *h, const mtar_raw_header_t *rh) {
   strcpy(h->name, rh->name);
   strcpy(h->linkname, rh->linkname);
 
-  /* Load size field */
+  /* Load size field: use uint64_t with SCNo64 to be explicitly correct
+   * on all platforms, including Windows where long is 32-bit. */
   if ((rh->size[0] & 0x80) == 0) {
-#ifdef _MSC_VER
-      sscanf(rh->size, "%12llo", &h->size);
-#else
-      sscanf(rh->size, "%12lo", &h->size);
-#endif
+      uint64_t tmp_size = 0;
+      sscanf(rh->size, "%12" SCNo64, &tmp_size);
+      h->size = (mtar_size_t)tmp_size;
   } else {
       h->size = (rh->size[0] & 0x7f) | (rh->size[0] & 0x40 ? 0x80 : 0);
       uint8_t *p8 = (uint8_t *)&rh->size + 1;
@@ -140,13 +140,11 @@ static int header_to_raw(mtar_raw_header_t *rh, const mtar_header_t *h) {
   /* Load header into raw header */
   memset(rh, 0, sizeof(*rh));
 
-  /* Store size in ASCII octal digits or base-256 formats */
+  /* Store size in ASCII octal digits or base-256 formats.
+   * Use uint64_t with PRIo64 to be explicitly correct on all platforms,
+   * including Windows where long is 32-bit. */
   if (sizeof(mtar_size_t) <= 4 || filesize <= (mtar_size_t)077777777777LL) {
-#ifdef _MSC_VER
-      sprintf(rh->size, "%llo", h->size);
-#else
-      sprintf(rh->size, "%lo", h->size);
-#endif
+      sprintf(rh->size, "%" PRIo64, (uint64_t)h->size);
   } else if (sizeof(filesize) < sizeof(rh->size)) {
       /* GNU tar uses "base-256 encoding" for very large numbers.
        * Encoding is binary, with highest bit always set as a marker
@@ -209,7 +207,12 @@ static int file_read(mtar_t *tar, void *data, mtar_size_t size) {
 }
 
 static int file_seek(mtar_t *tar, mtar_size_t offset) {
-  int res = fseek(tar->stream, offset, SEEK_SET);
+  int res;
+#if defined(_WIN32)
+  res = _fseeki64(tar->stream, (__int64) offset, SEEK_SET);
+#else
+  res = fseek(tar->stream, offset, SEEK_SET);
+#endif
   return (res == 0) ? MTAR_ESUCCESS : MTAR_ESEEKFAIL;
 }
 

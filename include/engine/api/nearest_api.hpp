@@ -156,6 +156,16 @@ class NearestAPI final : public BaseAPI
                 facade.GetOSMNodeIDOfNode(forward_geometry[phantom_node.fwd_segment_position - 1]);
             from_node = static_cast<std::uint64_t>(osm_node_id);
         }
+        else if (phantom_node.forward_segment_id.enabled && phantom_node.fwd_segment_position == 0)
+        {
+            // At the very beginning of a one-way forward geometry.
+            // Segment runs from the first OSM node to the second OSM node.
+            BOOST_ASSERT(forward_geometry.size() >= 2);
+            from_node = to_node;
+            auto osm_node_id =
+                facade.GetOSMNodeIDOfNode(forward_geometry[phantom_node.fwd_segment_position + 1]);
+            to_node = static_cast<std::uint64_t>(osm_node_id);
+        }
 
         return std::make_pair(from_node, to_node);
     }

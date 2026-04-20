@@ -12,33 +12,38 @@
  * you'll need to use pretty small OSM extracts to get this to work.
  *****************************************/
 import fs from 'fs';
-import { parseString } from 'xml2js';
+import { XMLParser } from 'fast-xml-parser';
 
 const data = fs.readFileSync('filename.osm', 'utf8');
 
-const items = parseString(data, (err, result) => {
-  const idmap = {};
+const parser = new XMLParser({
+  ignoreAttributes: false,
+  attributeNamePrefix: '@_',
+  isArray: (name) => ['node', 'way', 'tag', 'nd'].includes(name)
+});
 
-  console.log('Given the node locations');
-  console.log('    | node | lon       | lat       |');
-  result.osm.node.filter(n => !n.$.action || n.$.action !== 'delete').forEach(i => {
-    const code = String.fromCharCode(97 + Object.keys(idmap).length);
-    idmap[i.$.id] = code;
-    console.log(`    | ${code} | ${i.$.lon} | ${i.$.lat} |`);
-  });
+const result = parser.parse(data);
+const idmap = {};
 
-  const allkeys = {};
-  const waytags = {};
+console.log('Given the node locations');
+console.log('    | node | lon       | lat       |');
+result.osm.node.filter(n => !n['@_action'] || n['@_action'] !== 'delete').forEach(i => {
+  const code = String.fromCharCode(97 + Object.keys(idmap).length);
+  idmap[i['@_id']] = code;
+  console.log(`    | ${code} | ${i['@_lon']} | ${i['@_lat']} |`);
+});
 
-  result.osm.way.filter(n => !n.$.action || n.$.action !== 'delete').forEach(w => {
-    if (!waytags[w.$.id]) waytags[w.$.id] = {};
-    w.tag.forEach(t => { allkeys[t.$.k] = t.$.v; waytags[w.$.id][t.$.k] = t.$.v; });
-  });
+const allkeys = {};
+const waytags = {};
 
-  console.log('And the ways');
-  console.log(`    | nodes |  ${Object.keys(allkeys).join(' | ')} |`);
+result.osm.way.filter(n => !n['@_action'] || n['@_action'] !== 'delete').forEach(w => {
+  if (!waytags[w['@_id']]) waytags[w['@_id']] = {};
+  w.tag.forEach(t => { allkeys[t['@_k']] = t['@_v']; waytags[w['@_id']][t['@_k']] = t['@_v']; });
+});
 
-  result.osm.way.filter(n => !n.$.action || n.$.action !== 'delete').forEach(w => {
-    console.log(`    | ${w.nd.map(n => idmap[n.$.ref]).join('')} | ${Object.keys(allkeys).map(k => waytags[w.$.id][k] || '').join(' | ')} |`);
-  });
+console.log('And the ways');
+console.log(`    | nodes |  ${Object.keys(allkeys).join(' | ')} |`);
+
+result.osm.way.filter(n => !n['@_action'] || n['@_action'] !== 'delete').forEach(w => {
+  console.log(`    | ${w.nd.map(n => idmap[n['@_ref']]).join('')} | ${Object.keys(allkeys).map(k => waytags[w['@_id']][k] || '').join(' | ')} |`);
 });

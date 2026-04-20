@@ -38,6 +38,10 @@ function setup()
     turn_bias                 = 1.075,
     cardinal_directions       = false,
 
+    -- Penalty multiplier for roads with no lane markings (lane_markings=no)
+    -- Applied to bidirectional roads to prefer roads with clear lane markings
+    lane_markings_penalty     = 0.75,
+
     -- Size of the vehicle, to be limited by physical restriction of the way
     vehicle_height = 2.0, -- in meters, 2.0m is the height slightly above biggest SUVs
     vehicle_width = 1.9, -- in meters, ways with narrow tag are considered narrower than 2.2m
@@ -159,7 +163,10 @@ function setup()
         unclassified    = 25,
         residential     = 25,
         living_street   = 10,
-        service         = 15
+        service         = 15,
+        -- winter highway types (OSM highway=winter_road / highway=ice_road)
+        winter_road     = 20,
+        ice_road        = 15
       }
     },
 
@@ -247,7 +254,11 @@ function setup()
       rocky = 20,
       sand = 20,
 
-      mud = 10
+      mud = 10,
+
+      -- winter surfaces (OSM surface=ice / surface=snow)
+      ice  = 20,
+      snow = 30
     },
 
     -- max speed for tracktypes

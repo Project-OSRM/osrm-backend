@@ -36,6 +36,17 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 - Discord: [join](https://discord.gg/es9CdcCXcb)
 - BlueSky: [profile](https://bsky.app/profile/osrm.bsky.social)
 
+## Support the Project
+
+OSRM is built and maintained through a community effort. The most impactful way to support the project is to contribute your time and expertise.
+
+The primary ways to help are to:
+
+- contribute patches and improvements
+- participate in discussions, issue triage, and code reviews
+
+If you would also like to support the project financially, you can do so via [GitHub Sponsors](https://github.com/sponsors/Project-OSRM) or [PayPal](https://www.paypal.me/DennisLuxen).
+
 ## Quick Start
 
 The easiest and quickest way to setup your own routing engine is to use Docker images we provide.

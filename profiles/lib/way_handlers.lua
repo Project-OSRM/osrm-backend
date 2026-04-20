@@ -414,6 +414,12 @@ function WayHandlers.penalties(profile,way,result,data)
   local is_bidirectional = result.forward_mode ~= mode.inaccessible and
                            result.backward_mode ~= mode.inaccessible
 
+  -- Apply penalty for roads with no lane markings (on bidirectional roads)
+  local lane_markings = way:get_value_by_key("lane_markings")
+  if lane_markings == "no" and is_bidirectional then
+    width_penalty = profile.lane_markings_penalty
+  end
+
   if width <= 3 or (lanes <= 1 and is_bidirectional) then
     width_penalty = 0.5
   end
@@ -672,7 +678,12 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   -- http://wiki.openstreetmap.org/wiki/Key:proposed
   -- https://taginfo.openstreetmap.org/keys/proposed#values
   if profile.avoid.proposed and way:get_value_by_key('proposed') then
-    return false
+    -- Only block if the highway itself is 'proposed' (road not yet built).
+    -- A road with a real highway type and a proposed upgrade tag (e.g. highway=tertiary,
+    -- proposed=secondary) is a real, routable road -- the proposed tag is implicitly ignored.
+    if not data.highway or data.highway == 'proposed' then
+      return false
+    end
   end
 
   -- Reversible oneways change direction with low frequency (think twice a day):
@@ -721,6 +732,40 @@ function WayHandlers.driving_side(profile, way, result, data)
    else
       result.is_left_hand_driving = profile.properties.left_hand_driving
    end
+end
+
+-- Handle conveying tag on escalators and moving walkways
+-- The conveying tag indicates the direction of movement on a conveyor device
+-- Only applies to highway=steps (escalators) and highway=footway (moving walkways)
+-- conveying=forward: movement in way direction only (block backward unless oneway=no)
+-- conveying=backward: movement opposite to way direction only (block forward unless oneway=no)
+-- conveying=reversible: movement can go either direction
+-- Escalators and moving walkways are directional and block travel in the opposite direction
+function WayHandlers.conveying(profile, way, result, data)
+  local conveying = way:get_value_by_key("conveying")
+
+  if not conveying or conveying == "yes" or conveying == "reversible" then
+    return
+  end
+
+  local highway = data.highway
+  if highway ~= "steps" and highway ~= "footway" then
+    return
+  end
+
+  local oneway = data.oneway or way:get_value_by_key("oneway")
+  local allow_reverse = oneway == "no"
+  if conveying == "forward" then
+    -- Block backward travel unless explicitly allowed by oneway=no
+    if not allow_reverse then
+      result.backward_mode = mode.inaccessible
+    end
+  elseif conveying == "backward" then
+    -- Block forward travel unless explicitly allowed by oneway=no
+    if not allow_reverse then
+      result.forward_mode = mode.inaccessible
+    end
+  end
 end
 
 

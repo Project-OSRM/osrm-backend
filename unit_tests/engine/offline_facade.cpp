@@ -262,18 +262,24 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     bool IsBackwardEdge(const NodeID /*edge*/) const { return true; }
 
     bool HasLaneData(const EdgeID /*id*/) const override { return false; }
-    NameID GetNameIndex(const NodeID /*nodeID*/) const override { return EMPTY_NAMEID; }
-    std::string_view GetNameForID(const NameID /*id*/) const override { return std::string_view{}; }
-    std::string_view GetRefForID(const NameID /*id*/) const override { return std::string_view{}; }
-    std::string_view GetPronunciationForID(const NameID /*id*/) const override
+    StringViewID GetNameIndex(const NodeID /*nodeID*/) const override { return EMPTY_STRINGVIEWID; }
+    std::string_view GetNameForID(const StringViewID /*id*/) const override
     {
         return std::string_view{};
     }
-    std::string_view GetDestinationsForID(const NameID /*id*/) const override
+    std::string_view GetRefForID(const StringViewID /*id*/) const override
     {
         return std::string_view{};
     }
-    std::string_view GetExitsForID(const NameID /*id*/) const override
+    std::string_view GetPronunciationForID(const StringViewID /*id*/) const override
+    {
+        return std::string_view{};
+    }
+    std::string_view GetDestinationsForID(const StringViewID /*id*/) const override
+    {
+        return std::string_view{};
+    }
+    std::string_view GetExitsForID(const StringViewID /*id*/) const override
     {
         return std::string_view{};
     }
@@ -396,6 +402,30 @@ BOOST_AUTO_TEST_CASE(facade_uncompressed_methods)
     BOOST_CHECK_EQUAL(facade.GetUncompressedReverseDurations(0).size(), 0);
     BOOST_CHECK_EQUAL(facade.GetUncompressedForwardDatasources(0).size(), 0);
     BOOST_CHECK_EQUAL(facade.GetUncompressedReverseDatasources(0).size(), 0);
+}
+
+BOOST_AUTO_TEST_CASE(insert_or_update_skips_removed_nodes)
+{
+    using QueryHeap = osrm::engine::SearchEngineData<
+        osrm::engine::routing_algorithms::offline::Algorithm>::QueryHeap;
+
+    QueryHeap heap(4, 0);
+    const osrm::engine::MultiLayerDijkstraHeapData initial_data{SPECIAL_NODEID, false};
+    const osrm::engine::MultiLayerDijkstraHeapData updated_data{1, true};
+
+    heap.Insert(1, {10}, initial_data);
+    BOOST_CHECK_EQUAL(heap.DeleteMin(), 1);
+    BOOST_CHECK(heap.WasRemoved(1));
+
+    osrm::engine::routing_algorithms::mld::insertOrUpdate(heap, 1, {5}, updated_data);
+
+    BOOST_CHECK(heap.WasRemoved(1));
+    BOOST_CHECK_EQUAL(from_alias<int>(heap.GetKey(1)), 10);
+
+    const auto heap_node = heap.GetHeapNodeIfWasInserted(1);
+    BOOST_REQUIRE(heap_node != nullptr);
+    BOOST_CHECK_EQUAL(heap_node->data.parent, SPECIAL_NODEID);
+    BOOST_CHECK_EQUAL(heap_node->data.from_clique_arc, false);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

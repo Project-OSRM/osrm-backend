@@ -8,8 +8,6 @@
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assert.hpp>
 #include <boost/foreach.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/qi_int.hpp>
 
 #include <storage/io.hpp>
 
@@ -94,7 +92,7 @@ class RasterSource
     const float xstep;
     const float ystep;
 
-    float CalcSize(int min, int max, std::size_t count) const;
+    static float CalcSize(int min, int max, std::size_t count);
 
   public:
     RasterGrid raster_data;

@@ -41,10 +41,8 @@ if (ENABLE_CONAN)
   if (NOT CONAN_EXECUTABLE)
     message(FATAL_ERROR "Conan not found! Please install Conan 2.x and try again.")
   else()
-    set(CMAKE_TOOLCHAIN_FILE "./conan_toolchain.cmake")
-
     execute_process(
-      COMMAND ${CONAN_EXECUTABLE} install .. --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}
+      COMMAND ${CONAN_EXECUTABLE} install ${CMAKE_CURRENT_SOURCE_DIR} --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}
       WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
       OUTPUT_VARIABLE conan_stdout
       ERROR_VARIABLE conan_stderr
@@ -54,6 +52,8 @@ if (ENABLE_CONAN)
     if (NOT conan_install_result EQUAL 0)
       message(FATAL_ERROR "Conan install failed: ${conan_install_result}. Stderr: ${conan_stderr}. Stdout: ${conan_stdout}")
     endif()
+
+    include("${CMAKE_CURRENT_BINARY_DIR}/conan_toolchain.cmake")
   endif()
 endif()
 
@@ -85,7 +85,7 @@ endif()
 # add @loader_path/$ORIGIN to rpath to make binaries relocatable
 if (APPLE)
   set(CMAKE_BUILD_RPATH "@loader_path")
-else()
+elseif(NOT WIN32)
   set(CMAKE_BUILD_RPATH "\$ORIGIN")
   # https://stackoverflow.com/questions/6324131/rpath-origin-not-having-desired-effect
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,origin")
@@ -95,17 +95,30 @@ include(JSONParser)
 file(READ "package.json" packagejsonraw)
 sbeParseJson(packagejson packagejsonraw)
 
-# This regex is not strict enough, but the correct one is too complicated for cmake matching.
-# https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-if (packagejson.version MATCHES "^([0-9]+)\.([0-9]+)\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
+# This regex supports multiple semver version formats:
+# - (YYYY-2000).M.patchlevel: Monthly releases, e.g., 26.4.0 (April 2026)
+#   MAJOR is the year offset (year - 2000)
+# - Legacy semver: traditional major.minor.patch with optional prerelease, e.g., 6.0.0, 6.0.0-rc1
+
+# Try monthly release format: (YYYY-2000).M.patchlevel with month 1-12, no leading zeros
+if (packagejson.version MATCHES "^([0-9]+)\\.(1[0-2]|[1-9])\\.(0|[1-9][0-9]*)$")
+  # Monthly format: (YYYY-2000).M.patchlevel
+  # MAJOR is already offset (year - 2000)
+  set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
+  set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
+  set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
+  set(OSRM_VERSION_PRERELEASE_BUILD "")
+  set(OSRM_VERSION "${packagejson.version}")
+# Try legacy semver format (major.minor.patch with optional prerelease/build)
+elseif (packagejson.version MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
+  # Legacy semver format: major.minor.patch[-+prerelease]
   set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
   set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
   set(OSRM_VERSION_PATCH            ${CMAKE_MATCH_3})
   set(OSRM_VERSION_PRERELEASE_BUILD ${CMAKE_MATCH_4})
-
-  set(OSRM_VERSION packagejson.version)
+  set(OSRM_VERSION "${packagejson.version}")
 else()
-  message(FATAL_ERROR "Version from package.json cannot be parsed, expected semver compatible label, but found ${packagejson.version}")
+  message(FATAL_ERROR "Version from package.json cannot be parsed. Expected one of:\n  - Monthly release format: (YYYY-2000).M.patchlevel with month 1-12, no leading zeros (e.g., 26.4.0)\n  - Legacy semver format: major.minor.patch with optional prerelease (e.g., 6.0.0 or 6.0.0-rc1)\nBut found: ${packagejson.version}")
 endif()
 
 if (MSVC)
@@ -474,12 +487,6 @@ endif()
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
-
-add_dependency_defines(-DBOOST_SPIRIT_USE_PHOENIX_V3)
-add_dependency_defines(-DBOOST_RESULT_OF_USE_DECLTYPE)
-
-# Workaround for https://github.com/boostorg/phoenix/issues/111
-add_dependency_defines(-DBOOST_PHOENIX_STL_TUPLE_H_)
 
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})

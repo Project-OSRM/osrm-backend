@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(street_name_changes)
     std::vector<InputEdge> edges = {
         MakeUnitEdge(0, 1), MakeUnitEdge(1, 0), MakeUnitEdge(1, 2), MakeUnitEdge(2, 1)};
 
-    annotations[1].name_id = 1;
+    annotations[1].string_view_id = 1;
     edges[2].data.annotation_data = edges[3].data.annotation_data = 1;
 
     Graph graph(5, edges);

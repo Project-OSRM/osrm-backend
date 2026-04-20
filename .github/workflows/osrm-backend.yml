@@ -4,12 +4,11 @@ on:
     branches:
       - master
     tags:
-      - v[1-9]+.[0-9]+.[0-9]+
-      - v[1-9]+.[0-9]+.[0-9]+-[a-zA-Z]+.[0-9]+
-      - v[1-9]+.[0-9]+-[0-9a-zA-Z]+
+      - v*
   pull_request:
     branches:
       - master
+  workflow_dispatch:
 
 env:
   CCACHE_TEMPDIR: /tmp/.ccache-temp
@@ -30,11 +29,11 @@ jobs:
     env:
       BUILD_TYPE: Release
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - run: cmake --version
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v6
         with:
-          node-version: 20
+          node-version: 24
       - run: node --version
       - run: npm --version
       - name: Prepare environment
@@ -52,7 +51,7 @@ jobs:
 
           python3 -m venv .venv
           source .venv/Scripts/Activate
-          python3 -m pip install conan==2.15.1
+          python3 -m pip install conan==2.27.1
           conan profile detect --force
 
           cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
@@ -94,15 +93,15 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   format-taginfo-docs:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-slim
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v6
     - name: Use Node.js
-      uses: actions/setup-node@v4
+      uses: actions/setup-node@v6
       with:
-        node-version: 20
+        node-version: latest
     - name: Enable Node.js cache
-      uses: actions/cache@v4
+      uses: actions/cache@v5
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -110,14 +109,21 @@ jobs:
           ${{ runner.os }}-node-
     - name: Prepare environment
       run: |
+        sudo apt-get update -y
+        sudo apt-get install -y clang-format-18
         npm ci --ignore-scripts
         clang-format-18 --version
+    - name: Check PR title format
+      if: github.event_name == 'pull_request'
+      env:
+        PR_TITLE: ${{ github.event.pull_request.title }}
+      run: |
+        node ./scripts/check_pr_title.js
     - name: Run checks
       run: |
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
         # Check that code formatting is up to date
         ./scripts/format.sh && ./scripts/error_on_dirty.sh "Run './scripts/format.sh' locally and commit the changes."
-        node ./scripts/validate_changelog.js
         # Check that API documentation is up to date with JSDoc comments in node_osrm.cpp
         npm run docs && ./scripts/error_on_dirty.sh "Run 'npm run docs' locally and commit the changes."
         npm audit --production
@@ -131,9 +137,9 @@ jobs:
     continue-on-error: false
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
       - name: Enable osm.pbf cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: berlin-latest.osm.pbf
           key: v1-berlin-osm-pbf
@@ -174,7 +180,7 @@ jobs:
         include:
           - name: clang-20-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-20
@@ -183,7 +189,7 @@ jobs:
 
           - name: clang-19-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-19
@@ -192,7 +198,7 @@ jobs:
 
           - name: clang-18-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
@@ -201,7 +207,7 @@ jobs:
 
           - name: clang-18-debug
             continue-on-error: false
-            node:
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
@@ -210,7 +216,7 @@ jobs:
 
           - name: clang-18-debug-clang-tidy
             continue-on-error: false
-            node: 20
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
@@ -221,7 +227,7 @@ jobs:
 
           - name: clang-18-debug-asan-ubsan
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-18
@@ -233,7 +239,7 @@ jobs:
 
           - name: clang-17-release
             continue-on-error: false
-            node: 20
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-17
@@ -242,7 +248,7 @@ jobs:
 
           - name: clang-16-release
             continue-on-error: false
-            node: 20
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-16
@@ -251,7 +257,7 @@ jobs:
 
           - name: gcc-14-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
@@ -260,7 +266,7 @@ jobs:
 
           - name: gcc-13-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-13
@@ -269,7 +275,7 @@ jobs:
 
           - name: gcc-13-debug-cov
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: gcc-13
@@ -278,7 +284,7 @@ jobs:
 
           - name: gcc-12-release
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-22.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-12
@@ -287,7 +293,7 @@ jobs:
 
           - name: conan-linux-release
             continue-on-error: false
-            node: 20
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
@@ -297,7 +303,7 @@ jobs:
 
           - name: conan-linux-debug-asan-ubsan
             continue-on-error: false
-            node: 20
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
@@ -309,7 +315,7 @@ jobs:
           - name: conan-linux-release-node
             build_node_package: true
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
             CCOMPILER: clang-16
@@ -320,7 +326,7 @@ jobs:
           - name: conan-linux-debug-node
             build_node_package: true
             continue-on-error: false
-            node: 22
+            node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-16
@@ -328,11 +334,21 @@ jobs:
             ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
+          - name: conan-linux-arm64-release
+            continue-on-error: false
+            node: 24
+            runs-on: ubuntu-24.04-arm
+            BUILD_TYPE: Release
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
+            ENABLE_CONAN: ON
+            ENABLE_LTO: OFF
+
           - name: conan-macos-x64-release-node
             build_node_package: true
             continue-on-error: true
-            node: 22
-            runs-on: macos-15-intel # x86_64
+            node: 24
+            runs-on: macos-26-intel # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -342,8 +358,8 @@ jobs:
           - name: conan-macos-arm64-release-node
             build_node_package: true
             continue-on-error: true
-            node: 22
-            runs-on: macos-15 # arm64
+            node: 24
+            runs-on: macos-26 # arm64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -371,36 +387,36 @@ jobs:
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
       ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
       - name: Build machine architecture
         run: uname -m
       - name: Use Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node }}
       - name: Enable Node.js cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
       - name: Enable compiler cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.ccache
           key: ccache-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.name }}-
       - name: Enable Conan cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ~/.conan2
           key: v10-conan-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             v10-conan-${{ matrix.name }}-
       - name: Enable test cache
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         with:
           path: ${{github.workspace}}/test/cache
           key: v4-test-${{ matrix.name }}-${{ github.sha }}
@@ -504,8 +520,12 @@ jobs:
           if [[ "${ENABLE_CONAN}" == "ON" ]]; then
             python3 -m venv .venv
             source .venv/bin/activate
-            python3 -m pip install conan==2.15.1
+            python3 -m pip install conan==2.27.1
             conan profile detect --force
+            if [[ "${RUNNER_OS}" == "macOS" ]]; then
+              CONAN_DEFAULT_PROFILE="$(conan profile path default)"
+              perl -0pi -e 's/^compiler\.version=.*/compiler.version=17/m' "${CONAN_DEFAULT_PROFILE}"
+            fi
           fi
 
           ccache --zero-stats
@@ -553,19 +573,9 @@ jobs:
           popd
           npm test -- --parallel $JOBS
 
-      - name: Use Node 20
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-      - name: Run Node package tests on Node 20
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        run: |
-          node --version
-          npm run nodejs-tests
       - name: Use Node 22
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: 22
       - name: Run Node package tests on Node 22
@@ -573,9 +583,19 @@ jobs:
         run: |
           node --version
           npm run nodejs-tests
+      - name: Use Node 24
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - name: Run Node package tests on Node 24
+        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+        run: |
+          node --version
+          npm run nodejs-tests
       - name: Use Node latest
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: latest
       - name: Run Node package tests on Node-latest
@@ -585,7 +605,7 @@ jobs:
           npm run nodejs-tests
 
       - name: Upload test logs
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         if: failure()
         with:
           name: logs

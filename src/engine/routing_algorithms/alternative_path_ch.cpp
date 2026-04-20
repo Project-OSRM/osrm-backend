@@ -202,12 +202,12 @@ void computeWeightAndSharingOfViaPath(SearchEngineData<Algorithm> &engine_workin
                                        min_edge_offset,
                                        {});
     }
-    *real_weight_of_via_path = upper_bound_s_v_path_weight + upper_bound_of_v_t_path_weight;
 
     if (SPECIAL_NODEID == s_v_middle || SPECIAL_NODEID == v_t_middle)
     {
         return;
     }
+    *real_weight_of_via_path = upper_bound_s_v_path_weight + upper_bound_of_v_t_path_weight;
 
     // retrieve packed paths
     retrievePackedPathFromHeap(

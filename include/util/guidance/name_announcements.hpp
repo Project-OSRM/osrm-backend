@@ -3,7 +3,7 @@
 
 /* A set of tools required for guidance in both pre and post-processing */
 
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/suffix_table.hpp"
 
 #include "util/typedefs.hpp"
@@ -212,23 +212,23 @@ inline bool requiresNameAnnounced(const std::string &from_name,
                                  table);
 }
 
-inline bool requiresNameAnnounced(const NameID from_name_id,
-                                  const NameID to_name_id,
-                                  const extractor::NameTable &name_table,
+inline bool requiresNameAnnounced(const StringViewID from_name_id,
+                                  const StringViewID to_name_id,
+                                  const extractor::StringTable &string_table,
                                   const extractor::SuffixTable &suffix_table)
 {
     if (from_name_id == to_name_id)
         return false;
     else
-        return requiresNameAnnounced(name_table.GetNameForID(from_name_id),
-                                     name_table.GetRefForID(from_name_id),
-                                     name_table.GetPronunciationForID(from_name_id),
-                                     name_table.GetExitsForID(from_name_id),
+        return requiresNameAnnounced(string_table.GetNameForID(from_name_id),
+                                     string_table.GetRefForID(from_name_id),
+                                     string_table.GetPronunciationForID(from_name_id),
+                                     string_table.GetExitsForID(from_name_id),
                                      //
-                                     name_table.GetNameForID(to_name_id),
-                                     name_table.GetRefForID(to_name_id),
-                                     name_table.GetPronunciationForID(to_name_id),
-                                     name_table.GetExitsForID(to_name_id),
+                                     string_table.GetNameForID(to_name_id),
+                                     string_table.GetRefForID(to_name_id),
+                                     string_table.GetPronunciationForID(to_name_id),
+                                     string_table.GetExitsForID(to_name_id),
                                      //
                                      suffix_table);
 }
