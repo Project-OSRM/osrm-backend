@@ -394,19 +394,6 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-      - name: Use Xcode SDK (macOS)
-        if: runner.os == 'macOS'
-        run: |
-          echo "--- before ---"
-          xcode-select -p
-          xcrun --show-sdk-path
-          ls /Applications | grep -i Xcode || true
-          sudo xcode-select --switch /Applications/Xcode.app/Contents/Developer
-          echo "--- after ---"
-          xcode-select -p
-          xcrun --show-sdk-path
-          echo "SDKROOT=$(xcrun --show-sdk-path)" >> "$GITHUB_ENV"
-          echo "DEVELOPER_DIR=/Applications/Xcode.app/Contents/Developer" >> "$GITHUB_ENV"
       - name: Build machine architecture
         run: uname -m
       - name: Use Node.js
