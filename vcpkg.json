@@ -47,12 +47,5 @@
     "protozero",
     "flatbuffers",
     "libosmium"
-  ],
-  "overrides": [
-    {
-      "$comment": "Generated flatbuffers headers in generated/ are pinned to 25.9.23; vcpkg default is 25.12.19. Regenerate the .h files to move this pin forward.",
-      "name": "flatbuffers",
-      "version": "25.9.23"
-    }
   ]
 }
