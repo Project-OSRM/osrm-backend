@@ -26,7 +26,6 @@ option(BUILD_PACKAGE "Build OSRM package" OFF)
 option(ENABLE_ASSERTIONS "Use assertions in release mode" OFF)
 option(ENABLE_CCACHE "Speed up incremental rebuilds via ccache" ON)
 option(ENABLE_CLANG_TIDY "Enables clang-tidy checks" OFF)
-option(ENABLE_CONAN "Use conan for dependencies" OFF)
 option(ENABLE_COVERAGE "Build with coverage instrumentalisation" OFF)
 option(ENABLE_DEBUG_LOGGING "Use debug logging in release mode" OFF)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
@@ -34,28 +33,9 @@ option(ENABLE_LTO "Use Link Time Optimisation" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 
-if (ENABLE_CONAN)
-  message(STATUS "Installing Conan packages. It may take a while...")
-  find_program(CONAN_EXECUTABLE NAMES conan)
-
-  if (NOT CONAN_EXECUTABLE)
-    message(FATAL_ERROR "Conan not found! Please install Conan 2.x and try again.")
-  else()
-    execute_process(
-      COMMAND ${CONAN_EXECUTABLE} install ${CMAKE_CURRENT_SOURCE_DIR} --output-folder=. --build=missing --settings compiler.cppstd=20 --settings build_type=${CMAKE_BUILD_TYPE}
-      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-      OUTPUT_VARIABLE conan_stdout
-      ERROR_VARIABLE conan_stderr
-      RESULT_VARIABLE conan_install_result
-    )
-
-    if (NOT conan_install_result EQUAL 0)
-      message(FATAL_ERROR "Conan install failed: ${conan_install_result}. Stderr: ${conan_stderr}. Stdout: ${conan_stdout}")
-    endif()
-
-    include("${CMAKE_CURRENT_BINARY_DIR}/conan_toolchain.cmake")
-  endif()
-endif()
+# Dependencies are provided by vcpkg in manifest mode (see vcpkg.json).
+# The vcpkg toolchain file is wired up via CMakePresets.json or by passing
+# -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake.
 
 if (ENABLE_CLANG_TIDY)
   find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
@@ -152,8 +132,6 @@ include(GNUInstallDirs)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/generated/include/)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/sol2/include)
 
 set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
 
@@ -348,10 +326,7 @@ if(OSRM_HAS_STD_FORMAT)
   add_definitions(-DOSRM_HAS_STD_FORMAT)
 endif()
 
-# Third-party libraries
-set(RAPIDJSON_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/rapidjson/include")
-include_directories(SYSTEM ${RAPIDJSON_INCLUDE_DIR})
-
+# microtar is still vendored: single .c file, no upstream vcpkg port.
 set(MICROTAR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src")
 include_directories(SYSTEM ${MICROTAR_INCLUDE_DIR})
 
@@ -361,116 +336,157 @@ set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
 target_no_warning(MICROTAR unused-variable)
 target_no_warning(MICROTAR format)
 
-set(PROTOZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/protozero/include")
+# Header-only libraries from vcpkg. Each provides a CMake CONFIG package.
+find_package(fmt CONFIG REQUIRED)
+# fmt is consumed header-only so OSRM targets don't need to link libfmt.
+# Without this, LTO builds emit undefined references to fmt::v12::vformat,
+# fmt::v12::report_error, etc. because the templates pull in out-of-line
+# symbols that only exist in the compiled fmt::fmt library.
+add_compile_definitions(FMT_HEADER_ONLY)
+find_package(RapidJSON CONFIG REQUIRED)
+find_package(sol2 CONFIG REQUIRED)
+find_package(flatbuffers CONFIG REQUIRED)
+
+# Generate flatbuffers C++ headers from .fbs schemas at build time.
+# This removes the need to commit pre-generated headers and pin the
+# flatbuffers version — any compatible flatc will regenerate them.
+# BuildFlatBuffers.cmake is shipped alongside flatbuffers-config.cmake
+# but not on CMAKE_MODULE_PATH, so locate it via the package's own dir.
+include("${flatbuffers_DIR}/BuildFlatBuffers.cmake")
+set(FLATBUFFERS_SCHEMAS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/fbresult.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/route.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/table.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/waypoint.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/position.fbs)
+flatbuffers_generate_headers(
+    TARGET osrm_fbs
+    SCHEMAS ${FLATBUFFERS_SCHEMAS}
+    INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers
+    INCLUDE_PREFIX "engine/api/flatbuffers"
+    FLAGS --gen-mutable)
+# Make the generated headers available to all targets (the OBJECT libraries
+# were defined earlier, so we use include_directories + add_dependencies
+# rather than target_link_libraries). Every OBJECT library pulls in these
+# headers transitively via engine/api/base_api.hpp or plugin_base.hpp, so
+# each needs an explicit dependency on the generator or parallel builds
+# race the header generation and fail with "No such file or directory".
+include_directories(SYSTEM $<TARGET_PROPERTY:osrm_fbs,INTERFACE_INCLUDE_DIRECTORIES>)
+foreach(_osrm_obj UTIL EXTRACTOR PARTITIONER CUSTOMIZER CONTRACTOR UPDATER STORAGE ENGINE SERVER)
+    add_dependencies(${_osrm_obj} GENERATE_osrm_fbs)
+endforeach()
+
+# protozero has no CMake config in its vcpkg port — it ships only headers.
+# Locate the include dir via a sentinel header and add it directly.
+find_path(PROTOZERO_INCLUDE_DIR NAMES protozero/pbf_reader.hpp REQUIRED)
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 
+# vtzero has no vcpkg port; keep it vendored. Header-only, so just the include.
 set(VTZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vtzero/include")
 include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
 
-set(FLATBUFFERS_BUILD_TESTS OFF CACHE BOOL "Disable the build of Flatbuffers tests and samples.")
-set(FLATBUFFERS_SRC_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers")
-set(FLATBUFFERS_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/flatbuffers/include")
-include_directories(SYSTEM ${FLATBUFFERS_INCLUDE_DIR})
-add_subdirectory(${FLATBUFFERS_SRC_DIR}
-        ${CMAKE_CURRENT_BINARY_DIR}/flatbuffers-build
-        EXCLUDE_FROM_ALL)
+# The OBJECT libraries below (UTIL, EXTRACTOR, ENGINE, …) were created before
+# these find_package() calls, so we can't use target_link_libraries on them
+# from here. Instead, harvest INTERFACE_INCLUDE_DIRECTORIES from each imported
+# target and push them into the directory-level include_directories, which
+# DOES apply retroactively to earlier targets. Consumers (unit tests, etc.)
+# inherit the same search paths via the directory.
+set(_osrm_vcpkg_header_targets
+    fmt::fmt-header-only fmt::fmt
+    sol2::sol2
+    rapidjson RapidJSON::RapidJSON
+    flatbuffers::flatbuffers)
+foreach(_dep IN LISTS _osrm_vcpkg_header_targets)
+  if(TARGET ${_dep})
+    get_target_property(_inc ${_dep} INTERFACE_INCLUDE_DIRECTORIES)
+    if(_inc)
+      include_directories(SYSTEM ${_inc})
+    endif()
+  endif()
+endforeach()
 
-set(FMT_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/fmt/include")
-add_compile_definitions(FMT_HEADER_ONLY)
-include_directories(SYSTEM ${FMT_INCLUDE_DIR})
 
-
-# see https://stackoverflow.com/questions/70898030/boost-link-error-using-conan-find-package
 if (MSVC)
+  # Disable Boost auto-linking on MSVC; we link boost libraries explicitly
+  # via imported targets from vcpkg.
   add_definitions(-DBOOST_ALL_NO_LIB)
 endif()
 
 
-if (ENABLE_CONAN)
-  set(Boost_USE_STATIC_LIBS ON)
-  find_package(Boost 1.70 REQUIRED COMPONENTS ${BOOST_COMPONENTS})
-
-  find_package(TBB REQUIRED)
-  find_package(EXPAT REQUIRED)
-  find_package(BZip2 REQUIRED)
-  find_package(Lua 5.2 REQUIRED)
-
-  add_dependency_includes(${Boost_INCLUDE_DIRS})
-
-  set(BOOST_BASE_LIBRARIES ${Boost_LIBRARIES})
-  set(BOOST_ENGINE_LIBRARIES ${Boost_LIBRARIES})
-
-  add_dependency_includes(${TBB_INCLUDE_DIR})
-  set(TBB_LIBRARIES ${TBB_LIBRARIES})
-
-  add_dependency_includes(${expat_INCLUDE_DIRS})
-  set(EXPAT_LIBRARIES ${expat_LIBRARIES})
-  set(EXPAT_INCLUDE_DIRS ${expat_INCLUDE_DIRS})
-
-  add_dependency_includes(${BZIP2_INCLUDE_DIR})
-
-  set(LUA_LIBRARIES lua::lua)
-  if (LUA_FOUND)
-    message(STATUS "Using Lua ${LUA_VERSION_STRING}")
+# All dependencies below come from vcpkg (vcpkg.json). The vcpkg toolchain
+# file exposes them via standard CMake find_package() / imported targets.
+find_package(Boost 1.70 REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
+find_package(TBB CONFIG REQUIRED)
+# Always link the release build of TBB, even in Debug/Coverage configurations.
+# vcpkg's debug TBB enables internal debug assertions (e.g. intrusive_list
+# invariants) that trip during osrm-extract's test-data generation on
+# ubuntu-24.04 under gcc-13. The master branch never hit this because it
+# linked the system's release-only TBB. Do the same here.
+foreach(_tbb_target TBB::tbb TBB::tbbmalloc TBB::tbbmalloc_proxy)
+  if(TARGET ${_tbb_target})
+    set_target_properties(${_tbb_target} PROPERTIES
+      MAP_IMPORTED_CONFIG_DEBUG        Release
+      MAP_IMPORTED_CONFIG_MINSIZEREL   Release
+      MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
   endif()
+endforeach()
+find_package(EXPAT REQUIRED)
+find_package(BZip2 REQUIRED)
+find_package(Lua 5.4 REQUIRED)
 
-  add_dependency_includes(${lua_INCLUDE_DIRS})
+add_dependency_includes(${Boost_INCLUDE_DIRS})
+add_dependency_includes(${EXPAT_INCLUDE_DIRS})
+add_dependency_includes(${BZIP2_INCLUDE_DIR})
+add_dependency_includes(${LUA_INCLUDE_DIR})
 
-  # note: we avoid calling find_package(Osmium ...) here to ensure that the
-  # expat and bzip2 are used from conan rather than the system
-  include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include)
-else()
-  find_package(Boost 1.70 REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
+# Use modern imported targets for TBB and Boost so the rest of the build
+# is agnostic to whether the deps came from vcpkg, a system package, or a
+# subproject. Legacy Boost_*_LIBRARY variables below are populated to the
+# matching target names so unit_tests/CMakeLists.txt and src/benchmarks/
+# keep working without edits during the migration.
+set(TBB_LIBRARIES TBB::tbb)
 
-  find_package(TBB REQUIRED)
-  find_package(EXPAT REQUIRED)
-  find_package(BZip2 REQUIRED)
-  find_package(Lua 5.2 REQUIRED)
+set(Boost_DATE_TIME_LIBRARY            Boost::date_time)
+set(Boost_IOSTREAMS_LIBRARY            Boost::iostreams)
+set(Boost_THREAD_LIBRARY               Boost::thread)
+set(Boost_REGEX_LIBRARY                Boost::regex)
+set(Boost_PROGRAM_OPTIONS_LIBRARY      Boost::program_options)
+set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY  Boost::unit_test_framework)
 
-  add_dependency_includes(${Boost_INCLUDE_DIRS})
-  add_dependency_includes(${TBB_INCLUDE_DIR})
-  add_dependency_includes(${EXPAT_INCLUDE_DIRS})
-  add_dependency_includes(${BZIP2_INCLUDE_DIR})
-  add_dependency_includes(${LUA_INCLUDE_DIR})
+set(BOOST_BASE_LIBRARIES
+  ${Boost_DATE_TIME_LIBRARY}
+  ${Boost_IOSTREAMS_LIBRARY}
+  ${Boost_THREAD_LIBRARY})
 
-  set(TBB_LIBRARIES TBB::tbb)
+set(BOOST_ENGINE_LIBRARIES
+  ${Boost_REGEX_LIBRARY}
+  ${BOOST_BASE_LIBRARIES})
 
-  set(BOOST_BASE_LIBRARIES
-    ${Boost_DATE_TIME_LIBRARY}
-    ${Boost_IOSTREAMS_LIBRARY}
-    ${Boost_THREAD_LIBRARY})
-
-  set(BOOST_ENGINE_LIBRARIES
-    ${Boost_ZLIB_LIBRARY}
-    ${Boost_REGEX_LIBRARY}
-    ${BOOST_BASE_LIBRARIES})
-
-  # add a target to generate API documentation with Doxygen
-  find_package(Doxygen)
-  if(DOXYGEN_FOUND)
-    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
-    if(BUILD_AS_SUBPROJECT)
-      add_custom_target(osrm_doc
-        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Generating API documentation with Doxygen" VERBATIM
-      )
-    else()
-      add_custom_target(doc
-        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
-        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-        COMMENT "Generating API documentation with Doxygen" VERBATIM
-      )
-    endif()
+# add a target to generate API documentation with Doxygen
+find_package(Doxygen)
+if(DOXYGEN_FOUND)
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile @ONLY)
+  if(BUILD_AS_SUBPROJECT)
+    add_custom_target(osrm_doc
+      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
+  else()
+    add_custom_target(doc
+      ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile
+      WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+      COMMENT "Generating API documentation with Doxygen" VERBATIM
+    )
   endif()
-  # note libosmium depends on expat and bzip2
-  list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/cmake")
-  if(NOT OSMIUM_INCLUDE_DIR)
-    set(OSMIUM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libosmium/include")
-  endif()
-  find_package(Osmium REQUIRED COMPONENTS io)
-  include_directories(SYSTEM ${OSMIUM_INCLUDE_DIR})
 endif()
+
+# libosmium from vcpkg. The vcpkg port ships only headers, so we use the
+# upstream FindOsmium.cmake module (kept in cmake/) to locate the vcpkg
+# include dir and wire up the expat/bzip2/zlib runtime libs via the "io"
+# component.
+find_package(Osmium REQUIRED COMPONENTS io)
+include_directories(SYSTEM ${OSMIUM_INCLUDE_DIRS})
 
 # prefix compilation with ccache by default if available and on clang or gcc
 if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
@@ -482,8 +498,8 @@ if(ENABLE_CCACHE AND (CMAKE_CXX_COMPILER_ID MATCHES "Clang" OR CMAKE_CXX_COMPILE
   endif()
 endif()
 
-# even with conan builds we want to link to system zlib
-# to ensure that osrm binaries play well with other binaries like nodejs
+# Link to zlib explicitly so osrm binaries play well with other binaries
+# (e.g. nodejs) that expect the same zlib ABI.
 find_package(ZLIB REQUIRED)
 add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
@@ -593,7 +609,6 @@ set_property(TARGET osrm-contract PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-datastore PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET osrm-routed PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
 
-file(GLOB FlatbuffersGlob third_party/flatbuffers/include/flatbuffers/*.h)
 file(GLOB LibraryGlob include/osrm/*.hpp)
 file(GLOB ParametersGlob include/engine/api/*_parameters.hpp)
 set(ApiHeader include/engine/api/base_result.hpp)
@@ -612,7 +627,8 @@ install(FILES ${ContractorHeader} DESTINATION include/osrm/contractor)
 install(FILES ${LibraryGlob} DESTINATION include/osrm)
 install(FILES ${ParametersGlob} DESTINATION include/osrm/engine/api)
 install(FILES ${ApiHeader} DESTINATION include/osrm/engine/api)
-install(FILES ${FlatbuffersGlob} DESTINATION include/flatbuffers)
+# Flatbuffers headers are provided by the vcpkg port and installed into the
+# consumer's sysroot directly; we no longer ship them as part of libosrm.
 
 install(TARGETS osrm-extract DESTINATION bin)
 install(TARGETS osrm-partition DESTINATION bin)
@@ -675,26 +691,39 @@ list(APPEND DEPENDENCIES_INCLUDE_DIRS "${PKGCONFIG_INCLUDE_DIR}/osrm")
 JOIN("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
 
 
-if (NOT ENABLE_CONAN)
-  foreach(engine_lib ${ENGINE_LIBRARIES})
-    if("${engine_lib}" MATCHES "^boost.*" OR "${engine_lib}" MATCHES "^TBB.*")
-      list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "$<TARGET_LINKER_FILE:${engine_lib}>")
+foreach(engine_lib ${ENGINE_LIBRARIES})
+  if(TARGET ${engine_lib})
+    # Some imported targets (e.g. Boost::regex in modern Boost) are
+    # INTERFACE-only and have no TARGET_LINKER_FILE. Only embed a linker
+    # file for targets that actually produce one.
+    get_target_property(_tgt_type ${engine_lib} TYPE)
+    if(_tgt_type STREQUAL "INTERFACE_LIBRARY")
+      list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "-l${engine_lib}")
     else()
-      list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
+      list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "$<TARGET_LINKER_FILE:${engine_lib}>")
     endif()
-  endforeach(engine_lib)
-endif()
+  else()
+    list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
+  endif()
+endforeach(engine_lib)
 
 JOIN("${PKGCONFIG_DEPENDENT_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in pkgconfig.configured @ONLY)
-file(GENERATE
-     OUTPUT
-     ${PROJECT_BINARY_DIR}/libosrm.pc
-     INPUT
-     ${PROJECT_BINARY_DIR}/pkgconfig.configured)
+# Multi-config generators (e.g. Visual Studio) produce different values for
+# $<TARGET_LINKER_FILE:...> per configuration, which causes file(GENERATE) to
+# fail when writing a single output path. pkgconfig is not used on Windows, so
+# skip generation for multi-config generators.
+get_property(_is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
+if(NOT _is_multi_config)
+  file(GENERATE
+       OUTPUT
+       ${PROJECT_BINARY_DIR}/libosrm.pc
+       INPUT
+       ${PROJECT_BINARY_DIR}/pkgconfig.configured)
 
-install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION ${PKGCONFIG_LIBRARY_DIR}/pkgconfig)
+  install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION ${PKGCONFIG_LIBRARY_DIR}/pkgconfig)
+endif()
 
 # uninstall target
 configure_file(
