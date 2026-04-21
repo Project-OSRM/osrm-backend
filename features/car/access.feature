@@ -313,3 +313,19 @@ Feature: Car - Restricted access
             | primary    | psv          |       |
             | primary    | no           |       |
             | primary    | customers    |   x   |
+
+    Scenario: Car - Winter/ice roads with restricted access
+        Then routability should be
+            | highway    | access      | bothw |
+            | winter_road|             |   x   |
+            | winter_road| yes         |   x   |
+            | winter_road| private     |   x   |
+            | winter_road| delivery    |   x   |
+            | winter_road| destination |   x   |
+            | winter_road| no          |       |
+            | ice_road   |             |   x   |
+            | ice_road   | yes         |   x   |
+            | ice_road   | private     |   x   |
+            | ice_road   | delivery    |   x   |
+            | ice_road   | destination |   x   |
+            | ice_road   | no          |       |
