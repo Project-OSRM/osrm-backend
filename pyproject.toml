@@ -83,7 +83,7 @@ before-build = "ccache -s && ccache -M 500M"
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.macos]
-environment = "MACOSX_DEPLOYMENT_TARGET=14.0 CCACHE_DIR=/tmp/ccache"
+environment = "MACOSX_DEPLOYMENT_TARGET=15.0 CCACHE_DIR=/tmp/ccache"
 before-build = "ccache -s && ccache -M 500M"
 before-all = """
   export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1

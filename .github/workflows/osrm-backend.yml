@@ -347,7 +347,7 @@ jobs:
             build_bindings: true
             continue-on-error: true
             node: 24
-            runs-on: macos-26-intel # x86_64
+            runs-on: macos-15-intel # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -358,7 +358,7 @@ jobs:
             build_bindings: true
             continue-on-error: true
             node: 24
-            runs-on: macos-26 # arm64
+            runs-on: macos-15 # arm64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
