@@ -669,8 +669,9 @@ jobs:
           package-dir: ${{ runner.os == 'Linux' && steps.sdist.outputs.path || '.' }}
           output-dir: dist
         env:
-          # /tmp/ccache can be cached too, esp useful for linux
-          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /tmp/ccache:/ccache"
+          # Mount the workflow-cached ~/.ccache into the container so Linux
+          # wheel builds share the main-build ccache across runs.
+          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /home/runner/.ccache:/ccache"
           CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache"
           CIBW_CONFIG_SETTINGS_MACOS: "cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake.define.CMAKE_C_COMPILER_LAUNCHER=ccache"
           CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.define.ENABLE_CONAN=ON"
