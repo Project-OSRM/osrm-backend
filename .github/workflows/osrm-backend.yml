@@ -54,27 +54,25 @@ jobs:
           python3 -m pip install conan==2.27.1
           conan profile detect --force
 
-          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
-          cmake --build . --config Release
+          cmake -A x64 -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
+          cmake --build . --config Release --parallel 1
 
-      # TODO: MSVC goes out of memory when building our tests
-      # - name: Run tests
-      #   shell: bash
-      #   run: |
-      #     cd build
-      #     cmake --build . --config Release --target tests
-      #     # TODO: run tests
-      # - name: Run node tests
-      #   shell: bash
-      #   run: |
-      #     ./lib/binding_napi_v8/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
+      - name: Build tests
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --config Release --target tests --parallel 1
 
-      #     mkdir -p test/data/ch
-      #     cp test/data/monaco.osrm* test/data/ch/
-      #     ./lib/binding_napi_v8/osrm-contract.exe test/data/ch/monaco.osrm
-
-      #     ./lib/binding_napi_v8/osrm-datastore.exe test/data/ch/monaco.osrm
-      #     node test/nodejs/index.js
+      - name: Run tests
+        shell: bash
+        run: |
+          cd build
+          for test_exe in ./unit_tests/*-tests.exe; do
+            if [ -f "$test_exe" ]; then
+              echo "Running $test_exe"
+              "$test_exe"
+            fi
+          done
       - name: Build Node package
         shell: bash
         run: ./scripts/ci/node_package.sh
