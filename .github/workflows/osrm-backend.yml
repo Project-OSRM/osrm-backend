@@ -407,18 +407,20 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - name: Enable compiler cache
-        uses: actions/cache@v5
+      - name: Restore compiler cache
+        id: ccache-restore
+        uses: actions/cache/restore@v5
         with:
           path: ~/.ccache
           key: ccache-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.name }}-
-      - name: Enable Conan cache
-        uses: actions/cache@v5
+      - name: Restore Conan cache
+        id: conan-restore
+        uses: actions/cache/restore@v5
         with:
           path: ~/.conan2
-          key: v10-conan-${{ matrix.name }}-${{ github.sha }}
+          key: v10-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
           restore-keys: |
             v10-conan-${{ matrix.name }}-
       - name: Enable test cache
@@ -490,17 +492,15 @@ jobs:
             fi
           fi
 
-          # TBB
-          TBB_VERSION=2021.12.0
+          # TBB (Linux only; macOS gets it from conan or brew)
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            TBB_VERSION=2021.12.0
             TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
-          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-mac.tgz"
+            wget --tries 5 ${TBB_URL} -O onetbb.tgz
+            tar zxvf onetbb.tgz
+            sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
+            sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
           fi
-          wget --tries 5 ${TBB_URL} -O onetbb.tgz
-          tar zxvf onetbb.tgz
-          sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
-          sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
       - name: Prepare build
         run: |
           mkdir ${OSRM_BUILD_DIR}
@@ -511,14 +511,9 @@ jobs:
           fi
           echo "CC=${CCOMPILER}" >> $GITHUB_ENV
           echo "CXX=${CXXCOMPILER}" >> $GITHUB_ENV
-          if [[ "${RUNNER_OS}" == "macOS" ]]; then
-            # missing from GCC path, needed for conan builds of libiconv, for example.
-            sudo xcode-select --switch /Library/Developer/CommandLineTools
-            echo "LIBRARY_PATH=${LIBRARY_PATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" >> $GITHUB_ENV
-            echo "CPATH=${CPATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include" >> $GITHUB_ENV
-          fi
 
       - name: Build and install OSRM
+        id: build
         run: |
           echo "Using ${JOBS} jobs"
           pushd ${OSRM_BUILD_DIR}
@@ -562,6 +557,18 @@ jobs:
           popd
         env:
           Boost_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+      - name: Save compiler cache
+        if: steps.build.outcome == 'success' && steps.ccache-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.ccache
+          key: ccache-${{ matrix.name }}-${{ github.sha }}
+      - name: Save Conan cache
+        if: steps.build.outcome == 'success' && steps.conan-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          key: v10-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
       - name: Run all tests
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
         run: |
