@@ -490,8 +490,18 @@ add_dependency_includes(${ZLIB_INCLUDE_DIRS})
 set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
 
 add_definitions(${OSRM_DEFINES})
-include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
-
+# Drop paths the compiler already searches implicitly. Passing e.g. the SDK's
+# /usr/include as an explicit -isystem reorders it ahead of libc++'s own
+# header directory and breaks libc++'s <cstddef> guard on macOS.
+set(_osrm_system_includes ${DEPENDENCIES_INCLUDE_DIRS})
+if(CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES)
+  list(REMOVE_ITEM _osrm_system_includes ${CMAKE_CXX_IMPLICIT_INCLUDE_DIRECTORIES})
+endif()
+if(CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES)
+  list(REMOVE_ITEM _osrm_system_includes ${CMAKE_C_IMPLICIT_INCLUDE_DIRECTORIES})
+endif()
+include_directories(SYSTEM ${_osrm_system_includes})
+unset(_osrm_system_includes)
 
 # Binaries
 target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY})
