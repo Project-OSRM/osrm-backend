@@ -37,6 +37,10 @@ function setup()
     speed_reduction           = 0.8,
     turn_bias                 = 1.075,
     cardinal_directions       = false,
+    -- Penalty in seconds for u-turns at designated turning facilities
+    -- (highway=turning_circle, turning_loop, mini_roundabout).
+    -- Lower than u_turn_penalty because these nodes are specifically designed for turning around.
+    turning_circle_penalty    = 5,
 
     -- Penalty multiplier for roads with no lane markings (lane_markings=no)
     -- Applied to bidirectional roads to prefer roads with clear lane markings
@@ -545,7 +549,12 @@ function process_turn(profile, turn)
     end
 
     if turn.is_u_turn then
-      turn.duration = turn.duration + profile.properties.u_turn_penalty
+      if turn.has_turning_facility then
+        -- No regular u-turn penalty at designated turning facilities (turning_circle, turning_loop, mini_roundabout)
+        turn.duration = turn.duration + profile.turning_circle_penalty
+      else
+        turn.duration = turn.duration + profile.properties.u_turn_penalty
+      end
     end
   end
 
