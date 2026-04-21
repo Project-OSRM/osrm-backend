@@ -151,6 +151,22 @@ include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 include(GNUInstallDirs)
 
+# On macOS, brew-installed headers land in prefixes that clang may already
+# search implicitly (/usr/local on Intel, /opt/homebrew on ARM in some
+# configurations). When a path is implicit, CMake filters it out of
+# include_directories(SYSTEM ...) — no -isystem is emitted — and clang's
+# system-header warning suppression stops reliably catching template-
+# instantiation diagnostics from headers under that prefix. Force -isystem
+# via add_compile_options so brew-installed boost/lua/tbb headers are
+# treated as system headers regardless of implicit status.
+if(APPLE)
+  foreach(_brew_prefix /usr/local /opt/homebrew)
+    if(EXISTS "${_brew_prefix}/include")
+      add_compile_options(SHELL:-isystem ${_brew_prefix}/include)
+    endif()
+  endforeach()
+endif()
+
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/generated/include/)

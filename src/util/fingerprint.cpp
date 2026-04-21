@@ -3,20 +3,7 @@
 #include "util/exception_utils.hpp"
 #include "util/version.hpp"
 
-// boost/crc.hpp's template body contains a UB shift (`remainder <<= CHAR_BIT`
-// where remainder is 8 bits) that gets attributed to the instantiation site —
-// i.e. user code — when boost's header is reached via an implicit system search
-// path (macOS Intel brew at /usr/local/include). Clang's system-header
-// suppression doesn't always catch template-instantiation warnings in that
-// case, so silence it at the include itself.
-#if defined(__clang__)
-#pragma clang diagnostic push
-#pragma clang diagnostic ignored "-Wshift-count-overflow"
-#endif
 #include <boost/crc.hpp>
-#if defined(__clang__)
-#pragma clang diagnostic pop
-#endif
 
 #include <cstring>
 
