@@ -420,9 +420,9 @@ jobs:
         uses: actions/cache/restore@v5
         with:
           path: ~/.conan2
-          key: v10-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
+          key: v11-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
           restore-keys: |
-            v10-conan-${{ matrix.name }}-
+            v11-conan-${{ matrix.name }}-
       - name: Enable test cache
         uses: actions/cache@v5
         with:
@@ -568,7 +568,7 @@ jobs:
         uses: actions/cache/save@v5
         with:
           path: ~/.conan2
-          key: v10-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
+          key: v11-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
       - name: Run all tests
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
         run: |
