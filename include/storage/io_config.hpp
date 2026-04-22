@@ -3,8 +3,6 @@
 
 #include "util/exception.hpp"
 
-#include <boost/algorithm/string/predicate.hpp>
-
 #include <array>
 #include <filesystem>
 #include <set>
@@ -101,7 +99,7 @@ struct IOConfig
     {
         for (auto &path : paths)
         {
-            if (boost::algorithm::ends_with(path.string(), fileName))
+            if (path.string().ends_with(fileName))
             {
                 return true;
             }
