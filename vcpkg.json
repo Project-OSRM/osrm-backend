@@ -28,7 +28,6 @@
     "boost-serialization",
     "boost-spirit",
     "boost-test",
-    "boost-thread",
     "boost-tokenizer",
     "tbb",
     "expat",
