@@ -14,7 +14,7 @@ pip install osrm-bindings
 Platform | Arch
 ---|---
 Linux | x86_64
-Linux | aarch64
+MacOS | aarch64
 MacOS | arm64
 Windows | x86_64
 

@@ -186,7 +186,7 @@ You can install the Python bindings from PyPI via
 
     pip install osrm-bindings
 
-We distribute `abi3` wheels for CPython 3.12+ on Linux (x86_64, aarch64), macOS (arm64) and Windows (x86_64). On other platforms `pip` will fall back to building from source, which requires CPython 3.10+ and the OSRM build dependencies.
+We distribute `abi3` wheels for CPython 3.12+ on Linux (x86_64), macOS (arm64, x86_64) and Windows (x86_64). On other platforms `pip` will fall back to building from source, which requires CPython 3.10+ and the OSRM build dependencies.
 
 To build from source from this repository:
 
