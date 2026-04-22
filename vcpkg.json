@@ -34,7 +34,6 @@
     "boost-test",
     "boost-thread",
     "boost-tokenizer",
-    "boost-uuid",
     "boost-variant",
     "tbb",
     "expat",

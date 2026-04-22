@@ -2,7 +2,6 @@
 #define FINGERPRINT_H
 
 #include <array>
-#include <boost/uuid/uuid.hpp>
 #include <cstdint>
 #include <type_traits>
 
