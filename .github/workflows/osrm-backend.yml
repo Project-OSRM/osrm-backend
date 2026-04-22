@@ -2,7 +2,7 @@ name: osrm-backend CI
 on:
   push:
     branches:
-      - master
+      - nn-py-bindings
     tags:
       - v*
   pull_request:
@@ -22,75 +22,105 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  # conan-windows-release-node:
-  #   needs: format-taginfo-docs
-  #   runs-on: windows-2025
-  #   continue-on-error: false
-  #   env:
-  #     BUILD_TYPE: Release
-  #   steps:
-  #     - uses: actions/checkout@v6
-  #     - run: cmake --version
-  #     - uses: actions/setup-node@v6
-  #       with:
-  #         node-version: 24
-  #     - run: node --version
-  #     - run: npm --version
-  #     - name: Prepare environment
-  #       shell: bash
-  #       run: |
-  #         PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
-  #         echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
-  #     - run: npm install --ignore-scripts
-  #     - run: npm link --ignore-scripts
-  #     - name: Build
-  #       shell: bash
-  #       run: |
-  #         mkdir build
-  #         cd build
+  conan-windows-release-node:
+    needs: format-taginfo-docs
+    strategy:
+      matrix:
+        os: [windows-2025]
+    runs-on: ${{ matrix.os }}
+    continue-on-error: false
+    env:
+      BUILD_TYPE: Release
+    steps:
+      - uses: actions/checkout@v6
+      - run: cmake --version
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+      - run: node --version
+      - run: npm --version
+      - name: Prepare environment
+        shell: bash
+        run: |
+          PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
+          echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
+      - run: npm install --ignore-scripts
+      - run: npm link --ignore-scripts
+      - name: Restore Conan cache
+        id: conan-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.conan2
+          key: v11-conan-${{ matrix.os }}-${{ hashFiles('conanfile.py') }}
+          restore-keys: |
+            v11-conan-${{ matrix.os }}-
+      - name: Build
+        shell: bash
+        run: |
+          mkdir build
+          cd build
 
-  #         python3 -m venv .venv
-  #         source .venv/Scripts/Activate
-  #         python3 -m pip install conan==2.27.1
-  #         conan profile detect --force
+          python3 -m venv .venv
+          source .venv/Scripts/Activate
+          python3 -m pip install conan==2.27.1
+          conan profile detect --force
 
-  #         cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
-  #         cmake --build . --config Release
+          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
+          cmake --build . --config Release
+      - name: Save Conan cache
+        if: steps.build.outcome == 'success' && steps.conan-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          key: v11-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
 
-  #     # TODO: MSVC goes out of memory when building our tests
-  #     # - name: Run tests
-  #     #   shell: bash
-  #     #   run: |
-  #     #     cd build
-  #     #     cmake --build . --config Release --target tests
-  #     #     # TODO: run tests
-  #     # - name: Run node tests
-  #     #   shell: bash
-  #     #   run: |
-  #     #     ./lib/binding_napi_v8/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
+      # TODO: MSVC goes out of memory when building our tests
+      # - name: Run tests
+      #   shell: bash
+      #   run: |
+      #     cd build
+      #     cmake --build . --config Release --target tests
+      #     # TODO: run tests
+      # - name: Run node tests
+      #   shell: bash
+      #   run: |
+      #     ./lib/binding_napi_v8/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
 
-  #     #     mkdir -p test/data/ch
-  #     #     cp test/data/monaco.osrm* test/data/ch/
-  #     #     ./lib/binding_napi_v8/osrm-contract.exe test/data/ch/monaco.osrm
+      #     mkdir -p test/data/ch
+      #     cp test/data/monaco.osrm* test/data/ch/
+      #     ./lib/binding_napi_v8/osrm-contract.exe test/data/ch/monaco.osrm
 
-  #     #     ./lib/binding_napi_v8/osrm-datastore.exe test/data/ch/monaco.osrm
-  #     #     node test/nodejs/index.js
-  #     - name: Build Node package
-  #       shell: bash
-  #       run: ./scripts/ci/node_package.sh
-  #     - name: Publish Node package
-  #       if: ${{ env.PUBLISH == 'On' }}
-  #       uses: ncipollo/release-action@v1
-  #       with:
-  #         allowUpdates: true
-  #         artifactErrorsFailBuild: true
-  #         artifacts: build/stage/**/*.tar.gz
-  #         omitBody: true
-  #         omitBodyDuringUpdate: true
-  #         omitName: true
-  #         omitNameDuringUpdate: true
-  #         replacesArtifacts: true
-  #         token: ${{ secrets.GITHUB_TOKEN }}
+      #     ./lib/binding_napi_v8/osrm-datastore.exe test/data/ch/monaco.osrm
+      #     node test/nodejs/index.js
+      # - name: Build Node package
+      #   shell: bash
+      #   run: ./scripts/ci/node_package.sh
+      - name: Publish Node package
+        if: ${{ env.PUBLISH == 'On' }}
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: build/stage/**/*.tar.gz
+          omitBody: true
+          omitBodyDuringUpdate: true
+          omitName: true
+          omitNameDuringUpdate: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run CIBuildWheel
+        if: github.event_name != 'pull_request'
+        uses: pypa/cibuildwheel@v3.4.0
+        with:
+          output-dir: dist
+        env:
+          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.define.ENABLE_CONAN=ON"
+      - name: Publish to TestPyPI
+        # if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
+        uses: pypa/gh-action-pypi-publish@v1.13.0
+        with:
+          repository-url: https://test.pypi.org/legacy/
+          verbose: true
 
   format-taginfo-docs:
     runs-on: ubuntu-slim
@@ -354,16 +384,16 @@ jobs:
             ENABLE_ASSERTIONS: ON
             ENABLE_CONAN: ON
 
-          - name: conan-macos-arm64-release-node
-            build_bindings: true
-            continue-on-error: true
-            node: 24
-            runs-on: macos-15 # arm64
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
+          # - name: conan-macos-arm64-release-node
+          #   build_bindings: true
+          #   continue-on-error: true
+          #   node: 24
+          #   runs-on: macos-15 # arm64
+          #   BUILD_TYPE: Release
+          #   CCOMPILER: clang
+          #   CXXCOMPILER: clang++
+          #   ENABLE_ASSERTIONS: ON
+          #   ENABLE_CONAN: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -674,10 +704,9 @@ jobs:
           CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /home/runner/.ccache:/ccache"
           CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache"
           CIBW_CONFIG_SETTINGS_MACOS: "cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake.define.CMAKE_C_COMPILER_LAUNCHER=ccache"
-          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.define.ENABLE_CONAN=ON"
 
       - name: Publish to TestPyPI
-        if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
+        # if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
         uses: pypa/gh-action-pypi-publish@v1.13.0
         with:
           repository-url: https://test.pypi.org/legacy/
