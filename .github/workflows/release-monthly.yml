@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      id-token: write
       actions: write
     outputs:
       tag: ${{ steps.version.outputs.tag }}
