@@ -1,10 +1,8 @@
 name: osrm-backend CI
 on:
-  # push:
-  #   branches:
-  #     - nn-py-bindings
-  tags:
-    - v*
+  push:
+    tags:
+      - v*
   # pull_request:
   #   branches:
   #     - master
