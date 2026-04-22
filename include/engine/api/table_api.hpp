@@ -18,7 +18,7 @@
 
 #include "util/integer_range.hpp"
 
-#include <boost/range/algorithm/transform.hpp>
+#include <algorithm>
 
 #include <iterator>
 
@@ -243,10 +243,10 @@ class TableAPI final : public BaseAPI
         waypoints.reserve(candidates.size());
         BOOST_ASSERT(candidates.size() == parameters.coordinates.size());
 
-        boost::range::transform(candidates,
-                                std::back_inserter(waypoints),
-                                [this, &builder](const PhantomNodeCandidates &candidates)
-                                { return BaseAPI::MakeWaypoint(&builder, candidates)->Finish(); });
+        std::ranges::transform(candidates,
+                               std::back_inserter(waypoints),
+                               [this, &builder](const PhantomNodeCandidates &candidates)
+                               { return BaseAPI::MakeWaypoint(&builder, candidates)->Finish(); });
         return builder.CreateVector(waypoints);
     }
 
@@ -257,7 +257,7 @@ class TableAPI final : public BaseAPI
     {
         std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
         waypoints.reserve(indices.size());
-        boost::range::transform(
+        std::ranges::transform(
             indices,
             std::back_inserter(waypoints),
             [this, &builder, &candidates](const std::size_t idx)
@@ -330,10 +330,10 @@ class TableAPI final : public BaseAPI
         json_waypoints.values.reserve(candidates.size());
         BOOST_ASSERT(candidates.size() == parameters.coordinates.size());
 
-        boost::range::transform(candidates,
-                                std::back_inserter(json_waypoints.values),
-                                [this](const PhantomNodeCandidates &candidates)
-                                { return BaseAPI::MakeWaypoint(candidates); });
+        std::ranges::transform(candidates,
+                               std::back_inserter(json_waypoints.values),
+                               [this](const PhantomNodeCandidates &candidates)
+                               { return BaseAPI::MakeWaypoint(candidates); });
         return json_waypoints;
     }
 
@@ -342,13 +342,13 @@ class TableAPI final : public BaseAPI
     {
         util::json::Array json_waypoints;
         json_waypoints.values.reserve(indices.size());
-        boost::range::transform(indices,
-                                std::back_inserter(json_waypoints.values),
-                                [this, &candidates](const std::size_t idx)
-                                {
-                                    BOOST_ASSERT(idx < candidates.size());
-                                    return BaseAPI::MakeWaypoint(candidates[idx]);
-                                });
+        std::ranges::transform(indices,
+                               std::back_inserter(json_waypoints.values),
+                               [this, &candidates](const std::size_t idx)
+                               {
+                                   BOOST_ASSERT(idx < candidates.size());
+                                   return BaseAPI::MakeWaypoint(candidates[idx]);
+                               });
         return json_waypoints;
     }
 

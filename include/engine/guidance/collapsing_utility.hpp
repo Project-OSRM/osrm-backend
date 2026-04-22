@@ -6,7 +6,6 @@
 #include "util/bearing.hpp"
 #include "util/guidance/name_announcements.hpp"
 
-#include <boost/range/algorithm_ext/erase.hpp>
 #include <cstddef>
 
 namespace osrm::engine::guidance

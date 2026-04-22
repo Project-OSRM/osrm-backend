@@ -22,8 +22,6 @@
     "boost-iterator",
     "boost-numeric-conversion",
     "boost-program-options",
-    "boost-range",
-    "boost-serialization",
     "boost-spirit",
     "boost-test",
     "boost-tokenizer",
