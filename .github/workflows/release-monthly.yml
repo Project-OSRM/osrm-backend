@@ -14,10 +14,9 @@ on:
         required: false
         type: string
       branch:
-        description: 'Branch to release from (defaults to master)'
+        description: 'Branch to release from (defaults to the ref that triggered this workflow)'
         required: false
         type: string
-        default: 'master'
 
 concurrency:
   group: release-monthly-${{ github.ref }}
@@ -33,7 +32,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch || 'master' }}
+          ref: ${{ inputs.branch || github.ref_name }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v6
@@ -53,7 +52,7 @@ jobs:
           fi
           
           # Validate branch input (prevent shell injection)
-          BRANCH="${{ inputs.branch || 'master' }}"
+          BRANCH="${{ inputs.branch || github.ref_name }}"
           if ! echo "$BRANCH" | grep -E '^[a-zA-Z0-9._/-]+$' > /dev/null; then
             echo "Error: branch name contains invalid characters"
             exit 1
@@ -135,7 +134,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
         run: |
-          BRANCH="${{ inputs.branch || 'master' }}"
+          BRANCH="${{ inputs.branch || github.ref_name }}"
           git push origin "$BRANCH"
           git push origin "${{ steps.version.outputs.tag }}"
 
