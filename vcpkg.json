@@ -30,7 +30,6 @@
     "boost-test",
     "boost-thread",
     "boost-tokenizer",
-    "boost-variant",
     "tbb",
     "expat",
     "bzip2",
