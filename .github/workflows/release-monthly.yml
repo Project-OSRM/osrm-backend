@@ -1,9 +1,6 @@
 name: Monthly Release
 
 on:
-  push:
-    branches:
-      - nn-py-bindings
   schedule:
     # 1st of each month at 08:00 UTC
     - cron: '0 8 1 * *'
@@ -14,9 +11,10 @@ on:
         required: false
         type: string
       branch:
-        description: 'Branch to release from (defaults to the ref that triggered this workflow)'
+        description: 'Branch to release from (defaults to master)'
         required: false
         type: string
+        default: 'master'
 
 concurrency:
   group: release-monthly-${{ github.ref }}
@@ -27,12 +25,15 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
-      id-token: write
       actions: write
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
+      run_id: ${{ steps.wait_ci.outputs.run_id }}
     steps:
       - uses: actions/checkout@v6
         with:
-          ref: ${{ inputs.branch || github.ref_name }}
+          ref: ${{ inputs.branch || 'master' }}
           fetch-depth: 0
 
       - uses: actions/setup-node@v6
@@ -52,7 +53,7 @@ jobs:
           fi
           
           # Validate branch input (prevent shell injection)
-          BRANCH="${{ inputs.branch || github.ref_name }}"
+          BRANCH="${{ inputs.branch || 'master' }}"
           if ! echo "$BRANCH" | grep -E '^[a-zA-Z0-9._/-]+$' > /dev/null; then
             echo "Error: branch name contains invalid characters"
             exit 1
@@ -134,7 +135,7 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
         run: |
-          BRANCH="${{ inputs.branch || github.ref_name }}"
+          BRANCH="${{ inputs.branch || 'master' }}"
           git push origin "$BRANCH"
           git push origin "${{ steps.version.outputs.tag }}"
 
@@ -232,13 +233,36 @@ jobs:
           echo "✗ Timed out waiting for CI workflow to complete for tag $TAG"
           exit 1
 
+
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Install dependencies (skip native build scripts)
+        run: npm ci --ignore-scripts
+
+      - name: Publish to npm
+        run: npm publish
+
       - name: Download wheels from CI run
         uses: actions/download-artifact@v4
         with:
           pattern: wheels-*
           path: dist
           merge-multiple: true
-          run-id: ${{ steps.wait_ci.outputs.run_id }}
+          run-id: ${{ needs.release.outputs.run_id }}
           github-token: ${{ github.token }}
 
       - name: Publish to PyPI
@@ -247,10 +271,4 @@ jobs:
           skip-existing: true
           verbose: true
           repository-url: https://test.pypi.org/legacy/
-
-      # - name: Install dependencies (skip native build scripts)
-      #   run: npm ci --ignore-scripts
-
-      # - name: Publish to npm
-      #   run: npm publish
 
