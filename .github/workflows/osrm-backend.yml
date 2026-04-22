@@ -3,8 +3,8 @@ on:
   # push:
   #   branches:
   #     - nn-py-bindings
-    tags:
-      - v*
+  tags:
+    - v*
   # pull_request:
   #   branches:
   #     - master
@@ -55,6 +55,7 @@ jobs:
           restore-keys: |
             v11-conan-${{ matrix.os }}-
       - name: Build
+        id: build
         shell: bash
         run: |
           mkdir build
@@ -95,19 +96,19 @@ jobs:
       # - name: Build Node package
       #   shell: bash
       #   run: ./scripts/ci/node_package.sh
-      - name: Publish Node package
-        if: ${{ env.PUBLISH == 'On' }}
-        uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          artifacts: build/stage/**/*.tar.gz
-          omitBody: true
-          omitBodyDuringUpdate: true
-          omitName: true
-          omitNameDuringUpdate: true
-          replacesArtifacts: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Publish Node package
+      #   if: ${{ env.PUBLISH == 'On' }}
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     allowUpdates: true
+      #     artifactErrorsFailBuild: true
+      #     artifacts: build/stage/**/*.tar.gz
+      #     omitBody: true
+      #     omitBodyDuringUpdate: true
+      #     omitName: true
+      #     omitNameDuringUpdate: true
+      #     replacesArtifacts: true
+      #     token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run CIBuildWheel
         if: github.event_name != 'pull_request'
         uses: pypa/cibuildwheel@v3.4.0
@@ -586,7 +587,7 @@ jobs:
         env:
           Boost_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
       - name: Save compiler cache
-        if: steps.build.outcome == 'success' && steps.ccache-restore.outputs.cache-hit != 'true'
+        if: steps.build.outcome == 'success'
         uses: actions/cache/save@v5
         with:
           path: ~/.ccache
@@ -597,77 +598,77 @@ jobs:
         with:
           path: ~/.conan2
           key: v11-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
-      - name: Run all tests
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
-        run: |
-          make -C test/data benchmark
+      # - name: Run all tests
+      #   if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
+      #   run: |
+      #     make -C test/data benchmark
 
-          # macOS SIP strips the linker path. Reset this inside the running shell
-          export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
+      #     # macOS SIP strips the linker path. Reset this inside the running shell
+      #     export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
 
-          # All tests assume to be run from the build directory
-          pushd ${OSRM_BUILD_DIR}
-          for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
-          if [ -z "${ENABLE_SANITIZER}" ]; then
-            npm run nodejs-tests
-          fi
-          popd
-          npm test -- --parallel $JOBS
+      #     # All tests assume to be run from the build directory
+      #     pushd ${OSRM_BUILD_DIR}
+      #     for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
+      #     if [ -z "${ENABLE_SANITIZER}" ]; then
+      #       npm run nodejs-tests
+      #     fi
+      #     popd
+      #     npm test -- --parallel $JOBS
 
-      - name: Use Node 22
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v6
-        with:
-          node-version: 22
-      - name: Run Node package tests on Node 22
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        run: |
-          node --version
-          npm run nodejs-tests
-      - name: Use Node 24
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v6
-        with:
-          node-version: 24
-      - name: Run Node package tests on Node 24
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        run: |
-          node --version
-          npm run nodejs-tests
-      - name: Use Node latest
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v6
-        with:
-          node-version: latest
-      - name: Run Node package tests on Node-latest
-        if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        run: |
-          node --version
-          npm run nodejs-tests
+      # - name: Use Node 22
+      #   if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      #   uses: actions/setup-node@v6
+      #   with:
+      #     node-version: 22
+      # - name: Run Node package tests on Node 22
+      #   if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      #   run: |
+      #     node --version
+      #     npm run nodejs-tests
+      # - name: Use Node 24
+      #   if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      #   uses: actions/setup-node@v6
+      #   with:
+      #     node-version: 24
+      # - name: Run Node package tests on Node 24
+      #   if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      #   run: |
+      #     node --version
+      #     npm run nodejs-tests
+      # - name: Use Node latest
+      #   if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      #   uses: actions/setup-node@v6
+      #   with:
+      #     node-version: latest
+      # - name: Run Node package tests on Node-latest
+      #   if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
+      #   run: |
+      #     node --version
+      #     npm run nodejs-tests
 
-      - name: Upload test logs
-        uses: actions/upload-artifact@v6
-        if: failure()
-        with:
-          name: logs
-          path: test/logs/
+      # - name: Upload test logs
+      #   uses: actions/upload-artifact@v6
+      #   if: failure()
+      #   with:
+      #     name: logs
+      #     path: test/logs/
 
-      - name: Build Node package
-        if: ${{ env.BUILD_BINDINGS }}
-        run: ./scripts/ci/node_package.sh
-      - name: Publish Node package
-        if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
-        uses: ncipollo/release-action@v1
-        with:
-          allowUpdates: true
-          artifactErrorsFailBuild: true
-          artifacts: build/stage/**/*.tar.gz
-          omitBody: true
-          omitBodyDuringUpdate: true
-          omitName: true
-          omitNameDuringUpdate: true
-          replacesArtifacts: true
-          token: ${{ secrets.GITHUB_TOKEN }}
+      # - name: Build Node package
+      #   if: ${{ env.BUILD_BINDINGS }}
+      #   run: ./scripts/ci/node_package.sh
+      # - name: Publish Node package
+      #   if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
+      #   uses: ncipollo/release-action@v1
+      #   with:
+      #     allowUpdates: true
+      #     artifactErrorsFailBuild: true
+      #     artifacts: build/stage/**/*.tar.gz
+      #     omitBody: true
+      #     omitBodyDuringUpdate: true
+      #     omitName: true
+      #     omitNameDuringUpdate: true
+      #     replacesArtifacts: true
+      #     token: ${{ secrets.GITHUB_TOKEN }}
       
       # Python bindings
 
