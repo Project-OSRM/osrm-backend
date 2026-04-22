@@ -198,7 +198,9 @@ function setup()
       'residential',
       'living_street',
       'unclassified',
-      'service'
+      'service',
+      'winter_road',
+      'ice_road'
     },
 
     construction_whitelist = Set {
