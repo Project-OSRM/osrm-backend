@@ -2,13 +2,17 @@
 
 ## Installing for production
 
-Pre-built wheels are published to PyPI for Linux (x86\_64, aarch64), macOS (arm64), and Windows (amd64), requiring Python 3.12+:
+Pre-built wheels are published to PyPI for Linux (x86\_64), macOS (x86\_64),
+and Windows (amd64). They use the CPython 3.12 stable ABI (`cp312-abi3`) and
+therefore install on Python 3.12+:
 
 ```bash
 pip install osrm-bindings
 ```
 
-To build from source (e.g. unsupported platform):
+The package itself supports Python 3.10+ when built from source — needed for
+3.10/3.11, aarch64 Linux, arm64 macOS, or any platform without a pre-built
+wheel:
 
 ```bash
 pip install osrm-bindings --no-binary osrm-bindings
@@ -244,18 +248,53 @@ ruff format src/python/osrm/osrm_ext.pyi
 
 ## Releasing
 
-Releases are driven by git tags. `setuptools-scm` reads the tag to set the
-package version — no manual version bumps needed.
+Releases are driven by the monthly release workflow
+([.github/workflows/release-monthly.yml](../../.github/workflows/release-monthly.yml)),
+not by pushing a tag by hand. The workflow bumps the version, creates the tag,
+drives CI, downloads the built wheels, and publishes to both PyPI and npm in
+one shot.
 
-1. Ensure CI is green on `main`.
-2. Create and push an annotated tag:
-   ```bash
-   git tag -a v1.2.3 -m "v1.2.3"
-   git push origin v1.2.3
-   ```
-3. The publish workflow triggers on tag push, builds wheels for all platforms,
-   and uploads to PyPI via trusted publisher.
-4. Verify the release at [pypi.org/project/osrm-bindings](https://pypi.org/project/osrm-bindings/).
+### Scheduled monthly release
 
-**Test release without tagging:** trigger the publish workflow manually via
-`workflow_dispatch` with the `upload` input set to `true`.
+A cron on the 1st of each month at 08:00 UTC runs the workflow against
+`master`:
+
+1. Compute the next version as `(YYYY-2000).M.patchlevel` (e.g. `26.4.0`).
+2. Bump `package.json` + `package-lock.json`, commit, create annotated tag
+   `v<version>`, push branch and tag.
+3. Dispatch `osrm-backend.yml` on the tag. That run builds wheels + sdist
+   via `cibuildwheel` and uploads them as `wheels-*` artifacts.
+4. Wait for the dispatched CI run to finish with conclusion `success`.
+5. Run the `publish` job: download every `wheels-*` artifact into `dist/`,
+   publish to PyPI via trusted publisher (OIDC), then `npm publish`.
+
+If PyPI fails, the npm publish still runs (the npm steps have
+`if: ${{ !cancelled() }}`), and the overall job is marked failed so the PyPI
+problem stays visible.
+
+### Manual release
+
+Trigger the workflow from the Actions UI or `gh workflow run release-monthly.yml`
+with optional inputs:
+
+- `version_override` — set the version explicitly (e.g. `26.4.1`) instead of
+  using the `(YYYY-2000).M.patchlevel` calculation.
+- `branch` — release from a branch other than `master`.
+
+### Verification
+
+After the run finishes, check:
+
+- Tag `v<version>` exists and the GitHub Release is published.
+- [pypi.org/project/osrm-bindings](https://pypi.org/project/osrm-bindings/) shows
+  the new version with an sdist and three platform wheels (manylinux x86_64,
+  macOS x86_64, win_amd64).
+- [npmjs.com/package/@project-osrm/osrm](https://www.npmjs.com/package/@project-osrm/osrm)
+  shows the matching version.
+
+### Version mechanics
+
+`pyproject.toml` uses `setuptools-scm` with `local_scheme = "no-local-version"`.
+On a tag checkout (e.g. `v26.4.0`), the Python version resolves cleanly to
+`26.4.0`, matching the `package.json` version that `release-monthly.yml`
+committed when creating the tag.
