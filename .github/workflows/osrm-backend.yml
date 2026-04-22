@@ -151,6 +151,11 @@ jobs:
         PR_TITLE: ${{ github.event.pull_request.title }}
       run: |
         node ./scripts/check_pr_title.js
+    - uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+    - name: Run `pre-commit`
+      uses: pre-commit/action@v3.0.1
     - name: Run checks
       run: |
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
@@ -714,13 +719,66 @@ jobs:
             dist/*.tar.gz
           if-no-files-found: error
 
+      - name: Upload Linux wheel for stub check
+        if: ${{ env.BUILD_BINDINGS && runner.os == 'Linux' && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-linux-stub-check
+          path: dist/*.whl
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Show CCache statistics
         run: |
           ccache -p
           ccache -s
 
+  # Verify that committed .pyi stubs match the actual C++ bindings when Python
+  # C++ sources changed. Installs the Linux wheel built by build-matrix,
+  # regenerates stubs via nanobind, ruff-formats them, and diffs against the repo.
+  check-python-stubs:
+    name: Check Python stubs are up to date
+    needs: build-matrix
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            python_cpp:
+              - 'src/python/src/**'
+              - 'src/python/include/**'
+              - 'src/python/CMakeLists.txt'
+      - uses: actions/setup-python@v6
+        if: steps.changes.outputs.python_cpp == 'true'
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        if: steps.changes.outputs.python_cpp == 'true'
+        with:
+          name: wheel-linux-stub-check
+          path: wheelhouse
+      - name: Install wheel and regenerate stubs
+        if: steps.changes.outputs.python_cpp == 'true'
+        run: |
+          pip install nanobind ruff
+          pip install wheelhouse/*.whl
+          python -m nanobind.stubgen -m osrm.osrm_ext -o src/python/osrm/osrm_ext.pyi
+          ruff format src/python/osrm/osrm_ext.pyi
+      - name: Check for differences
+        if: steps.changes.outputs.python_cpp == 'true'
+        run: |
+          git diff --exit-code src/python/osrm/osrm_ext.pyi \
+            || (echo "::error::Stubs are out of date. Rebuild locally and commit the updated .pyi file." && exit 1)
+
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
+    needs: [build-matrix, conan-windows-release-node, docker-image-matrix, check-python-stubs]
+    if: ${{ !cancelled() }}
     steps:
+      - name: Fail if any dependency failed
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1
       - run: echo "CI complete"
