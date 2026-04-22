@@ -13,7 +13,6 @@
     "boost-config",
     "boost-crc",
     "boost-date-time",
-    "boost-dynamic-bitset",
     "boost-exception",
     "boost-fusion",
     "boost-geometry",
