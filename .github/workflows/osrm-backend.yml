@@ -93,22 +93,22 @@ jobs:
 
       #     ./lib/binding_napi_v8/osrm-datastore.exe test/data/ch/monaco.osrm
       #     node test/nodejs/index.js
-      # - name: Build Node package
-      #   shell: bash
-      #   run: ./scripts/ci/node_package.sh
-      # - name: Publish Node package
-      #   if: ${{ env.PUBLISH == 'On' }}
-      #   uses: ncipollo/release-action@v1
-      #   with:
-      #     allowUpdates: true
-      #     artifactErrorsFailBuild: true
-      #     artifacts: build/stage/**/*.tar.gz
-      #     omitBody: true
-      #     omitBodyDuringUpdate: true
-      #     omitName: true
-      #     omitNameDuringUpdate: true
-      #     replacesArtifacts: true
-      #     token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Node package
+        shell: bash
+        run: ./scripts/ci/node_package.sh
+      - name: Publish Node package
+        if: ${{ env.PUBLISH == 'On' }}
+        uses: ncipollo/release-action@v1
+        with:
+          allowUpdates: true
+          artifactErrorsFailBuild: true
+          artifacts: build/stage/**/*.tar.gz
+          omitBody: true
+          omitBodyDuringUpdate: true
+          omitName: true
+          omitNameDuringUpdate: true
+          replacesArtifacts: true
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run CIBuildWheel
         if: github.event_name != 'pull_request'
         uses: pypa/cibuildwheel@v3.4.0
