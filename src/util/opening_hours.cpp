@@ -3,17 +3,27 @@
 #include <boost/fusion/include/at_c.hpp>
 #include <boost/spirit/home/x3.hpp>
 
-#include <boost/io/ios_state.hpp>
-
 #include <algorithm>
 #include <cctype>
 #include <iomanip>
+#include <ios>
 #include <iterator>
 
 namespace osrm::util
 {
 
 #ifndef NDEBUG
+namespace
+{
+struct IosFlagsSaver
+{
+    std::ios_base &stream;
+    std::ios_base::fmtflags flags;
+    explicit IosFlagsSaver(std::ios_base &s) : stream(s), flags(s.flags()) {}
+    ~IosFlagsSaver() { stream.flags(flags); }
+};
+} // namespace
+
 // Debug output stream operators for use with BOOST_SPIRIT_DEBUG
 inline std::ostream &operator<<(std::ostream &stream, const OpeningHours::Modifier value)
 {
@@ -53,7 +63,7 @@ inline std::ostream &operator<<(std::ostream &stream, const OpeningHours::Time::
 
 inline std::ostream &operator<<(std::ostream &stream, const OpeningHours::Time &value)
 {
-    boost::io::ios_flags_saver ifs(stream);
+    IosFlagsSaver ifs(stream);
     if (value.event == OpeningHours::Time::invalid)
         return stream << "???";
     if (value.event == OpeningHours::Time::none)
@@ -92,7 +102,7 @@ inline std::ostream &operator<<(std::ostream &stream, const OpeningHours::Monthd
 
 inline std::ostream &operator<<(std::ostream &stream, const OpeningHours::WeekdayRange &value)
 {
-    boost::io::ios_flags_saver ifs(stream);
+    IosFlagsSaver ifs(stream);
     return stream << std::hex << std::setfill('0') << std::setw(2) << value.weekdays;
 }
 

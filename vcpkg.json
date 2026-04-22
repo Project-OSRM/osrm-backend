@@ -19,7 +19,6 @@
     "boost-geometry",
     "boost-heap",
     "boost-interprocess",
-    "boost-io",
     "boost-iostreams",
     "boost-iterator",
     "boost-numeric-conversion",
