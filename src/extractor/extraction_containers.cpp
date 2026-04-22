@@ -17,7 +17,6 @@
 #include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/core/ignore_unused.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
 #include <tbb/parallel_sort.h>
@@ -529,7 +528,7 @@ void ExtractionContainers::PrepareNodes()
 
         for (const auto index : util::irange<NodeID>(0, used_node_id_list.size()))
         {
-            boost::ignore_unused(index);
+            (void)index;
             BOOST_ASSERT(node_id_iterator != used_node_id_list.end());
             BOOST_ASSERT(node_iterator != all_nodes_list_end);
             BOOST_ASSERT(*node_id_iterator >= node_iterator->node_id);
