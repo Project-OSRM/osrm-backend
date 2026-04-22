@@ -1,6 +1,9 @@
 name: Monthly Release
 
 on:
+  push:
+    branches:
+      - nn-py-bindings
   schedule:
     # 1st of each month at 08:00 UTC
     - cron: '0 8 1 * *'
@@ -177,6 +180,7 @@ jobs:
           prerelease: false
 
       - name: Wait for CI to complete
+        id: wait_ci
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -209,6 +213,7 @@ jobs:
               if [ "$STATUS" = "completed" ]; then
                 if [ "$CONCLUSION" = "success" ]; then
                   echo "✓ CI workflow completed successfully, proceeding with npm publish"
+                  echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
                   exit 0
                 else
                   echo "✗ CI workflow completed with conclusion=$CONCLUSION (expected success)"
@@ -228,9 +233,25 @@ jobs:
           echo "✗ Timed out waiting for CI workflow to complete for tag $TAG"
           exit 1
 
-      - name: Install dependencies (skip native build scripts)
-        run: npm ci --ignore-scripts
+      - name: Download wheels from CI run
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+          run-id: ${{ steps.wait_ci.outputs.run_id }}
+          github-token: ${{ github.token }}
 
-      - name: Publish to npm
-        run: npm publish
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.13.0
+        with:
+          skip-existing: true
+          verbose: true
+          repository-url: https://test.pypi.org/legacy/
+
+      # - name: Install dependencies (skip native build scripts)
+      #   run: npm ci --ignore-scripts
+
+      # - name: Publish to npm
+      #   run: npm publish
 

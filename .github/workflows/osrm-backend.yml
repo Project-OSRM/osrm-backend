@@ -1,13 +1,13 @@
 name: osrm-backend CI
 on:
-  push:
-    branches:
-      - nn-py-bindings
+  # push:
+  #   branches:
+  #     - nn-py-bindings
     tags:
       - v*
-  pull_request:
-    branches:
-      - master
+  # pull_request:
+  #   branches:
+  #     - master
   workflow_dispatch:
 
 env:
@@ -115,12 +115,13 @@ jobs:
           output-dir: dist
         env:
           CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.define.ENABLE_CONAN=ON"
-      - name: Publish to TestPyPI
-        # if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+      - name: Upload Windows wheel
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-artifact@v4
         with:
-          repository-url: https://test.pypi.org/legacy/
-          verbose: true
+          name: wheels-windows
+          path: dist/*.whl
+          if-no-files-found: error
 
   format-taginfo-docs:
     runs-on: ubuntu-slim
@@ -398,9 +399,6 @@ jobs:
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
     runs-on: ${{ matrix.runs-on }}
-    # for PyPI trusted publisher
-    permissions:
-      id-token: write
     env:
       BUILD_TYPE: ${{ matrix.BUILD_TYPE }}
       BUILD_SHARED_LIBS: ${{ matrix.BUILD_SHARED_LIBS }}
@@ -705,12 +703,15 @@ jobs:
           CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache"
           CIBW_CONFIG_SETTINGS_MACOS: "cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake.define.CMAKE_C_COMPILER_LAUNCHER=ccache"
 
-      - name: Publish to TestPyPI
-        # if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+      - name: Upload wheels and sdist
+        if: ${{ env.BUILD_BINDINGS && github.event_name != 'pull_request' }}
+        uses: actions/upload-artifact@v4
         with:
-          repository-url: https://test.pypi.org/legacy/
-          verbose: true
+          name: wheels-${{ matrix.name }}
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+          if-no-files-found: error
 
       - name: Show CCache statistics
         run: |
