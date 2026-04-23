@@ -94,9 +94,9 @@ BOOST_AUTO_TEST_CASE(write_tar_file)
     CHECK_EQUAL_COLLECTIONS(result_32bit_vector, vector_32bit);
 }
 
-BOOST_AUTO_TEST_CASE(continue_write_tar_file)
+BOOST_AUTO_TEST_CASE(write_large_tar_file)
 {
-    TemporaryFile tmp{TEST_DATA_DIR "/tar_continue_write_test.tar"};
+    TemporaryFile tmp{TEST_DATA_DIR "/tar_large_write_test.tar"};
 
     // more than 64 values to ensure we fill up more than one tar block of 512 bytes
     std::vector<std::uint64_t> vector_64bit = {0,
@@ -173,11 +173,7 @@ BOOST_AUTO_TEST_CASE(continue_write_tar_file)
     {
         storage::tar::FileWriter writer(tmp.path, storage::tar::FileWriter::GenerateFingerprint);
         writer.WriteElementCount64("baz/bla/64bit_vector", vector_64bit.size());
-        writer.WriteFrom("baz/bla/64bit_vector", vector_64bit.data(), 12);
-        writer.ContinueFrom("baz/bla/64bit_vector", vector_64bit.data() + 12, 30);
-        writer.ContinueFrom("baz/bla/64bit_vector", vector_64bit.data() + 42, 10);
-        writer.ContinueFrom(
-            "baz/bla/64bit_vector", vector_64bit.data() + 52, vector_64bit.size() - 52);
+        writer.WriteFrom("baz/bla/64bit_vector", vector_64bit.data(), vector_64bit.size());
     }
 
     storage::tar::FileReader reader(tmp.path, storage::tar::FileReader::VerifyFingerprint);

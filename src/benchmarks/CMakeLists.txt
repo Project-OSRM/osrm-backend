@@ -6,7 +6,7 @@ file(GLOB PackedVectorBenchmarkSources packed_vector.cpp)
 add_executable(rtree-bench
 	EXCLUDE_FROM_ALL
 	${RTreeBenchmarkSources}
-    $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
+    $<TARGET_OBJECTS:UTIL>)
 
 target_include_directories(rtree-bench
 	PUBLIC
@@ -16,7 +16,8 @@ target_link_libraries(rtree-bench
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
-	${MAYBE_SHAPEFILE})
+	${MAYBE_SHAPEFILE}
+	LibArchive::LibArchive)
 
 
 add_executable(match-bench

@@ -62,12 +62,12 @@ file(GLOB UtilTestsSources
 add_executable(engine-tests
 	EXCLUDE_FROM_ALL
 	${EngineTestsSources}
-        $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:MICROTAR>)
+        $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
 add_executable(contractor-tests
 	EXCLUDE_FROM_ALL
     ${ContractorTestsSources}
-    $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:MICROTAR>)
+    $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
 
 add_executable(extractor-tests
 	EXCLUDE_FROM_ALL
@@ -122,11 +122,12 @@ add_executable(server-tests
 add_executable(util-tests
 	EXCLUDE_FROM_ALL
 	${UtilTestsSources}
-        $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:MICROTAR>)
+        $<TARGET_OBJECTS:UTIL>)
 
-if(NOT WIN32 AND NOT Boost_USE_STATIC_LIBS)
-  add_definitions(-DBOOST_TEST_DYN_LINK)
-endif()
+# vcpkg builds boost statically on every platform, so BOOST_TEST_DYN_LINK
+# must never be defined — the dyn-link path expects a different
+# unit_test_main() signature than the static library exports, and enabling
+# it produces undefined references at link time.
 
 set(UPDATER_TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/unit_tests/updater")
 set(TEST_DATA_DIR "${CMAKE_SOURCE_DIR}/test/data")
@@ -165,7 +166,7 @@ target_include_directories(updater-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(contractor-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(storage-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 target_link_libraries(extractor-tests osrm_extract ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(partitioner-tests osrm_partition ${PARTITIONER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(customizer-tests osrm_customize ${CUSTOMIZER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
@@ -176,9 +177,9 @@ target_link_libraries(library-contract-tests osrm_contract ${Boost_UNIT_TEST_FRA
 target_link_libraries(library-customize-tests osrm_customize ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-partition-tests osrm_partition ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(contractor-tests osrm_contract ${CONTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(storage-tests osrm_store ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
+target_link_libraries(contractor-tests osrm_contract ${CONTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
+target_link_libraries(storage-tests osrm_store ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 
 if(BUILD_AS_SUBPROJECT)
   add_custom_target(osrm_tests
