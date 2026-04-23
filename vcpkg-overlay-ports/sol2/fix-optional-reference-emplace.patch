@@ -1,0 +1,24 @@
+--- a/include/sol/optional_implementation.hpp
++++ b/include/sol/optional_implementation.hpp
+@@ -2185,13 +2185,15 @@
+ 		/// Constructs the value in-place, destroying the current one if there is
+ 		/// one.
+ 		///
++		/// Rebinds the stored reference to `arg`. Reference optionals have no
++		/// storage to "construct" into — the upstream code called this->construct
++		/// which does not exist on this specialization and fails to instantiate
++		/// on stricter compilers (Apple Clang 17+).
++		///
+ 		/// \group emplace
+-		template <class... Args>
+-		T& emplace(Args&&... args) noexcept {
+-			static_assert(std::is_constructible<T, Args&&...>::value, "T must be constructible with Args");
+-
+-			*this = nullopt;
+-			this->construct(std::forward<Args>(args)...);
++		T& emplace(T& arg) noexcept {
++			m_value = std::addressof(arg);
++			return *m_value;
+ 		}
+ 
+ 		/// Swaps this optional with the other.

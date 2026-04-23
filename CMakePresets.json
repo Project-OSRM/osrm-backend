@@ -1,0 +1,92 @@
+{
+  "version": 6,
+  "cmakeMinimumRequired": { "major": 3, "minor": 25, "patch": 0 },
+  "configurePresets": [
+    {
+      "name": "base",
+      "hidden": true,
+      "binaryDir": "${sourceDir}/build",
+      "generator": "Ninja",
+      "toolchainFile": "$env{VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake",
+      "cacheVariables": {
+        "CMAKE_EXPORT_COMPILE_COMMANDS": "ON"
+      }
+    },
+    {
+      "name": "release",
+      "inherits": "base",
+      "displayName": "Release",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Release" }
+    },
+    {
+      "name": "debug",
+      "inherits": "base",
+      "displayName": "Debug",
+      "cacheVariables": { "CMAKE_BUILD_TYPE": "Debug" }
+    },
+    {
+      "name": "asan",
+      "inherits": "debug",
+      "displayName": "Debug + ASan/UBSan",
+      "cacheVariables": {
+        "ENABLE_SANITIZER": "ON",
+        "ENABLE_ASSERTIONS": "ON"
+      }
+    },
+    {
+      "name": "ci-linux",
+      "inherits": "release",
+      "cacheVariables": { "VCPKG_TARGET_TRIPLET": "x64-linux" }
+    },
+    {
+      "name": "ci-linux-debug",
+      "inherits": "debug",
+      "cacheVariables": { "VCPKG_TARGET_TRIPLET": "x64-linux" }
+    },
+    {
+      "name": "ci-linux-asan",
+      "inherits": "asan",
+      "cacheVariables": { "VCPKG_TARGET_TRIPLET": "x64-linux" }
+    },
+    {
+      "name": "ci-macos-arm64",
+      "inherits": "release",
+      "cacheVariables": { "VCPKG_TARGET_TRIPLET": "arm64-osx" }
+    },
+    {
+      "name": "ci-macos-x64",
+      "inherits": "release",
+      "cacheVariables": { "VCPKG_TARGET_TRIPLET": "x64-osx" }
+    },
+    {
+      "name": "ci-windows",
+      "inherits": "release",
+      "generator": "Visual Studio 17 2022",
+      "cacheVariables": { "VCPKG_TARGET_TRIPLET": "x64-windows-static-md" }
+    }
+  ],
+  "buildPresets": [
+    { "name": "release",          "configurePreset": "release" },
+    { "name": "debug",            "configurePreset": "debug" },
+    { "name": "asan",             "configurePreset": "asan" },
+    { "name": "ci-linux",         "configurePreset": "ci-linux" },
+    { "name": "ci-linux-debug",   "configurePreset": "ci-linux-debug" },
+    { "name": "ci-linux-asan",    "configurePreset": "ci-linux-asan" },
+    { "name": "ci-macos-arm64",   "configurePreset": "ci-macos-arm64" },
+    { "name": "ci-macos-x64",     "configurePreset": "ci-macos-x64" },
+    { "name": "ci-windows",       "configurePreset": "ci-windows", "configuration": "Release" }
+  ],
+  "testPresets": [
+    {
+      "name": "release",
+      "configurePreset": "release",
+      "output": { "outputOnFailure": true },
+      "execution": { "noTestsAction": "error", "stopOnFailure": false }
+    },
+    {
+      "name": "ci-linux",
+      "inherits": "release",
+      "configurePreset": "ci-linux"
+    }
+  ]
+}

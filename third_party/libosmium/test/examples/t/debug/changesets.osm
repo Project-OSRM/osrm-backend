@@ -1,7 +1,0 @@
-<?xml version='1.0' encoding='UTF-8'?>
-<osm version="0.6" generator="Osmosis 0.41">
-  <changeset id="15449962" created_at="2013-03-22T02:10:17Z" num_changes="140" closed_at="2013-03-22T02:10:24Z" open="false" min_lon="106.8146927" min_lat="-6.1207748" max_lon="106.8212512" max_lat="-6.1133246" user="Vivianecahen" uid="1241761">
-    <tag k="comment" v="Adding Initial buildings and roads"/>
-    <tag k="created_by" v="JOSM/1.5 (5697 en)"/>
-  </changeset>
-</osm>

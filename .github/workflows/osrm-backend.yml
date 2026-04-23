@@ -14,15 +14,23 @@ env:
   CCACHE_TEMPDIR: /tmp/.ccache-temp
   CCACHE_COMPRESS: 1
   CASHER_TIME_OUT: 599 # one second less than 10m to avoid 10m timeout error: https://github.com/Project-OSRM/osrm-backend/issues/2742
-  CMAKE_VERSION: 3.21.2
+  CMAKE_VERSION: 3.31.0
   ENABLE_NODE_BINDINGS: 'ON'
+  # vcpkg baseline is also pinned in vcpkg-configuration.json; this env var
+  # is what lukka/run-vcpkg consumes to pick the vcpkg tool version.
+  VCPKG_COMMIT_ID: c3867e714dd3a51c272826eea77267876517ed99
+  # Use a local filesystem directory as vcpkg's binary cache. The directory
+  # itself is persisted across CI runs via actions/cache@v5. The x-gha
+  # backend was removed upstream; files+actions/cache is the replacement.
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/.vcpkg-bincache
+  VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/.vcpkg-bincache,readwrite"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
-  conan-windows-release-node:
+  vcpkg-windows-release-node:
     needs: format-taginfo-docs
     runs-on: windows-2025
     continue-on-error: false
@@ -36,6 +44,20 @@ jobs:
           node-version: 24
       - run: node --version
       - run: npm --version
+      - name: Enable vcpkg binary cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ github.workspace }}/.vcpkg-bincache
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-${{ runner.arch }}-
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          # Pin to top-level manifest; the default glob **/vcpkg.json would
+          # otherwise pick up overlay port manifests in vcpkg-overlay-ports/.
+          vcpkgJsonGlob: 'vcpkg.json'
       - name: Prepare environment
         shell: bash
         run: |
@@ -46,16 +68,8 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          mkdir build
-          cd build
-
-          python3 -m venv .venv
-          source .venv/Scripts/Activate
-          python3 -m pip install conan==2.27.1
-          conan profile detect --force
-
-          cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
-          cmake --build . --config Release
+          cmake --preset ci-windows -DENABLE_NODE_BINDINGS=ON
+          cmake --build --preset ci-windows
 
       # TODO: MSVC goes out of memory when building our tests
       # - name: Run tests
@@ -145,9 +159,20 @@ jobs:
           key: v1-berlin-osm-pbf
           restore-keys: |
             v1-berlin-osm-pbf
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
       - name: Docker build
-        run: |
-          docker build -t osrm-backend-local -f docker/Dockerfile-${{ matrix.docker-base-image }} .
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: docker/Dockerfile-${{ matrix.docker-base-image }}
+          tags: osrm-backend-local
+          load: true
+          # Persist BuildKit layer + vcpkg/ccache mount cache across runs via
+          # GitHub Actions cache. Scope per base image so alpine/debian don't
+          # collide.
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
+          cache-to: type=gha,mode=max,scope=docker-${{ matrix.docker-base-image }}
       - name: Test Docker image
         run: |
           if [ ! -f "${PWD}/berlin-latest.osm.pbf" ]; then
@@ -291,28 +316,7 @@ jobs:
             CXXCOMPILER: g++-12
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: conan-linux-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
-            ENABLE_LTO: OFF
-
-          - name: conan-linux-debug-asan-ubsan
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
-            ENABLE_SANITIZER: ON
-            ENABLE_LTO: OFF
-
-          - name: conan-linux-release-node
+          - name: vcpkg-linux-release-node
             build_node_package: true
             continue-on-error: false
             node: 24
@@ -320,10 +324,9 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang-16
             CXXCOMPILER: clang++-16
-            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-linux-debug-node
+          - name: vcpkg-linux-debug-node
             build_node_package: true
             continue-on-error: false
             node: 24
@@ -331,20 +334,18 @@ jobs:
             BUILD_TYPE: Debug
             CCOMPILER: clang-16
             CXXCOMPILER: clang++-16
-            ENABLE_CONAN: ON
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: conan-linux-arm64-release
+          - name: vcpkg-linux-arm64-release
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04-arm
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
-            ENABLE_CONAN: ON
             ENABLE_LTO: OFF
 
-          - name: conan-macos-x64-release-node
+          - name: vcpkg-macos-x64-release-node
             build_node_package: true
             continue-on-error: true
             node: 24
@@ -353,9 +354,8 @@ jobs:
             CCOMPILER: clang
             CXXCOMPILER: clang++
             ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
 
-          - name: conan-macos-arm64-release-node
+          - name: vcpkg-macos-arm64-release-node
             build_node_package: true
             continue-on-error: true
             node: 24
@@ -364,7 +364,6 @@ jobs:
             CCOMPILER: clang
             CXXCOMPILER: clang++
             ENABLE_ASSERTIONS: ON
-            ENABLE_CONAN: ON
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -379,7 +378,6 @@ jobs:
       ENABLE_ASSERTIONS: ${{ matrix.ENABLE_ASSERTIONS }}
       ENABLE_CLANG_TIDY: ${{ matrix.ENABLE_CLANG_TIDY }}
       ENABLE_COVERAGE: ${{ matrix.ENABLE_COVERAGE }}
-      ENABLE_CONAN: ${{ matrix.ENABLE_CONAN }}
       ENABLE_SANITIZER: ${{ matrix.ENABLE_SANITIZER }}
       NODE_PACKAGE_TESTS_ONLY: ${{ matrix.NODE_PACKAGE_TESTS_ONLY }}
       TARGET_ARCH: ${{ matrix.TARGET_ARCH }}
@@ -408,13 +406,20 @@ jobs:
           key: ccache-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.name }}-
-      - name: Enable Conan cache
+      - name: Enable vcpkg binary cache
         uses: actions/cache@v5
         with:
-          path: ~/.conan2
-          key: v10-conan-${{ matrix.name }}-${{ github.sha }}
+          path: ${{ github.workspace }}/.vcpkg-bincache
+          key: vcpkg-${{ matrix.name }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
           restore-keys: |
-            v10-conan-${{ matrix.name }}-
+            vcpkg-${{ matrix.name }}-
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          # Pin to top-level manifest; the default glob **/vcpkg.json would
+          # otherwise pick up overlay port manifests in vcpkg-overlay-ports/.
+          vcpkgJsonGlob: 'vcpkg.json'
       - name: Enable test cache
         uses: actions/cache@v5
         with:
@@ -443,58 +448,17 @@ jobs:
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
             echo "JOBS=$((`sysctl -n hw.ncpu` + 1))" >>  $GITHUB_ENV
           fi
-      # See: https://github.com/actions/toolkit/issues/946#issuecomment-1590016041
-      # We need it to be able to access system folders while restoring cached Boost below
-      - name: Give tar root ownership
-        if: runner.os == 'Linux' && matrix.ENABLE_CONAN != 'ON'
-        run: sudo chown root /bin/tar && sudo chmod u+s /bin/tar
-
-      - name: Install boost
-        if: ${{ matrix.ENABLE_CONAN != 'ON' }}
-        uses: MarkusJx/install-boost@v2
-        id: install-boost
-        with:
-          boost_version: 1.85.0
-
-      - name: Install dev dependencies
+      - name: Install compiler and ccache
         run: |
-          # workaround for issue that GitHub Actions seems to not adding it to PATH after https://github.com/actions/runner-images/pull/6499
-          # and that's why CI cannot find conan executable installed above
-          if [[ "${RUNNER_OS}" == "macOS" ]]; then
-            echo "/Library/Frameworks/Python.framework/Versions/Current/bin" >> $GITHUB_PATH
-          fi
-
-          # Update package list
-          if [[ "${RUNNER_OS}" == "Linux" || "${ENABLE_CONAN}" != "ON" ]]; then
-            sudo apt-get update -y
-          fi
-
-          # Install compiler and ccache
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            sudo apt-get update -y
             sudo apt-get install -y ${CCOMPILER} ${CXXCOMPILER} ccache
-          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            brew install ccache
-          fi
-
-          # Linux dev packages
-          if [[ "${ENABLE_CONAN}" != "ON" ]]; then
-            sudo apt-get install -y libbz2-dev libxml2-dev libzip-dev liblua5.2-dev
             if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
               sudo apt-get install -y lcov
             fi
-          fi
-
-          # TBB
-          TBB_VERSION=2021.12.0
-          if [[ "${RUNNER_OS}" == "Linux" ]]; then
-            TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-mac.tgz"
+            brew install ccache
           fi
-          wget --tries 5 ${TBB_URL} -O onetbb.tgz
-          tar zxvf onetbb.tgz
-          sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
-          sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
       - name: Prepare build
         run: |
           mkdir ${OSRM_BUILD_DIR}
@@ -506,7 +470,7 @@ jobs:
           echo "CC=${CCOMPILER}" >> $GITHUB_ENV
           echo "CXX=${CXXCOMPILER}" >> $GITHUB_ENV
           if [[ "${RUNNER_OS}" == "macOS" ]]; then
-            # missing from GCC path, needed for conan builds of libiconv, for example.
+            # missing from GCC path, needed when vcpkg builds libiconv, etc.
             sudo xcode-select --switch /Library/Developer/CommandLineTools
             echo "LIBRARY_PATH=${LIBRARY_PATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" >> $GITHUB_ENV
             echo "CPATH=${CPATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include" >> $GITHUB_ENV
@@ -517,20 +481,10 @@ jobs:
           echo "Using ${JOBS} jobs"
           pushd ${OSRM_BUILD_DIR}
 
-          if [[ "${ENABLE_CONAN}" == "ON" ]]; then
-            python3 -m venv .venv
-            source .venv/bin/activate
-            python3 -m pip install conan==2.27.1
-            conan profile detect --force
-            if [[ "${RUNNER_OS}" == "macOS" ]]; then
-              CONAN_DEFAULT_PROFILE="$(conan profile path default)"
-              perl -0pi -e 's/^compiler\.version=.*/compiler.version=17/m' "${CONAN_DEFAULT_PROFILE}"
-            fi
-          fi
-
           ccache --zero-stats
-          cmake .. -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
-                   -DENABLE_CONAN=${ENABLE_CONAN:-OFF} \
+          cmake -S ${GITHUB_WORKSPACE} -B . \
+                   -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+                   -DCMAKE_BUILD_TYPE=${BUILD_TYPE} \
                    -DENABLE_ASSERTIONS=${ENABLE_ASSERTIONS:-OFF} \
                    -DENABLE_CLANG_TIDY=${ENABLE_CLANG_TIDY:-OFF} \
                    -DBUILD_SHARED_LIBS=${BUILD_SHARED_LIBS:-OFF} \
@@ -554,8 +508,6 @@ jobs:
             echo "PKG_CONFIG_PATH=${OSRM_INSTALL_DIR}/lib/pkgconfig" >> $GITHUB_ENV
           fi
           popd
-        env:
-          Boost_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
       - name: Run all tests
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
         run: |
@@ -634,6 +586,6 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
+    needs: [build-matrix, vcpkg-windows-release-node, docker-image-matrix]
     steps:
       - run: echo "CI complete"
