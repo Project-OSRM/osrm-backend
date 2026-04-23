@@ -33,7 +33,7 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 
 ## Contact
 
-- Discord: [join](https://discord.gg/es9CdcCXcb)
+- Discord: [join](https://discord.gg/CpWzBC9G7Z)
 - BlueSky: [profile](https://bsky.app/profile/osrm.bsky.social)
 
 ## Support the Project
