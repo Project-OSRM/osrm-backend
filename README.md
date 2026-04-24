@@ -1,6 +1,6 @@
 ## Open Source Routing Machine
 
-[![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) [![Discord](https://img.shields.io/discord/1034487840219860992)](https://discord.gg/es9CdcCXcb)
+[![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) [![Discord](https://img.shields.io/discord/1034487840219860992)](https://discord.gg/CpWzBC9G7Z)
 
 High performance routing engine written in C++ designed to run on OpenStreetMap data.
 
@@ -33,7 +33,7 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 
 ## Contact
 
-- Discord: [join](https://discord.gg/es9CdcCXcb)
+- Discord: [join](https://discord.gg/CpWzBC9G7Z)
 - BlueSky: [profile](https://bsky.app/profile/osrm.bsky.social)
 
 ## Support the Project
