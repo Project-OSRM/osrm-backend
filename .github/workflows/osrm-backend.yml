@@ -24,7 +24,10 @@ concurrency:
 jobs:
   conan-windows-release-node:
     needs: format-taginfo-docs
-    runs-on: windows-2025
+    strategy:
+      matrix:
+        os: [windows-2025]
+    runs-on: ${{ matrix.os }}
     continue-on-error: false
     env:
       BUILD_TYPE: Release
@@ -43,7 +46,16 @@ jobs:
           echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
       - run: npm install --ignore-scripts
       - run: npm link --ignore-scripts
+      - name: Restore Conan cache
+        id: conan-restore
+        uses: actions/cache/restore@v5
+        with:
+          path: ~/.conan2
+          key: v11-conan-${{ matrix.os }}-${{ hashFiles('conanfile.py') }}
+          restore-keys: |
+            v11-conan-${{ matrix.os }}-
       - name: Build
+        id: build
         shell: bash
         run: |
           mkdir build
@@ -56,6 +68,12 @@ jobs:
 
           cmake -DCMAKE_BUILD_TYPE=Release -DENABLE_CONAN=ON -DENABLE_NODE_BINDINGS=ON ..
           cmake --build . --config Release
+      - name: Save Conan cache
+        if: steps.build.outcome == 'success' && steps.conan-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          key: v11-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
 
       # TODO: MSVC goes out of memory when building our tests
       # - name: Run tests
@@ -91,6 +109,20 @@ jobs:
           omitNameDuringUpdate: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Run CIBuildWheel
+        if: github.event_name != 'pull_request'
+        uses: pypa/cibuildwheel@v3.4.0
+        with:
+          output-dir: dist
+        env:
+          CIBW_CONFIG_SETTINGS_WINDOWS: "cmake.define.ENABLE_CONAN=ON"
+      - name: Upload Windows wheel
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-windows
+          path: dist/*.whl
+          if-no-files-found: error
 
   format-taginfo-docs:
     runs-on: ubuntu-slim
@@ -119,6 +151,11 @@ jobs:
         PR_TITLE: ${{ github.event.pull_request.title }}
       run: |
         node ./scripts/check_pr_title.js
+    - uses: actions/setup-python@v6
+      with:
+        python-version: '3.12'
+    - name: Run `pre-commit`
+      uses: pre-commit/action@v3.0.1
     - name: Run checks
       run: |
         ./scripts/check_taginfo.py taginfo.json profiles/car.lua
@@ -313,7 +350,7 @@ jobs:
             ENABLE_LTO: OFF
 
           - name: conan-linux-release-node
-            build_node_package: true
+            build_bindings: true
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
@@ -324,7 +361,6 @@ jobs:
             NODE_PACKAGE_TESTS_ONLY: ON
 
           - name: conan-linux-debug-node
-            build_node_package: true
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
@@ -345,10 +381,10 @@ jobs:
             ENABLE_LTO: OFF
 
           - name: conan-macos-x64-release-node
-            build_node_package: true
+            build_bindings: true
             continue-on-error: true
             node: 24
-            runs-on: macos-26-intel # x86_64
+            runs-on: macos-15-intel # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -356,10 +392,10 @@ jobs:
             ENABLE_CONAN: ON
 
           - name: conan-macos-arm64-release-node
-            build_node_package: true
+            build_bindings: true
             continue-on-error: true
             node: 24
-            runs-on: macos-26 # arm64
+            runs-on: macos-15 # arm64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
@@ -386,8 +422,12 @@ jobs:
       OSRM_CONNECTION_RETRIES: ${{ matrix.OSRM_CONNECTION_RETRIES }}
       OSRM_CONNECTION_EXP_BACKOFF_COEF: ${{ matrix.OSRM_CONNECTION_EXP_BACKOFF_COEF }}
       ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
+      BUILD_BINDINGS: ${{ matrix.build_bindings }}
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - name: Build machine architecture
         run: uname -m
       - name: Use Node.js
@@ -401,20 +441,22 @@ jobs:
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
           restore-keys: |
             ${{ runner.os }}-node-
-      - name: Enable compiler cache
-        uses: actions/cache@v5
+      - name: Restore compiler cache
+        id: ccache-restore
+        uses: actions/cache/restore@v5
         with:
           path: ~/.ccache
           key: ccache-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.name }}-
-      - name: Enable Conan cache
-        uses: actions/cache@v5
+      - name: Restore Conan cache
+        id: conan-restore
+        uses: actions/cache/restore@v5
         with:
           path: ~/.conan2
-          key: v10-conan-${{ matrix.name }}-${{ github.sha }}
+          key: v11-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
           restore-keys: |
-            v10-conan-${{ matrix.name }}-
+            v11-conan-${{ matrix.name }}-
       - name: Enable test cache
         uses: actions/cache@v5
         with:
@@ -484,17 +526,15 @@ jobs:
             fi
           fi
 
-          # TBB
-          TBB_VERSION=2021.12.0
+          # TBB (Linux only; macOS gets it from conan or brew)
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
+            TBB_VERSION=2021.12.0
             TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-lin.tgz"
-          elif [[ "${RUNNER_OS}" == "macOS" ]]; then
-            TBB_URL="https://github.com/oneapi-src/oneTBB/releases/download/v${TBB_VERSION}/oneapi-tbb-${TBB_VERSION}-mac.tgz"
+            wget --tries 5 ${TBB_URL} -O onetbb.tgz
+            tar zxvf onetbb.tgz
+            sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
+            sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
           fi
-          wget --tries 5 ${TBB_URL} -O onetbb.tgz
-          tar zxvf onetbb.tgz
-          sudo cp -a oneapi-tbb-${TBB_VERSION}/lib/. /usr/local/lib/
-          sudo cp -a oneapi-tbb-${TBB_VERSION}/include/. /usr/local/include/
       - name: Prepare build
         run: |
           mkdir ${OSRM_BUILD_DIR}
@@ -505,14 +545,9 @@ jobs:
           fi
           echo "CC=${CCOMPILER}" >> $GITHUB_ENV
           echo "CXX=${CXXCOMPILER}" >> $GITHUB_ENV
-          if [[ "${RUNNER_OS}" == "macOS" ]]; then
-            # missing from GCC path, needed for conan builds of libiconv, for example.
-            sudo xcode-select --switch /Library/Developer/CommandLineTools
-            echo "LIBRARY_PATH=${LIBRARY_PATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/lib" >> $GITHUB_ENV
-            echo "CPATH=${CPATH}:/Library/Developer/CommandLineTools/SDKs/MacOSX.sdk/usr/include" >> $GITHUB_ENV
-          fi
 
       - name: Build and install OSRM
+        id: build
         run: |
           echo "Using ${JOBS} jobs"
           pushd ${OSRM_BUILD_DIR}
@@ -556,6 +591,18 @@ jobs:
           popd
         env:
           Boost_ROOT: ${{ steps.install-boost.outputs.BOOST_ROOT }}
+      - name: Save compiler cache
+        if: steps.build.outcome == 'success'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.ccache
+          key: ccache-${{ matrix.name }}-${{ github.sha }}
+      - name: Save Conan cache
+        if: steps.build.outcome == 'success' && steps.conan-restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.conan2
+          key: v11-conan-${{ matrix.name }}-${{ hashFiles('conanfile.py') }}
       - name: Run all tests
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
         run: |
@@ -612,10 +659,10 @@ jobs:
           path: test/logs/
 
       - name: Build Node package
-        if: ${{ matrix.build_node_package }}
+        if: ${{ env.BUILD_BINDINGS }}
         run: ./scripts/ci/node_package.sh
       - name: Publish Node package
-        if: ${{ matrix.build_node_package && env.PUBLISH == 'On' }}
+        if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
         uses: ncipollo/release-action@v1
         with:
           allowUpdates: true
@@ -627,13 +674,111 @@ jobs:
           omitNameDuringUpdate: true
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
+      
+      # Python bindings
+
+      - name: Set up Python
+        if: ${{ env.BUILD_BINDINGS }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build sdist
+        if: ${{ env.BUILD_BINDINGS && runner.os == 'Linux' }}
+        run: |
+          python -m pip install build
+          python -m build --sdist
+
+      - name: Locate sdist
+        if: ${{ env.BUILD_BINDINGS && runner.os == 'Linux' }}
+        id: sdist
+        shell: bash
+        run: echo "path=$(ls dist/*.tar.gz | head -n1)" >> "$GITHUB_OUTPUT"
+
+      - name: Run cibuildwheel
+        uses: pypa/cibuildwheel@v3.4.1
+        if: ${{ env.BUILD_BINDINGS }}
+        with:
+          # for linux build the wheel from the sdist
+          package-dir: ${{ runner.os == 'Linux' && steps.sdist.outputs.path || '.' }}
+          output-dir: dist
+        env:
+          # Mount the workflow-cached ~/.ccache into the container so Linux
+          # wheel builds share the main-build ccache across runs.
+          CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /home/runner/.ccache:/ccache"
+          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache"
+          CIBW_CONFIG_SETTINGS_MACOS: "cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake.define.CMAKE_C_COMPILER_LAUNCHER=ccache"
+
+      - name: Upload wheels and sdist
+        if: ${{ env.BUILD_BINDINGS && startsWith(github.ref, 'refs/tags/v') }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheels-${{ matrix.name }}
+          path: |
+            dist/*.whl
+            dist/*.tar.gz
+          if-no-files-found: error
+
+      - name: Upload Linux wheel for stub check
+        if: ${{ env.BUILD_BINDINGS && runner.os == 'Linux' && github.event_name == 'pull_request' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-linux-stub-check
+          path: dist/*.whl
+          if-no-files-found: error
+          retention-days: 1
+
       - name: Show CCache statistics
         run: |
           ccache -p
           ccache -s
 
+  # Verify that committed .pyi stubs match the actual C++ bindings when Python
+  # C++ sources changed. Installs the Linux wheel built by build-matrix,
+  # regenerates stubs via nanobind, ruff-formats them, and diffs against the repo.
+  check-python-stubs:
+    name: Check Python stubs are up to date
+    needs: build-matrix
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            python_cpp:
+              - 'src/python/src/**'
+              - 'src/python/include/**'
+              - 'src/python/CMakeLists.txt'
+      - uses: actions/setup-python@v6
+        if: steps.changes.outputs.python_cpp == 'true'
+        with:
+          python-version: '3.12'
+      - uses: actions/download-artifact@v4
+        if: steps.changes.outputs.python_cpp == 'true'
+        with:
+          name: wheel-linux-stub-check
+          path: wheelhouse
+      - name: Install wheel and regenerate stubs
+        if: steps.changes.outputs.python_cpp == 'true'
+        run: |
+          pip install nanobind ruff
+          pip install wheelhouse/*.whl
+          python -m nanobind.stubgen -m osrm.osrm_ext -o src/python/osrm/osrm_ext.pyi
+          ruff format src/python/osrm/osrm_ext.pyi
+      - name: Check for differences
+        if: steps.changes.outputs.python_cpp == 'true'
+        run: |
+          git diff --exit-code src/python/osrm/osrm_ext.pyi \
+            || (echo "::error::Stubs are out of date. Rebuild locally and commit the updated .pyi file." && exit 1)
+
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, conan-windows-release-node, docker-image-matrix]
+    needs: [build-matrix, conan-windows-release-node, docker-image-matrix, check-python-stubs]
+    if: ${{ !cancelled() }}
     steps:
+      - name: Fail if any dependency failed
+        if: ${{ contains(needs.*.result, 'failure') }}
+        run: exit 1
       - run: echo "CI complete"

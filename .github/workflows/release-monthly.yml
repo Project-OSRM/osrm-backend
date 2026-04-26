@@ -27,6 +27,10 @@ jobs:
       contents: write
       id-token: write
       actions: write
+    outputs:
+      tag: ${{ steps.version.outputs.tag }}
+      version: ${{ steps.version.outputs.version }}
+      run_id: ${{ steps.wait_ci.outputs.run_id }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -177,6 +181,7 @@ jobs:
           prerelease: false
 
       - name: Wait for CI to complete
+        id: wait_ci
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -209,6 +214,7 @@ jobs:
               if [ "$STATUS" = "completed" ]; then
                 if [ "$CONCLUSION" = "success" ]; then
                   echo "✓ CI workflow completed successfully, proceeding with npm publish"
+                  echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
                   exit 0
                 else
                   echo "✗ CI workflow completed with conclusion=$CONCLUSION (expected success)"
@@ -228,9 +234,42 @@ jobs:
           echo "✗ Timed out waiting for CI workflow to complete for tag $TAG"
           exit 1
 
+
+  publish:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ needs.release.outputs.tag }}
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
       - name: Install dependencies (skip native build scripts)
         run: npm ci --ignore-scripts
 
       - name: Publish to npm
         run: npm publish
+
+      - name: Download wheels from CI run
+        uses: actions/download-artifact@v4
+        with:
+          pattern: wheels-*
+          path: dist
+          merge-multiple: true
+          run-id: ${{ needs.release.outputs.run_id }}
+          github-token: ${{ github.token }}
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@v1.13.0
+        with:
+          skip-existing: true
+          verbose: true
+          # repository-url: https://test.pypi.org/legacy/
 

@@ -13,6 +13,9 @@ hero:
       text: Node.js API
       link: /nodejs/api
     - theme: alt
+      text: Python API
+      link: /python/api
+    - theme: alt
       text: View on GitHub
       link: https://github.com/Project-OSRM/osrm-backend
     - theme: alt
@@ -46,6 +49,7 @@ OSRM provides powerful routing services through both HTTP and Node.js APIs:
 
 - **[HTTP API](./http.md)** - RESTful API for routing services
 - **[Node.js API](./nodejs/api.md)** - Native Node.js bindings for embedded use
+- **[Python API](./python/api.md)** - Python bindings via nanobind ([Development Guide](./python/development.md))
 
 ## Documentation
 

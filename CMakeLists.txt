@@ -32,6 +32,7 @@ option(ENABLE_DEBUG_LOGGING "Use debug logging in release mode" OFF)
 option(ENABLE_FUZZING "Fuzz testing using LLVM's libFuzzer" OFF)
 option(ENABLE_LTO "Use Link Time Optimisation" ON)
 option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
+option(ENABLE_PYTHON_BINDINGS "Build Python bindings" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 
 if (ENABLE_CONAN)
@@ -149,6 +150,22 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(CheckCXXCompilerFlag)
 include(FindPackageHandleStandardArgs)
 include(GNUInstallDirs)
+
+# On macOS, brew-installed headers land in prefixes that clang may already
+# search implicitly (/usr/local on Intel, /opt/homebrew on ARM in some
+# configurations). When a path is implicit, CMake filters it out of
+# include_directories(SYSTEM ...) — no -isystem is emitted — and clang's
+# system-header warning suppression stops reliably catching template-
+# instantiation diagnostics from headers under that prefix. Force -isystem
+# via add_compile_options so brew-installed boost/lua/tbb headers are
+# treated as system headers regardless of implicit status.
+if(APPLE)
+  foreach(_brew_prefix /usr/local /opt/homebrew)
+    if(EXISTS "${_brew_prefix}/include")
+      add_compile_options(SHELL:-isystem ${_brew_prefix}/include)
+    endif()
+  endforeach()
+endif()
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
@@ -491,7 +508,6 @@ set(ZLIB_LIBRARY ${ZLIB_LIBRARIES})
 add_definitions(${OSRM_DEFINES})
 include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
-
 # Binaries
 target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY})
@@ -717,6 +733,10 @@ add_subdirectory(src/benchmarks)
 
 if (ENABLE_NODE_BINDINGS)
   add_subdirectory(src/nodejs)
+endif()
+
+if (ENABLE_PYTHON_BINDINGS)
+  add_subdirectory(src/python)
 endif()
 
 if (ENABLE_FUZZING)
