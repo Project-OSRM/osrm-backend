@@ -124,6 +124,11 @@ add_executable(util-tests
 	${UtilTestsSources}
         $<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:MICROTAR>)
 
+if(CMAKE_CXX_COMPILER_ID STREQUAL "GNU" AND NOT CMAKE_CXX_COMPILER_VERSION VERSION_LESS 15)
+    # TODO: remove after we stop supporting GCC 15, or when the false positive is fixed in GCC 15.
+    set_property(TARGET util-tests PROPERTY INTERPROCEDURAL_OPTIMIZATION FALSE)
+endif()
+
 # vcpkg builds boost statically on every platform, so BOOST_TEST_DYN_LINK
 # must never be defined — the dyn-link path expects a different
 # unit_test_main() signature than the static library exports, and enabling
