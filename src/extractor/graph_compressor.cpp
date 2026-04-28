@@ -142,8 +142,8 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
             }
 
             // this case can happen if two ways with different names overlap
-            if ((fwd_annotation_data1.name_id != rev_annotation_data1.name_id) ||
-                (fwd_annotation_data2.name_id != rev_annotation_data2.name_id))
+            if ((fwd_annotation_data1.string_view_id != rev_annotation_data1.string_view_id) ||
+                (fwd_annotation_data2.string_view_id != rev_annotation_data2.string_view_id))
             {
                 continue;
             }

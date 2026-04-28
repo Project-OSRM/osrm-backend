@@ -70,6 +70,7 @@ Feature: Foot - Access tags on ways
             |              | agricultural |       |
             |              | forestry     |       |
             |              | delivery     |       |
+            |              | use_sidepath |       |
 
     Scenario: Foot - Access tags on both node and way
         Then routability should be
@@ -86,13 +87,22 @@ Feature: Foot - Access tags on ways
 
     Scenario: Foot - Access combinations
         Then routability should be
-            | highway     | access     | foot       | bothw |
-            | motorway    | private    | yes        | x     |
-            | footway     |            | permissive | x     |
-            | track       | forestry   | permissive | x     |
-            | footway     | yes        | no         |       |
-            | primary     |            | private    |       |
-            | residential | permissive | no         |       |
+            | highway     | access     | foot         | bothw |
+            | motorway    | private    | yes          | x     |
+            | footway     |            | permissive   | x     |
+            | track       | forestry   | permissive   | x     |
+            | footway     | yes        | no           |       |
+            | primary     |            | private      |       |
+            | residential | permissive | no           |       |
+            | primary     | yes        | use_sidepath |       |
+            | primary     | permissive | use_sidepath |       |
+
+    Scenario: Foot - explicit foot access overrides sidewalk:*=separate inference
+        Then routability should be
+            | highway | foot        | sidewalk:right | bothw |
+            | primary | destination | separate       | x     |
+            | primary | yes         | separate       | x     |
+            | primary |             | separate       |       |
 
     Scenario: Foot - Ignore access tags for other modes
         Then routability should be

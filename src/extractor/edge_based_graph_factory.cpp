@@ -40,13 +40,13 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     EdgeBasedNodeDataContainer &node_data_container,
     const CompressedEdgeContainer &compressed_edge_container,
     const std::vector<util::Coordinate> &coordinates,
-    const NameTable &name_table,
+    const StringTable &string_table,
     const std::unordered_set<EdgeID> &segregated_edges,
     const extractor::LaneDescriptionMap &lane_description_map)
     : m_edge_based_node_container(node_data_container), m_connectivity_checksum(0),
       m_number_of_edge_based_nodes(0), m_coordinates(coordinates),
       m_node_based_graph(node_based_graph), m_compressed_edge_container(compressed_edge_container),
-      name_table(name_table), segregated_edges(segregated_edges),
+      string_table(string_table), segregated_edges(segregated_edges),
       lane_description_map(lane_description_map)
 {
 }
@@ -491,7 +491,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                                               unconditional_node_restriction_map,
                                                               scripting_environment.m_obstacle_map,
                                                               turn_lanes_data,
-                                                              name_table,
+                                                              string_table,
                                                               street_name_suffix_table);
 
     // FIXME these need to be tuned in pre-allocated size

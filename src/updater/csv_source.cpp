@@ -4,6 +4,7 @@
 
 #include <boost/fusion/adapted/std_pair.hpp>
 #include <boost/fusion/include/adapt_adt.hpp>
+#include <boost/spirit/home/x3.hpp>
 
 // clang-format off
 BOOST_FUSION_ADAPT_STRUCT(osrm::updater::Segment,
@@ -20,21 +21,20 @@ BOOST_FUSION_ADAPT_STRUCT(osrm::updater::PenaltySource,
                           (decltype(osrm::updater::PenaltySource::duration), duration)
                           (decltype(osrm::updater::PenaltySource::weight), weight))
 // clang-format on
-namespace
-{
-namespace qi = boost::spirit::qi;
-}
 
 namespace osrm::updater::csv
 {
+
+namespace x3 = boost::spirit::x3;
+
 SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
 {
     static const auto value_if_blank = std::numeric_limits<double>::quiet_NaN();
-    const qi::real_parser<double, qi::ureal_policies<double>> unsigned_double;
+    const x3::real_parser<double, x3::ureal_policies<double>> unsigned_double;
     CSVFilesParser<Segment, SpeedSource> parser(
         1,
-        qi::ulong_long >> ',' >> qi::ulong_long,
-        unsigned_double >> -(',' >> (qi::double_ | qi::attr(value_if_blank))));
+        x3::ulong_long >> ',' >> x3::ulong_long,
+        unsigned_double >> -(',' >> (x3::double_ | x3::attr(value_if_blank))));
 
     // Check consistency of keys in the result lookup table
     auto result = parser(paths);
@@ -54,9 +54,9 @@ SegmentLookupTable readSegmentValues(const std::vector<std::string> &paths)
 TurnLookupTable readTurnValues(const std::vector<std::string> &paths)
 {
     CSVFilesParser<Turn, PenaltySource> parser(1,
-                                               qi::ulong_long >> ',' >> qi::ulong_long >> ',' >>
-                                                   qi::ulong_long,
-                                               qi::double_ >> -(',' >> qi::double_));
+                                               x3::ulong_long >> ',' >> x3::ulong_long >> ',' >>
+                                                   x3::ulong_long,
+                                               x3::double_ >> -(',' >> x3::double_));
     return parser(paths);
 }
 } // namespace osrm::updater::csv

@@ -9,11 +9,11 @@
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/extraction_turn.hpp"
 #include "extractor/maneuver_override.hpp"
-#include "extractor/name_table.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/node_restriction_map.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/turn_lane_types.hpp"
 #include "extractor/way_restriction_map.hpp"
 
@@ -63,7 +63,7 @@ class EdgeBasedGraphFactory
                                    EdgeBasedNodeDataContainer &node_data_container,
                                    const CompressedEdgeContainer &compressed_edge_container,
                                    const std::vector<util::Coordinate> &coordinates,
-                                   const NameTable &name_table,
+                                   const StringTable &string_table,
                                    const std::unordered_set<EdgeID> &segregated_edges,
                                    const LaneDescriptionMap &lane_description_map);
 
@@ -128,7 +128,7 @@ class EdgeBasedGraphFactory
 
     const CompressedEdgeContainer &m_compressed_edge_container;
 
-    const NameTable &name_table;
+    const StringTable &string_table;
     const std::unordered_set<EdgeID> &segregated_edges;
     const LaneDescriptionMap &lane_description_map;
 

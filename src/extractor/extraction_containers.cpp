@@ -2,9 +2,9 @@
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/files.hpp"
-#include "extractor/name_table.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
+#include "extractor/string_table.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/integer_range.hpp"
 
@@ -17,7 +17,6 @@
 #include "util/timing_util.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/core/ignore_unused.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
 #include <tbb/parallel_sort.h>
@@ -63,15 +62,15 @@ struct CmpEdgeByInternalSourceTargetAndName
         if (lhs.result.target == SPECIAL_NODEID)
             return false;
 
-        auto const lhs_name_id = edge_annotation_data[lhs.result.annotation_data].name_id;
-        auto const rhs_name_id = edge_annotation_data[rhs.result.annotation_data].name_id;
+        auto const lhs_name_id = edge_annotation_data[lhs.result.annotation_data].string_view_id;
+        auto const rhs_name_id = edge_annotation_data[rhs.result.annotation_data].string_view_id;
         if (lhs_name_id == rhs_name_id)
             return false;
 
-        if (lhs_name_id == EMPTY_NAMEID)
+        if (lhs_name_id == EMPTY_STRINGVIEWID)
             return false;
 
-        if (rhs_name_id == EMPTY_NAMEID)
+        if (rhs_name_id == EMPTY_STRINGVIEWID)
             return true;
 
         BOOST_ASSERT(!name_offsets.empty() && name_offsets.back() == name_data.size());
@@ -428,7 +427,7 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     TIMER_START(write_index);
 
     files::writeNames(file_name,
-                      NameTable{NameTable::IndexedData(
+                      StringTable{StringTable::IndexedData(
                           name_offsets.begin(), name_offsets.end(), name_char_data.begin())});
 
     TIMER_STOP(write_index);
@@ -524,29 +523,22 @@ void ExtractionContainers::PrepareNodes()
         TIMER_START(write_nodes);
         // identify all used nodes by a merging step of two sorted lists
         auto node_iterator = all_nodes_list.begin();
-        auto node_id_iterator = used_node_id_list.begin();
         const auto all_nodes_list_end = all_nodes_list.end();
 
-        for (const auto index : util::irange<NodeID>(0, used_node_id_list.size()))
+        for (const auto node_id : used_node_id_list)
         {
-            boost::ignore_unused(index);
-            BOOST_ASSERT(node_id_iterator != used_node_id_list.end());
             BOOST_ASSERT(node_iterator != all_nodes_list_end);
-            BOOST_ASSERT(*node_id_iterator >= node_iterator->node_id);
-            while (*node_id_iterator > node_iterator->node_id &&
-                   node_iterator != all_nodes_list_end)
+            BOOST_ASSERT(node_id >= node_iterator->node_id);
+            while (node_id > node_iterator->node_id && node_iterator != all_nodes_list_end)
             {
                 ++node_iterator;
             }
-            if (node_iterator == all_nodes_list_end || *node_id_iterator < node_iterator->node_id)
+            if (node_iterator == all_nodes_list_end || node_id < node_iterator->node_id)
             {
-                throw util::exception(
-                    "Invalid OSM data: Referenced non-existing node with ID " +
-                    std::to_string(static_cast<std::uint64_t>(*node_id_iterator)));
+                throw util::exception("Invalid OSM data: Referenced non-existing node with ID " +
+                                      std::to_string(static_cast<std::uint64_t>(node_id)));
             }
-            BOOST_ASSERT(*node_id_iterator == node_iterator->node_id);
-
-            ++node_id_iterator;
+            BOOST_ASSERT(node_id == node_iterator->node_id);
 
             used_nodes.emplace_back(*node_iterator++);
         }

@@ -46,7 +46,7 @@ MotorwayHandler::MotorwayHandler(const util::NodeBasedDynamicGraph &node_based_g
                                  const extractor::RestrictionMap &node_restriction_map,
                                  const extractor::ObstacleMap &obstacle_nodes,
                                  const extractor::TurnLanesIndexedArray &turn_lanes_data,
-                                 const extractor::NameTable &name_table,
+                                 const extractor::StringTable &string_table,
                                  const extractor::SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
@@ -55,7 +55,7 @@ MotorwayHandler::MotorwayHandler(const util::NodeBasedDynamicGraph &node_based_g
                           node_restriction_map,
                           obstacle_nodes,
                           turn_lanes_data,
-                          name_table,
+                          string_table,
                           street_name_suffix_table)
 {
 }
@@ -129,11 +129,13 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
             const auto &out_data = node_data_container.GetAnnotation(
                 node_based_graph.GetEdgeData(road.eid).annotation_data);
 
-            const auto same_name = !util::guidance::requiresNameAnnounced(
-                in_data.name_id, out_data.name_id, name_table, street_name_suffix_table);
+            const auto same_name = !util::guidance::requiresNameAnnounced(in_data.string_view_id,
+                                                                          out_data.string_view_id,
+                                                                          string_table,
+                                                                          street_name_suffix_table);
 
-            if (road.angle != 0 && in_data.name_id != EMPTY_NAMEID &&
-                out_data.name_id != EMPTY_NAMEID && same_name &&
+            if (road.angle != 0 && in_data.string_view_id != EMPTY_STRINGVIEWID &&
+                out_data.string_view_id != EMPTY_STRINGVIEWID && same_name &&
                 isMotorwayClass(road.eid, node_based_graph))
                 return road.angle;
         }
@@ -247,7 +249,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
                                                              intersection,
                                                              node_based_graph,
                                                              node_data_container,
-                                                             name_table,
+                                                             string_table,
                                                              street_name_suffix_table),
                                              intersection[1]);
             }
@@ -269,7 +271,7 @@ Intersection MotorwayHandler::fromMotorway(const EdgeID via_eid, Intersection in
                                                                      intersection,
                                                                      node_based_graph,
                                                                      node_data_container,
-                                                                     name_table,
+                                                                     string_table,
                                                                      street_name_suffix_table),
                                                      road);
                     }
@@ -377,7 +379,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                                                      intersection,
                                                      node_based_graph,
                                                      node_data_container,
-                                                     name_table,
+                                                     string_table,
                                                      street_name_suffix_table),
                                      intersection[1]);
     }
@@ -388,9 +390,9 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
         const auto &first_intersection_data = node_data_container.GetAnnotation(
             node_based_graph.GetEdgeData(intersection[1].eid).annotation_data);
         const auto first_second_same_name =
-            !util::guidance::requiresNameAnnounced(second_intersection_data.name_id,
-                                                   first_intersection_data.name_id,
-                                                   name_table,
+            !util::guidance::requiresNameAnnounced(second_intersection_data.string_view_id,
+                                                   first_intersection_data.string_view_id,
+                                                   string_table,
                                                    street_name_suffix_table);
 
         // merging onto a passing highway / or two ramps merging onto the same highway
@@ -406,9 +408,9 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
             //     7         1
             //          0
             const auto &first_intersection_name_empty =
-                name_table.GetNameForID(first_intersection_data.name_id).empty();
+                string_table.GetNameForID(first_intersection_data.string_view_id).empty();
             const auto &second_intersection_name_empty =
-                name_table.GetNameForID(second_intersection_data.name_id).empty();
+                string_table.GetNameForID(second_intersection_data.string_view_id).empty();
             if (intersection[1].entry_allowed)
             {
                 if (isMotorwayClass(intersection[1].eid, node_based_graph) &&
@@ -433,7 +435,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                                                                  intersection,
                                                                  node_based_graph,
                                                                  node_data_container,
-                                                                 name_table,
+                                                                 string_table,
                                                                  street_name_suffix_table),
                                                  intersection[1]);
                 }
@@ -463,7 +465,7 @@ Intersection MotorwayHandler::fromRamp(const EdgeID via_eid, Intersection inters
                                                                  intersection,
                                                                  node_based_graph,
                                                                  node_data_container,
-                                                                 name_table,
+                                                                 string_table,
                                                                  street_name_suffix_table),
                                                  intersection[2]);
                 }

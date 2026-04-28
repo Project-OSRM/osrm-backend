@@ -9,11 +9,11 @@
 
 #include <boost/algorithm/string/join.hpp>
 #include <boost/program_options.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 
 #include <filesystem>
 #include <iostream>
 #include <iterator>
+#include <ranges>
 #include <regex>
 #include <thread>
 
@@ -34,13 +34,14 @@ struct MaxCellSizesArgument
 std::ostream &operator<<(std::ostream &os, const MaxCellSizesArgument &arg)
 {
     auto to_string = [](std::size_t x) { return std::to_string(x); };
-    return os << boost::algorithm::join(arg.value | boost::adaptors::transformed(to_string), ",");
+    auto view = arg.value | std::views::transform(to_string);
+    std::vector<std::string> parts(view.begin(), view.end());
+    return os << boost::algorithm::join(parts, ",");
 }
 
 void validate(boost::any &v, const std::vector<std::string> &values, MaxCellSizesArgument *, int)
 {
     using namespace boost::program_options;
-    using namespace boost::adaptors;
 
     // Make sure no previous assignment to 'v' was made.
     validators::check_first_occurrence(v);

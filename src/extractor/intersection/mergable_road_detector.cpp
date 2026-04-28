@@ -1,8 +1,8 @@
 #include "extractor/intersection/mergable_road_detector.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/intersection/node_based_graph_walker.hpp"
-#include "extractor/name_table.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/suffix_table.hpp"
 #include "guidance/constants.hpp"
 
@@ -20,28 +20,28 @@ namespace
 // check a connected road for equality of a name
 // returns 'true' if no equality because this is used as a filter elsewhere, i.e. filter if fn
 // returns 'true'
-inline auto makeCheckRoadForName(const NameID name_id,
+inline auto makeCheckRoadForName(const StringViewID name_id,
                                  const util::NodeBasedDynamicGraph &node_based_graph,
                                  const EdgeBasedNodeDataContainer &node_data_container,
-                                 const NameTable &name_table,
+                                 const StringTable &string_table,
                                  const SuffixTable &suffix_table)
 {
-    return [name_id, &node_based_graph, &node_data_container, &name_table, &suffix_table](
+    return [name_id, &node_based_graph, &node_data_container, &string_table, &suffix_table](
                const MergableRoadDetector::MergableRoadData &road)
     {
         // since we filter here, we don't want any other name than the one we are looking for
         const auto road_name_id =
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
-                .name_id;
-        const auto road_name_empty = name_table.GetNameForID(road_name_id).empty();
-        const auto in_name_empty = name_table.GetNameForID(name_id).empty();
+                .string_view_id;
+        const auto road_name_empty = string_table.GetNameForID(road_name_id).empty();
+        const auto in_name_empty = string_table.GetNameForID(name_id).empty();
         if (in_name_empty || road_name_empty)
             return true;
-        const auto requires_announcement =
-            util::guidance::requiresNameAnnounced(
-                name_id, road_name_id, name_table, suffix_table) ||
-            util::guidance::requiresNameAnnounced(road_name_id, name_id, name_table, suffix_table);
+        const auto requires_announcement = util::guidance::requiresNameAnnounced(
+                                               name_id, road_name_id, string_table, suffix_table) ||
+                                           util::guidance::requiresNameAnnounced(
+                                               road_name_id, name_id, string_table, suffix_table);
 
         return requires_announcement;
     };
@@ -56,12 +56,12 @@ MergableRoadDetector::MergableRoadDetector(
     const RestrictionMap &node_restriction_map,
     const ObstacleMap &obstacle_nodes,
     const extractor::TurnLanesIndexedArray &turn_lanes_data,
-    const NameTable &name_table,
+    const StringTable &string_table,
     const SuffixTable &street_name_suffix_table)
     : node_based_graph(node_based_graph), node_data_container(node_data_container),
       node_coordinates(node_coordinates), compressed_geometries(compressed_geometries),
       node_restriction_map(node_restriction_map), obstacle_nodes(obstacle_nodes),
-      turn_lanes_data(turn_lanes_data), name_table(name_table),
+      turn_lanes_data(turn_lanes_data), string_table(string_table),
       street_name_suffix_table(street_name_suffix_table),
       coordinate_extractor(node_based_graph, compressed_geometries, node_coordinates)
 {
@@ -127,10 +127,10 @@ bool MergableRoadDetector::IsDistinctFrom(const MergableRoadData &lhs,
     else // or it cannot have the same name
         return !HaveIdenticalNames(
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
-                .name_id,
+                .string_view_id,
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(rhs.eid).annotation_data)
-                .name_id,
-            name_table,
+                .string_view_id,
+            string_table,
             street_name_suffix_table);
 }
 
@@ -153,8 +153,10 @@ bool MergableRoadDetector::EdgeDataSupportsMerge(
         return false;
 
     // we require valid names
-    if (!HaveIdenticalNames(
-            lhs_annotation.name_id, rhs_annotation.name_id, name_table, street_name_suffix_table))
+    if (!HaveIdenticalNames(lhs_annotation.string_view_id,
+                            rhs_annotation.string_view_id,
+                            string_table,
+                            street_name_suffix_table))
         return false;
 
     return lhs_flags.road_classification == rhs_flags.road_classification;
@@ -196,7 +198,7 @@ bool MergableRoadDetector::IsNarrowTriangle(const NodeID intersection_node,
      */
     SelectStraightmostRoadByNameAndOnlyChoice selector(
         node_data_container.GetAnnotation(node_based_graph.GetEdgeData(lhs.eid).annotation_data)
-            .name_id,
+            .string_view_id,
         lhs.perceived_bearing,
         /*requires entry=*/false,
         false);
@@ -314,7 +316,7 @@ bool MergableRoadDetector::IsCircularShape(const NodeID intersection_node,
         LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
         SelectStraightmostRoadByNameAndOnlyChoice selector(
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
-                .name_id,
+                .string_view_id,
             lhs.perceived_bearing,
             /*requires_entry=*/false,
             false);
@@ -387,7 +389,7 @@ bool MergableRoadDetector::HaveSameDirection(const NodeID intersection_node,
         LengthLimitedCoordinateAccumulator accumulator(coordinate_extractor, max_length);
         SelectStraightmostRoadByNameAndOnlyChoice selector(
             node_data_container.GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
-                .name_id,
+                .string_view_id,
             lhs.perceived_bearing,
             /*requires_entry=*/false,
             true);
@@ -508,22 +510,22 @@ bool MergableRoadDetector::IsTrafficIsland(const NodeID intersection_node,
         const auto required_name_id =
             node_data_container
                 .GetAnnotation(node_based_graph.GetEdgeData(range.front()).annotation_data)
-                .name_id;
+                .string_view_id;
 
         const auto has_required_name = [this, required_name_id](const auto edge_id)
         {
             const auto road_name_id =
                 node_data_container
                     .GetAnnotation(node_based_graph.GetEdgeData(edge_id).annotation_data)
-                    .name_id;
-            const auto &road_name_empty = name_table.GetNameForID(road_name_id).empty();
-            const auto &required_name_empty = name_table.GetNameForID(required_name_id).empty();
+                    .string_view_id;
+            const auto &road_name_empty = string_table.GetNameForID(road_name_id).empty();
+            const auto &required_name_empty = string_table.GetNameForID(required_name_id).empty();
             if (required_name_empty && road_name_empty)
                 return false;
             return !util::guidance::requiresNameAnnounced(
-                       required_name_id, road_name_id, name_table, street_name_suffix_table) ||
+                       required_name_id, road_name_id, string_table, street_name_suffix_table) ||
                    !util::guidance::requiresNameAnnounced(
-                       road_name_id, required_name_id, name_table, street_name_suffix_table);
+                       road_name_id, required_name_id, string_table, street_name_suffix_table);
         };
 
         /* the beautiful way would be:
@@ -572,7 +574,7 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
     {
         return node_data_container
             .GetAnnotation(node_based_graph.GetEdgeData(road.eid).annotation_data)
-            .name_id;
+            .string_view_id;
     };
 
     const auto requested_name_id = extract_name_id(road);
@@ -581,7 +583,7 @@ bool MergableRoadDetector::IsLinkRoad(const NodeID intersection_node,
         makeCheckRoadForName(requested_name_id,
                              node_based_graph,
                              node_data_container,
-                             name_table,
+                             string_table,
                              street_name_suffix_table));
 
     // we need to have a continuing road to successfully detect a link road

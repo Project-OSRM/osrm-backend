@@ -3,82 +3,271 @@ on:
   push:
     tags:
       - 'v*'
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: 'Git ref (tag) to build the images from'
+        required: true
+        type: string
+
+env:
+  SEMVER_REF: ${{ inputs.ref || github.ref }}
 
 jobs:
-  publish:
-    strategy:
+  build-amd64:
+    strategy: &docker-base-image-matrix
       matrix:
         docker-base-image: ["debian", "alpine"]
     runs-on: ubuntu-latest
-    steps:       
+    steps:
       - name: Check out the repo
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
 
-      - name: Set up QEMU
-        uses: docker/setup-qemu-action@v1
-      
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v4
 
       - name: Docker meta
         id: meta
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern=v{{version}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
+            type=ref,event=tag,suffix=-amd64-${{ matrix.docker-base-image }}
+            type=ref,event=branch,enable=${{ inputs.ref == '' }},suffix=-amd64-${{ matrix.docker-base-image }}
 
       - name: Docker meta - debug
         id: metadebug
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
           flavor: |
-            latest=true
-            suffix=-debug,onlatest=true
+            latest=false
+            suffix=-debug-amd64-${{ matrix.docker-base-image }},onlatest=false
+          tags: |
+            type=semver,pattern=v{{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
       - name: Docker meta - assertions
         id: metaassertions
-        uses: docker/metadata-action@v3
+        uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
           flavor: |
-            latest=true
-            suffix=-assertions,onlatest=true        
+            latest=false
+            suffix=-assertions-amd64-${{ matrix.docker-base-image }},onlatest=false
+          tags: |
+            type=semver,pattern=v{{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ inputs.ref == '' }}
 
       - name: Log in to GitHub Docker Registry
-        uses: docker/login-action@v1
+        uses: docker/login-action@v4
         with:
           registry: ghcr.io
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Build container image - debug
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v7
         with:
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metadebug.outputs.tags  }}
+          labels: ${{ steps.metadebug.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
-
       - name: Build container image - assertions
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v7
         with:
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metaassertions.outputs.tags  }}
+          labels: ${{ steps.metaassertions.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
-      # build and publish "normal" image as last to get it listed on top
       - name: Build container image - normal
-        uses: docker/build-push-action@v2
+        uses: docker/build-push-action@v7
         with:
           push: true
-          platforms: linux/amd64,linux/arm64
+          platforms: linux/amd64
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.meta.outputs.tags  }}
+          labels: ${{ steps.meta.outputs.labels }}
           build-args: |
             DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}
+
+  build-arm64:
+    strategy: *docker-base-image-matrix
+    runs-on: ubuntu-24.04-arm
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.ref || github.ref }}
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          tags: |
+            type=semver,pattern=v{{version}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
+            type=ref,event=tag,suffix=-arm64-${{ matrix.docker-base-image }}
+            type=ref,event=branch,enable=${{ inputs.ref == '' }},suffix=-arm64-${{ matrix.docker-base-image }}
+
+      - name: Docker meta - debug
+        id: metadebug
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
+            suffix=-debug-arm64-${{ matrix.docker-base-image }},onlatest=false
+          tags: |
+            type=semver,pattern=v{{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ inputs.ref == '' }}
+
+      - name: Docker meta - assertions
+        id: metaassertions
+        uses: docker/metadata-action@v6
+        with:
+          images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
+            suffix=-assertions-arm64-${{ matrix.docker-base-image }},onlatest=false
+          tags: |
+            type=semver,pattern=v{{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{version}},value=${{ env.SEMVER_REF }}
+            type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }}
+            type=ref,event=tag
+            type=ref,event=branch,enable=${{ inputs.ref == '' }}
+
+      - name: Log in to GitHub Docker Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Build container image - debug
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          platforms: linux/arm64
+          file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
+          tags: ${{ steps.metadebug.outputs.tags  }}
+          labels: ${{ steps.metadebug.outputs.labels }}
+          build-args: |
+            DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}-${{ matrix.docker-base-image }}
+
+      - name: Build container image - assertions
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          platforms: linux/arm64
+          file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
+          tags: ${{ steps.metaassertions.outputs.tags  }}
+          labels: ${{ steps.metaassertions.outputs.labels }}
+          build-args: |
+            DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}-${{ matrix.docker-base-image }}
+
+      - name: Build container image - normal
+        uses: docker/build-push-action@v7
+        with:
+          push: true
+          platforms: linux/arm64
+          file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
+          tags: ${{ steps.meta.outputs.tags  }}
+          labels: ${{ steps.meta.outputs.labels }}
+          build-args: |
+            DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}
+
+  combine-manifests:
+    needs: [build-amd64, build-arm64]
+    strategy: *docker-base-image-matrix
+    runs-on: ubuntu-latest
+    steps:
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to GitHub Docker Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Create and push manifests
+        run: |
+          REGISTRY_REPOSITORY="$(printf '%s' "$GITHUB_REPOSITORY" | tr '[:upper:]' '[:lower:]')"
+          REGISTRY="ghcr.io/$REGISTRY_REPOSITORY"
+          
+          # Determine tag name based on trigger type
+          if [ "${{ inputs.ref }}" != "" ]; then
+            # workflow_dispatch with explicit ref/tag
+            RAW_REF="${{ inputs.ref }}"
+          elif [ "${{ github.ref_name }}" != "" ]; then
+            # push:tags trigger
+            RAW_REF="${{ github.ref_name }}"
+          else
+            RAW_REF="${{ github.ref }}"
+          fi
+          
+          # Normalize refs/tags/v26.4.0 -> v26.4.0
+          REF_NAME="${RAW_REF#refs/tags/}"
+          
+          if [ -z "$REF_NAME" ]; then
+            echo "Unable to determine tag name from ref: $RAW_REF" >&2
+            exit 1
+          fi
+          
+          # Always create a manifest for the exact pushed tag, and also
+          # keep the existing semver aliases for plain release tags.
+          TAGS=("$REF_NAME")
+          if [[ "$REF_NAME" =~ ^v?([0-9]+\.[0-9]+\.[0-9]+)$ ]]; then
+            VERSION="${BASH_REMATCH[1]}"
+            MAJOR_MINOR="${VERSION%.*}"
+            TAGS+=("$VERSION" "$MAJOR_MINOR")
+          fi
+          
+          # Deduplicate tags while preserving order
+          MANIFEST_TAGS=()
+          declare -A SEEN_TAGS=()
+          for TAG in "${TAGS[@]}"; do
+            if [ -n "$TAG" ] && [ -z "${SEEN_TAGS[$TAG]}" ]; then
+              MANIFEST_TAGS+=("$TAG")
+              SEEN_TAGS[$TAG]=1
+            fi
+          done
+          
+          echo "Creating manifests for ${{ matrix.docker-base-image }}..."
+
+          for IMAGE_SUFFIX in "" "-debug" "-assertions"; do
+            for TAG in "${MANIFEST_TAGS[@]}"; do
+              docker buildx imagetools create -t "$REGISTRY:${TAG}${IMAGE_SUFFIX}-${{ matrix.docker-base-image }}" \
+                "$REGISTRY:${TAG}${IMAGE_SUFFIX}-amd64-${{ matrix.docker-base-image }}" \
+                "$REGISTRY:${TAG}${IMAGE_SUFFIX}-arm64-${{ matrix.docker-base-image }}"
+            done
+          done

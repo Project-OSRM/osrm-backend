@@ -1,8 +1,9 @@
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/mpl/list.hpp>
 #include <boost/test/unit_test.hpp>
+
+#include <tuple>
 
 #include <algorithm>
 #include <limits>
@@ -23,7 +24,7 @@ using TestNodeID = NodeID;
 using TestKey = int;
 using TestWeight = int;
 using storage_types =
-    boost::mpl::list<ArrayStorage<TestNodeID, TestKey>, UnorderedMapStorage<TestNodeID, TestKey>>;
+    std::tuple<ArrayStorage<TestNodeID, TestKey>, UnorderedMapStorage<TestNodeID, TestKey>>;
 
 template <unsigned NUM_ELEM> struct RandomDataFixture
 {

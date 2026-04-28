@@ -32,7 +32,7 @@ namespace osrm::engine::datafacade
 
 static const std::string DATASET_TURN_DATA = "TurnData";
 static const std::string DATASET_TURN_LANE_DATA = "NameLaneData";
-static const std::string DATASET_NAME_DATA = "NameData";
+static const std::string DATASET_STRING_DATA = "StringData";
 static const std::string DATASET_INTERSECTION_BEARINGS = "IntersectionBearings";
 static const std::string DATASET_ENTRY_CLASS = "EntryClass";
 
@@ -180,7 +180,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     std::optional<extractor::IntersectionBearingsView> intersection_bearings_view;
 
-    std::optional<extractor::NameTableView> m_name_table;
+    std::optional<extractor::StringTableView> m_string_table;
     // the look-up table for entry classes. An entry class lists the possibility of entry for all
     // available turns. Such a class id is stored with every edge.
     std::optional<util::vector_view<util::guidance::EntryClass>> m_entry_class_table;
@@ -238,7 +238,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         if (isIndexed(index, "/common/names"))
         {
-            m_name_table = make_name_table_view(index, "/common/names");
+            m_string_table = make_string_table_view(index, "/common/names");
         }
 
         if (isIndexed(index, "/common/turn_lanes"))
@@ -449,39 +449,39 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         return classes;
     }
 
-    NameID GetNameIndex(const NodeID edge_based_node_id) const override final
+    StringViewID GetNameIndex(const NodeID edge_based_node_id) const override final
     {
         return edge_based_node_data.GetNameID(edge_based_node_id);
     }
 
-    std::string_view GetNameForID(const NameID id) const override final
+    std::string_view GetNameForID(const StringViewID id) const override final
     {
-        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
-        return m_name_table->GetNameForID(id);
+        CHECK_DATASET_DISABLED(m_string_table, DATASET_STRING_DATA);
+        return m_string_table->GetNameForID(id);
     }
 
-    std::string_view GetRefForID(const NameID id) const override final
+    std::string_view GetRefForID(const StringViewID id) const override final
     {
-        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
-        return m_name_table->GetRefForID(id);
+        CHECK_DATASET_DISABLED(m_string_table, DATASET_STRING_DATA);
+        return m_string_table->GetRefForID(id);
     }
 
-    std::string_view GetPronunciationForID(const NameID id) const override final
+    std::string_view GetPronunciationForID(const StringViewID id) const override final
     {
-        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
-        return m_name_table->GetPronunciationForID(id);
+        CHECK_DATASET_DISABLED(m_string_table, DATASET_STRING_DATA);
+        return m_string_table->GetPronunciationForID(id);
     }
 
-    std::string_view GetDestinationsForID(const NameID id) const override final
+    std::string_view GetDestinationsForID(const StringViewID id) const override final
     {
-        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
-        return m_name_table->GetDestinationsForID(id);
+        CHECK_DATASET_DISABLED(m_string_table, DATASET_STRING_DATA);
+        return m_string_table->GetDestinationsForID(id);
     }
 
-    std::string_view GetExitsForID(const NameID id) const override final
+    std::string_view GetExitsForID(const StringViewID id) const override final
     {
-        CHECK_DATASET_DISABLED(m_name_table, DATASET_NAME_DATA);
-        return m_name_table->GetExitsForID(id);
+        CHECK_DATASET_DISABLED(m_string_table, DATASET_STRING_DATA);
+        return m_string_table->GetExitsForID(id);
     }
 
     std::string_view GetDatasourceName(const DatasourceID id) const override final

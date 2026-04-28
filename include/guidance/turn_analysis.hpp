@@ -3,8 +3,8 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/intersection/intersection_view.hpp"
-#include "extractor/name_table.hpp"
 #include "extractor/node_restriction_map.hpp"
+#include "extractor/string_table.hpp"
 #include "extractor/suffix_table.hpp"
 
 #include "guidance/driveway_handler.hpp"
@@ -35,7 +35,7 @@ class TurnAnalysis
                  const extractor::RestrictionMap &restriction_map,
                  const extractor::ObstacleMap &obstacle_nodes,
                  const extractor::TurnLanesIndexedArray &turn_lanes_data,
-                 const extractor::NameTable &name_table,
+                 const extractor::StringTable &string_table,
                  const extractor::SuffixTable &street_name_suffix_table);
 
     /* Full Analysis Process for a single node/edge combination. Use with caution, as the process is

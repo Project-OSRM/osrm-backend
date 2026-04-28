@@ -13,7 +13,6 @@
 #include <tbb/parallel_sort.h>
 
 #include <boost/iterator/permutation_iterator.hpp>
-#include <boost/range/combine.hpp>
 
 namespace osrm::partitioner
 {
@@ -87,13 +86,8 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
         }
         BOOST_ASSERT(max_border_node_id < num_nodes);
 
-        auto edge_and_level_range = boost::combine(edges, highest_border_level);
-        auto sorted_edge_and_level_begin =
-            boost::make_permutation_iterator(edge_and_level_range.begin(), permutation.begin());
-        auto sorted_edge_and_level_end =
-            boost::make_permutation_iterator(edge_and_level_range.begin(), permutation.end());
         InitializeOffsetsFromSortedEdges(
-            mlp, max_border_node_id, sorted_edge_and_level_begin, sorted_edge_and_level_end);
+            mlp, max_border_node_id, edges, highest_border_level, permutation);
     }
 
     // Fast scan over all relevant border edges
@@ -186,38 +180,37 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
         return permutation;
     }
 
-    template <typename ZipIterT>
+    template <typename EdgesT, typename LevelsT, typename PermutationT>
     auto InitializeOffsetsFromSortedEdges(const MultiLevelPartition &mlp,
                                           const NodeID max_border_node_id,
-                                          const ZipIterT &edge_and_level_begin,
-                                          const ZipIterT &edge_and_level_end)
+                                          const EdgesT &edges,
+                                          const LevelsT &highest_border_level,
+                                          const PermutationT &permutation)
     {
-
         auto num_levels = mlp.GetNumberOfLevels();
         // we save one sentinel element at the end
         node_to_edge_offset.reserve(num_levels * (max_border_node_id + 1) + 1);
-        auto iter = edge_and_level_begin;
+        std::size_t idx = 0;
+        const std::size_t permutation_size = permutation.size();
         for (auto node : util::irange<NodeID>(0, max_border_node_id + 1))
         {
             node_to_edge_offset.push_back(0);
-            auto level_begin = iter;
-            for (auto level : util::irange<LevelID>(0, mlp.GetNumberOfLevels()))
+            auto level_begin_idx = idx;
+            for (auto level : util::irange<LevelID>(0, num_levels))
             {
-                iter = std::find_if(iter,
-                                    edge_and_level_end,
-                                    [node, level](const auto &edge_and_level) {
-                                        return boost::get<0>(edge_and_level).source != node ||
-                                               boost::get<1>(edge_and_level) != level;
-                                    });
-                EdgeOffset offset = std::distance(level_begin, iter);
+                while (idx < permutation_size && edges[permutation[idx]].source == node &&
+                       highest_border_level[permutation[idx]] == level)
+                {
+                    ++idx;
+                }
+                EdgeOffset offset = idx - level_begin_idx;
                 node_to_edge_offset.push_back(offset);
             }
             node_to_edge_offset.pop_back();
         }
-        BOOST_ASSERT(node_to_edge_offset.size() ==
-                     mlp.GetNumberOfLevels() * (max_border_node_id + 1));
+        BOOST_ASSERT(node_to_edge_offset.size() == num_levels * (max_border_node_id + 1));
         // save number of levels as last element so we can reconstruct the stride
-        node_to_edge_offset.push_back(mlp.GetNumberOfLevels());
+        node_to_edge_offset.push_back(num_levels);
     }
 
     friend void

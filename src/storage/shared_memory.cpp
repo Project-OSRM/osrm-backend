@@ -1,9 +1,14 @@
 #include "storage/shared_memory.hpp"
 #include "storage/shared_datatype.hpp"
 #include <boost/interprocess/shared_memory_object.hpp>
+#include <cstdlib>
 #include <cstring>
 #include <string>
 #include <thread>
+
+#ifndef _WIN32
+#include <unistd.h>
+#endif
 
 namespace osrm::storage
 {
@@ -216,19 +221,76 @@ std::unique_ptr<SharedMemory> makeSharedMemory(const ProjID proj_id, const uint6
     }
 }
 
+// Try to use a directory for lock files. Creates it if needed.
+// Returns true on success, false if the directory cannot be used.
+bool tryLockDir(const std::filesystem::path &dir)
+{
+    std::error_code ec;
+    std::filesystem::create_directories(dir, ec);
+    return !ec && std::filesystem::is_directory(dir, ec) && !ec;
+}
+
 std::filesystem::path getLockDir()
 {
-    if (const char *lock_dir = std::getenv("SHM_LOCK_DIR"))
+    auto logOnce = [](const std::filesystem::path &dir)
     {
-        std::filesystem::path dir(lock_dir);
-        if (!std::filesystem::exists(dir))
+        static bool logged = false;
+        if (!logged)
         {
-            throw util::exception("SHM_LOCK_DIR directory does not exist: " + dir.string() +
+            util::Log() << "Using shared memory lock directory: " << dir;
+            logged = true;
+        }
+    };
+
+    // 1. Explicit override via environment variable
+    if (const char *env = std::getenv("SHM_LOCK_DIR"))
+    {
+        std::filesystem::path dir(env);
+        if (!tryLockDir(dir))
+        {
+            throw util::exception("SHM_LOCK_DIR directory is not usable: " + dir.string() +
                                   SOURCE_REF);
         }
+        logOnce(dir);
         return dir;
     }
-    return std::filesystem::temp_directory_path();
+
+    // 2. Platform-specific candidates
+#ifdef __linux__
+    // /dev/shm is a RAM-backed tmpfs that is always local and never cleaned by
+    // systemd-tmpfiles-clean. It is only cleared on reboot, which matches the
+    // lifetime of System V shared memory segments.
+    {
+        auto dir = std::filesystem::path("/dev/shm") / ("osrm-" + std::to_string(::getuid()));
+        if (tryLockDir(dir))
+        {
+            logOnce(dir);
+            return dir;
+        }
+    }
+#endif
+
+    // 3. User home directory
+    {
+        const char *home = std::getenv("HOME");
+#ifdef _WIN32
+        if (!home)
+            home = std::getenv("USERPROFILE");
+#endif
+        if (home)
+        {
+            auto dir = std::filesystem::path(home) / ".osrm";
+            if (tryLockDir(dir))
+            {
+                logOnce(dir);
+                return dir;
+            }
+        }
+    }
+
+    throw util::exception("Could not determine a shared memory lock directory. "
+                          "Set SHM_LOCK_DIR to a writable directory." +
+                          SOURCE_REF);
 }
 
 } // namespace osrm::storage

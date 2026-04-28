@@ -63,7 +63,7 @@ Returns the fastest route between two or more coordinates while visiting the way
     *   `options.steps` **[Boolean][4]** Return route steps for each route leg. (optional, default `false`)
     *   `options.annotations` **([Array][5] | [Boolean][4])** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
     *   `options.geometries` **[String][3]** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
-    *   `options.overview` **[String][3]** Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`). (optional, default `simplified`)
+    *   `options.overview` **[String][3]** Add overview geometry either `full`, `simplified` according to highest zoom level it could be displayed on, or not at all (`false`). If you want the overview for each leg, you can use `by_legs`. (optional, default `simplified`)
     *   `options.continue_straight` **[Boolean][4]?** Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
     *   `options.approaches` **[Array][5]?** Restrict the direction on the road network at a waypoint, relative to the input coordinate. Can be `null` (unrestricted, default), `curb` or `opposite`.
         `null`/`true`/`false`
@@ -300,7 +300,7 @@ Right now, the following combinations are possible:
     *   `options.steps` **[Boolean][4]** Return route steps for each route. (optional, default `false`)
     *   `options.annotations` **([Array][5] | [Boolean][4])** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
     *   `options.geometries` **[String][3]** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
-    *   `options.overview` **[String][3]** Add overview geometry either `full`, `simplified` (optional, default `simplified`)
+    *   `options.overview` **[String][3]** Add overview geometry either `full`, `simplified`, `false` or `by_legs`. (optional, default `simplified`)
     *   `options.roundtrip` **[Boolean][4]** Return route is a roundtrip. (optional, default `true`)
     *   `options.source` **[String][3]** Return route starts at `any` or `first` coordinate. (optional, default `any`)
     *   `options.destination` **[String][3]** Return route ends at `any` or `last` coordinate. (optional, default `any`)

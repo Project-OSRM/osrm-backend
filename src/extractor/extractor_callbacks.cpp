@@ -318,7 +318,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     road_classification.SetNumberOfLanes(std::max(road_deduced_num_lanes, // len(turn:lanes)
                                                   road_classification.GetNumberOfLanes()));
 
-    const auto GetNameID = [this, &parsed_way](bool is_forward) -> NameID
+    const auto GetNameID = [this, &parsed_way](bool is_forward) -> StringViewID
     {
         const std::string &ref = is_forward ? parsed_way.forward_ref : parsed_way.backward_ref;
         // Get the unique identifier for the street name, destination, and ref
@@ -328,7 +328,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                                           parsed_way.pronunciation,
                                                           parsed_way.exits));
 
-        NameID name_id = EMPTY_NAMEID;
+        StringViewID name_id = EMPTY_STRINGVIEWID;
         if (string_map.end() == name_iterator)
         {
             // name_offsets has a sentinel element with the total name data size
@@ -375,8 +375,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         return name_id;
     };
 
-    const NameID forward_name_id = GetNameID(true);
-    const NameID backward_name_id = GetNameID(false);
+    const StringViewID forward_name_id = GetNameID(true);
+    const StringViewID backward_name_id = GetNameID(false);
 
     const bool in_forward_direction =
         (parsed_way.forward_speed > 0 || parsed_way.forward_rate > 0 || parsed_way.duration > 0 ||

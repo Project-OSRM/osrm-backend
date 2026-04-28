@@ -4,58 +4,47 @@
 #include "server/api/route_parameters_grammar.hpp"
 #include "engine/api/trip_parameters.hpp"
 
-#include <boost/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/home/x3.hpp>
 
-namespace osrm::server::api
+namespace osrm::server::api::trip_grammar
 {
 
-namespace
+namespace x3 = boost::spirit::x3;
+
+inline const auto source_type = []()
 {
-namespace ph = boost::phoenix;
-namespace qi = boost::spirit::qi;
-} // namespace
+    x3::symbols<engine::api::TripParameters::SourceType> sym;
+    sym.add("any", engine::api::TripParameters::SourceType::Any)(
+        "first", engine::api::TripParameters::SourceType::First);
+    return sym;
+}();
 
-template <typename Iterator = std::string::iterator,
-          typename Signature = void(engine::api::TripParameters &)>
-struct TripParametersGrammar final : public RouteParametersGrammar<Iterator, Signature>
+inline const auto destination_type = []()
 {
-    using BaseGrammar = RouteParametersGrammar<Iterator, Signature>;
+    x3::symbols<engine::api::TripParameters::DestinationType> sym;
+    sym.add("any", engine::api::TripParameters::DestinationType::Any)(
+        "last", engine::api::TripParameters::DestinationType::Last);
+    return sym;
+}();
 
-    TripParametersGrammar() : BaseGrammar(root_rule)
-    {
-        roundtrip_rule =
-            qi::lit("roundtrip=") >
-            qi::bool_[ph::bind(&engine::api::TripParameters::roundtrip, qi::_r1) = qi::_1];
+inline const auto roundtrip_rule =
+    x3::lit("roundtrip=") >
+    x3::bool_[([](auto &ctx) { x3::get<params_tag>(ctx).get().roundtrip = x3::_attr(ctx); })];
 
-        source_type.add("any", engine::api::TripParameters::SourceType::Any)(
-            "first", engine::api::TripParameters::SourceType::First);
+inline const auto source_rule =
+    x3::lit("source=") >
+    source_type[([](auto &ctx) { x3::get<params_tag>(ctx).get().source = x3::_attr(ctx); })];
 
-        destination_type.add("any", engine::api::TripParameters::DestinationType::Any)(
-            "last", engine::api::TripParameters::DestinationType::Last);
+inline const auto destination_rule =
+    x3::lit("destination=") >
+    destination_type[([](auto &ctx)
+                      { x3::get<params_tag>(ctx).get().destination = x3::_attr(ctx); })];
 
-        source_rule = qi::lit("source=") >
-                      source_type[ph::bind(&engine::api::TripParameters::source, qi::_r1) = qi::_1];
+// Trip root rule
+inline const auto root_rule = x3::rule<struct trip_root_tag>{"trip_root"} =
+    base_grammar::query_rule > base_grammar::format_rule >
+    -('?' > (roundtrip_rule | source_rule | destination_rule | route_grammar::route_options) % '&');
 
-        destination_rule =
-            qi::lit("destination=") >
-            destination_type[ph::bind(&engine::api::TripParameters::destination, qi::_r1) = qi::_1];
-
-        root_rule = BaseGrammar::query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
-                    -('?' > (roundtrip_rule(qi::_r1) | source_rule(qi::_r1) |
-                             destination_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1)) %
-                                '&');
-    }
-
-  private:
-    qi::rule<Iterator, Signature> source_rule;
-    qi::rule<Iterator, Signature> destination_rule;
-    qi::rule<Iterator, Signature> roundtrip_rule;
-    qi::rule<Iterator, Signature> root_rule;
-
-    qi::symbols<char, engine::api::TripParameters::SourceType> source_type;
-    qi::symbols<char, engine::api::TripParameters::DestinationType> destination_type;
-};
-} // namespace osrm::server::api
+} // namespace osrm::server::api::trip_grammar
 
 #endif

@@ -1,4 +1,4 @@
-#include "extractor/name_table.hpp"
+#include "extractor/string_table.hpp"
 
 #include "util/typedefs.hpp"
 
@@ -19,6 +19,6 @@ namespace guidance
 // - staggered intersections (X-cross)
 // - square/circle intersections
 std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFactory &factory,
-                                               const extractor::NameTable &names);
+                                               const extractor::StringTable &names);
 } // namespace guidance
 } // namespace osrm

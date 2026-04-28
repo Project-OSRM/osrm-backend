@@ -285,7 +285,7 @@ inline void asyncForTiles(const Napi::CallbackInfo &info,
  * @param {Boolean} [options.steps=false] Return route steps for each route leg.
  * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
- * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`).
+ * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be displayed on, or not at all (`false`). If you want the overview for each leg, you can use `by_legs`.
  * @param {Boolean} [options.continue_straight] Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
  * @param {Array} [options.approaches] Restrict the direction on the road network at a waypoint, relative to the input coordinate. Can be `null` (unrestricted, default), `curb` or `opposite`.
  *                  `null`/`true`/`false`
@@ -555,7 +555,7 @@ Napi::Value Engine::match(const Napi::CallbackInfo &info)
  * @param {Boolean} [options.steps=false] Return route steps for each route.
  * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
- * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified`
+ * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified`, `false` or `by_legs`.
  * @param {Function} callback
  * @param {Boolean} [options.roundtrip=true] Return route is a roundtrip.
  * @param {String} [options.source=any] Return route starts at `any` or `first` coordinate.

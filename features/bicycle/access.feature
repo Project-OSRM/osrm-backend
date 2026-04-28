@@ -144,14 +144,23 @@ Feature: Bike - Access tags on ways
 
     Scenario: Bike - Access combinations
         Then routability should be
-            | highway     | access     | vehicle    | bicycle    | forw    | backw   |
-            | runway      | private    |            | yes        | cycling | cycling |
-            | footway     |            | no         | permissive | cycling | cycling |
-            | motorway    |            |            | yes        | cycling |         |
-            | track       | forestry   |            | permissive | cycling | cycling |
-            | cycleway    | yes        | designated | no         |         |         |
-            | primary     |            | yes        | private    |         |         |
-            | residential | permissive |            | no         |         |         |
+            | highway     | access     | vehicle    | bicycle      | forw    | backw   |
+            | runway      | private    |            | yes          | cycling | cycling |
+            | footway     |            | no         | permissive   | cycling | cycling |
+            | motorway    |            |            | yes          | cycling |         |
+            | track       | forestry   |            | permissive   | cycling | cycling |
+            | cycleway    | yes        | designated | no           |         |         |
+            | primary     |            | yes        | private      |         |         |
+            | residential | permissive |            | no           |         |         |
+            | primary     | yes        |            | use_sidepath |         |         |
+            | primary     | permissive |            | use_sidepath |         |         |
+
+    Scenario: Bike - explicit bicycle access overrides cycleway:*=separate inference
+        Then routability should be
+            | highway | bicycle     | cycleway:right | bothw   |
+            | primary | destination | separate       | cycling |
+            | primary | yes         | separate       | cycling |
+            | primary |             | separate       |         |
 
     Scenario: Bike - Ignore access tags for other modes
         Then routability should be

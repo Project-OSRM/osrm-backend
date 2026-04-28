@@ -2,13 +2,14 @@
 import assert from 'assert';
 import { When, Then } from '@cucumber/cucumber';
 
-When(/^I request \/(.*)$/, function (path, callback) {
-  this.reprocessAndLoadData((e) => {
-    if (e) return callback(e);
+When(/^I request \/(.*)$/, async function (path) {
+  await this.reprocessAndLoadData();
+  await new Promise((resolve, reject) => {
     this.requestUrl(path, (err, res, body) => {
+      if (err) return reject(err);
       this.response = res;
       this.body = body;
-      callback(err, res, body);
+      resolve();
     });
   });
 });

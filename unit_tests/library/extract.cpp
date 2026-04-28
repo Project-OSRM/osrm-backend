@@ -4,8 +4,8 @@
 #include "osrm/extractor.hpp"
 #include "osrm/extractor_config.hpp"
 
-#include <boost/algorithm/string.hpp>
 #include <filesystem>
+#include <string>
 #include <thread>
 
 // utility class to redirect stderr so we can test it
@@ -85,8 +85,8 @@ BOOST_AUTO_TEST_CASE(test_setup_runtime_error)
 
     // We just look for the line number, file name, and error message. This avoids portability
     // issues since the output contains the full path to the file, which may change between systems
-    BOOST_CHECK(boost::algorithm::contains(output.str(),
-                                           "bad_setup.lua:6: attempt to compare number with nil"));
+    BOOST_CHECK((output.str()).find("bad_setup.lua:6: attempt to compare number with nil") !=
+                std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_way_runtime_error)
@@ -107,8 +107,8 @@ BOOST_AUTO_TEST_CASE(test_way_runtime_error)
 
     // We just look for the line number, file name, and error message. This avoids portability
     // issues since the output contains the full path to the file, which may change between systems
-    BOOST_CHECK(boost::algorithm::contains(output.str(),
-                                           "bad_way.lua:41: attempt to compare number with nil"));
+    BOOST_CHECK((output.str()).find("bad_way.lua:41: attempt to compare number with nil") !=
+                std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_node_runtime_error)
@@ -129,8 +129,8 @@ BOOST_AUTO_TEST_CASE(test_node_runtime_error)
 
     // We just look for the line number, file name, and error message. This avoids portability
     // issues since the output contains the full path to the file, which may change between systems
-    BOOST_CHECK(boost::algorithm::contains(output.str(),
-                                           "bad_node.lua:36: attempt to compare number with nil"));
+    BOOST_CHECK((output.str()).find("bad_node.lua:36: attempt to compare number with nil") !=
+                std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_segment_runtime_error)
@@ -151,8 +151,8 @@ BOOST_AUTO_TEST_CASE(test_segment_runtime_error)
 
     // We just look for the line number, file name, and error message. This avoids portability
     // issues since the output contains the full path to the file, which may change between systems
-    BOOST_CHECK(boost::algorithm::contains(
-        output.str(), "bad_segment.lua:132: attempt to compare number with nil"));
+    BOOST_CHECK((output.str()).find("bad_segment.lua:132: attempt to compare number with nil") !=
+                std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(test_turn_runtime_error)
@@ -170,8 +170,8 @@ BOOST_AUTO_TEST_CASE(test_turn_runtime_error)
     }
     // We just look for the line number, file name, and error message. This avoids portability
     // issues since the output contains the full path to the file, which may change between systems
-    BOOST_CHECK(boost::algorithm::contains(output.str(),
-                                           "bad_turn.lua:122: attempt to compare number with nil"));
+    BOOST_CHECK((output.str()).find("bad_turn.lua:122: attempt to compare number with nil") !=
+                std::string::npos);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

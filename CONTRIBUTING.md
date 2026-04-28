@@ -49,8 +49,38 @@ Often we don't include changes that would increase the memory consumption a lot 
 
 ## Pull Request
 
-Every pull-request that changes the API needs to update the docs in `docs/http.md` and add an entry to `CHANGELOG.md`.
-Breaking changes need to have a BREAKING prefix. See the [releasing documentation](docs/releasing.md) on how this affects the version.
+### Conventional Commits
+
+All pull request titles must follow the [Conventional Commits](https://www.conventionalcommits.org/) specification. The CI will automatically validate this.
+
+**Format:** `<type>[optional scope][optional !]: <description>`
+
+**Allowed types:**
+- `feat` – A new feature
+- `fix` – A bug fix
+- `docs` – Documentation changes
+- `style` – Code style changes (formatting, semicolons, etc.)
+- `refactor` – Code refactoring without feature/bug fix changes
+- `perf` – Performance improvements
+- `test` – Test-related changes
+- `ci` – CI/CD changes
+- `chore` – Maintenance tasks, dependency updates
+- `build` – Build system changes
+
+**Examples:**
+- `feat: add new routing algorithm`
+- `fix(api): resolve nearest endpoint crash`
+- `docs: update API documentation`
+- `feat(profiles)!: remove deprecated car profile option`
+- `feat(api)!: change response format` (breaking change with scope)
+
+**Breaking Changes:** Use the `!` suffix before the colon in the pull request title (e.g., `feat!:`).
+
+### Release Notes
+
+Pull request titles must follow [Conventional Commits](https://www.conventionalcommits.org/) format as described above. This format is validated in CI and is used to structure the commit history for release organization.
+
+For API changes, additionally update the docs in `docs/http.md`. See the [releasing documentation](docs/releasing.md) on how breaking changes affect the version.
 
 Early feedback is also important.
 You will see that a lot of the PR have tags like `[not ready]` or `[wip]`.

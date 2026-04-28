@@ -1,0 +1,236 @@
+name: Monthly Release
+
+on:
+  schedule:
+    # 1st of each month at 08:00 UTC
+    - cron: '0 8 1 * *'
+  workflow_dispatch:
+    inputs:
+      version_override:
+        description: 'Override version (semver format, e.g., 26.4.0). Leave empty to auto-calculate.'
+        required: false
+        type: string
+      branch:
+        description: 'Branch to release from (defaults to master)'
+        required: false
+        type: string
+        default: 'master'
+
+concurrency:
+  group: release-monthly-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      id-token: write
+      actions: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          ref: ${{ inputs.branch || 'master' }}
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version: 24
+          registry-url: 'https://registry.npmjs.org'
+
+      - name: Validate inputs
+        run: |
+          if [ -n "${{ inputs.version_override }}" ]; then
+            # Validate version_override matches semver format (YYYY-2000).M.patchlevel
+            # Month must be 1-12, no leading zeros except single digit 0 for patchlevel
+            if ! echo "${{ inputs.version_override }}" | grep -E '^(0|[1-9][0-9]?)\.(1[0-2]|[1-9])\.(0|[1-9][0-9]*)$' > /dev/null; then
+              echo "Error: version_override must be in format (YYYY-2000).M.patchlevel with month 1-12 and no leading zeros (e.g., 26.4.0)"
+              exit 1
+            fi
+          fi
+          
+          # Validate branch input (prevent shell injection)
+          BRANCH="${{ inputs.branch || 'master' }}"
+          if ! echo "$BRANCH" | grep -E '^[a-zA-Z0-9._/-]+$' > /dev/null; then
+            echo "Error: branch name contains invalid characters"
+            exit 1
+          fi
+
+      - name: Calculate version
+        id: version
+        run: |
+          if [ -n "${{ inputs.version_override }}" ]; then
+            VERSION="${{ inputs.version_override }}"
+          else
+            # Calculate semver version automatically
+            # Use (YYYY-2000).M.patchlevel format (no leading zeros for month/patch)
+            YEAR=$(date -u +%Y)
+            MONTH=$(date -u +%-m)
+            YEAR_OFFSET=$((YEAR - 2000))
+            
+            # Find highest patchlevel for this month
+            LATEST_TAG=$(git tag -l "v${YEAR_OFFSET}.${MONTH}.*" --sort=-version:refname | head -1)
+            
+            if [ -z "$LATEST_TAG" ]; then
+              PATCHLEVEL=0
+            else
+              # Extract patchlevel from tag (e.g., v26.4.5 -> 5)
+              PATCHLEVEL=${LATEST_TAG##*.}
+              PATCHLEVEL=$((PATCHLEVEL + 1))
+            fi
+            
+            VERSION="${YEAR_OFFSET}.${MONTH}.${PATCHLEVEL}"
+          fi
+          
+          echo "version=${VERSION}" >> $GITHUB_OUTPUT
+          echo "tag=v${VERSION}" >> $GITHUB_OUTPUT
+
+      - name: Update package.json and package-lock.json
+        env:
+          VERSION: ${{ steps.version.outputs.version }}
+        run: |
+          node -e "
+            const fs = require('fs');
+            const pkg = require('./package.json');
+            const lock = require('./package-lock.json');
+            const oldVersion = pkg.version;
+            
+            // Update both package.json and package-lock.json
+            pkg.version = process.env.VERSION;
+            lock.version = process.env.VERSION;
+            fs.writeFileSync('./package.json', JSON.stringify(pkg, null, 2) + '\n');
+            fs.writeFileSync('./package-lock.json', JSON.stringify(lock, null, 2) + '\n');
+            console.log('Updated version from ' + oldVersion + ' to ' + process.env.VERSION);
+          "
+
+      - name: Check for changes
+        id: check_changes
+        run: |
+          if git diff --quiet package.json package-lock.json; then
+            echo "No changes to package files (version unchanged)"
+            echo "has_changes=false" >> $GITHUB_OUTPUT
+          else
+            echo "Changes detected in package files"
+            echo "has_changes=true" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Commit version update
+        if: steps.check_changes.outputs.has_changes == 'true'
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json
+          git commit -m "chore: bump version to ${{ steps.version.outputs.version }}"
+
+      - name: Create git tag
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag -a "${{ steps.version.outputs.tag }}" -m "Release ${{ steps.version.outputs.version }}"
+
+      - name: Push changes and tag
+        env:
+          GITHUB_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
+        run: |
+          BRANCH="${{ inputs.branch || 'master' }}"
+          git push origin "$BRANCH"
+          git push origin "${{ steps.version.outputs.tag }}"
+
+      - name: Trigger CI for tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # GITHUB_TOKEN pushes don't trigger workflow runs (prevents loops).
+          # Explicitly dispatch CI on the tag so binaries get built and uploaded.
+          gh workflow run osrm-backend.yml --ref "${{ steps.version.outputs.tag }}"
+          echo "Dispatched osrm-backend.yml on ${{ steps.version.outputs.tag }}"
+
+      - name: Generate changelog
+        id: changelog
+        run: |
+          CURRENT_TAG="${{ steps.version.outputs.tag }}"
+          
+          # Get the previous release tag
+          PREVIOUS_TAG=$(git tag -l 'v*' --sort=-version:refname --merged "$CURRENT_TAG" | head -2 | tail -1)
+          
+          if [ -z "$PREVIOUS_TAG" ] || [ "$PREVIOUS_TAG" = "$CURRENT_TAG" ]; then
+            # No previous release, or selection resolved to the current tag; show all commits
+            CHANGELOG=$(git log "$CURRENT_TAG" --pretty=format:"* %h - %s")
+          else
+            # Show commits since last release
+            CHANGELOG=$(git log "${PREVIOUS_TAG}..$CURRENT_TAG" --pretty=format:"* %h - %s")
+          fi
+          
+          # Output as multiline variable using a unique delimiter to avoid collisions
+          DELIMITER=$(cat /proc/sys/kernel/random/uuid)
+          echo "body<<$DELIMITER" >> $GITHUB_OUTPUT
+          echo "$CHANGELOG" >> $GITHUB_OUTPUT
+          echo "$DELIMITER" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: ncipollo/release-action@v1
+        with:
+          tag: ${{ steps.version.outputs.tag }}
+          name: Release ${{ steps.version.outputs.version }}
+          body: ${{ steps.changelog.outputs.body }}
+          draft: false
+          prerelease: false
+
+      - name: Wait for CI to complete
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Wait for tag CI to complete before publishing npm package
+          # The osrm-backend.yml workflow is triggered by the tag push
+          # and uploads prebuilt binaries to the release assets
+          TAG="${{ steps.version.outputs.tag }}"
+          TAG_SHA="$(git rev-list -n 1 "$TAG")"
+          
+          echo "Waiting for CI workflow to complete for tag $TAG (commit $TAG_SHA)"
+          
+          MAX_WAIT=3600  # 1 hour
+          ELAPSED=0
+          POLL_INTERVAL=10
+          
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            # Query runs for the osrm-backend.yml workflow for this tag's commit
+            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,displayTitle 2>/dev/null || echo '[]')"
+            
+            # Find run matching this tag's commit SHA
+            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha) | @json' | head -1)"
+            
+            if [ -n "$MATCHING_RUN" ] && [ "$MATCHING_RUN" != "null" ]; then
+              STATUS="$(echo "$MATCHING_RUN" | jq -r '.status')"
+              CONCLUSION="$(echo "$MATCHING_RUN" | jq -r '.conclusion // empty')"
+              RUN_ID="$(echo "$MATCHING_RUN" | jq -r '.databaseId')"
+              
+              echo "Found matching CI run $RUN_ID: status=$STATUS conclusion=$CONCLUSION"
+              
+              if [ "$STATUS" = "completed" ]; then
+                if [ "$CONCLUSION" = "success" ]; then
+                  echo "✓ CI workflow completed successfully, proceeding with npm publish"
+                  exit 0
+                else
+                  echo "✗ CI workflow completed with conclusion=$CONCLUSION (expected success)"
+                  exit 1
+                fi
+              else
+                echo "CI workflow still running (status=$STATUS), waiting..."
+              fi
+            else
+              echo "No matching CI run found yet, waiting for workflow to start..."
+            fi
+            
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+          
+          echo "✗ Timed out waiting for CI workflow to complete for tag $TAG"
+          exit 1
+
+      - name: Install dependencies (skip native build scripts)
+        run: npm ci --ignore-scripts
+
+      - name: Publish to npm
+        run: npm publish
+

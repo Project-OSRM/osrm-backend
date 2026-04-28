@@ -163,7 +163,10 @@ function setup()
         unclassified    = 25,
         residential     = 25,
         living_street   = 10,
-        service         = 15
+        service         = 15,
+        -- winter highway types (OSM highway=winter_road / highway=ice_road)
+        winter_road     = 20,
+        ice_road        = 15
       }
     },
 
@@ -195,7 +198,9 @@ function setup()
       'residential',
       'living_street',
       'unclassified',
-      'service'
+      'service',
+      'winter_road',
+      'ice_road'
     },
 
     construction_whitelist = Set {
@@ -251,7 +256,11 @@ function setup()
       rocky = 20,
       sand = 20,
 
-      mud = 10
+      mud = 10,
+
+      -- winter surfaces (OSM surface=ice / surface=snow)
+      ice  = 20,
+      snow = 30
     },
 
     -- max speed for tracktypes

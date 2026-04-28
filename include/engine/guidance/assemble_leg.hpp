@@ -10,8 +10,6 @@
 #include "util/typedefs.hpp"
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/range/adaptor/filtered.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -19,6 +17,7 @@
 #include <algorithm>
 #include <array>
 #include <numeric>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -121,7 +120,7 @@ std::array<std::uint32_t, SegmentNumber> summarizeRoute(const datafacade::BaseDa
               { return lhs.position < rhs.position; });
 
     std::array<std::uint32_t, SegmentNumber> summary;
-    std::fill(summary.begin(), summary.end(), EMPTY_NAMEID);
+    std::fill(summary.begin(), summary.end(), EMPTY_STRINGVIEWID);
     std::transform(segments.begin(),
                    segments.end(),
                    summary.begin(),
@@ -143,7 +142,7 @@ inline std::string assembleSummary(const datafacade::BaseDataFacade &facade,
 
     // transform a name_id into a string containing either the name, or -if the name is empty-
     // the reference.
-    const auto name_id_to_string = [&](const NameID name_id)
+    const auto name_id_to_string = [&](const StringViewID name_id)
     {
         const auto name = facade.GetNameForID(name_id);
         if (!name.empty())
@@ -157,8 +156,9 @@ inline std::string assembleSummary(const datafacade::BaseDataFacade &facade,
 
     const auto not_empty = [&](const std::string &name) { return !name.empty(); };
 
-    const auto summary_names = summary_array | boost::adaptors::transformed(name_id_to_string) |
-                               boost::adaptors::filtered(not_empty);
+    auto transformed_view =
+        summary_array | std::views::transform(name_id_to_string) | std::views::filter(not_empty);
+    std::vector<std::string> summary_names(transformed_view.begin(), transformed_view.end());
     return boost::algorithm::join(summary_names, ", ");
 }
 

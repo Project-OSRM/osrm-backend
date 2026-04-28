@@ -5,10 +5,10 @@
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
 
-#include <boost/algorithm/string/predicate.hpp>
 #include <osmium/osm.hpp>
 
 #include <algorithm>
+#include <string_view>
 
 namespace osrm::extractor
 {
@@ -97,23 +97,22 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
 
     for (; fi_begin != fi_end; ++fi_begin)
     {
-        auto value = fi_begin->value();
+        std::string_view value{fi_begin->value()};
 
         // documented OSM restriction tags start either with only_* or no_*;
         // check and return on these values, and ignore no_*_on_red or unrecognized values
-        if (boost::algorithm::starts_with(value, "only_"))
+        if (value.starts_with("only_"))
         {
             is_only_restriction = true;
         }
-        else if (boost::algorithm::starts_with(value, "no_") &&
-                 !boost::algorithm::ends_with(value, "_on_red"))
+        else if (value.starts_with("no_") && !value.ends_with("_on_red"))
         {
             is_only_restriction = false;
-            if (boost::algorithm::starts_with(value, "no_exit"))
+            if (value.starts_with("no_exit"))
             {
                 is_multi_to = true;
             }
-            else if (boost::algorithm::starts_with(value, "no_entry"))
+            else if (value.starts_with("no_entry"))
             {
                 is_multi_from = true;
             }
@@ -126,7 +125,7 @@ RestrictionParser::TryParse(const osmium::Relation &relation) const
         if (parse_conditionals)
         {
             // Parse condition and add independent value/condition pairs
-            const auto &parsed = osrm::util::ParseConditionalRestrictions(value);
+            const auto parsed = osrm::util::ParseConditionalRestrictions(std::string(value));
 
             if (parsed.empty())
                 continue;
