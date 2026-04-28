@@ -1,0 +1,72 @@
+name: vcpkg-smoke
+
+# Fast manifest-resolution check across every supported OS. Runs `vcpkg
+# install` against vcpkg.json to catch baseline/port drift before the full
+# osrm-backend.yml matrix spends compute on it. Non-gating: failures here
+# don't block merges.
+
+on:
+  push:
+    branches: [master]
+    paths:
+      - 'vcpkg.json'
+      - 'vcpkg-configuration.json'
+      - 'CMakePresets.json'
+      - '.github/workflows/vcpkg-smoke.yml'
+  pull_request:
+    paths:
+      - 'vcpkg.json'
+      - 'vcpkg-configuration.json'
+      - 'CMakePresets.json'
+      - '.github/workflows/vcpkg-smoke.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: vcpkg-smoke-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  # Use a local filesystem directory as vcpkg's binary cache. The directory
+  # itself is persisted across CI runs via actions/cache@v5. The x-gha
+  # backend was removed upstream; files+actions/cache is the replacement.
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/.vcpkg-bincache
+  VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/.vcpkg-bincache,readwrite"
+
+jobs:
+  manifest-resolve:
+    # Non-blocking during the migration. Validates only that vcpkg.json +
+    # vcpkg-configuration.json resolve and install cleanly on every supported
+    # OS. Full cmake build against vcpkg deps happens once rollout step 3
+    # rewrites CMakeLists.txt.
+    continue-on-error: true
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { os: ubuntu-24.04,    triplet: x64-linux }
+          - { os: macos-26,        triplet: arm64-osx }
+          - { os: macos-26-intel,  triplet: x64-osx }
+          - { os: windows-2025,    triplet: x64-windows-static-md }
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Enable vcpkg binary cache
+        uses: actions/cache@v5
+        with:
+          path: ${{ github.workspace }}/.vcpkg-bincache
+          key: vcpkg-${{ matrix.os }}-${{ matrix.triplet }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
+          restore-keys: |
+            vcpkg-${{ matrix.os }}-${{ matrix.triplet }}-
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          # Pinned to vcpkg-configuration.json baseline (2026.03.18).
+          vcpkgGitCommitId: c3867e714dd3a51c272826eea77267876517ed99
+          runVcpkgInstall: true
+          # Pin to top-level manifest; the default glob **/vcpkg.json would
+          # otherwise pick up overlay port manifests in vcpkg-overlay-ports/.
+          vcpkgJsonGlob: 'vcpkg.json'
+        env:
+          VCPKG_DEFAULT_TRIPLET: ${{ matrix.triplet }}
