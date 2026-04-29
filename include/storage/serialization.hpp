@@ -10,8 +10,7 @@
 #include "storage/tar.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/iterator/function_input_iterator.hpp>
-#include <boost/iterator/function_output_iterator.hpp>
+#include "util/iterator_adapters.hpp"
 
 #include <cmath>
 #include <cstdint>
@@ -72,7 +71,7 @@ void readBoolVector(tar::FileReader &reader, const std::string &name, VectorT &d
         index += BLOCK_BITS;
     };
 
-    reader.ReadStreaming<BlockType>(name, boost::make_function_output_iterator(decode));
+    reader.ReadStreaming<BlockType>(name, osrm::util::make_function_output_iterator(decode));
 }
 
 template <typename VectorT>
@@ -98,7 +97,7 @@ void writeBoolVector(tar::FileWriter &writer, const std::string &name, const Vec
     std::uint64_t number_of_blocks = (count + BLOCK_BITS - 1) / BLOCK_BITS;
     writer.WriteStreaming<BlockType>(
         name,
-        boost::make_function_input_iterator(encode_function, boost::infinite()),
+        osrm::util::make_function_input_iterator(encode_function),
         number_of_blocks);
 }
 } // namespace detail

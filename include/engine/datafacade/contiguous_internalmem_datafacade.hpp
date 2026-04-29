@@ -192,7 +192,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         bool result = false;
         index.List(name,
-                   boost::make_function_output_iterator([&](const auto &) { result = true; }));
+                   osrm::util::make_function_output_iterator([&](const auto &) { result = true; }));
         return result;
     }
 

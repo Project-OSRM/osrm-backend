@@ -3,7 +3,7 @@
 
 #include "storage/shared_datatype.hpp"
 
-#include <boost/iterator/function_output_iterator.hpp>
+#include "util/iterator_adapters.hpp"
 
 #include <type_traits>
 #include <unordered_map>
@@ -31,7 +31,7 @@ class SharedDataIndex
         {
             regions[index].layout->List(
                 "",
-                boost::make_function_output_iterator([&](const auto &name)
+                osrm::util::make_function_output_iterator([&](const auto &name)
                                                      { block_to_region[name] = index; }));
         }
     }

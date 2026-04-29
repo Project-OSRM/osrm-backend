@@ -19,7 +19,6 @@
     "boost-heap",
     "boost-interprocess",
     "boost-iostreams",
-    "boost-iterator",
     "boost-numeric-conversion",
     "boost-program-options",
     "boost-spirit",
