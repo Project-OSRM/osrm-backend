@@ -4,8 +4,7 @@ requires = [
   "nanobind >=2.12.0",
   "setuptools-scm >=10",
   "cmake",
-  "ninja",
-  sys_platform == 'win32'",
+  "ninja; sys_platform != 'win32'",
 ]
 build-backend = "scikit_build_core.build"
 
@@ -78,7 +77,18 @@ test-command = [
 ]
 
 [tool.cibuildwheel.linux]
-environment = "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH}"
+# The custom manylinux image ships vcpkg + a pre-warmed binary cache built
+# against this exact vcpkg.json, exposing VCPKG_ROOT=/opt/vcpkg and
+# VCPKG_DEFAULT_BINARY_CACHE=/opt/vcpkg-bincache as ENV. CMAKE_ARGS routes
+# the cmake configure through the vcpkg toolchain so `vcpkg install` reads
+# from that bincache instead of rebuilding boost/tbb/etc. from source.
+# The `-release` triplet matches what the image's prewarm used; vcpkg's ABI
+# hash includes the triplet name, so x64-linux ≠ x64-linux-release in the
+# cache.
+environment = """\
+LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} \
+CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-release"\
+"""
 before-build = "ccache -s && ccache -M 500M"
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
@@ -87,14 +97,25 @@ environment = "MACOSX_DEPLOYMENT_TARGET=15.0 CCACHE_DIR=$HOME/.ccache"
 before-build = "ccache -s && ccache -M 500M"
 before-all = """
   export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1
-  brew install lua tbb boost@1.90 ccache
+  brew install ccache lua tbb boost@1.90 fmt rapidjson sol2 flatbuffers \
+              protozero libosmium
   brew link boost@1.90
 """
 
 [tool.cibuildwheel.windows]
-before-build = "pip install conan==2.27.0 delvewheel && conan profile detect --force"
-config-settings = "cmake.define.ENABLE_CONAN=ON"
-repair-wheel-command = 'call build\cp312-abi3-win_amd64\conanrun.bat && delvewheel repair --analyze-existing-exes --add-dll hwloc.dll --no-mangle tbb12.dll --no-mangle hwloc.dll -w {dest_dir} {wheel}'
+# Windows uses vcpkg. VCPKG_ROOT is exported on the runner by lukka/run-vcpkg
+# in the workflow and inherited by the cibuildwheel build env; CMAKE_ARGS is
+# read by scikit-build-core and forwarded to the cmake configure step.
+# cibuildwheel parses `environment` as bash export statements, so $VCPKG_ROOT
+# expands here.
+environment = 'CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static-md"'
+before-build = "pip install delvewheel"
+# In manifest mode, vcpkg installs deps into <build-dir>/vcpkg_installed/<triplet>.
+# scikit-build-core's build dir is build/{wheel_tag} and the abi3 cp312 wheel
+# tag on Windows x64 is cp312-abi3-win_amd64, so the vcpkg-built tbb12.dll and
+# hwloc.dll live at the path below — point delvewheel at it via --add-path so
+# they get bundled into the wheel.
+repair-wheel-command = 'delvewheel repair --analyze-existing-exes --add-path build\cp312-abi3-win_amd64\vcpkg_installed\x64-windows-static-md\bin --add-dll hwloc.dll --no-mangle tbb12.dll --no-mangle hwloc.dll -w {dest_dir} {wheel}'
 test-command = [
   "cd /d {project}/test/data",
   "windows-build-test-data.bat",

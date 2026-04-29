@@ -41,30 +41,55 @@ pre-commit install
 
 ### Linux
 
-No extra steps needed. Wheels are built inside a custom manylinux image
-that has all OSRM dependencies baked in. A regular source install will pull
-OSRM's dependencies via the system package manager or build them from source.
+CI wheel builds run inside a custom manylinux image
+([nilsnolde/manylinux](https://github.com/nilsnolde/manylinux), branch
+`osrm_python`) that ships vcpkg pre-bootstrapped at the SHA pinned in
+`vcpkg-configuration.json`, plus a pre-warmed vcpkg binary cache compiled
+against this repo's `vcpkg.json`. The wheel build's own `vcpkg install`
+hits that cache instead of recompiling boost/tbb/etc. from source.
+
+The image needs rebuilding when this repo's `vcpkg.json`, the baseline SHA
+in `vcpkg-configuration.json`, or any file under `vcpkg-overlay-ports/`
+changes — otherwise the wheel build either misses the cache (slow) or
+fails on a missing port. The manylinux repo's `Build` workflow takes an
+`osrmRef` input for that purpose; see its README.
+
+For local source builds outside the manylinux image, install vcpkg
+yourself, point CMake at its toolchain, and use the release-only triplet
+to match the cache:
+
+```bash
+git clone https://github.com/microsoft/vcpkg
+./vcpkg/bootstrap-vcpkg.sh
+export VCPKG_ROOT=$PWD/vcpkg
+export CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-release"
+```
 
 ### macOS
 
-Install OSRM's C++ dependencies via Homebrew:
+Install OSRM's C++ dependencies via Homebrew (the same set the cibuildwheel
+macOS `before-all` uses; all ship CMake config files so the
+`find_package(... CONFIG REQUIRED)` calls in `CMakeLists.txt` resolve
+without a toolchain file):
 
 ```bash
-brew install lua tbb boost@1.90
+brew install lua tbb boost@1.90 fmt rapidjson sol2 flatbuffers \
+             protozero libosmium
 brew link boost@1.90
 ```
 
 ### Windows
 
-Windows uses [Conan](https://conan.io/) for OSRM's C++ dependencies. Install
-it and generate a default profile before building:
+Windows uses [vcpkg](https://vcpkg.io/) in manifest mode for OSRM's C++
+dependencies. Clone and bootstrap it, then export `VCPKG_ROOT`:
 
-```bash
-pip install conan==2.27.0
-conan profile detect --force
+```powershell
+git clone https://github.com/microsoft/vcpkg
+.\vcpkg\bootstrap-vcpkg.bat
+$env:VCPKG_ROOT = "$PWD\vcpkg"
 ```
 
-Pass `ENABLE_CONAN=ON` to CMake at build time (see below).
+Pass the toolchain to CMake at build time via `CMAKE_ARGS` (see below).
 
 ## Building locally
 
@@ -81,8 +106,10 @@ build directory (`build/{wheel_tag}/`) across runs:
 # Linux / macOS
 pip install -e . --no-build-isolation
 
-# Windows
-pip install -e . --no-build-isolation -C cmake.define.ENABLE_CONAN=ON
+# Windows (PowerShell) — VCPKG_ROOT must be set, see Platform-specific
+# build requirements
+$env:CMAKE_ARGS = "-DCMAKE_TOOLCHAIN_FILE=$env:VCPKG_ROOT\scripts\buildsystems\vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-windows-static-md"
+pip install -e . --no-build-isolation
 ```
 
 The first run is slow (full OSRM compile). Subsequent runs only recompile
@@ -111,8 +138,8 @@ recompiling:
 # Linux / macOS
 pip wheel . --no-build-isolation -w dist
 
-# Windows
-pip wheel . --no-build-isolation -C cmake.define.ENABLE_CONAN=ON -w dist
+# Windows (PowerShell) — uses the same CMAKE_ARGS as the editable install above
+pip wheel . --no-build-isolation -w dist
 ```
 
 CMake finds the existing artifacts in the build directory and skips
@@ -148,8 +175,17 @@ delvewheel show dist/*.whl          # inspect dependencies
 delvewheel repair -w dist dist/*.whl
 ```
 
-On Windows, Conan's shared DLLs (tbb, hwloc) must be on PATH for delvewheel
-to find them. Activate the `conanrun.bat` generated in the build tree first.
+On Windows, vcpkg's shared DLLs (tbb12.dll, hwloc.dll — TBB is shared even
+under the static-md triplet) live in
+`build\<wheel-tag>\vcpkg_installed\x64-windows-static-md\bin\`. Pass that
+to delvewheel via `--add-path` so it can resolve and bundle them:
+
+```powershell
+delvewheel repair --analyze-existing-exes `
+    --add-path build\cp312-abi3-win_amd64\vcpkg_installed\x64-windows-static-md\bin `
+    --add-dll hwloc.dll --no-mangle tbb12.dll --no-mangle hwloc.dll `
+    -w dist dist\*.whl
+```
 
 ::: tip
 cibuildwheel runs wheel repair automatically in CI. You only need these
@@ -210,18 +246,23 @@ cibuildwheel --platform windows
 
 Wheels land in `wheelhouse/`.
 
-**Windows note:** cibuildwheel's `config-settings` in pyproject.toml are
-*replaced* (not merged) by `CIBW_CONFIG_SETTINGS_WINDOWS` if that env var is
-set. Always include `ENABLE_CONAN=ON` explicitly when overriding via the env
-var.
+**Windows note:** the toolchain wiring (`CMAKE_TOOLCHAIN_FILE`,
+`VCPKG_TARGET_TRIPLET`) lives in `[tool.cibuildwheel.windows].environment`
+in `pyproject.toml`, where `$VCPKG_ROOT` is expanded at build time from the
+host environment. Make sure `VCPKG_ROOT` is set in your shell before
+invoking cibuildwheel.
 
-**Linux note:** The manylinux container mounts the host ccache directory via a
-Docker volume. Set `CCACHE_DIR` on the host so the mount path matches what CI
-uses:
+**Linux note:** the wheel build inside the manylinux container reads
+`VCPKG_ROOT` and `VCPKG_DEFAULT_BINARY_CACHE` from the image's `ENV`, so
+no toolchain forwarding is needed from the host. If you override
+`CIBW_ENVIRONMENT_LINUX` to mount a host ccache, remember it *replaces*
+(not merges with) `[tool.cibuildwheel.linux].environment` in
+`pyproject.toml` — re-include `LD_LIBRARY_PATH` and the `CMAKE_ARGS` line
+verbatim:
 
 ```bash
 CIBW_CONTAINER_ENGINE="docker; create_args: --volume /tmp/ccache:/ccache" \
-CIBW_ENVIRONMENT_LINUX="CCACHE_DIR=/ccache" \
+CIBW_ENVIRONMENT_LINUX='LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-release"' \
 cibuildwheel --platform linux
 ```
 
