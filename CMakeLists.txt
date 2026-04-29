@@ -392,8 +392,7 @@ endforeach()
 find_path(PROTOZERO_INCLUDE_DIR NAMES protozero/pbf_reader.hpp REQUIRED)
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 
-# vtzero has no vcpkg port; keep it vendored. Header-only, so just the include.
-set(VTZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vtzero/include")
+find_path(VTZERO_INCLUDE_DIR NAMES vtzero/vector_tile.hpp REQUIRED)
 include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
 
 # The OBJECT libraries below (UTIL, EXTRACTOR, ENGINE, …) were created before

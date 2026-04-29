@@ -9,7 +9,8 @@
 #include "util/coordinate_calculation.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/dynamic_bitset.hpp>
+
+#include <vector>
 
 namespace osrm::engine::api::tidy
 {
@@ -20,7 +21,7 @@ struct Thresholds
     std::int32_t duration_in_seconds;
 };
 
-using Mask = boost::dynamic_bitset<>;
+using Mask = std::vector<bool>;
 using Mapping = std::vector<std::size_t>;
 
 struct Result
@@ -47,7 +48,7 @@ inline Result keep_all(const MatchParameters &params)
     {
         for (const auto p : params.waypoints)
         {
-            result.was_waypoint.set(p, false);
+            result.was_waypoint[p] = false;
         }
         // logic is a little funny, uses inversion to set the bitfield
         result.was_waypoint.flip();
@@ -102,7 +103,7 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
     {
         for (const auto p : params.waypoints)
         {
-            result.was_waypoint.set(p, false);
+            result.was_waypoint[p] = false;
         }
         result.was_waypoint.flip();
     }
@@ -134,7 +135,7 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
             }
             else
             {
-                result.can_be_removed.set(next, true);
+                result.can_be_removed[next] = true;
             }
         }
         else
@@ -146,7 +147,7 @@ inline Result tidy(const MatchParameters &params, Thresholds cfg = {15., 5})
             }
             else
             {
-                result.can_be_removed.set(next, true);
+                result.can_be_removed[next] = true;
             }
         }
     }
