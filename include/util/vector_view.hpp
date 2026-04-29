@@ -20,8 +20,7 @@
 namespace osrm::util
 {
 
-template <typename DataT>
-class VectorViewIterator
+template <typename DataT> class VectorViewIterator
 {
   public:
     using value_type = DataT;

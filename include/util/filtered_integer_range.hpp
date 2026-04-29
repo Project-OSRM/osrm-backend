@@ -6,8 +6,7 @@
 namespace osrm::util
 {
 
-template <typename Integer, typename Filter>
-class filtered_integer_iterator
+template <typename Integer, typename Filter> class filtered_integer_iterator
 {
   public:
     using value_type = Integer;

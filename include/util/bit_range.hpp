@@ -8,8 +8,7 @@
 namespace osrm::util
 {
 
-template <typename DataT>
-class BitIterator
+template <typename DataT> class BitIterator
 {
   public:
     using value_type = std::size_t;
@@ -40,7 +39,10 @@ class BitIterator
         return tmp;
     }
 
-    friend bool operator==(const BitIterator &a, const BitIterator &b) { return a.m_value == b.m_value; }
+    friend bool operator==(const BitIterator &a, const BitIterator &b)
+    {
+        return a.m_value == b.m_value;
+    }
     friend bool operator!=(const BitIterator &a, const BitIterator &b) { return !(a == b); }
 
   private:
@@ -59,10 +61,7 @@ template <typename T> struct BitRange
     T value;
 };
 
-template <typename T> auto makeBitRange(const T value)
-{
-    return BitRange<T>(value);
-}
+template <typename T> auto makeBitRange(const T value) { return BitRange<T>(value); }
 } // namespace osrm::util
 
 #endif

@@ -31,11 +31,11 @@
 #include "osrm/coordinate.hpp"
 #include <cstddef>
 
+#include "util/vector_view.hpp"
 #include <engine/bearing.hpp>
 #include <optional>
 #include <ranges>
 #include <span>
-#include "util/vector_view.hpp"
 #include <string>
 #include <string_view>
 #include <vector>

@@ -64,8 +64,7 @@ template <typename ElementT> struct DeallocatingVectorIteratorState
     }
 };
 
-template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK>
-class ConstDeallocatingVectorIterator
+template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK> class ConstDeallocatingVectorIterator
 {
     ConstDeallocatingVectorIteratorState<ElementT> current_state;
 
@@ -93,10 +92,7 @@ class ConstDeallocatingVectorIterator
         return *this;
     }
 
-    ConstDeallocatingVectorIterator &operator++()
-    {
-        return *this += 1;
-    }
+    ConstDeallocatingVectorIterator &operator++() { return *this += 1; }
     ConstDeallocatingVectorIterator operator++(int)
     {
         auto tmp = *this;
@@ -104,10 +100,7 @@ class ConstDeallocatingVectorIterator
         return tmp;
     }
 
-    ConstDeallocatingVectorIterator &operator--()
-    {
-        return *this -= 1;
-    }
+    ConstDeallocatingVectorIterator &operator--() { return *this -= 1; }
     ConstDeallocatingVectorIterator operator--(int)
     {
         auto tmp = *this;
@@ -133,17 +126,20 @@ class ConstDeallocatingVectorIterator
                static_cast<std::ptrdiff_t>(b.current_state.index);
     }
 
-    friend ConstDeallocatingVectorIterator operator+(ConstDeallocatingVectorIterator it, difference_type n)
+    friend ConstDeallocatingVectorIterator operator+(ConstDeallocatingVectorIterator it,
+                                                     difference_type n)
     {
         it += n;
         return it;
     }
-    friend ConstDeallocatingVectorIterator operator-(ConstDeallocatingVectorIterator it, difference_type n)
+    friend ConstDeallocatingVectorIterator operator-(ConstDeallocatingVectorIterator it,
+                                                     difference_type n)
     {
         it -= n;
         return it;
     }
-    friend ConstDeallocatingVectorIterator operator+(difference_type n, ConstDeallocatingVectorIterator it)
+    friend ConstDeallocatingVectorIterator operator+(difference_type n,
+                                                     ConstDeallocatingVectorIterator it)
     {
         it += n;
         return it;
@@ -164,8 +160,7 @@ class ConstDeallocatingVectorIterator
     }
 };
 
-template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK>
-class DeallocatingVectorIterator
+template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK> class DeallocatingVectorIterator
 {
     DeallocatingVectorIteratorState<ElementT> current_state;
 
@@ -193,10 +188,7 @@ class DeallocatingVectorIterator
         return *this;
     }
 
-    DeallocatingVectorIterator &operator++()
-    {
-        return *this += 1;
-    }
+    DeallocatingVectorIterator &operator++() { return *this += 1; }
     DeallocatingVectorIterator operator++(int)
     {
         auto tmp = *this;
@@ -204,10 +196,7 @@ class DeallocatingVectorIterator
         return tmp;
     }
 
-    DeallocatingVectorIterator &operator--()
-    {
-        return *this -= 1;
-    }
+    DeallocatingVectorIterator &operator--() { return *this -= 1; }
     DeallocatingVectorIterator operator--(int)
     {
         auto tmp = *this;
@@ -225,7 +214,8 @@ class DeallocatingVectorIterator
         return !(a == b);
     }
 
-    friend std::ptrdiff_t operator-(DeallocatingVectorIterator const &a, DeallocatingVectorIterator const &b)
+    friend std::ptrdiff_t operator-(DeallocatingVectorIterator const &a,
+                                    DeallocatingVectorIterator const &b)
     {
         return static_cast<std::ptrdiff_t>(a.current_state.index) -
                static_cast<std::ptrdiff_t>(b.current_state.index);

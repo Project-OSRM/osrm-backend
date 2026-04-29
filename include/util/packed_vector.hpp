@@ -8,12 +8,12 @@
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar_fwd.hpp"
 
+#include <array>
 #include <atomic>
+#include <cmath>
 #include <iterator>
 #include <limits>
 #include <tuple>
-#include <array>
-#include <cmath>
 
 namespace osrm::util
 {
@@ -312,8 +312,14 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         using iterator_category = std::random_access_iterator_tag;
         using iterator_concept = std::random_access_iterator_tag;
 
-        explicit iterator_impl() : container(nullptr), index(std::numeric_limits<std::size_t>::max()) {}
-        explicit iterator_impl(ContainerT *container_, const std::size_t index_) : container(container_), index(index_) {}
+        explicit iterator_impl()
+            : container(nullptr), index(std::numeric_limits<std::size_t>::max())
+        {
+        }
+        explicit iterator_impl(ContainerT *container_, const std::size_t index_)
+            : container(container_), index(index_)
+        {
+        }
 
         reference operator*() const { return (*container)[index]; }
         reference operator[](difference_type n) const { return (*container)[index + n]; }
@@ -375,7 +381,10 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
             return it;
         }
 
-        difference_type operator-(const iterator_impl &other) const { return static_cast<difference_type>(index) - static_cast<difference_type>(other.index); }
+        difference_type operator-(const iterator_impl &other) const
+        {
+            return static_cast<difference_type>(index) - static_cast<difference_type>(other.index);
+        }
 
         bool operator==(const iterator_impl &other) const { return index == other.index; }
         bool operator!=(const iterator_impl &other) const { return !(*this == other); }

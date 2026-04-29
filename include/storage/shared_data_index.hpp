@@ -32,7 +32,7 @@ class SharedDataIndex
             regions[index].layout->List(
                 "",
                 osrm::util::make_function_output_iterator([&](const auto &name)
-                                                     { block_to_region[name] = index; }));
+                                                          { block_to_region[name] = index; }));
         }
     }
 

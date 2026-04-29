@@ -7,8 +7,7 @@
 namespace osrm::util
 {
 
-template <typename Integer>
-class integer_iterator
+template <typename Integer> class integer_iterator
 {
   public:
     using value_type = Integer;

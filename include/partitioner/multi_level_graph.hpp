@@ -68,7 +68,8 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
         auto permutation = SortEdgesByHighestLevel(highest_border_level, edges);
         auto sorted_edges_begin =
             osrm::util::make_permutation_iterator(edges.begin(), permutation.begin());
-        auto sorted_edges_end = osrm::util::make_permutation_iterator(edges.begin(), permutation.end());
+        auto sorted_edges_end =
+            osrm::util::make_permutation_iterator(edges.begin(), permutation.end());
         SuperT::InitializeFromSortedEdgeRange(num_nodes, sorted_edges_begin, sorted_edges_end);
 
         // if the node ordering is sorting the border nodes first,

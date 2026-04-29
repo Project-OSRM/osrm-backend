@@ -9,8 +9,8 @@
 #include "storage/shared_datatype.hpp"
 #include "storage/tar.hpp"
 
-#include <boost/assert.hpp>
 #include "util/iterator_adapters.hpp"
+#include <boost/assert.hpp>
 
 #include <cmath>
 #include <cstdint>
@@ -96,9 +96,7 @@ void writeBoolVector(tar::FileWriter &writer, const std::string &name, const Vec
 
     std::uint64_t number_of_blocks = (count + BLOCK_BITS - 1) / BLOCK_BITS;
     writer.WriteStreaming<BlockType>(
-        name,
-        osrm::util::make_function_input_iterator(encode_function),
-        number_of_blocks);
+        name, osrm::util::make_function_input_iterator(encode_function), number_of_blocks);
 }
 } // namespace detail
 

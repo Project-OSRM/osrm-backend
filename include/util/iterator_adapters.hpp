@@ -9,15 +9,13 @@
 namespace osrm::util
 {
 // function_output_iterator: calls a callable when assigned to
-template <typename Func>
-class function_output_iterator
+template <typename Func> class function_output_iterator
 {
   private:
     struct proxy
     {
         Func *func;
-        template <typename T>
-        proxy &operator=(T &&value)
+        template <typename T> proxy &operator=(T &&value)
         {
             (*func)(std::forward<T>(value));
             return *this;
@@ -48,8 +46,7 @@ template <typename Func> inline auto make_function_output_iterator(Func f)
 }
 
 // function_input_iterator: returns value from callable on deref, ++ is a no-op
-template <typename Func>
-class function_input_iterator
+template <typename Func> class function_input_iterator
 {
   public:
     using iterator_category = std::input_iterator_tag;
@@ -74,8 +71,7 @@ template <typename Func> inline auto make_function_input_iterator(Func f)
 }
 
 // permutation_iterator: iterates over underlying container in order specified by index iterator
-template <typename BaseIt, typename IndexIt>
-class permutation_iterator
+template <typename BaseIt, typename IndexIt> class permutation_iterator
 {
   public:
     using index_traits = std::iterator_traits<IndexIt>;
@@ -142,10 +138,19 @@ class permutation_iterator
         return a.index_it - b.index_it;
     }
 
-    reference operator[](difference_type n) const { return *(base + static_cast<std::size_t>(*(index_it + n))); }
+    reference operator[](difference_type n) const
+    {
+        return *(base + static_cast<std::size_t>(*(index_it + n)));
+    }
 
-    friend bool operator==(const permutation_iterator &a, const permutation_iterator &b) { return a.index_it == b.index_it; }
-    friend bool operator!=(const permutation_iterator &a, const permutation_iterator &b) { return !(a == b); }
+    friend bool operator==(const permutation_iterator &a, const permutation_iterator &b)
+    {
+        return a.index_it == b.index_it;
+    }
+    friend bool operator!=(const permutation_iterator &a, const permutation_iterator &b)
+    {
+        return !(a == b);
+    }
 
   private:
     BaseIt base{};

@@ -201,17 +201,15 @@ BOOST_AUTO_TEST_CASE(write_huge_tar_file, *boost::unit_test::disabled())
         };
         std::uint64_t num_elements = (10ULL * 1024ULL * 1024ULL * 1024ULL) / sizeof(std::uint64_t);
         writer.WriteStreaming<std::uint64_t>(
-            "huge_data",
-            osrm::util::make_function_input_iterator(encode_function),
-            num_elements);
+            "huge_data", osrm::util::make_function_input_iterator(encode_function), num_elements);
     }
 
     std::uint64_t checksum = 0;
     {
         storage::tar::FileReader reader(tmp.path, storage::tar::FileReader::VerifyFingerprint);
-        reader.ReadStreaming<std::uint64_t>(
-            "huge_data",
-            osrm::util::make_function_output_iterator([&](const auto &value) { checksum += value; }));
+        reader.ReadStreaming<std::uint64_t>("huge_data",
+                                            osrm::util::make_function_output_iterator(
+                                                [&](const auto &value) { checksum += value; }));
     }
 
     BOOST_CHECK_EQUAL(checksum, reference_checksum);

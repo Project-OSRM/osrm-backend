@@ -89,8 +89,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
         // Possibly replace with
         // http://www.boost.org/doc/libs/1_55_0/libs/range/doc/html/range/reference/adaptors/reference/strided.html
 
-        template <typename ValuePtrT>
-        class ColumnIterator
+        template <typename ValuePtrT> class ColumnIterator
         {
             using ValueT = decltype(*std::declval<ValuePtrT>());
 
@@ -150,8 +149,14 @@ template <storage::Ownership Ownership> class CellStorageImpl
                 return (a.current - b.current) / static_cast<std::intptr_t>(a.stride);
             }
 
-            friend bool operator==(const ColumnIterator &a, const ColumnIterator &b) { return a.current == b.current; }
-            friend bool operator!=(const ColumnIterator &a, const ColumnIterator &b) { return !(a == b); }
+            friend bool operator==(const ColumnIterator &a, const ColumnIterator &b)
+            {
+                return a.current == b.current;
+            }
+            friend bool operator!=(const ColumnIterator &a, const ColumnIterator &b)
+            {
+                return !(a == b);
+            }
 
           private:
             ValuePtrT current;
