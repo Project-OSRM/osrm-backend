@@ -66,6 +66,13 @@ jobs:
         run: |
           PACKAGE_JSON_VERSION=$(node -e "console.log(require('./package.json').version)")
           echo PUBLISH=$([[ "${GITHUB_REF:-}" == "refs/tags/v${PACKAGE_JSON_VERSION}" ]] && echo "On" || echo "Off") >> $GITHUB_ENV
+          # cibuildwheel parses [tool.cibuildwheel.windows].environment in
+          # pyproject.toml as bash export statements. lukka/run-vcpkg sets
+          # VCPKG_ROOT with native backslashes (D:\a\...), and bash eats those
+          # as escapes during $VAR expansion, mangling CMAKE_TOOLCHAIN_FILE
+          # into "D:aosrm-backend...". Rewrite with forward slashes — CMake
+          # accepts both separators on Windows.
+          echo "VCPKG_ROOT=${VCPKG_ROOT//\\//}" >> "$GITHUB_ENV"
       - run: npm install --ignore-scripts
       - run: npm link --ignore-scripts
       - name: Build
@@ -351,7 +358,7 @@ jobs:
             CXXCOMPILER: clang++-16
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: vcpkg-linux-debug-node
+          - name: vcpkg-linux-debug
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
@@ -369,7 +376,7 @@ jobs:
             CXXCOMPILER: clang++-18
             ENABLE_LTO: OFF
 
-          - name: vcpkg-macos-x64-release-node
+          - name: vcpkg-macos-x64-release
             continue-on-error: true
             node: 24
             runs-on: macos-26-intel # x86_64
@@ -378,7 +385,7 @@ jobs:
             CXXCOMPILER: clang++
             ENABLE_ASSERTIONS: ON
 
-          - name: vcpkg-macos-arm64-release-node
+          - name: vcpkg-macos-arm64-release
             continue-on-error: true
             node: 24
             runs-on: macos-26 # arm64

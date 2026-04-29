@@ -94,13 +94,21 @@ before-build = "ccache -s && ccache -M 500M"
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
 [tool.cibuildwheel.macos]
-environment = "MACOSX_DEPLOYMENT_TARGET=15.0 CCACHE_DIR=$HOME/.ccache"
+# Build deps come from vcpkg (same pattern as Windows). VCPKG_ROOT is
+# exported on the runner by lukka/run-vcpkg in the workflow and inherited
+# by cibuildwheel; CMAKE_ARGS routes the cmake configure through the vcpkg
+# toolchain. No triplet override — vcpkg's autodetect picks arm64-osx on
+# Apple Silicon and x64-osx on Intel, matching the main build-matrix step's
+# CMakePresets, so the wheel hits the runner-level bincache populated there.
+environment = """\
+MACOSX_DEPLOYMENT_TARGET=15.0 \
+CCACHE_DIR=$HOME/.ccache \
+CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"\
+"""
 before-build = "ccache -s && ccache -M 500M"
 before-all = """
   export HOMEBREW_NO_AUTO_UPDATE=1 HOMEBREW_NO_INSTALL_CLEANUP=1
-  brew install ccache lua tbb boost@1.90 fmt rapidjson sol2 flatbuffers \
-              protozero libosmium
-  brew link boost@1.90
+  brew install ccache
 """
 
 [tool.cibuildwheel.windows]
