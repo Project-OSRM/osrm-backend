@@ -651,8 +651,11 @@ jobs:
           package-dir: ${{ runner.os == 'Linux' && steps.sdist.outputs.path || '.' }}
           output-dir: dist
         env:
+          # The full Linux env (LD_LIBRARY_PATH, CCACHE_DIR, CMAKE_ARGS for the
+          # vcpkg toolchain) lives in [tool.cibuildwheel.linux].environment in
+          # pyproject.toml. Setting CIBW_ENVIRONMENT_LINUX here would *replace*
+          # that whole block (cibuildwheel doesn't merge), so we don't.
           CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /home/runner/.ccache:/ccache"
-          CIBW_ENVIRONMENT_LINUX: "LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} CCACHE_DIR=/ccache"
           CIBW_CONFIG_SETTINGS_MACOS: "cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake.define.CMAKE_C_COMPILER_LAUNCHER=ccache"
 
       - name: Upload wheels and sdist

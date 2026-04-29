@@ -87,6 +87,7 @@ test-command = [
 # cache.
 environment = """\
 LD_LIBRARY_PATH=/usr/local/lib64:${LD_LIBRARY_PATH} \
+CCACHE_DIR=/ccache \
 CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-release"\
 """
 before-build = "ccache -s && ccache -M 500M"
