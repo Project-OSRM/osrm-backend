@@ -30,7 +30,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  vcpkg-windows-release-node:
+  vcpkg-windows-release-bindings:
     needs: format-taginfo-docs
     strategy:
       matrix:
@@ -348,7 +348,7 @@ jobs:
             CXXCOMPILER: g++-12
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: vcpkg-linux-release-node
+          - name: vcpkg-linux-release-bindings
             build_bindings: true
             continue-on-error: false
             node: 24
@@ -395,7 +395,7 @@ jobs:
             ENABLE_ASSERTIONS: ON
 
           # only for python & nodeJS release, needs a low macos version
-          - name: brew-macos-x64-release-node
+          - name: vcpkg-macos-x64-release-bindings
             build_bindings: true
             continue-on-error: true
             node: 24
@@ -405,7 +405,7 @@ jobs:
             CXXCOMPILER: clang++
             ENABLE_ASSERTIONS: ON
 
-          - name: brew-macos-arm64-release-node
+          - name: vcpkg-macos-arm64-release-bindings
             build_bindings: true
             continue-on-error: true
             node: 24

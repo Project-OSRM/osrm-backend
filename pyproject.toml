@@ -121,10 +121,11 @@ environment = 'CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsyste
 before-build = "pip install delvewheel"
 # In manifest mode, vcpkg installs deps into <build-dir>/vcpkg_installed/<triplet>.
 # scikit-build-core's build dir is build/{wheel_tag} and the abi3 cp312 wheel
-# tag on Windows x64 is cp312-abi3-win_amd64, so the vcpkg-built tbb12.dll and
-# hwloc.dll live at the path below — point delvewheel at it via --add-path so
-# they get bundled into the wheel.
-repair-wheel-command = 'delvewheel repair --analyze-existing-exes --add-path build\cp312-abi3-win_amd64\vcpkg_installed\x64-windows-static-md\bin --add-dll hwloc.dll --no-mangle tbb12.dll --no-mangle hwloc.dll -w {dest_dir} {wheel}'
+# tag on Windows x64 is cp312-abi3-win_amd64, so the vcpkg-built tbb12.dll
+# (TBB is shared even under static-md — vcpkg's port forces it) lives at the
+# path below. --add-path makes delvewheel discover it. --no-mangle preserves
+# the DLL name so anything that hard-codes "tbb12.dll" still loads it.
+repair-wheel-command = 'delvewheel repair --analyze-existing-exes --add-path build\cp312-abi3-win_amd64\vcpkg_installed\x64-windows-static-md\bin --no-mangle tbb12.dll -w {dest_dir} {wheel}'
 test-command = [
   "cd /d {project}/test/data",
   "windows-build-test-data.bat",
