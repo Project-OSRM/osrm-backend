@@ -398,7 +398,7 @@ jobs:
             CXXCOMPILER: clang++
             ENABLE_ASSERTIONS: ON
 
-          - name: vcpkg-macos-arm64-release-node
+          - name: brew-macos-arm64-release-node
             build_bindings: true
             continue-on-error: true
             node: 24
