@@ -444,7 +444,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                        indexes.end(),
                        classes.begin(),
                        [this](const auto index)
-                       { return m_profile_properties->GetClassName(index); });
+                       { return m_profile_properties->GetClassNameForIndex(index); });
 
         return classes;
     }
