@@ -1,0 +1,19 @@
+{
+  "name": "vtzero",
+  "version-string": "1.2.0",
+  "port-version": 2,
+  "description": "Tiny and fast vector tile decoder and encoder in C++.",
+  "homepage": "https://github.com/mapbox/vtzero",
+  "license": "BSD-2-Clause",
+  "dependencies": [
+    "protozero",
+    {
+      "name": "vcpkg-cmake",
+      "host": true
+    },
+    {
+      "name": "vcpkg-cmake-config",
+      "host": true
+    }
+  ]
+}

@@ -10,8 +10,6 @@
 #include "util/typedefs.hpp"
 
 #include <boost/algorithm/string/join.hpp>
-#include <boost/range/adaptor/filtered.hpp>
-#include <boost/range/adaptor/transformed.hpp>
 
 #include <cstddef>
 #include <cstdint>
@@ -19,6 +17,7 @@
 #include <algorithm>
 #include <array>
 #include <numeric>
+#include <ranges>
 #include <string>
 #include <vector>
 
@@ -157,8 +156,9 @@ inline std::string assembleSummary(const datafacade::BaseDataFacade &facade,
 
     const auto not_empty = [&](const std::string &name) { return !name.empty(); };
 
-    const auto summary_names = summary_array | boost::adaptors::transformed(name_id_to_string) |
-                               boost::adaptors::filtered(not_empty);
+    auto transformed_view =
+        summary_array | std::views::transform(name_id_to_string) | std::views::filter(not_empty);
+    std::vector<std::string> summary_names(transformed_view.begin(), transformed_view.end());
     return boost::algorithm::join(summary_names, ", ");
 }
 

@@ -4,6 +4,8 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
+cmake_policy(SET CMP0156 NEW)
+
 if(CMAKE_CURRENT_SOURCE_DIR STREQUAL CMAKE_CURRENT_BINARY_DIR AND NOT MSVC_IDE)
   message(FATAL_ERROR "In-source builds are not allowed.
 Please create a directory and run cmake from there, passing the path to this source directory as the last argument.
@@ -132,7 +134,6 @@ include(GNUInstallDirs)
 
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
-include_directories(SYSTEM ${CMAKE_CURRENT_SOURCE_DIR}/generated/include/)
 
 set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
 
@@ -173,14 +174,14 @@ add_executable(osrm-extract src/tools/extract.cpp)
 add_executable(osrm-partition src/tools/partition.cpp)
 add_executable(osrm-customize src/tools/customize.cpp)
 add_executable(osrm-contract src/tools/contract.cpp)
-add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
+add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
+add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract src/osrm/contractor.cpp $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_extract src/osrm/extractor.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_partition src/osrm/partitioner.cpp $<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_customize src/osrm/customizer.cpp $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_update $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_extract src/osrm/extractor.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_partition src/osrm/partitioner.cpp $<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_customize src/osrm/customizer.cpp $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_update $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
 # ALIAS targets with :: provide compile-time safety: typos error at configure time, not link time
 add_library(osrm::osrm ALIAS osrm)
@@ -327,15 +328,7 @@ if(OSRM_HAS_STD_FORMAT)
   add_definitions(-DOSRM_HAS_STD_FORMAT)
 endif()
 
-# microtar is still vendored: single .c file, no upstream vcpkg port.
-set(MICROTAR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src")
-include_directories(SYSTEM ${MICROTAR_INCLUDE_DIR})
-
-add_library(MICROTAR OBJECT "${CMAKE_CURRENT_SOURCE_DIR}/third_party/microtar/src/microtar.c")
-set_property(TARGET MICROTAR PROPERTY POSITION_INDEPENDENT_CODE ON)
-
-target_no_warning(MICROTAR unused-variable)
-target_no_warning(MICROTAR format)
+find_package(LibArchive REQUIRED)
 
 # Header-only libraries from vcpkg. Each provides a CMake CONFIG package.
 find_package(fmt CONFIG REQUIRED)
@@ -348,13 +341,41 @@ find_package(RapidJSON CONFIG REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 find_package(flatbuffers CONFIG REQUIRED)
 
+# Generate flatbuffers C++ headers from .fbs schemas at build time.
+# This removes the need to commit pre-generated headers and pin the
+# flatbuffers version — any compatible flatc will regenerate them.
+# BuildFlatBuffers.cmake is shipped alongside flatbuffers-config.cmake
+# but not on CMAKE_MODULE_PATH, so locate it via the package's own dir.
+include("${flatbuffers_DIR}/BuildFlatBuffers.cmake")
+set(FLATBUFFERS_SCHEMAS
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/fbresult.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/route.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/table.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/waypoint.fbs
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/position.fbs)
+flatbuffers_generate_headers(
+    TARGET osrm_fbs
+    SCHEMAS ${FLATBUFFERS_SCHEMAS}
+    INCLUDE ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers
+    INCLUDE_PREFIX "engine/api/flatbuffers"
+    FLAGS --gen-mutable)
+# Make the generated headers available to all targets (the OBJECT libraries
+# were defined earlier, so we use include_directories + add_dependencies
+# rather than target_link_libraries). Every OBJECT library pulls in these
+# headers transitively via engine/api/base_api.hpp or plugin_base.hpp, so
+# each needs an explicit dependency on the generator or parallel builds
+# race the header generation and fail with "No such file or directory".
+include_directories(SYSTEM $<TARGET_PROPERTY:osrm_fbs,INTERFACE_INCLUDE_DIRECTORIES>)
+foreach(_osrm_obj UTIL EXTRACTOR PARTITIONER CUSTOMIZER CONTRACTOR UPDATER STORAGE ENGINE SERVER)
+    add_dependencies(${_osrm_obj} GENERATE_osrm_fbs)
+endforeach()
+
 # protozero has no CMake config in its vcpkg port — it ships only headers.
 # Locate the include dir via a sentinel header and add it directly.
 find_path(PROTOZERO_INCLUDE_DIR NAMES protozero/pbf_reader.hpp REQUIRED)
 include_directories(SYSTEM ${PROTOZERO_INCLUDE_DIR})
 
-# vtzero has no vcpkg port; keep it vendored. Header-only, so just the include.
-set(VTZERO_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/third_party/vtzero/include")
+find_path(VTZERO_INCLUDE_DIR NAMES vtzero/vector_tile.hpp REQUIRED)
 include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
 
 # The OBJECT libraries below (UTIL, EXTRACTOR, ENGINE, …) were created before
@@ -481,7 +502,7 @@ include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
 
 # Binaries
-target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY})
+target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY} LibArchive::LibArchive)
 target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-partition osrm_partition ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-customize osrm_customize ${Boost_PROGRAM_OPTIONS_LIBRARY})
@@ -546,16 +567,16 @@ set(UTIL_LIBRARIES
     ${ZLIB_LIBRARY})
 
 # Libraries
-target_link_libraries(osrm ${ENGINE_LIBRARIES})
-target_link_libraries(osrm_update ${UPDATER_LIBRARIES})
+target_link_libraries(osrm ${ENGINE_LIBRARIES} LibArchive::LibArchive)
+target_link_libraries(osrm_update ${UPDATER_LIBRARIES} LibArchive::LibArchive)
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES} osrm_update osrm_store)
-target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES})
-target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES})
+target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES} LibArchive::LibArchive)
+target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES} LibArchive::LibArchive)
 target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES} osrm_update osrm_store)
-target_link_libraries(osrm_store ${STORAGE_LIBRARIES})
+target_link_libraries(osrm_store ${STORAGE_LIBRARIES} LibArchive::LibArchive)
 
-add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
-target_link_libraries(osrm-components ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${UTIL_LIBRARIES})
+add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:UTIL>)
+target_link_libraries(osrm-components ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${UTIL_LIBRARIES} LibArchive::LibArchive)
 install(TARGETS osrm-components DESTINATION bin)
 
 add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
@@ -753,3 +774,4 @@ foreach(header ${headers_to_check})
 endforeach()
 add_library(check-headers STATIC EXCLUDE_FROM_ALL ${sources})
 set_target_properties(check-headers PROPERTIES ARCHIVE_OUTPUT_DIRECTORY ${check_headers_dir})
+target_link_libraries(check-headers LibArchive::LibArchive)

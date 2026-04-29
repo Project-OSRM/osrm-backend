@@ -11,31 +11,20 @@
     "boost-assert",
     "boost-beast",
     "boost-config",
-    "boost-core",
     "boost-crc",
     "boost-date-time",
-    "boost-dynamic-bitset",
     "boost-exception",
-    "boost-foreach",
     "boost-fusion",
     "boost-geometry",
     "boost-heap",
     "boost-interprocess",
-    "boost-io",
     "boost-iostreams",
     "boost-iterator",
-    "boost-mpl",
     "boost-numeric-conversion",
-    "boost-optional",
     "boost-program-options",
-    "boost-range",
-    "boost-serialization",
     "boost-spirit",
     "boost-test",
-    "boost-thread",
     "boost-tokenizer",
-    "boost-uuid",
-    "boost-variant",
     "tbb",
     "expat",
     "bzip2",
@@ -46,13 +35,8 @@
     "sol2",
     "protozero",
     "flatbuffers",
-    "libosmium"
-  ],
-  "overrides": [
-    {
-      "$comment": "Generated flatbuffers headers in generated/ are pinned to 25.9.23; vcpkg default is 25.12.19. Regenerate the .h files to move this pin forward.",
-      "name": "flatbuffers",
-      "version": "25.9.23"
-    }
+    "libarchive",
+    "libosmium",
+    "vtzero"
   ]
 }

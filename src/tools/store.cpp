@@ -10,7 +10,6 @@
 #include "util/typedefs.hpp"
 #include "util/version.hpp"
 
-#include <boost/algorithm/string/case_conv.hpp>
 #include <boost/program_options.hpp>
 
 #include <csignal>
