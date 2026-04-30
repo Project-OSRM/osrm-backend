@@ -16,7 +16,6 @@
     "boost-exception",
     "boost-fusion",
     "boost-geometry",
-    "boost-heap",
     "boost-interprocess",
     "boost-iostreams",
     "boost-iterator",
