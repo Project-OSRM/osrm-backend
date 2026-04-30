@@ -5,6 +5,7 @@
 #include "util/meminfo.hpp"
 #include "util/version.hpp"
 
+#include "util/boost_filesystem_path_validation.hpp"
 #include <boost/program_options.hpp>
 
 #include <filesystem>

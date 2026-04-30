@@ -7,6 +7,7 @@
 #include "util/timing_util.hpp"
 #include "util/version.hpp"
 
+#include "util/boost_filesystem_path_validation.hpp"
 #include <boost/algorithm/string/join.hpp>
 #include <boost/program_options.hpp>
 
