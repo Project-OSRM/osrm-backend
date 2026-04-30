@@ -529,6 +529,10 @@ jobs:
         id: build
         run: |
           echo "Using ${JOBS} jobs"
+          # so vcpkg's bincache is consistent with cibuildwheel (python bindings)
+          if [[ "${RUNNER_OS}" == "macOS" && "${BUILD_BINDINGS}" == "true" ]]; then
+            export MACOSX_DEPLOYMENT_TARGET=15.0
+          fi
           pushd ${OSRM_BUILD_DIR}
 
           ccache --zero-stats
