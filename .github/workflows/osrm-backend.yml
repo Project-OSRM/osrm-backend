@@ -735,7 +735,7 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, vcpkg-windows-release-node, docker-image-matrix, check-python-stubs]
+    needs: [build-matrix, vcpkg-windows-release-bindings, docker-image-matrix, check-python-stubs]
     steps:
       - name: Fail if any dependency failed
         if: ${{ contains(needs.*.result, 'failure') }}
