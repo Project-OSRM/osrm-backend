@@ -4,8 +4,7 @@ on:
   pull_request:
     types: [opened, edited, synchronize, reopened]
     branches:
-      - gh-pages
-      - main
+      - master
 
 permissions:
   contents: read
