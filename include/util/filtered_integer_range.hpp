@@ -1,6 +1,7 @@
 #ifndef FILTERED_INTEGER_RANGE_HPP
 #define FILTERED_INTEGER_RANGE_HPP
 
+#include <iterator>
 #include <type_traits>
 
 namespace osrm::util
