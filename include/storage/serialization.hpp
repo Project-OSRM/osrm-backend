@@ -14,6 +14,7 @@
 
 #include <cmath>
 #include <cstdint>
+#include <funtional>
 
 namespace osrm::storage::serialization
 {
