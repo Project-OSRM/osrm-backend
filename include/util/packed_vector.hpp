@@ -14,11 +14,6 @@
 #include <array>
 #include <cmath>
 
-#if defined(_MSC_VER)
-// for `InterlockedCompareExchange64`
-#include <windows.h>
-#endif
-
 namespace osrm::util
 {
 namespace detail
@@ -121,15 +116,9 @@ inline WordT set_upper_value(
 
 inline bool compare_and_swap(uint64_t *ptr, uint64_t old_value, uint64_t new_value)
 {
-#if defined(_MSC_VER)
-    return InterlockedCompareExchange64(reinterpret_cast<LONG64 *>(ptr),
-                                        static_cast<LONG64>(new_value),
-                                        static_cast<LONG64>(old_value)) == old_value;
-#elif defined(__GNUC__)
-    return __sync_bool_compare_and_swap(ptr, old_value, new_value);
-#else
-#error "Unsupported compiler";
-#endif
+    // Use std::atomic_ref for lock-free atomic compare-and-swap
+    std::atomic_ref<uint64_t> atomic_ref(*ptr);
+    return atomic_ref.compare_exchange_strong(old_value, new_value, std::memory_order_seq_cst);
 }
 
 template <typename T, std::size_t Bits, storage::Ownership Ownership> class PackedVector

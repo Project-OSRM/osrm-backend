@@ -73,7 +73,7 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
 
         for (const auto index : util::irange<std::size_t>(0, properties->class_names.size()))
         {
-            const std::string name = properties->GetClassName(index);
+            const std::string name = properties->GetClassNameForIndex(index);
             if (!name.empty())
             {
                 name_to_class[name] = extractor::getClassData(index);

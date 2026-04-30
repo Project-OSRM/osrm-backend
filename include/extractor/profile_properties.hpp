@@ -108,7 +108,7 @@ struct ProfileProperties
         BOOST_ASSERT(class_names[index][MAX_CLASS_NAME_LENGTH] == '\0');
     }
 
-    std::string GetClassName(std::size_t index) const
+    std::string GetClassNameForIndex(std::size_t index) const
     {
         BOOST_ASSERT(index <= MAX_CLASS_INDEX);
         const auto &name_it = std::begin(class_names) + index;
