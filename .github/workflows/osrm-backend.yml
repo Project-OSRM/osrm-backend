@@ -68,14 +68,13 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          cmake --preset ci-windows -DENABLE_NODE_BINDINGS=ON
+          cmake --preset ci-windows -DENABLE_NODE_BINDINGS=ON -DCMAKE_CXX_FLAGS="/Zm256 /MP2"
           cmake --build --preset ci-windows
       - name: Run tests
         shell: bash
         run: |
           cd build
           cmake --build . --config Release --target tests
-          # TODO: run tests
       - name: Run node tests
         shell: bash
         run: |
