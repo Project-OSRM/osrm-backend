@@ -12,7 +12,6 @@
     "boost-beast",
     "boost-config",
     "boost-crc",
-    "boost-date-time",
     "boost-exception",
     "boost-fusion",
     "boost-geometry",

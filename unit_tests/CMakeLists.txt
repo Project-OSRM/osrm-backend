@@ -1,3 +1,5 @@
+enable_testing()
+
 file(GLOB EngineTestsSources
     engine_tests.cpp
     engine/*.cpp)
@@ -185,6 +187,28 @@ target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 target_link_libraries(contractor-tests osrm_contract ${CONTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 target_link_libraries(storage-tests osrm_store ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
+
+# Register unit test executables with CTest
+set(TEST_TARGETS
+    engine-tests
+    contractor-tests
+    extractor-tests
+    partitioner-tests
+    customizer-tests
+    updater-tests
+    storage-tests
+    library-tests
+    library-extract-tests
+    library-contract-tests
+    library-customize-tests
+    library-partition-tests
+    server-tests
+    util-tests
+)
+
+foreach(t ${TEST_TARGETS})
+    add_test(NAME ${t} COMMAND $<TARGET_FILE:${t}>)
+endforeach()
 
 if(BUILD_AS_SUBPROJECT)
   add_custom_target(osrm_tests
