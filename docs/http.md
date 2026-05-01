@@ -137,7 +137,7 @@ possible. In that case, only the `code` field will be returned.
 
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `waypoints` array of `Waypoint` objects sorted by distance to the input coordinate. Each object has at least the following additional properties:
-  - `nodes`: Array of OpenStreetMap node ids.
+  - `nodes`: Array of OpenStreetMap node ids. Each id is a 64-bit unsigned integer (encoded as a JSON number for the `json` format, and as `ulong` for the `flatbuffers` format).
 
 #### Example Requests
 
