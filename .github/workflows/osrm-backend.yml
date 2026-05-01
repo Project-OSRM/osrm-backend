@@ -117,7 +117,7 @@ jobs:
           replacesArtifacts: true
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run CIBuildWheel
-        #if: github.event_name != 'pull_request'
+        if: github.event_name != 'pull_request'
         uses: pypa/cibuildwheel@v3.4.0
         with:
           output-dir: dist
@@ -126,7 +126,7 @@ jobs:
         # [tool.cibuildwheel.windows] in pyproject.toml. VCPKG_ROOT is
         # exported by lukka/run-vcpkg above and inherited by cibuildwheel.
       - name: Upload Windows wheel
-        #if: startsWith(github.ref, 'refs/tags/v')
+        if: startsWith(github.ref, 'refs/tags/v')
         uses: actions/upload-artifact@v4
         with:
           name: wheels-windows
@@ -670,7 +670,7 @@ jobs:
           CIBW_CONFIG_SETTINGS_MACOS: "cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake.define.CMAKE_C_COMPILER_LAUNCHER=ccache"
 
       - name: Upload wheels and sdist
-        if: ${{ env.BUILD_BINDINGS }}
+        if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
         uses: actions/upload-artifact@v4
         with:
           name: wheels-${{ matrix.name }}
