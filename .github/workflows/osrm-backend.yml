@@ -36,6 +36,7 @@ jobs:
     continue-on-error: false
     env:
       BUILD_TYPE: Release
+      CXXFLAGS: "/Zm256 /MP2"
     steps:
       - uses: actions/checkout@v6
       - run: cmake --version
@@ -68,7 +69,7 @@ jobs:
       - name: Build
         shell: bash
         run: |
-          cmake --preset ci-windows -DENABLE_NODE_BINDINGS=ON -DCMAKE_CXX_FLAGS="/Zm256 /MP2"
+          cmake --preset ci-windows -DENABLE_NODE_BINDINGS=ON
           cmake --build --preset ci-windows
       - name: Run tests
         shell: bash
