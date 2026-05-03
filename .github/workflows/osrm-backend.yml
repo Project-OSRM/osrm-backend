@@ -36,6 +36,7 @@ jobs:
       matrix:
         os: [windows-2025]
     runs-on: ${{ matrix.os }}
+    if: github.repository == 'Project-OSRM/osrm-backend'
     continue-on-error: false
     env:
       BUILD_TYPE: Release
@@ -134,6 +135,7 @@ jobs:
           if-no-files-found: error
 
   format-taginfo-docs:
+    if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-slim
     steps:
     - uses: actions/checkout@v6
@@ -173,6 +175,7 @@ jobs:
       matrix:
         docker-base-image: ['debian', 'alpine']
     needs: format-taginfo-docs
+    if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-22.04
     continue-on-error: false
     steps:
@@ -226,6 +229,7 @@ jobs:
 
   build-matrix:
     needs: format-taginfo-docs
+    if: github.repository == 'Project-OSRM/osrm-backend'
     strategy:
       matrix:
         include:
@@ -728,7 +732,12 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-latest
+<<<<<<< HEAD
     needs: [build-matrix, vcpkg-windows-release-bindings, docker-image-matrix, check-python-stubs]
+=======
+    needs: [build-matrix, vcpkg-windows-release-node, docker-image-matrix]
+    if: github.repository == 'Project-OSRM/osrm-backend'
+>>>>>>> origin/master
     steps:
       - name: Fail if any dependency failed
         if: ${{ contains(needs.*.result, 'failure') }}
