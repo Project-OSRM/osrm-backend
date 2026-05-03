@@ -58,7 +58,7 @@ class exception : public std::exception
  * user supplied bad data, etc).
  */
 
-constexpr const std::array<const char *, 12> ErrorDescriptions = {{
+constexpr const std::array<const char *, 10> ErrorDescriptions = {{
     "",                                               // Dummy - ErrorCode values start at 2
     "",                                               // Dummy - ErrorCode values start at 2
     "Fingerprint did not match the expected value",   // InvalidFingerprint
@@ -69,10 +69,8 @@ constexpr const std::array<const char *, 12> ErrorDescriptions = {{
     "I/O error occurred",                             // FileIOError
     "Unexpected end of file",                         // UnexpectedEndOfFile
     // NOLINTNEXTLINE(bugprone-suspicious-missing-comma)
-    "The dataset you are trying to load is not "              // IncompatibleDataset
-    "compatible with the routing algorithm you want to use.", // ...continued...
-    "Incompatible algorithm",                                 // IncompatibleAlgorithm
-    "Unknown feature dataset"                                 // UnknownFeatureDataset
+    "The dataset you are trying to load is not "             // IncompatibleDataset
+    "compatible with the routing algorithm you want to use." // ...continued...
 }};
 
 #ifndef NDEBUG

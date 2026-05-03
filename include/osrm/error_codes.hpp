@@ -20,9 +20,7 @@ enum ErrorCode
     FileWriteError,
     FileIOError,
     UnexpectedEndOfFile,
-    IncompatibleDataset,
-    UnknownAlgorithm,
-    UnknownFeatureDataset
+    IncompatibleDataset
 #ifndef NDEBUG
     // Leave this at the end.  In debug mode, we assert that the size of
     // this enum matches the number of messages we have documented, and __ENDMARKER__

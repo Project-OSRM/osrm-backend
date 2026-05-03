@@ -6,11 +6,13 @@
 #include "util/meminfo.hpp"
 #include "util/version.hpp"
 
-#include <boost/program_options.hpp>
+#include <CLI/CLI.hpp>
+
 #include <cstdlib>
 #include <filesystem>
 #include <iostream>
 #include <new>
+#include <string>
 #include <thread>
 
 using namespace osrm;
@@ -27,129 +29,97 @@ return_code parseArguments(int argc,
                            std::string &verbosity,
                            extractor::ExtractorConfig &extractor_config)
 {
-    // declare a group of options that will be allowed only on command line
-    boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "list-inputs", "List required and optional input file extensions")(
-        "verbosity,l",
-        boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
-        std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str());
+    const auto executable = std::filesystem::path(argv[0]).filename().string();
+    CLI::App app{executable + " <input.osm/.osm.bz2/.osm.pbf> [options]", executable};
+    app.set_version_flag("-v,--version", std::string{OSRM_VERSION});
 
-    // declare a group of options that will be allowed both on command line
-    boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()(
-        "profile,p",
-        boost::program_options::value<std::filesystem::path>(&extractor_config.profile_path)
-            ->default_value("profiles/car.lua"),
-        "Path to LUA routing profile")(
-        "data_version,d",
-        boost::program_options::value<std::string>(&extractor_config.data_version)
-            ->default_value(""),
-        "Data version. Leave blank to avoid. osmosis - to get timestamp from file")(
-        "threads,t",
-        boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
-            ->default_value(std::thread::hardware_concurrency()),
-        "Number of threads to use")(
-        "small-component-size",
-        boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
-            ->default_value(1000),
-        "Number of nodes required before a strongly-connected-componennt is considered big "
-        "(affects nearest neighbor snapping)")(
-        "with-osm-metadata",
-        boost::program_options::bool_switch(&extractor_config.use_metadata)
-            ->implicit_value(true)
-            ->default_value(false),
-        "Use metadata during osm parsing (This can affect the extraction performance).")(
-        "parse-conditional-restrictions",
-        boost::program_options::bool_switch(&extractor_config.parse_conditionals)
-            ->implicit_value(true)
-            ->default_value(false),
-        "Save conditional restrictions found during extraction to disk for use "
-        "during contraction")("location-dependent-data",
-                              boost::program_options::value<std::vector<std::filesystem::path>>(
-                                  &extractor_config.location_dependent_data_paths)
-                                  ->composing(),
-                              "GeoJSON files with location-dependent data")(
-        "disable-location-cache",
-        boost::program_options::bool_switch(&extractor_config.use_locations_cache)
-            ->implicit_value(false)
-            ->default_value(true),
-        "Use internal nodes locations cache for location-dependent data lookups")(
-        "dump-nbg-graph",
-        boost::program_options::bool_switch(&extractor_config.dump_nbg_graph)
-            ->implicit_value(true)
-            ->default_value(false),
-        "Dump raw node-based graph to *.osrm file for debug purposes.")(
-        "output,o",
-        boost::program_options::value<std::filesystem::path>(&extractor_config.output_path),
-        "Output base path for generated files (default: derived from input file name)");
+    bool list_inputs = false;
+    app.add_flag("--list-inputs", list_inputs, "List required and optional input file extensions");
 
-    bool dummy;
-    // hidden options, will be allowed on command line, but will not be
-    // shown to the user
-    boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "input,i",
-        boost::program_options::value<std::filesystem::path>(&extractor_config.input_path),
-        "Input file in .osm, .osm.bz2 or .osm.pbf format")(
-        "generate-edge-lookup",
-        boost::program_options::bool_switch(&dummy)->implicit_value(true)->default_value(false),
-        "Not used anymore");
+    app.add_option(
+           "-l,--verbosity", verbosity, "Log verbosity level: " + util::LogPolicy::GetLevels())
+        ->default_val("INFO");
 
-    // positional option
-    boost::program_options::positional_options_description positional_options;
-    positional_options.add("input", 1);
+    app.add_option("-p,--profile", extractor_config.profile_path, "Path to LUA routing profile")
+        ->default_val("profiles/car.lua");
 
-    // combine above options for parsing
-    boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic_options).add(config_options).add(hidden_options);
+    app.add_option("-d,--data_version",
+                   extractor_config.data_version,
+                   "Data version. Leave blank to avoid. osmosis - to get timestamp from file")
+        ->default_val("");
 
-    const auto *executable = argv[0];
-    boost::program_options::options_description visible_options(
-        std::filesystem::path(executable).filename().string() +
-        " <input.osm/.osm.bz2/.osm.pbf> [options]");
-    visible_options.add(generic_options).add(config_options);
+    app.add_option(
+           "-t,--threads", extractor_config.requested_num_threads, "Number of threads to use")
+        ->default_val(std::thread::hardware_concurrency());
 
-    // parse command line options
-    boost::program_options::variables_map option_variables;
+    app.add_option("--small-component-size",
+                   extractor_config.small_component_size,
+                   "Number of nodes required before a strongly-connected-componennt is considered "
+                   "big (affects nearest neighbor snapping)")
+        ->default_val(1000);
+
+    app.add_flag("--with-osm-metadata",
+                 extractor_config.use_metadata,
+                 "Use metadata during osm parsing (This can affect the extraction performance).");
+
+    app.add_flag("--parse-conditional-restrictions",
+                 extractor_config.parse_conditionals,
+                 "Save conditional restrictions found during extraction to disk for use "
+                 "during contraction");
+
+    app.add_option("--location-dependent-data",
+                   extractor_config.location_dependent_data_paths,
+                   "GeoJSON files with location-dependent data");
+
+    app.add_flag("!--disable-location-cache",
+                 extractor_config.use_locations_cache,
+                 "Use internal nodes locations cache for location-dependent data lookups");
+
+    app.add_flag("--dump-nbg-graph",
+                 extractor_config.dump_nbg_graph,
+                 "Dump raw node-based graph to *.osrm file for debug purposes.");
+
+    app.add_option("-o,--output",
+                   extractor_config.output_path,
+                   "Output base path for generated files (default: derived from input file name)");
+
+    app.add_option(
+           "input", extractor_config.input_path, "Input file in .osm, .osm.bz2 or .osm.pbf format")
+        ->group("");
+
+    bool dummy = false;
+    app.add_flag("--generate-edge-lookup", dummy, "Not used anymore")->group("");
+
     try
     {
-        boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
-                                          .options(cmdline_options)
-                                          .positional(positional_options)
-                                          .run(),
-                                      option_variables);
+        app.parse(argc, argv);
     }
-    catch (const boost::program_options::error &e)
+    catch (const CLI::CallForHelp &)
+    {
+        std::cout << app.help();
+        return return_code::exit;
+    }
+    catch (const CLI::CallForVersion &)
+    {
+        std::cout << OSRM_VERSION << std::endl;
+        return return_code::exit;
+    }
+    catch (const CLI::ParseError &e)
     {
         util::Log(logERROR) << e.what();
         return return_code::fail;
     }
 
-    if (option_variables.contains("version"))
-    {
-        std::cout << OSRM_VERSION << std::endl;
-        return return_code::exit;
-    }
-
-    if (option_variables.contains("help"))
-    {
-        std::cout << visible_options;
-        return return_code::exit;
-    }
-
-    if (option_variables.contains("list-inputs"))
+    if (list_inputs)
     {
         extractor::ExtractorConfig config;
         config.ListInputFiles(std::cout);
         return return_code::exit;
     }
 
-    boost::program_options::notify(option_variables);
-
-    if (!option_variables.contains("input"))
+    if (extractor_config.input_path.empty())
     {
-        std::cout << visible_options;
+        std::cout << app.help();
         return return_code::exit;
     }
 

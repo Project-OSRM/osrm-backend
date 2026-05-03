@@ -6,13 +6,15 @@
 #include "util/timezones.hpp"
 #include "util/version.hpp"
 
-#include <boost/program_options.hpp>
-#include <boost/program_options/errors.hpp>
+#include <CLI/CLI.hpp>
 
 #include <cstdlib>
+#include <ctime>
 #include <filesystem>
+#include <iostream>
 #include <new>
 #include <set>
+#include <string>
 #include <thread>
 
 #include "util/meminfo.hpp"
@@ -31,98 +33,72 @@ return_code parseArguments(int argc,
                            std::string &verbosity,
                            contractor::ContractorConfig &contractor_config)
 {
-    // declare a group of options that will be allowed only on command line
-    boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "list-inputs", "List required and optional input file extensions")(
-        "verbosity,l",
-        boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
-        std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str());
+    const auto executable = std::filesystem::path(argv[0]).filename().string();
+    CLI::App app{"Usage: " + executable + " <input.osrm> [options]", executable};
+    app.set_version_flag("-v,--version", std::string{OSRM_VERSION});
 
-    // declare a group of options that will be allowed on command line
-    boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()(
-        "threads,t",
-        boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
-            ->default_value(std::thread::hardware_concurrency()),
-        "Number of threads to use")(
-        "segment-speed-file",
-        boost::program_options::value<std::vector<std::string>>(
-            &contractor_config.updater_config.segment_speed_lookup_paths)
-            ->composing(),
-        "Lookup files containing nodeA, nodeB, speed data to adjust edge weights")(
-        "turn-penalty-file",
-        boost::program_options::value<std::vector<std::string>>(
-            &contractor_config.updater_config.turn_penalty_lookup_paths)
-            ->composing(),
-        "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust turn weights")(
-        "edge-weight-updates-over-factor",
-        boost::program_options::value<double>(
-            &contractor_config.updater_config.log_edge_updates_factor)
-            ->default_value(0.0),
-        "Use with `--segment-speed-file`. Provide an `x` factor, by which Extractor will log edge "
-        "weights updated by more than this factor")(
-        "parse-conditionals-from-now",
-        boost::program_options::value<std::time_t>(&contractor_config.updater_config.valid_now)
-            ->default_value(0),
-        "Optional for conditional turn restriction parsing, provide a UTC time stamp from "
-        "which "
-        "to evaluate the validity of conditional turn restrictions")(
-        "time-zone-file",
-        boost::program_options::value<std::string>(&contractor_config.updater_config.tz_file_path),
-        "Required for conditional turn restriction parsing, provide a geojson file containing "
-        "time zone boundaries");
+    bool list_inputs = false;
+    app.add_flag("--list-inputs", list_inputs, "List required and optional input file extensions");
 
-    // hidden options, will be allowed on command line, but will not be shown to the user
-    boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "input,i",
-        boost::program_options::value<std::filesystem::path>(&contractor_config.base_path),
-        "Input file in .osm, .osm.bz2 or .osm.pbf format");
+    app.add_option(
+           "-l,--verbosity", verbosity, "Log verbosity level: " + util::LogPolicy::GetLevels())
+        ->default_val("INFO");
 
-    // positional option
-    boost::program_options::positional_options_description positional_options;
-    positional_options.add("input", 1);
+    app.add_option(
+           "-t,--threads", contractor_config.requested_num_threads, "Number of threads to use")
+        ->default_val(std::thread::hardware_concurrency());
 
-    // combine above options for parsing
-    boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic_options).add(config_options).add(hidden_options);
+    app.add_option("--segment-speed-file",
+                   contractor_config.updater_config.segment_speed_lookup_paths,
+                   "Lookup files containing nodeA, nodeB, speed data to adjust edge weights");
 
-    const auto *executable = argv[0];
-    boost::program_options::options_description visible_options(
-        "Usage: " + std::filesystem::path(executable).filename().string() +
-        " <input.osrm> [options]");
-    visible_options.add(generic_options).add(config_options);
+    app.add_option("--turn-penalty-file",
+                   contractor_config.updater_config.turn_penalty_lookup_paths,
+                   "Lookup files containing from_, to_, via_nodes, and turn penalties to adjust "
+                   "turn weights");
 
-    // parse command line options
-    boost::program_options::variables_map option_variables;
+    app.add_option("--edge-weight-updates-over-factor",
+                   contractor_config.updater_config.log_edge_updates_factor,
+                   "Use with `--segment-speed-file`. Provide an `x` factor, by which Extractor "
+                   "will log edge weights updated by more than this factor")
+        ->default_val(0.0);
+
+    app.add_option("--parse-conditionals-from-now",
+                   contractor_config.updater_config.valid_now,
+                   "Optional for conditional turn restriction parsing, provide a UTC time stamp "
+                   "from which to evaluate the validity of conditional turn restrictions")
+        ->default_val(std::time_t{0});
+
+    app.add_option("--time-zone-file",
+                   contractor_config.updater_config.tz_file_path,
+                   "Required for conditional turn restriction parsing, provide a geojson file "
+                   "containing time zone boundaries");
+
+    app.add_option(
+           "input", contractor_config.base_path, "Input file in .osm, .osm.bz2 or .osm.pbf format")
+        ->group("");
+
     try
     {
-        boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
-                                          .options(cmdline_options)
-                                          .positional(positional_options)
-                                          .run(),
-                                      option_variables);
+        app.parse(argc, argv);
     }
-    catch (const boost::program_options::error &e)
+    catch (const CLI::CallForHelp &)
+    {
+        std::cout << app.help();
+        return return_code::exit;
+    }
+    catch (const CLI::CallForVersion &)
+    {
+        std::cout << OSRM_VERSION << std::endl;
+        return return_code::exit;
+    }
+    catch (const CLI::ParseError &e)
     {
         util::Log(logERROR) << e.what();
         return return_code::fail;
     }
 
-    if (option_variables.contains("version"))
-    {
-        std::cout << OSRM_VERSION << std::endl;
-        return return_code::exit;
-    }
-
-    if (option_variables.contains("help"))
-    {
-        std::cout << visible_options;
-        return return_code::exit;
-    }
-
-    if (option_variables.contains("list-inputs"))
+    if (list_inputs)
     {
         contractor::ContractorConfig config;
         std::set<std::string> seen;
@@ -131,11 +107,9 @@ return_code parseArguments(int argc,
         return return_code::exit;
     }
 
-    boost::program_options::notify(option_variables);
-
-    if (!option_variables.contains("input"))
+    if (contractor_config.base_path.empty())
     {
-        std::cout << visible_options;
+        std::cout << app.help();
         return return_code::fail;
     }
 

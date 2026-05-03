@@ -135,7 +135,7 @@ include(GNUInstallDirs)
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
-set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
+set(BOOST_COMPONENTS date_time iostreams thread unit_test_framework)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
@@ -426,6 +426,7 @@ endforeach()
 find_package(EXPAT REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(Lua 5.4 REQUIRED)
+find_package(CLI11 CONFIG REQUIRED)
 
 add_dependency_includes(${Boost_INCLUDE_DIRS})
 add_dependency_includes(${EXPAT_INCLUDE_DIRS})
@@ -443,7 +444,6 @@ set(Boost_DATE_TIME_LIBRARY            Boost::date_time)
 set(Boost_IOSTREAMS_LIBRARY            Boost::iostreams)
 set(Boost_THREAD_LIBRARY               Boost::thread)
 set(Boost_REGEX_LIBRARY                Boost::regex)
-set(Boost_PROGRAM_OPTIONS_LIBRARY      Boost::program_options)
 set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY  Boost::unit_test_framework)
 
 set(BOOST_BASE_LIBRARIES
@@ -502,12 +502,12 @@ include_directories(SYSTEM ${DEPENDENCIES_INCLUDE_DIRS})
 
 
 # Binaries
-target_link_libraries(osrm-datastore osrm_store ${Boost_PROGRAM_OPTIONS_LIBRARY} LibArchive::LibArchive)
-target_link_libraries(osrm-extract osrm_extract ${Boost_PROGRAM_OPTIONS_LIBRARY})
-target_link_libraries(osrm-partition osrm_partition ${Boost_PROGRAM_OPTIONS_LIBRARY})
-target_link_libraries(osrm-customize osrm_customize ${Boost_PROGRAM_OPTIONS_LIBRARY})
-target_link_libraries(osrm-contract osrm_contract ${Boost_PROGRAM_OPTIONS_LIBRARY})
-target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
+target_link_libraries(osrm-datastore osrm_store CLI11::CLI11 LibArchive::LibArchive)
+target_link_libraries(osrm-extract osrm_extract CLI11::CLI11)
+target_link_libraries(osrm-partition osrm_partition CLI11::CLI11)
+target_link_libraries(osrm-customize osrm_customize CLI11::CLI11)
+target_link_libraries(osrm-contract osrm_contract CLI11::CLI11)
+target_link_libraries(osrm-routed osrm CLI11::CLI11 ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}

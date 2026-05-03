@@ -7,14 +7,15 @@
 #include "util/timing_util.hpp"
 #include "util/version.hpp"
 
-#include <boost/algorithm/string/join.hpp>
-#include <boost/program_options.hpp>
+#include <CLI/CLI.hpp>
 
+#include <algorithm>
+#include <cstddef>
 #include <filesystem>
 #include <iostream>
-#include <iterator>
-#include <ranges>
-#include <regex>
+#include <sstream>
+#include <stdexcept>
+#include <string>
 #include <thread>
 
 using namespace osrm;
@@ -26,170 +27,113 @@ enum class return_code : unsigned
     exit
 };
 
-struct MaxCellSizesArgument
-{
-    std::vector<size_t> value;
-};
-
-std::ostream &operator<<(std::ostream &os, const MaxCellSizesArgument &arg)
-{
-    auto to_string = [](std::size_t x) { return std::to_string(x); };
-    auto view = arg.value | std::views::transform(to_string);
-    std::vector<std::string> parts(view.begin(), view.end());
-    return os << boost::algorithm::join(parts, ",");
-}
-
-void validate(boost::any &v, const std::vector<std::string> &values, MaxCellSizesArgument *, int)
-{
-    using namespace boost::program_options;
-
-    // Make sure no previous assignment to 'v' was made.
-    validators::check_first_occurrence(v);
-    // Extract the first string from 'values'. If there is more than
-    // one string, it's an error, and exception will be thrown.
-    const std::string &s = validators::get_single_string(values);
-
-    std::regex re(",");
-    std::vector<size_t> output;
-    std::transform(std::sregex_token_iterator(s.begin(), s.end(), re, -1),
-                   std::sregex_token_iterator(),
-                   std::back_inserter(output),
-                   [](const auto &x)
-                   {
-                       try
-                       {
-                           return boost::lexical_cast<std::size_t>(x);
-                       }
-                       catch (const boost::bad_lexical_cast &)
-                       {
-                           throw validation_error(validation_error::invalid_option_value);
-                       }
-                   });
-
-    v = boost::any(MaxCellSizesArgument{output});
-}
-
 return_code parseArguments(int argc,
                            char *argv[],
                            std::string &verbosity,
                            partitioner::PartitionerConfig &config)
 {
-    // declare a group of options that will be allowed only on command line
-    boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()("version,v", "Show version")("help,h", "Show this help message")(
-        "list-inputs", "List required and optional input file extensions")(
-        "verbosity,l",
-        boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
-        std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str());
+    const auto executable = std::filesystem::path(argv[0]).filename().string();
+    CLI::App app{executable + " <input.osrm> [options]", executable};
+    app.set_version_flag("-v,--version", std::string{OSRM_VERSION});
 
-    // declare a group of options that will be allowed both on command line
-    boost::program_options::options_description config_options("Configuration");
-    config_options.add_options()
-        //
-        ("threads,t",
-         boost::program_options::value<unsigned int>(&config.requested_num_threads)
-             ->default_value(std::thread::hardware_concurrency()),
-         "Number of threads to use")
-        //
-        ("balance",
-         boost::program_options::value<double>(&config.balance)->default_value(config.balance),
-         "Balance for left and right side in single bisection")
-        //
-        ("boundary",
-         boost::program_options::value<double>(&config.boundary_factor)
-             ->default_value(config.boundary_factor),
-         "Percentage of embedded nodes to contract as sources and sinks")
-        //
-        ("optimizing-cuts",
-         boost::program_options::value<std::size_t>(&config.num_optimizing_cuts)
-             ->default_value(config.num_optimizing_cuts),
-         "Number of cuts to use for optimizing a single bisection")
-        //
-        ("small-component-size",
-         boost::program_options::value<std::size_t>(&config.small_component_size)
-             ->default_value(config.small_component_size),
-         "Size threshold for small components.")
-        //
-        ("max-cell-sizes",
-         boost::program_options::value<MaxCellSizesArgument>()->default_value(
-             MaxCellSizesArgument{config.max_cell_sizes}),
-         "Maximum cell sizes starting from the level 1. The first cell size value is a bisection "
-         "termination citerion");
+    bool list_inputs = false;
+    app.add_flag("--list-inputs", list_inputs, "List required and optional input file extensions");
 
-    // hidden options, will be allowed on command line, but will not be
-    // shown to the user
-    boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "input,i",
-        boost::program_options::value<std::filesystem::path>(&config.base_path),
-        "Input base file path");
+    app.add_option(
+           "-l,--verbosity", verbosity, "Log verbosity level: " + util::LogPolicy::GetLevels())
+        ->default_val("INFO");
 
-    // positional option
-    boost::program_options::positional_options_description positional_options;
-    positional_options.add("input", 1);
+    app.add_option("-t,--threads", config.requested_num_threads, "Number of threads to use")
+        ->default_val(std::thread::hardware_concurrency());
 
-    // combine above options for parsing
-    boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic_options).add(config_options).add(hidden_options);
+    app.add_option(
+           "--balance", config.balance, "Balance for left and right side in single bisection")
+        ->default_val(config.balance);
 
-    const auto *executable = argv[0];
-    boost::program_options::options_description visible_options(
-        std::filesystem::path(executable).filename().string() + " <input.osrm> [options]");
-    visible_options.add(generic_options).add(config_options);
+    app.add_option("--boundary",
+                   config.boundary_factor,
+                   "Percentage of embedded nodes to contract as sources and sinks")
+        ->default_val(config.boundary_factor);
 
-    // parse command line options
-    boost::program_options::variables_map option_variables;
+    app.add_option("--optimizing-cuts",
+                   config.num_optimizing_cuts,
+                   "Number of cuts to use for optimizing a single bisection")
+        ->default_val(config.num_optimizing_cuts);
+
+    app.add_option("--small-component-size",
+                   config.small_component_size,
+                   "Size threshold for small components.")
+        ->default_val(config.small_component_size);
+
+    // Bind to a string and split manually after parse. CLI11's delimiter()
+    // combined with expected(1) miscounts (post-split values), and without
+    // expected(1) the vector binding is greedy across argv tokens — eating
+    // the positional input path. Manual split sidesteps both issues.
+    std::string max_cell_sizes_str;
+    app.add_option("--max-cell-sizes",
+                   max_cell_sizes_str,
+                   "Maximum cell sizes (comma-separated) starting from the level 1. The first "
+                   "cell size value is a bisection termination citerion");
+
+    app.add_option("input", config.base_path, "Input base file path")->group("");
+
     try
     {
-        boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
-                                          .options(cmdline_options)
-                                          .positional(positional_options)
-                                          .run(),
-                                      option_variables);
+        app.parse(argc, argv);
     }
-    catch (const boost::program_options::error &e)
+    catch (const CLI::CallForHelp &)
+    {
+        std::cout << app.help();
+        return return_code::exit;
+    }
+    catch (const CLI::CallForVersion &)
+    {
+        std::cout << OSRM_VERSION << std::endl;
+        return return_code::exit;
+    }
+    catch (const CLI::ParseError &e)
     {
         util::Log(logERROR) << e.what();
         return return_code::fail;
     }
 
-    if (option_variables.contains("version"))
+    if (list_inputs)
     {
-        std::cout << OSRM_VERSION << std::endl;
+        partitioner::PartitionerConfig defaults;
+        defaults.ListInputFiles(std::cout);
         return return_code::exit;
     }
 
-    if (option_variables.contains("help"))
+    if (config.base_path.empty())
     {
-        std::cout << visible_options;
-        return return_code::exit;
-    }
-
-    if (option_variables.contains("list-inputs"))
-    {
-        partitioner::PartitionerConfig config;
-        config.ListInputFiles(std::cout);
-        return return_code::exit;
-    }
-
-    boost::program_options::notify(option_variables);
-
-    if (!option_variables.contains("input"))
-    {
-        std::cout << visible_options;
+        std::cout << app.help();
         return return_code::fail;
     }
 
-    if (option_variables.contains("max-cell-sizes"))
+    if (!max_cell_sizes_str.empty())
     {
-        config.max_cell_sizes = option_variables["max-cell-sizes"].as<MaxCellSizesArgument>().value;
-
-        if (!std::is_sorted(config.max_cell_sizes.begin(), config.max_cell_sizes.end()))
+        config.max_cell_sizes.clear();
+        std::stringstream ss(max_cell_sizes_str);
+        std::string token;
+        while (std::getline(ss, token, ','))
         {
-            util::Log(logERROR)
-                << "The maximum cell sizes array must be sorted in non-descending order.";
-            return return_code::fail;
+            try
+            {
+                config.max_cell_sizes.push_back(std::stoull(token));
+            }
+            catch (const std::exception &)
+            {
+                util::Log(logERROR) << "--max-cell-sizes: invalid value '" << token << "'";
+                return return_code::fail;
+            }
         }
+    }
+
+    if (!std::is_sorted(config.max_cell_sizes.begin(), config.max_cell_sizes.end()))
+    {
+        util::Log(logERROR)
+            << "The maximum cell sizes array must be sorted in non-descending order.";
+        return return_code::fail;
     }
 
     return return_code::ok;

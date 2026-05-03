@@ -5,16 +5,23 @@
 #include "osrm/storage_config.hpp"
 
 #include "osrm/exception.hpp"
+#include "util/cli_helpers.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
 #include "util/typedefs.hpp"
 #include "util/version.hpp"
 
-#include <boost/program_options.hpp>
+#include <CLI/CLI.hpp>
 
 #include <csignal>
 #include <cstdlib>
 #include <filesystem>
+#include <iostream>
+#include <iterator>
+#include <memory>
+#include <sstream>
+#include <string>
+#include <vector>
 
 using namespace osrm;
 
@@ -93,7 +100,6 @@ void springClean()
     }
 }
 
-// generate boost::program_options object for the routing part
 bool generateDataStoreOptions(const int argc,
                               const char *argv[],
                               std::string &verbosity,
@@ -105,129 +111,94 @@ bool generateDataStoreOptions(const int argc,
                               bool &only_metric,
                               std::vector<storage::FeatureDataset> &disable_feature_dataset)
 {
-    // declare a group of options that will be allowed only on command line
-    boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()                                           //
-        ("version,v", "Show version")                                       //
-        ("help,h", "Show this help message")                                //
-        ("list-inputs", "List required and optional input file extensions") //
-        ("verbosity,l",
-         boost::program_options::value<std::string>(&verbosity)->default_value("INFO"),
-         std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str()) //
-        ("remove-locks,r", "Remove locks")                                            //
-        ("spring-clean,s", "Spring-cleaning all shared memory regions");
+    const auto executable = std::filesystem::path(argv[0]).filename().string();
+    CLI::App app{executable + " [<options>] <configuration>", executable};
+    app.set_version_flag("-v,--version", std::string{OSRM_VERSION});
 
-    // declare a group of options that will be allowed both on command line
-    // as well as in a config file
-    boost::program_options::options_description config_options("Configuration");
-    config_options.add_options() //
-        ("max-wait",
-         boost::program_options::value<int>(&max_wait)->default_value(-1),
-         "Maximum number of seconds to wait on a running data update "
-         "before aquiring the lock by force.") //
-        ("dataset-name",
-         boost::program_options::value<std::string>(&dataset_name)->default_value(""),
-         "Name of the dataset to load into memory. This allows having multiple datasets in memory "
-         "at the same time.") //
-        ("disable-feature-dataset",
-         boost::program_options::value<std::vector<storage::FeatureDataset>>(
-             &disable_feature_dataset)
-             ->multitoken(),
-         "Disables a feature dataset from being loaded into memory if not needed. Options: "
-         "ROUTE_STEPS, ROUTE_GEOMETRY") //
-        ("list",
-         boost::program_options::value<bool>(&list_datasets)
-             ->default_value(false)
-             ->implicit_value(true),
-         "List all OSRM datasets currently in memory") //
-        ("list-blocks",
-         boost::program_options::value<bool>(&list_blocks)
-             ->default_value(false)
-             ->implicit_value(true),
-         "List all OSRM datasets currently in memory")(
-            "only-metric",
-            boost::program_options::value<bool>(&only_metric)
-                ->default_value(false)
-                ->implicit_value(true),
-            "Only reload the metric data without updating the full dataset. This is an "
-            "optimization "
-            "for traffic updates.");
+    bool list_inputs = false;
+    bool remove_locks_flag = false;
+    bool spring_clean_flag = false;
 
-    // hidden options, will be allowed on command line but will not be shown to the user
-    boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()("base,b",
-                                 boost::program_options::value<std::filesystem::path>(&base_path),
-                                 "base path to .osrm file");
+    app.add_flag("--list-inputs", list_inputs, "List required and optional input file extensions");
+    app.add_option(
+           "-l,--verbosity", verbosity, "Log verbosity level: " + util::LogPolicy::GetLevels())
+        ->default_val("INFO");
+    app.add_flag("-r,--remove-locks", remove_locks_flag, "Remove locks");
+    app.add_flag(
+        "-s,--spring-clean", spring_clean_flag, "Spring-cleaning all shared memory regions");
 
-    // positional option
-    boost::program_options::positional_options_description positional_options;
-    positional_options.add("base", 1);
+    app.add_option("--max-wait",
+                   max_wait,
+                   "Maximum number of seconds to wait on a running data update before aquiring "
+                   "the lock by force.")
+        ->default_val(-1);
+    app.add_option("--dataset-name",
+                   dataset_name,
+                   "Name of the dataset to load into memory. This allows having multiple datasets "
+                   "in memory at the same time.")
+        ->default_val("");
+    app.add_option_function<std::string>(
+        "--disable-feature-dataset",
+        util::cli::disable_feature_dataset_handler(disable_feature_dataset),
+        "Disables a feature dataset from being loaded into memory if not needed. "
+        "Repeat the flag for multiple values. Options: ROUTE_STEPS, ROUTE_GEOMETRY");
+    app.add_flag("--list", list_datasets, "List all OSRM datasets currently in memory");
+    app.add_flag("--list-blocks", list_blocks, "List all OSRM datasets currently in memory");
+    app.add_flag("--only-metric",
+                 only_metric,
+                 "Only reload the metric data without updating the full dataset. This is an "
+                 "optimization for traffic updates.");
 
-    // combine above options for parsing
-    boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic_options).add(config_options).add(hidden_options);
+    app.add_option("base", base_path, "base path to .osrm file")->group("");
 
-    const auto *executable = argv[0];
-    boost::program_options::options_description visible_options(
-        std::filesystem::path(executable).filename().string() + " [<options>] <configuration>");
-    visible_options.add(generic_options).add(config_options);
-
-    // print help options if no infile is specified
     if (argc < 2)
     {
-        util::Log() << visible_options;
+        std::ostringstream oss;
+        oss << app.help();
+        util::Log() << oss.str();
         return false;
     }
 
-    // parse command line options
-    boost::program_options::variables_map option_variables;
-
     try
     {
-        boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
-                                          .options(cmdline_options)
-                                          .positional(positional_options)
-                                          .run(),
-                                      option_variables);
+        app.parse(argc, argv);
     }
-    catch (const boost::program_options::error &e)
+    catch (const CLI::CallForHelp &)
+    {
+        std::ostringstream oss;
+        oss << app.help();
+        util::Log() << oss.str();
+        return false;
+    }
+    catch (const CLI::CallForVersion &)
+    {
+        util::Log() << OSRM_VERSION;
+        return false;
+    }
+    catch (const CLI::ParseError &e)
     {
         util::Log(logERROR) << e.what();
         return false;
     }
 
-    if (option_variables.contains("version"))
-    {
-        util::Log() << OSRM_VERSION;
-        return false;
-    }
-
-    if (option_variables.contains("help"))
-    {
-        util::Log() << visible_options;
-        return false;
-    }
-
-    if (option_variables.contains("list-inputs"))
+    if (list_inputs)
     {
         storage::StorageConfig config;
         config.ListInputFiles(std::cout);
         return false;
     }
 
-    if (option_variables.contains("remove-locks"))
+    if (remove_locks_flag)
     {
         removeLocks();
         return false;
     }
 
-    if (option_variables.contains("spring-clean"))
+    if (spring_clean_flag)
     {
         springClean();
         return false;
     }
-
-    boost::program_options::notify(option_variables);
 
     return true;
 }

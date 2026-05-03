@@ -39,8 +39,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm::storage
 {
 
-std::istream &operator>>(std::istream &in, FeatureDataset &datasets);
-
 static std::vector<std::filesystem::path>
 GetRequiredFiles(const std::vector<storage::FeatureDataset> &disabled_feature_dataset)
 {

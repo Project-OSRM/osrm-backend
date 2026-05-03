@@ -1,5 +1,6 @@
 #include "server/header_size.hpp"
 #include "server/server.hpp"
+#include "util/cli_helpers.hpp"
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
@@ -11,14 +12,13 @@
 #include "osrm/osrm.hpp"
 #include "osrm/storage_config.hpp"
 
-#include <boost/algorithm/string/case_conv.hpp>
-#include <boost/any.hpp>
-#include <boost/program_options.hpp>
+#include <CLI/CLI.hpp>
 
 #include <cstdlib>
 
 #include <signal.h>
 
+#include <algorithm>
 #include <chrono>
 #include <exception>
 #include <filesystem>
@@ -27,6 +27,7 @@
 #include <new>
 #include <string>
 #include <thread>
+#include <vector>
 
 #ifdef _WIN32
 boost::function0<void> console_ctrl_function;
@@ -53,53 +54,6 @@ const static unsigned INIT_OK_START_ENGINE = 0;
 const static unsigned INIT_OK_DO_NOT_START_ENGINE = 1;
 const static unsigned INIT_FAILED = -1;
 
-namespace osrm::engine
-{
-std::istream &operator>>(std::istream &in, EngineConfig::Algorithm &algorithm)
-{
-    std::string token;
-    in >> token;
-    boost::to_lower(token);
-
-    if (token == "ch")
-        algorithm = EngineConfig::Algorithm::CH;
-    else if (token == "mld")
-        algorithm = EngineConfig::Algorithm::MLD;
-    else
-        throw util::RuntimeError(token, ErrorCode::UnknownAlgorithm, SOURCE_REF);
-    return in;
-}
-
-} // namespace osrm::engine
-
-// overload validate for the double type to allow "unlimited" as an input
-namespace boost
-{
-void validate(boost::any &v, const std::vector<std::string> &values, double *, double)
-{
-    boost::program_options::validators::check_first_occurrence(v);
-    const std::string &s = boost::program_options::validators::get_single_string(values);
-
-    if (s == "unlimited")
-    {
-        v = -1.0;
-    }
-    else
-    {
-        try
-        {
-            v = std::stod(s);
-        }
-        catch (const std::invalid_argument &)
-        {
-            throw boost::program_options::validation_error(
-                boost::program_options::validation_error::invalid_option_value);
-        }
-    }
-}
-} // namespace boost
-
-// generate boost::program_options object for the routing part
 inline unsigned generateServerProgramOptions(const int argc,
                                              const char *argv[],
                                              std::filesystem::path &base_path,
@@ -111,159 +65,149 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              short &keepalive_timeout,
                                              unsigned &max_header_size)
 {
-    using boost::program_options::value;
-    using std::filesystem::path;
-
     const auto hardware_threads = std::max<int>(1, std::thread::hardware_concurrency());
+    const auto executable = std::filesystem::path(argv[0]).filename().string();
 
-    // declare a group of options that will be allowed only on command line
-    boost::program_options::options_description generic_options("Options");
-    generic_options.add_options()                                           //
-        ("version,v", "Show version")                                       //
-        ("help,h", "Show this help message")                                //
-        ("list-inputs", "List required and optional input file extensions") //
-        ("verbosity,l",
+    // EngineConfig defaults these to true for library consumers; reset to
+    // false here so the CLI tool only enables them when the flag is passed
+    // (matches the original boost::po default_value(false) behavior).
+    config.use_shared_memory = false;
+    config.use_mmap = false;
+
+    CLI::App app{executable + " <base.osrm> [<options>]", executable};
+    app.set_version_flag("-v,--version", std::string{OSRM_VERSION});
+
+    bool list_inputs = false;
+    app.add_flag("--list-inputs", list_inputs, "List required and optional input file extensions");
+
+    app.add_option("-l,--verbosity",
+                   config.verbosity,
+                   "Log verbosity level: " + util::LogPolicy::GetLevels())
 #ifdef NDEBUG
-         boost::program_options::value<std::string>(&config.verbosity)->default_value("INFO"),
+        ->default_val("INFO");
 #else
-         boost::program_options::value<std::string>(&config.verbosity)->default_value("DEBUG"),
+        ->default_val("DEBUG");
 #endif
-         std::string("Log verbosity level: " + util::LogPolicy::GetLevels()).c_str()) //
-        ("trial", value<bool>(&trial)->implicit_value(true), "Quit after initialization");
 
-    // declare a group of options that will be allowed on command line
-    boost::program_options::options_description config_options("Configuration");
-    config_options.add_options() //
-        ("ip,i",
-         value<std::string>(&ip_address)->default_value("0.0.0.0"),
-         "IP address") //
-        ("port,p",
-         value<int>(&ip_port)->default_value(5000),
-         "TCP/IP port") //
-        ("threads,t",
-         value<int>(&requested_thread_num)->default_value(hardware_threads),
-         "Number of threads to use") //
-        ("keepalive-timeout,k",
-         value<short>(&keepalive_timeout)->default_value(5),
-         "Default keepalive-timeout. Default: 5 seconds.") //
-        ("shared-memory,s",
-         value<bool>(&config.use_shared_memory)->implicit_value(true)->default_value(false),
-         "Load data from shared memory") //
-        ("memory_file",
-         value<std::filesystem::path>(&config.memory_file),
-         "DEPRECATED: Will behave the same as --mmap.")(
-            "mmap,m",
-            value<bool>(&config.use_mmap)->implicit_value(true)->default_value(false),
-            "Map datafiles directly, do not use any additional memory.") //
-        ("dataset-name",
-         value<std::string>(&config.dataset_name),
-         "Name of the shared memory dataset to connect to.") //
-        ("algorithm,a",
-         value<EngineConfig::Algorithm>(&config.algorithm)
-             ->default_value(EngineConfig::Algorithm::CH, "CH"),
-         "Algorithm to use for the data. Can be CH, MLD.") //
-        ("disable-feature-dataset",
-         value<std::vector<storage::FeatureDataset>>(&config.disable_feature_dataset)->multitoken(),
-         "Disables a feature dataset from being loaded into memory if not needed. Options: "
-         "ROUTE_STEPS, ROUTE_GEOMETRY") //
-        ("max-viaroute-size",
-         value<int>(&config.max_locations_viaroute)->default_value(500),
-         "Max. locations supported in viaroute query") //
-        ("max-trip-size",
-         value<int>(&config.max_locations_trip)->default_value(100),
-         "Max. locations supported in trip query") //
-        ("max-table-size",
-         value<int>(&config.max_locations_distance_table)->default_value(100),
-         "Max. locations supported in distance table query") //
-        ("max-matching-size",
-         value<int>(&config.max_locations_map_matching)->default_value(100),
-         "Max. locations supported in map matching query") //
-        ("max-nearest-size",
-         value<int>(&config.max_results_nearest)->default_value(100),
-         "Max. results supported in nearest query") //
-        ("max-alternatives",
-         value<int>(&config.max_alternatives)->default_value(3),
-         "Max. number of alternatives supported in the MLD route query") //
-        ("max-matching-radius",
-         value<double>(&config.max_radius_map_matching)->default_value(-1.0),
-         "Max. radius size supported in map matching query. Default: unlimited.") //
-        ("default-radius",
-         value<double>(&config.default_radius)->default_value(-1.0),
-         "Default radius size for queries. Default: unlimited.")(
-            "max-header-size",
-            value<unsigned>(&max_header_size)->default_value(0),
-            "Maximum size of the HTTP headers (including GET request line). Default: auto (based "
-            "on maximum coordinates).");
+    app.add_flag("--trial", trial, "Quit after initialization");
 
-    // hidden options, will be allowed on command line, but will not be shown to the user
-    boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "base,b", value<std::filesystem::path>(&base_path), "base path to .osrm file");
+    app.add_option("-i,--ip", ip_address, "IP address")->default_val("0.0.0.0");
+    app.add_option("-p,--port", ip_port, "TCP/IP port")->default_val(5000);
+    app.add_option("-t,--threads", requested_thread_num, "Number of threads to use")
+        ->default_val(hardware_threads);
+    app.add_option("-k,--keepalive-timeout",
+                   keepalive_timeout,
+                   "Default keepalive-timeout. Default: 5 seconds.")
+        ->default_val(5);
 
-    // positional option
-    boost::program_options::positional_options_description positional_options;
-    positional_options.add("base", 1);
+    app.add_flag("-s,--shared-memory", config.use_shared_memory, "Load data from shared memory");
 
-    // combine above options for parsing
-    boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic_options).add(config_options).add(hidden_options);
+    app.add_option(
+        "--memory_file", config.memory_file, "DEPRECATED: Will behave the same as --mmap.");
 
-    const auto *executable = argv[0];
-    boost::program_options::options_description visible_options(
-        std::filesystem::path(executable).filename().string() + " <base.osrm> [<options>]");
-    visible_options.add(generic_options).add(config_options);
+    app.add_flag(
+        "-m,--mmap", config.use_mmap, "Map datafiles directly, do not use any additional memory.");
 
-    // parse command line options
-    boost::program_options::variables_map option_variables;
+    app.add_option(
+        "--dataset-name", config.dataset_name, "Name of the shared memory dataset to connect to.");
+
+    app.add_option(
+           "-a,--algorithm", config.algorithm, "Algorithm to use for the data. Can be CH, MLD.")
+        ->transform(util::cli::algorithm_transform())
+        ->default_val("CH");
+
+    app.add_option_function<std::string>(
+        "--disable-feature-dataset",
+        util::cli::disable_feature_dataset_handler(config.disable_feature_dataset),
+        "Disables a feature dataset from being loaded into memory if not needed. "
+        "Repeat the flag for multiple values. Options: ROUTE_STEPS, ROUTE_GEOMETRY");
+
+    app.add_option("--max-viaroute-size",
+                   config.max_locations_viaroute,
+                   "Max. locations supported in viaroute query")
+        ->default_val(500);
+    app.add_option(
+           "--max-trip-size", config.max_locations_trip, "Max. locations supported in trip query")
+        ->default_val(100);
+    app.add_option("--max-table-size",
+                   config.max_locations_distance_table,
+                   "Max. locations supported in distance table query")
+        ->default_val(100);
+    app.add_option("--max-matching-size",
+                   config.max_locations_map_matching,
+                   "Max. locations supported in map matching query")
+        ->default_val(100);
+    app.add_option("--max-nearest-size",
+                   config.max_results_nearest,
+                   "Max. results supported in nearest query")
+        ->default_val(100);
+    app.add_option("--max-alternatives",
+                   config.max_alternatives,
+                   "Max. number of alternatives supported in the MLD route query")
+        ->default_val(3);
+
+    app.add_option("--max-matching-radius",
+                   config.max_radius_map_matching,
+                   "Max. radius size supported in map matching query. Default: unlimited.")
+        ->transform(util::cli::unlimited_double())
+        ->default_val(-1.0);
+
+    app.add_option("--default-radius",
+                   config.default_radius,
+                   "Default radius size for queries. Default: unlimited.")
+        ->transform(util::cli::unlimited_double())
+        ->default_val(-1.0);
+
+    app.add_option("--max-header-size",
+                   max_header_size,
+                   "Maximum size of the HTTP headers (including GET request line). Default: auto "
+                   "(based on maximum coordinates).")
+        ->default_val(0);
+
+    app.add_option("base", base_path, "base path to .osrm file")->group("");
+
     try
     {
-        boost::program_options::store(boost::program_options::command_line_parser(argc, argv)
-                                          .options(cmdline_options)
-                                          .positional(positional_options)
-                                          .run(),
-                                      option_variables);
+        app.parse(argc, argv);
     }
-    catch (const boost::program_options::error &e)
+    catch (const CLI::CallForHelp &)
+    {
+        std::cout << app.help();
+        return INIT_OK_DO_NOT_START_ENGINE;
+    }
+    catch (const CLI::CallForVersion &)
+    {
+        std::cout << OSRM_VERSION << std::endl;
+        return INIT_OK_DO_NOT_START_ENGINE;
+    }
+    catch (const CLI::ParseError &e)
     {
         util::Log(logERROR) << e.what();
         return INIT_FAILED;
     }
 
-    if (option_variables.contains("version"))
-    {
-        std::cout << OSRM_VERSION << std::endl;
-        return INIT_OK_DO_NOT_START_ENGINE;
-    }
-
-    if (option_variables.contains("help"))
-    {
-        std::cout << visible_options;
-        return INIT_OK_DO_NOT_START_ENGINE;
-    }
-
-    if (option_variables.contains("list-inputs"))
+    if (list_inputs)
     {
         storage::StorageConfig storage_config;
         storage_config.ListInputFiles(std::cout);
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 
-    boost::program_options::notify(option_variables);
-
     if (max_header_size == 0)
     {
         max_header_size = server::deriveMaxHeaderSize(config);
     }
 
-    if (!config.use_shared_memory && option_variables.contains("base"))
+    const bool has_base = !base_path.empty();
+    if (!config.use_shared_memory && has_base)
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (config.use_shared_memory && !option_variables.contains("base"))
+    else if (config.use_shared_memory && !has_base)
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (config.use_shared_memory && option_variables.contains("base"))
+    else if (config.use_shared_memory && has_base)
     {
         util::Log(logWARNING) << "Shared memory settings conflict with path settings.";
     }
@@ -271,7 +215,7 @@ inline unsigned generateServerProgramOptions(const int argc,
     // Adjust number of threads to hardware concurrency
     requested_thread_num = std::min(hardware_threads, requested_thread_num);
 
-    std::cout << visible_options;
+    std::cout << app.help();
     return INIT_OK_DO_NOT_START_ENGINE;
 }
 
