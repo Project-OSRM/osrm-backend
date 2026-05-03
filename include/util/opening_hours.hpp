@@ -3,10 +3,10 @@
 
 #include <chrono>
 #include <cstdint>
-#include <string>
-#include <vector>
-#include <tuple>
 #include <ctime>
+#include <string>
+#include <tuple>
+#include <vector>
 
 namespace osrm::util
 {
@@ -134,19 +134,20 @@ struct OpeningHours
 
         bool IsInRange(const struct tm &time, bool use_curr_day, bool use_next_day) const
         {
-            using std::chrono::year;
-            using std::chrono::month;
             using std::chrono::day;
-            using std::chrono::year_month_day;
-            using std::chrono::year_month_day_last;
+            using std::chrono::days;
+            using std::chrono::month;
             using std::chrono::month_day_last;
             using std::chrono::sys_days;
-            using std::chrono::days;
+            using std::chrono::year;
+            using std::chrono::year_month_day;
+            using std::chrono::year_month_day_last;
 
             const auto year_val = time.tm_year + 1900;
             const auto month_val = time.tm_mon + 1;
 
-            year_month_day ymd_current{year{year_val}, month{static_cast<unsigned>(month_val)},
+            year_month_day ymd_current{year{year_val},
+                                       month{static_cast<unsigned>(month_val)},
                                        day{static_cast<unsigned>(time.tm_mday)}};
             sys_days date_current = sys_days{ymd_current};
 
@@ -156,7 +157,8 @@ struct OpeningHours
             if (from.IsValid())
             {
                 int fy = (from.year == 0) ? year_val : from.year;
-                unsigned fm = (from.month == 0) ? static_cast<unsigned>(month_val) : static_cast<unsigned>(from.month);
+                unsigned fm = (from.month == 0) ? static_cast<unsigned>(month_val)
+                                                : static_cast<unsigned>(from.month);
                 unsigned fd = (from.day == 0) ? 1u : static_cast<unsigned>(from.day);
                 year_month_day ymd_from{year{fy}, month{fm}, day{fd}};
                 date_from = sys_days{ymd_from};
@@ -165,8 +167,10 @@ struct OpeningHours
             if (to.IsValid())
             {
                 int ty = (to.year == 0) ? ((from.year == 0) ? year_val : from.year) : to.year;
-                unsigned tm = (to.month == 0) ? ((from.month == 0) ? static_cast<unsigned>(month_val) : static_cast<unsigned>(from.month))
-                                              : static_cast<unsigned>(to.month);
+                unsigned tm = (to.month == 0)
+                                  ? ((from.month == 0) ? static_cast<unsigned>(month_val)
+                                                       : static_cast<unsigned>(from.month))
+                                  : static_cast<unsigned>(to.month);
                 if (to.day == 0)
                 {
                     year_month_day_last ymdl{year{ty}, month_day_last{month{tm}}};

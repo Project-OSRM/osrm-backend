@@ -1,8 +1,8 @@
 #include "util/opening_hours.hpp"
 
+#include <boost/test/unit_test.hpp>
 #include <iomanip>
 #include <sstream>
-#include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(opening_hours)
 
