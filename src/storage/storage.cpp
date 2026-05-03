@@ -97,7 +97,7 @@ bool swapData(Monitor &monitor,
             {
                 if (std::chrono::steady_clock::now() >= deadline)
                 {
-                    util::Log(logERROR) << "Could not aquire current region lock after " << max_wait
+                    util::Log(logERROR) << "Could not acquire current region lock after " << max_wait
                                         << " seconds. Data update failed.";
 
                     for (auto &pair : handles)

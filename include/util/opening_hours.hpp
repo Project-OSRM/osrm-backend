@@ -7,6 +7,8 @@
 #include <string>
 #include <tuple>
 #include <vector>
+#include <algorithm>
+#include <utility>
 
 namespace osrm::util
 {
@@ -149,6 +151,8 @@ struct OpeningHours
             year_month_day ymd_current{year{year_val},
                                        month{static_cast<unsigned>(month_val)},
                                        day{static_cast<unsigned>(time.tm_mday)}};
+            if (!ymd_current.ok())
+                return false;
             sys_days date_current = sys_days{ymd_current};
 
             sys_days date_from = std::chrono::sys_days::min();
@@ -161,6 +165,8 @@ struct OpeningHours
                                                 : static_cast<unsigned>(from.month);
                 unsigned fd = (from.day == 0) ? 1u : static_cast<unsigned>(from.day);
                 year_month_day ymd_from{year{fy}, month{fm}, day{fd}};
+                if (!ymd_from.ok())
+                    return false;
                 date_from = sys_days{ymd_from};
             }
 
@@ -179,7 +185,9 @@ struct OpeningHours
                 else
                 {
                     year_month_day ymd_to{year{ty}, month{tm}, day{static_cast<unsigned>(to.day)}};
-                    date_to = sys_days{ymd_to};
+                    if (!ymd_to.ok())
+                    return false;
+                date_to = sys_days{ymd_to};
                 }
             }
             else if (to == Monthday())

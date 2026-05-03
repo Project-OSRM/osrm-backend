@@ -217,3 +217,12 @@ else()
   add_custom_target(tests
 	DEPENDS engine-tests extractor-tests contractor-tests partitioner-tests updater-tests customizer-tests library-tests library-extract-tests library-contract-tests library-customize-tests library-partition-tests server-tests util-tests storage-tests)
 endif()
+
+# Provide a 'check' target that builds the test executables then runs ctest.
+# This prevents surprising failures when users run `ctest` without first building tests
+# (the test executables are EXCLUDE_FROM_ALL by design).
+add_custom_target(check
+  DEPENDS ${TEST_TARGETS}
+  COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+  COMMENT "Build tests and run ctest (use 'cmake --build . --target check')"
+)
