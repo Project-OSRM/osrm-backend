@@ -7,8 +7,6 @@
 #include "storage/shared_memory_ownership.hpp"
 
 #include <boost/assert.hpp>
-#include <boost/iterator/iterator_facade.hpp>
-#include <boost/iterator/reverse_iterator.hpp>
 
 #include <climits>
 #include <cstddef>
@@ -22,21 +20,13 @@
 namespace osrm::util
 {
 
-template <typename DataT>
-class VectorViewIterator : public boost::iterator_facade<VectorViewIterator<DataT>,
-                                                         DataT,
-                                                         boost::random_access_traversal_tag,
-                                                         DataT &>
+template <typename DataT> class VectorViewIterator
 {
-    using base_t = boost::iterator_facade<VectorViewIterator<DataT>,
-                                          DataT,
-                                          boost::random_access_traversal_tag,
-                                          DataT &>;
-
   public:
-    using value_type = typename base_t::value_type;
-    using difference_type = typename base_t::difference_type;
-    using reference = typename base_t::reference;
+    using value_type = DataT;
+    using difference_type = std::ptrdiff_t;
+    using reference = DataT &;
+    using pointer = DataT *;
     using iterator_category = std::random_access_iterator_tag;
 
     explicit VectorViewIterator() : m_value(nullptr) {}
@@ -44,18 +34,76 @@ class VectorViewIterator : public boost::iterator_facade<VectorViewIterator<Data
 
     reference operator[](difference_type n) const { return m_value[n]; }
 
-  private:
-    void increment() { ++m_value; }
-    void decrement() { --m_value; }
-    void advance(difference_type offset) { m_value += offset; }
-    bool equal(const VectorViewIterator &other) const { return m_value == other.m_value; }
-    reference dereference() const { return *m_value; }
-    difference_type distance_to(const VectorViewIterator &other) const
+    VectorViewIterator &operator++()
     {
-        return other.m_value - m_value;
+        ++m_value;
+        return *this;
+    }
+    VectorViewIterator operator++(int)
+    {
+        auto tmp = *this;
+        ++*this;
+        return tmp;
     }
 
-    friend class ::boost::iterator_core_access;
+    VectorViewIterator &operator--()
+    {
+        --m_value;
+        return *this;
+    }
+    VectorViewIterator operator--(int)
+    {
+        auto tmp = *this;
+        --*this;
+        return tmp;
+    }
+
+    VectorViewIterator &operator+=(difference_type offset)
+    {
+        m_value += offset;
+        return *this;
+    }
+    VectorViewIterator &operator-=(difference_type offset)
+    {
+        m_value -= offset;
+        return *this;
+    }
+
+    reference operator*() const { return *m_value; }
+
+    friend difference_type operator-(const VectorViewIterator &a, const VectorViewIterator &b)
+    {
+        return a.m_value - b.m_value;
+    }
+
+    friend VectorViewIterator operator+(VectorViewIterator it, difference_type n)
+    {
+        it += n;
+        return it;
+    }
+
+    friend VectorViewIterator operator-(VectorViewIterator it, difference_type n)
+    {
+        it -= n;
+        return it;
+    }
+
+    friend VectorViewIterator operator+(difference_type n, VectorViewIterator it)
+    {
+        it += n;
+        return it;
+    }
+
+    friend bool operator==(const VectorViewIterator &a, const VectorViewIterator &b)
+    {
+        return a.m_value == b.m_value;
+    }
+    friend bool operator!=(const VectorViewIterator &a, const VectorViewIterator &b)
+    {
+        return !(a == b);
+    }
+
+  private:
     DataT *m_value;
 };
 
@@ -69,7 +117,7 @@ template <typename DataT> class vector_view
     using value_type = DataT;
     using iterator = VectorViewIterator<DataT>;
     using const_iterator = VectorViewIterator<const DataT>;
-    using reverse_iterator = boost::reverse_iterator<iterator>;
+    using reverse_iterator = std::reverse_iterator<iterator>;
 
     vector_view() : m_ptr(nullptr), m_size(0) {}
 
@@ -91,9 +139,13 @@ template <typename DataT> class vector_view
 
     const DataT &at(const std::size_t index) const { return m_ptr[index]; }
 
-    auto begin() const { return iterator(m_ptr); }
+    auto begin() { return iterator(m_ptr); }
 
-    auto end() const { return iterator(m_ptr + m_size); }
+    auto end() { return iterator(m_ptr + m_size); }
+
+    auto begin() const { return const_iterator(m_ptr); }
+
+    auto end() const { return const_iterator(m_ptr + m_size); }
 
     auto cbegin() const { return const_iterator(m_ptr); }
 

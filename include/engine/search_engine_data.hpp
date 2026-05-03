@@ -5,6 +5,8 @@
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
+#include <memory>
+
 namespace osrm::engine
 {
 

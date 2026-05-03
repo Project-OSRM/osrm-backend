@@ -12,7 +12,7 @@
 #include <utility>
 #include <vector>
 
-#include <boost/iterator/function_output_iterator.hpp>
+#include "util/iterator_adapters.hpp"
 
 namespace osrm::engine::routing_algorithms
 {

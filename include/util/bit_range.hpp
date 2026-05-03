@@ -3,63 +3,65 @@
 
 #include "util/msb.hpp"
 #include <bit>
-#include <boost/iterator/iterator_facade.hpp>
 #include <ranges>
 
 namespace osrm::util
 {
 
-// Investigate if we can replace this with
-// http://www.boost.org/doc/libs/1_64_0/libs/dynamic_bitset/dynamic_bitset.html
-template <typename DataT>
-class BitIterator : public boost::iterator_facade<BitIterator<DataT>,
-                                                  const std::size_t,
-                                                  boost::forward_traversal_tag,
-                                                  const std::size_t>
+template <typename DataT> class BitIterator
 {
-    using base_t = boost::iterator_facade<BitIterator<DataT>,
-                                          const std::size_t,
-                                          boost::forward_traversal_tag,
-                                          const std::size_t>;
-
   public:
-    using value_type = typename base_t::value_type;
-    using difference_type = typename base_t::difference_type;
-    using reference = typename base_t::reference;
-    using iterator_category = std::random_access_iterator_tag;
+    using value_type = std::size_t;
+    using difference_type = std::ptrdiff_t;
+    using reference = value_type;
+    using iterator_category = std::forward_iterator_tag;
 
     explicit BitIterator() : m_value(0) {}
     explicit BitIterator(const DataT x) : m_value(std::move(x)) {}
 
-  private:
-    void increment()
+    reference operator*() const
     {
-        auto index = msb(m_value);
-        m_value = m_value & ~(DataT{1} << index);
-    }
-
-    difference_type distance_to(const BitIterator &other) const
-    {
-        return std::popcount(m_value) - std::popcount(other.m_value);
-    }
-
-    bool equal(const BitIterator &other) const { return m_value == other.m_value; }
-
-    reference dereference() const
-    {
-        BOOST_ASSERT(m_value > 0);
+        // assumes m_value > 0
         return msb(m_value);
     }
 
-    friend class ::boost::iterator_core_access;
+    BitIterator &operator++()
+    {
+        auto index = msb(m_value);
+        m_value = m_value & ~(DataT{1} << index);
+        return *this;
+    }
+
+    BitIterator operator++(int)
+    {
+        auto tmp = *this;
+        ++*this;
+        return tmp;
+    }
+
+    friend bool operator==(const BitIterator &a, const BitIterator &b)
+    {
+        return a.m_value == b.m_value;
+    }
+    friend bool operator!=(const BitIterator &a, const BitIterator &b) { return !(a == b); }
+
+  private:
     DataT m_value;
 };
 
 // Returns range over all 1 bits of value
-template <typename T> auto makeBitRange(const T value)
+template <typename T> struct BitRange
 {
-    return std::ranges::subrange(BitIterator<T>{value}, BitIterator<T>{});
-}
+    explicit BitRange(T v) : value(v) {}
+    BitIterator<T> begin() const { return BitIterator<T>(value); }
+    BitIterator<T> end() const { return BitIterator<T>(0); }
+    std::size_t size() const { return std::popcount(static_cast<std::make_unsigned_t<T>>(value)); }
+    bool empty() const { return value == 0; }
+    std::size_t front() const { return msb(value); }
+    T value;
+};
+
+template <typename T> auto makeBitRange(const T value) { return BitRange<T>(value); }
 } // namespace osrm::util
 
 #endif
