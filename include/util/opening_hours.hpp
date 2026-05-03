@@ -1,14 +1,14 @@
 #ifndef OSRM_OPENING_HOURS_HPP
 #define OSRM_OPENING_HOURS_HPP
 
+#include <algorithm>
 #include <chrono>
 #include <cstdint>
 #include <ctime>
 #include <string>
 #include <tuple>
-#include <vector>
-#include <algorithm>
 #include <utility>
+#include <vector>
 
 namespace osrm::util
 {
@@ -186,8 +186,8 @@ struct OpeningHours
                 {
                     year_month_day ymd_to{year{ty}, month{tm}, day{static_cast<unsigned>(to.day)}};
                     if (!ymd_to.ok())
-                    return false;
-                date_to = sys_days{ymd_to};
+                        return false;
+                    date_to = sys_days{ymd_to};
                 }
             }
             else if (to == Monthday())
