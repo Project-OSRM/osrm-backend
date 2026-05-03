@@ -115,3 +115,4 @@ lib/binding_napi_v8
 ##########################
 .vitepress/cache
 docs/.vitepress/cache
+docs/.vitepress/dist
