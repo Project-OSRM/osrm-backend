@@ -32,6 +32,7 @@ concurrency:
 jobs:
   vcpkg-windows-release-node:
     needs: format-taginfo-docs
+    if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: windows-2025
     continue-on-error: false
     env:
@@ -107,6 +108,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
 
   format-taginfo-docs:
+    if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-slim
     steps:
     - uses: actions/checkout@v6
@@ -141,6 +143,7 @@ jobs:
       matrix:
         docker-base-image: ['debian', 'alpine']
     needs: format-taginfo-docs
+    if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-22.04
     continue-on-error: false
     steps:
@@ -194,6 +197,7 @@ jobs:
 
   build-matrix:
     needs: format-taginfo-docs
+    if: github.repository == 'Project-OSRM/osrm-backend'
     strategy:
       matrix:
         include:
@@ -581,5 +585,6 @@ jobs:
   ci-complete:
     runs-on: ubuntu-latest
     needs: [build-matrix, vcpkg-windows-release-node, docker-image-matrix]
+    if: github.repository == 'Project-OSRM/osrm-backend'
     steps:
       - run: echo "CI complete"
