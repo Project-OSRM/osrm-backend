@@ -4,15 +4,13 @@
 // For isatty()
 #if defined(__unix__) || (defined(__APPLE__) && defined(__MACH__))
 #include <unistd.h>
-#else
-#ifdef WIN32
+#elif defined(_WIN32) || defined(WIN32)
 #include <io.h>
 #define isatty _isatty
 #define fileno _fileno
 #else
 #error Unknown platform - isatty implementation required
-#endif // win32
-#endif // unix
+#endif
 
 #include <cstdio>
 
