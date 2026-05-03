@@ -22,6 +22,7 @@
 #include <chrono>
 #include <exception>
 #include <filesystem>
+#include <functional>
 #include <future>
 #include <iostream>
 #include <new>
@@ -29,7 +30,7 @@
 #include <thread>
 
 #ifdef _WIN32
-boost::function0<void> console_ctrl_function;
+std::function<void()> console_ctrl_function;
 
 BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 {
