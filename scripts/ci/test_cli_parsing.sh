@@ -207,13 +207,19 @@ assert_exit_nonzero "partition/--max-cell-sizes 1,abc exits nonzero" \
 
 # --- path with spaces (the original bug) -----------------------------------
 
-# Use a path that does not exist; the error log echoes back the path string.
-# If parsing truncated at whitespace (the original boost::po bug), the echo
-# would not contain the part of the path after the space.
-SPACE_PATH="/tmp/osrm cli test space/missing.osm.pbf"
+# Use a path that does not exist; each tool's error log echoes back the path
+# string. If parsing truncated at whitespace (the original boost::po bug),
+# the echo would not contain the part of the path after the space. The shim
+# is centralized, so testing a positional fs::path on more than one tool
+# guards against future per-tool regressions (e.g. a missing #include).
+SPACE_DIR="/tmp/osrm cli test space"
 assert_output_matches "extract/path-with-spaces preserved end-to-end" \
-    "/tmp/osrm cli test space/missing\\.osm\\.pbf" \
-    "$EXTRACT" --profile /nonexistent.lua "$SPACE_PATH"
+    "$SPACE_DIR/missing\\.osm\\.pbf" \
+    "$EXTRACT" --profile /nonexistent.lua "$SPACE_DIR/missing.osm.pbf"
+
+assert_output_matches "partition/path-with-spaces preserved end-to-end" \
+    "$SPACE_DIR/missing\\.osrm" \
+    "$PARTITION" "$SPACE_DIR/missing.osrm"
 
 # --- unknown option rejection ----------------------------------------------
 
