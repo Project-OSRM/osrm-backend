@@ -517,6 +517,7 @@ jobs:
             npm run nodejs-tests
           fi
           popd
+          ./scripts/ci/test_cli_parsing.sh -b "${OSRM_BUILD_DIR}"
           npm test -- --parallel $JOBS
 
       - name: Use Node 22
