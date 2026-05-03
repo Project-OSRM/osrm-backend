@@ -171,21 +171,23 @@ assert_output_not_matches "routed/--max-matching-radius zzzz rejected" \
 
 # --- feature-dataset multitoken on routed ----------------------------------
 
-# Multitoken: multiple values per single flag invocation must parse.
+# Multitoken: multiple values per single flag invocation must parse. Note: the
+# positional must come BEFORE --disable-feature-dataset, otherwise boost::po's
+# multitoken greedily consumes the positional as a (bogus) dataset value.
 assert_output_matches "routed/--disable-feature-dataset multitoken parses" \
     "Required files are missing" \
-    "$ROUTED" --disable-feature-dataset ROUTE_STEPS ROUTE_GEOMETRY "$NONEXISTENT"
+    "$ROUTED" "$NONEXISTENT" --disable-feature-dataset ROUTE_STEPS ROUTE_GEOMETRY
 
-# Single value variant.
+# Single value variant (same ordering rule).
 assert_output_matches "routed/--disable-feature-dataset single value parses" \
     "Required files are missing" \
-    "$ROUTED" --disable-feature-dataset ROUTE_STEPS "$NONEXISTENT"
+    "$ROUTED" "$NONEXISTENT" --disable-feature-dataset ROUTE_STEPS
 
 assert_exit_nonzero "routed/--disable-feature-dataset bogus exits nonzero" \
-    "$ROUTED" --disable-feature-dataset bogus "$NONEXISTENT"
+    "$ROUTED" "$NONEXISTENT" --disable-feature-dataset bogus
 assert_output_not_matches "routed/--disable-feature-dataset bogus rejected" \
     "Required files are missing" \
-    "$ROUTED" --disable-feature-dataset bogus "$NONEXISTENT"
+    "$ROUTED" "$NONEXISTENT" --disable-feature-dataset bogus
 
 # --- max-cell-sizes manual comma-split + sort check on partition ----------
 
