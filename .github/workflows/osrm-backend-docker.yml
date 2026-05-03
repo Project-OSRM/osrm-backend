@@ -15,6 +15,7 @@ env:
 
 jobs:
   build-amd64:
+    if: github.repository == 'Project-OSRM/osrm-backend'
     strategy: &docker-base-image-matrix
       matrix:
         docker-base-image: ["debian", "alpine"]
@@ -111,6 +112,7 @@ jobs:
             DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
   build-arm64:
+    if: github.repository == 'Project-OSRM/osrm-backend'
     strategy: *docker-base-image-matrix
     runs-on: ubuntu-24.04-arm
     steps:
@@ -206,6 +208,7 @@ jobs:
 
   combine-manifests:
     needs: [build-amd64, build-arm64]
+    if: github.repository == 'Project-OSRM/osrm-backend'
     strategy: *docker-base-image-matrix
     runs-on: ubuntu-latest
     steps:

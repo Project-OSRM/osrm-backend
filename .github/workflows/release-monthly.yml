@@ -22,6 +22,7 @@ concurrency:
 
 jobs:
   release:
+    if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-latest
     permissions:
       contents: write
