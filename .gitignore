@@ -120,3 +120,4 @@ __pycache__/
 ##########################
 .vitepress/cache
 docs/.vitepress/cache
+docs/.vitepress/dist
