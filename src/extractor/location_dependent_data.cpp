@@ -7,8 +7,8 @@
 #include <rapidjson/error/en.h>
 #include <rapidjson/istreamwrapper.h>
 
+#include "util/iterator_adapters.hpp"
 #include <boost/geometry/algorithms/equals.hpp>
-#include <boost/iterator/function_output_iterator.hpp>
 
 #include <filesystem>
 #include <fstream>
@@ -278,7 +278,7 @@ std::vector<std::size_t> LocationDependentData::GetPropertyIndexes(const point_t
 
                     return inside;
                 }),
-        boost::make_function_output_iterator(std::ref(inserter)));
+        osrm::util::make_function_output_iterator(std::ref(inserter)));
 
     return result;
 }

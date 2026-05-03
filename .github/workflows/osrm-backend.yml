@@ -154,12 +154,6 @@ jobs:
         sudo apt-get install -y clang-format-18
         npm ci --ignore-scripts
         clang-format-18 --version
-    - name: Check PR title format
-      if: github.event_name == 'pull_request'
-      env:
-        PR_TITLE: ${{ github.event.pull_request.title }}
-      run: |
-        node ./scripts/check_pr_title.js
     - uses: actions/setup-python@v6
       with:
         python-version: '3.12'

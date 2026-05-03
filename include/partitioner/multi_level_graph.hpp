@@ -12,7 +12,7 @@
 
 #include <tbb/parallel_sort.h>
 
-#include <boost/iterator/permutation_iterator.hpp>
+#include "util/iterator_adapters.hpp"
 
 namespace osrm::partitioner
 {
@@ -67,8 +67,9 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
         auto highest_border_level = GetHighestBorderLevel(mlp, edges);
         auto permutation = SortEdgesByHighestLevel(highest_border_level, edges);
         auto sorted_edges_begin =
-            boost::make_permutation_iterator(edges.begin(), permutation.begin());
-        auto sorted_edges_end = boost::make_permutation_iterator(edges.begin(), permutation.end());
+            osrm::util::make_permutation_iterator(edges.begin(), permutation.begin());
+        auto sorted_edges_end =
+            osrm::util::make_permutation_iterator(edges.begin(), permutation.end());
         SuperT::InitializeFromSortedEdgeRange(num_nodes, sorted_edges_begin, sorted_edges_end);
 
         // if the node ordering is sorting the border nodes first,
