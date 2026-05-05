@@ -733,12 +733,8 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-latest
-<<<<<<< HEAD
     needs: [build-matrix, vcpkg-windows-release-bindings, docker-image-matrix, check-python-stubs]
-=======
-    needs: [build-matrix, vcpkg-windows-release-node, docker-image-matrix]
     if: github.repository == 'Project-OSRM/osrm-backend'
->>>>>>> origin/master
     steps:
       - name: Fail if any dependency failed
         if: ${{ contains(needs.*.result, 'failure') }}
