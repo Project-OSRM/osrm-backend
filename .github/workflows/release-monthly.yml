@@ -145,7 +145,7 @@ jobs:
 
       - name: Trigger CI for tag
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
         run: |
           # GITHUB_TOKEN pushes don't trigger workflow runs (prevents loops).
           # Explicitly dispatch CI on the tag so binaries get built and uploaded.
@@ -186,7 +186,7 @@ jobs:
       - name: Wait for CI to complete
         id: wait_ci
         env:
-          GH_TOKEN: ${{ github.token }}
+          GH_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
         run: |
           # Wait for tag CI to complete before publishing npm package
           # The osrm-backend.yml workflow is triggered by the tag push
