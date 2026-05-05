@@ -36,7 +36,7 @@ jobs:
     steps:
       - uses: actions/checkout@v6
         with:
-          token: ${{ secrets.GIT_TOKEN }}
+          token: ${{ secrets.BACKEND_RELEASE_TOKEN }}
           ref: ${{ inputs.branch || 'master' }}
           fetch-depth: 0
 
