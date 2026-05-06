@@ -1,3 +1,5 @@
+enable_testing()
+
 file(GLOB EngineTestsSources
     engine_tests.cpp
     engine/*.cpp)
@@ -186,6 +188,28 @@ target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_L
 target_link_libraries(contractor-tests osrm_contract ${CONTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 target_link_libraries(storage-tests osrm_store ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 
+# Register unit test executables with CTest
+set(TEST_TARGETS
+    engine-tests
+    contractor-tests
+    extractor-tests
+    partitioner-tests
+    customizer-tests
+    updater-tests
+    storage-tests
+    library-tests
+    library-extract-tests
+    library-contract-tests
+    library-customize-tests
+    library-partition-tests
+    server-tests
+    util-tests
+)
+
+foreach(t ${TEST_TARGETS})
+    add_test(NAME ${t} COMMAND $<TARGET_FILE:${t}>)
+endforeach()
+
 if(BUILD_AS_SUBPROJECT)
   add_custom_target(osrm_tests
 	DEPENDS engine-tests extractor-tests contractor-tests partitioner-tests updater-tests customizer-tests library-tests library-extract-tests library-contract-tests library-customize-tests library-partition-tests server-tests util-tests storage-tests)
@@ -193,3 +217,12 @@ else()
   add_custom_target(tests
 	DEPENDS engine-tests extractor-tests contractor-tests partitioner-tests updater-tests customizer-tests library-tests library-extract-tests library-contract-tests library-customize-tests library-partition-tests server-tests util-tests storage-tests)
 endif()
+
+# Provide a 'check' target that builds the test executables then runs ctest.
+# This prevents surprising failures when users run `ctest` without first building tests
+# (the test executables are EXCLUDE_FROM_ALL by design).
+add_custom_target(check
+  DEPENDS ${TEST_TARGETS}
+  COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
+  COMMENT "Build tests and run ctest (use 'cmake --build . --target check')"
+)

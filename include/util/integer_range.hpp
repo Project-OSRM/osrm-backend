@@ -1,59 +1,89 @@
 #ifndef INTEGER_RANGE_HPP
 #define INTEGER_RANGE_HPP
 
-#include <boost/iterator/iterator_facade.hpp>
-
+#include <iterator>
 #include <type_traits>
 
 namespace osrm::util
 {
 
-// Ported from Boost.Range 1.56 due to required fix
-// https://github.com/boostorg/range/commit/9e6bdc13ba94af4e150afae547557a2fbbfe3bf0
-// Can be removed after dropping support of Boost < 1.56
-template <typename Integer>
-class integer_iterator : public boost::iterator_facade<integer_iterator<Integer>,
-                                                       Integer,
-                                                       boost::random_access_traversal_tag,
-                                                       Integer>
+template <typename Integer> class integer_iterator
 {
-    using base_t = boost::iterator_facade<integer_iterator<Integer>,
-                                          Integer,
-                                          boost::random_access_traversal_tag,
-                                          Integer>;
-
   public:
-    using value_type = typename base_t::value_type;
-    using difference_type = typename base_t::difference_type;
-    using reference = typename base_t::reference;
+    using value_type = Integer;
+    using difference_type = std::ptrdiff_t;
+    using reference = value_type;
     using iterator_category = std::random_access_iterator_tag;
 
     integer_iterator() : m_value() {}
     explicit integer_iterator(value_type x) : m_value(x) {}
 
-  private:
-    void increment() { ++m_value; }
-    void decrement() { --m_value; }
-    void advance(difference_type offset) { m_value += offset; }
-    bool equal(const integer_iterator &other) const { return m_value == other.m_value; }
-    reference dereference() const { return m_value; }
+    reference operator*() const { return m_value; }
 
-    difference_type distance_to(const integer_iterator &other) const
+    integer_iterator &operator++()
     {
-        return std::is_signed<value_type>::value ? (other.m_value - m_value)
-               : (other.m_value >= m_value)
-                   ? static_cast<difference_type>(other.m_value - m_value)
-                   : -static_cast<difference_type>(m_value - other.m_value);
+        ++m_value;
+        return *this;
+    }
+    integer_iterator operator++(int)
+    {
+        auto tmp = *this;
+        ++*this;
+        return tmp;
     }
 
-    friend class ::boost::iterator_core_access;
+    integer_iterator &operator--()
+    {
+        --m_value;
+        return *this;
+    }
+    integer_iterator operator--(int)
+    {
+        auto tmp = *this;
+        --*this;
+        return tmp;
+    }
+
+    integer_iterator &operator+=(difference_type n)
+    {
+        m_value += n;
+        return *this;
+    }
+    integer_iterator &operator-=(difference_type n)
+    {
+        m_value -= n;
+        return *this;
+    }
+
+    friend integer_iterator operator+(integer_iterator it, difference_type n)
+    {
+        it += n;
+        return it;
+    }
+    friend integer_iterator operator-(integer_iterator it, difference_type n)
+    {
+        it -= n;
+        return it;
+    }
+
+    friend difference_type operator-(const integer_iterator &a, const integer_iterator &b)
+    {
+        // a - b
+        return static_cast<difference_type>(a.m_value) - static_cast<difference_type>(b.m_value);
+    }
+
+    friend bool operator==(const integer_iterator &a, const integer_iterator &b)
+    {
+        return a.m_value == b.m_value;
+    }
+    friend bool operator!=(const integer_iterator &a, const integer_iterator &b)
+    {
+        return !(a == b);
+    }
+
+  private:
     value_type m_value;
 };
-
-// Warning: do not try to replace this with Boost's irange, as it is broken on Boost 1.55:
-//     auto r = boost::irange<unsigned int>(0, 15);
-//     std::cout << r.size() << std::endl;
-// results in -4294967281. Latest Boost versions fix this, but we still support older ones.
 
 template <typename Integer> class range
 {
@@ -74,7 +104,6 @@ template <typename Integer> class range
     iterator last;
 };
 
-// convenience function to construct an integer range with type deduction
 template <typename Integer>
 range<Integer>
 irange(const Integer first,
@@ -83,6 +112,7 @@ irange(const Integer first,
 {
     return range<Integer>(first, last);
 }
+
 } // namespace osrm::util
 
 #endif // INTEGER_RANGE_HPP

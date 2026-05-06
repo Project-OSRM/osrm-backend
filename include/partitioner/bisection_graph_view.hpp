@@ -3,8 +3,6 @@
 
 #include "partitioner/bisection_graph.hpp"
 
-#include <boost/iterator/filter_iterator.hpp>
-#include <boost/iterator/iterator_facade.hpp>
 #include <ranges>
 
 #include <cstddef>

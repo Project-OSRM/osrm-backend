@@ -457,7 +457,7 @@ void readRawNBGraph(const std::filesystem::path &path,
         index++;
     };
     reader.ReadStreaming<extractor::QueryNode>("/extractor/nodes",
-                                               boost::make_function_output_iterator(decode));
+                                               osrm::util::make_function_output_iterator(decode));
 
     storage::serialization::read(reader, "/extractor/edges", edge_list);
 }

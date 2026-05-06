@@ -75,10 +75,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetForwardGeometry(const DirectionalGeometryID id)
     {
-        const auto begin = nodes.begin() + index[id];
-        const auto end = nodes.begin() + index[id + 1];
-
-        return std::ranges::subrange(begin, end);
+        auto ptr = nodes.data() + index[id];
+        auto len = static_cast<std::size_t>(index[id + 1] - index[id]);
+        return std::span<NodeID>(ptr, len);
     }
 
     auto GetReverseGeometry(const DirectionalGeometryID id)
@@ -120,10 +119,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetForwardDatasources(const DirectionalGeometryID id)
     {
-        const auto begin = fwd_datasources.begin() + index[id] + 1;
-        const auto end = fwd_datasources.begin() + index[id + 1];
-
-        return std::ranges::subrange(begin, end);
+        auto ptr = fwd_datasources.data() + index[id] + 1;
+        auto len = static_cast<std::size_t>(index[id + 1] - (index[id] + 1));
+        return std::span<DatasourceID>(ptr, len);
     }
 
     auto GetForwardWayIDs(const DirectionalGeometryID id)
@@ -136,10 +134,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseDatasources(const DirectionalGeometryID id)
     {
-        const auto begin = rev_datasources.begin() + index[id];
-        const auto end = rev_datasources.begin() + index[id + 1] - 1;
-
-        return std::ranges::subrange(begin, end) | std::views::reverse;
+        auto ptr = rev_datasources.data() + index[id];
+        auto len = static_cast<std::size_t>((index[id + 1] - 1) - index[id]);
+        return std::span<DatasourceID>(ptr, len) | std::views::reverse;
     }
 
     auto GetReverseWayIDs(const DirectionalGeometryID id)
@@ -152,10 +149,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetForwardGeometry(const DirectionalGeometryID id) const
     {
-        const auto begin = nodes.cbegin() + index[id];
-        const auto end = nodes.cbegin() + index[id + 1];
-
-        return std::ranges::subrange(begin, end);
+        auto ptr = nodes.data() + index[id];
+        auto len = static_cast<std::size_t>(index[id + 1] - index[id]);
+        return std::span<const NodeID>(ptr, len);
     }
 
     auto GetReverseGeometry(const DirectionalGeometryID id) const
@@ -197,10 +193,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetForwardDatasources(const DirectionalGeometryID id) const
     {
-        const auto begin = fwd_datasources.cbegin() + index[id] + 1;
-        const auto end = fwd_datasources.cbegin() + index[id + 1];
-
-        return std::ranges::subrange(begin, end);
+        auto ptr = fwd_datasources.data() + index[id] + 1;
+        auto len = static_cast<std::size_t>(index[id + 1] - (index[id] + 1));
+        return std::span<const DatasourceID>(ptr, len);
     }
 
     auto GetForwardWayIDs(const DirectionalGeometryID id) const
@@ -213,10 +208,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseDatasources(const DirectionalGeometryID id) const
     {
-        const auto begin = rev_datasources.cbegin() + index[id];
-        const auto end = rev_datasources.cbegin() + index[id + 1] - 1;
-
-        return std::ranges::subrange(begin, end) | std::views::reverse;
+        auto ptr = rev_datasources.data() + index[id];
+        auto len = static_cast<std::size_t>((index[id + 1] - 1) - index[id]);
+        return std::span<const DatasourceID>(ptr, len) | std::views::reverse;
     }
 
     auto GetReverseWayIDs(const DirectionalGeometryID id) const
