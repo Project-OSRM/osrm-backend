@@ -310,7 +310,7 @@ A cron on the 1st of each month at 08:00 UTC runs the workflow against
    publish to PyPI via trusted publisher (OIDC), then `npm publish`.
 
 If PyPI fails, the npm publish still runs (the npm steps have
-`if: ${{ !cancelled() }}`), and the overall job is marked failed so the PyPI
+<code v-pre>if: ${{ !cancelled() }}</code>), and the overall job is marked failed so the PyPI
 problem stays visible.
 
 ### Manual release
