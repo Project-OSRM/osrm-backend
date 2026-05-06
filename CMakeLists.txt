@@ -36,6 +36,15 @@ option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
 option(ENABLE_PYTHON_BINDINGS "Build Python bindings" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 
+if(BUILD_AS_SUBPROJECT)
+  set(OSRM_BUILD_AUXILIARY_TARGETS_DEFAULT OFF)
+else()
+  set(OSRM_BUILD_AUXILIARY_TARGETS_DEFAULT ON)
+endif()
+
+option(OSRM_BUILD_TESTING "Build OSRM test targets" ${OSRM_BUILD_AUXILIARY_TARGETS_DEFAULT})
+option(OSRM_BUILD_BENCHMARKS "Build OSRM benchmark targets" ${OSRM_BUILD_AUXILIARY_TARGETS_DEFAULT})
+
 # Dependencies are provided by vcpkg in manifest mode (see vcpkg.json).
 # The vcpkg toolchain file is wired up via CMakePresets.json or by passing
 # -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake.
@@ -346,8 +355,15 @@ if(OSRM_HAS_STD_FORMAT)
 endif()
 
 find_package(LibArchive REQUIRED)
+add_dependency_includes(${LibArchive_INCLUDE_DIRS})
+if(TARGET LibArchive::LibArchive)
+  get_target_property(_libarchive_includes LibArchive::LibArchive INTERFACE_INCLUDE_DIRECTORIES)
+  if(_libarchive_includes)
+    add_dependency_includes(${_libarchive_includes})
+  endif()
+endif()
 
-# Header-only libraries from vcpkg. Each provides a CMake CONFIG package.
+# Header-only libraries consumed through CMake package configs.
 find_package(fmt CONFIG REQUIRED)
 # fmt is consumed header-only so OSRM targets don't need to link libfmt.
 # Without this, LTO builds emit undefined references to fmt::v12::vformat,
@@ -361,9 +377,11 @@ find_package(flatbuffers CONFIG REQUIRED)
 # Generate flatbuffers C++ headers from .fbs schemas at build time.
 # This removes the need to commit pre-generated headers and pin the
 # flatbuffers version — any compatible flatc will regenerate them.
-# BuildFlatBuffers.cmake is shipped alongside flatbuffers-config.cmake
-# but not on CMAKE_MODULE_PATH, so locate it via the package's own dir.
-include("${flatbuffers_DIR}/BuildFlatBuffers.cmake")
+# Some package configs define this helper command themselves instead of placing
+# BuildFlatBuffers.cmake next to the generated config file.
+if(NOT COMMAND flatbuffers_generate_headers)
+  include("${flatbuffers_DIR}/BuildFlatBuffers.cmake")
+endif()
 set(FLATBUFFERS_SCHEMAS
     ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/fbresult.fbs
     ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/route.fbs
@@ -401,12 +419,13 @@ include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
 # target and push them into the directory-level include_directories, which
 # DOES apply retroactively to earlier targets. Consumers (unit tests, etc.)
 # inherit the same search paths via the directory.
-set(_osrm_vcpkg_header_targets
+set(_osrm_dependency_header_targets
     fmt::fmt-header-only fmt::fmt
     sol2::sol2
     rapidjson RapidJSON::RapidJSON
-    flatbuffers::flatbuffers)
-foreach(_dep IN LISTS _osrm_vcpkg_header_targets)
+    flatbuffers::flatbuffers flatbuffers::libflatbuffers
+    TBB::tbb)
+foreach(_dep IN LISTS _osrm_dependency_header_targets)
   if(TARGET ${_dep})
     get_target_property(_inc ${_dep} INTERFACE_INCLUDE_DIRECTORIES)
     if(_inc)
@@ -749,9 +768,13 @@ else()
 endif()
 
 
-# Modular build system: each directory registered here provides its own CMakeLists.txt
-add_subdirectory(unit_tests)
-add_subdirectory(src/benchmarks)
+if(OSRM_BUILD_TESTING)
+  add_subdirectory(unit_tests)
+endif()
+
+if(OSRM_BUILD_BENCHMARKS)
+  add_subdirectory(src/benchmarks)
+endif()
 
 if (ENABLE_NODE_BINDINGS)
   add_subdirectory(src/nodejs)
