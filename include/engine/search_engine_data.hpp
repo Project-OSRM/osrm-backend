@@ -2,6 +2,7 @@
 #define SEARCH_ENGINE_DATA_HPP
 
 #include "engine/algorithm.hpp"
+#include "engine/concepts.hpp"
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
@@ -14,7 +15,7 @@ namespace osrm::engine
 // - CH algorithms use CH heaps
 // - MLD algorithms use MLD heaps
 
-template <typename Algorithm> struct SearchEngineData
+template <routing_algorithms::RoutingAlgorithm Algorithm> struct SearchEngineData
 {
 };
 
