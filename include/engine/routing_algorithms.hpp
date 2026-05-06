@@ -62,7 +62,8 @@ class RoutingAlgorithmsInterface
 };
 
 // Short-lived object passed to each plugin in request to wrap routing algorithms
-template <routing_algorithms::RoutingAlgorithm Algorithm> class RoutingAlgorithms final : public RoutingAlgorithmsInterface
+template <routing_algorithms::RoutingAlgorithm Algorithm>
+class RoutingAlgorithms final : public RoutingAlgorithmsInterface
 {
   public:
     RoutingAlgorithms(SearchEngineData<Algorithm> &heaps,

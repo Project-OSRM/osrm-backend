@@ -1,9 +1,9 @@
 #ifndef OSRM_ENGINE_CONCEPTS_HPP
 #define OSRM_ENGINE_CONCEPTS_HPP
 
+#include "engine/algorithm.hpp"
 #include <concepts>
 #include <type_traits>
-#include "engine/algorithm.hpp"
 
 namespace osrm::engine::routing_algorithms
 {
@@ -30,33 +30,31 @@ namespace osrm::engine::routing_algorithms
  *  - the above trait specializations must expose a compile-time ::value convertible to bool
  */
 template <typename T>
-concept RoutingAlgorithm =
-    requires
-    {
-        /* name() and identifier() are callable and return C strings */
-        { name<T>() } -> std::convertible_to<const char *>;
-        { identifier<T>() } -> std::convertible_to<const char *>;
+concept RoutingAlgorithm = requires {
+    /* name() and identifier() are callable and return C strings */
+    { name<T>() } -> std::convertible_to<const char *>;
+    { identifier<T>() } -> std::convertible_to<const char *>;
 
-        /* trait templates are instantiable */
-        typename HasAlternativePathSearch<T>;
-        typename HasShortestPathSearch<T>;
-        typename HasDirectShortestPathSearch<T>;
-        typename HasMapMatching<T>;
-        typename HasManyToManySearch<T>;
-        typename SupportsDistanceAnnotationType<T>;
-        typename HasGetTileTurns<T>;
-        typename HasExcludeFlags<T>;
+    /* trait templates are instantiable */
+    typename HasAlternativePathSearch<T>;
+    typename HasShortestPathSearch<T>;
+    typename HasDirectShortestPathSearch<T>;
+    typename HasMapMatching<T>;
+    typename HasManyToManySearch<T>;
+    typename SupportsDistanceAnnotationType<T>;
+    typename HasGetTileTurns<T>;
+    typename HasExcludeFlags<T>;
 
-        /* trait values are usable as compile-time booleans */
-        { HasAlternativePathSearch<T>::value } -> std::convertible_to<bool>;
-        { HasShortestPathSearch<T>::value } -> std::convertible_to<bool>;
-        { HasDirectShortestPathSearch<T>::value } -> std::convertible_to<bool>;
-        { HasMapMatching<T>::value } -> std::convertible_to<bool>;
-        { HasManyToManySearch<T>::value } -> std::convertible_to<bool>;
-        { SupportsDistanceAnnotationType<T>::value } -> std::convertible_to<bool>;
-        { HasGetTileTurns<T>::value } -> std::convertible_to<bool>;
-        { HasExcludeFlags<T>::value } -> std::convertible_to<bool>;
-    };
+    /* trait values are usable as compile-time booleans */
+    { HasAlternativePathSearch<T>::value } -> std::convertible_to<bool>;
+    { HasShortestPathSearch<T>::value } -> std::convertible_to<bool>;
+    { HasDirectShortestPathSearch<T>::value } -> std::convertible_to<bool>;
+    { HasMapMatching<T>::value } -> std::convertible_to<bool>;
+    { HasManyToManySearch<T>::value } -> std::convertible_to<bool>;
+    { SupportsDistanceAnnotationType<T>::value } -> std::convertible_to<bool>;
+    { HasGetTileTurns<T>::value } -> std::convertible_to<bool>;
+    { HasExcludeFlags<T>::value } -> std::convertible_to<bool>;
+};
 
 } // namespace osrm::engine::routing_algorithms
 
