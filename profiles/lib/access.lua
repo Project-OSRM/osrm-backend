@@ -27,6 +27,7 @@ function Access.resolve_access(value, profile)
     local best_priority = -1
 
     for part in value:gmatch('[^;]+') do
+        part = part:match('^%s*(.-)%s*$')
         local priority = Access.classify_access(part, profile)
         if priority > best_priority then
             best = part

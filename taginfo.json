@@ -162,7 +162,7 @@
         {"key": "access", "value": "foot"},
         {"key": "access", "value": "restricted"},
         {"key": "access", "value": "military"},
-        {"key": "access", "value": "officials"},
+        {"key": "access", "value": "official"},
         {"key": "maxheight", "object_types": ["node", "way"]},
         {"key": "maxspeed", "value": "none"},
         {"key": "maxspeed", "value": "urban"},

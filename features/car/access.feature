@@ -135,7 +135,7 @@ Feature: Car - Restricted access
             | foot         |       |
             | restricted   |       |
             | military     |       |
-            | officials          |       |
+            | official           |       |
             | emergency_vehicle  |       |
             | unknown            | x     |
             | agricultural;forestry |  |
@@ -163,7 +163,7 @@ Feature: Car - Restricted access
             | foot         |       |
             | restricted   |       |
             | military     |       |
-            | officials          |       |
+            | official           |       |
             | emergency_vehicle  |       |
             | unknown            | x     |
             | agricultural;forestry |  |
@@ -187,7 +187,7 @@ Feature: Car - Restricted access
             | foot                  |       |
             | restricted            |       |
             | military              |       |
-            | officials             |       |
+            | official              |       |
             | emergency_vehicle     |       |
             | unknown               | x     |
             | agricultural;forestry |       |
@@ -376,7 +376,7 @@ Feature: Car - Restricted access
             | primary    | foot                 |       |
             | primary    | restricted           |       |
             | primary    | military             |       |
-            | primary    | officials            |       |
+            | primary    | official             |       |
             | primary    | customers            |   x   |
             | primary    | permit               |   x   |
             | primary    | residents            |   x   |

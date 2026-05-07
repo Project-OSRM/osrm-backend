@@ -97,7 +97,7 @@ function setup()
       'emergency_vehicle',
       'restricted',
       'military',
-      'officials',
+      'official',
       'customers',
       'private',
       'delivery',
