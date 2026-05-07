@@ -258,6 +258,8 @@
         {"key": "lanes:forward", "description": "Lanes in forward direction"},
         {"key": "lanes:backward", "description": "Lanes in backward direction"},
         {"key": "lane_markings", "value": "no", "description": "Penalty for roads without lane markings on bidirectional streets"},
+        {"key": "priority", "value": "forward", "object_types": ["way"], "description": "Traffic priority in forward direction; non-priority direction gets a penalty"},
+        {"key": "priority", "value": "backward", "object_types": ["way"], "description": "Traffic priority in backward direction; non-priority direction gets a penalty"},
         {"key": "surface", "value": "asphalt"},
         {"key": "surface", "value": "concrete"},
         {"key": "surface", "value": "concrete:plates"},
