@@ -8,6 +8,7 @@ Handlers = require("lib/way_handlers")
 Relations = require("lib/relations")
 Obstacles = require("lib/obstacles")
 find_access_tag = require("lib/access").find_access_tag
+resolve_access = require("lib/access").resolve_access
 limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
 Measure = require("lib/measure")
@@ -78,7 +79,8 @@ function setup()
       'vehicle',
       'permissive',
       'designated',
-      'hov'
+      'hov',
+      'unknown'
     },
 
     access_tag_blacklist = Set {
@@ -91,10 +93,17 @@ function setup()
       'share_taxi', -- sub class of psv
       'minibus', -- sub class of psv
       'bus', -- sub class of psv
+      'foot',
+      'emergency_vehicle',
+      'restricted',
+      'military',
+      'officials',
       'customers',
       'private',
       'delivery',
-      'destination'
+      'destination',
+      'permit',
+      'residents'
     },
 
     -- tags disallow access to in combination with highway=service
@@ -107,6 +116,8 @@ function setup()
       'delivery',
       'destination',
       'customers',
+      'permit',
+      'residents',
     },
 
     access_tags_hierarchy = Sequence {
@@ -355,7 +366,7 @@ end
 
 function process_node(profile, node, result, relations)
   -- parse access and barrier tags
-  local access = find_access_tag(node, profile.access_tags_hierarchy)
+  local access = resolve_access(find_access_tag(node, profile.access_tags_hierarchy), profile)
   if access then
     if profile.access_tag_blacklist[access] and not profile.restricted_access_tag_list[access] then
       obstacle_map:add(node, Obstacle.new(obstacle_type.barrier))

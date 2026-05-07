@@ -9,6 +9,7 @@ local set_classification = require("lib/guidance").set_classification
 local get_destination = require("lib/destination").get_destination
 local Tags = require('lib/tags')
 local Measure = require("lib/measure")
+local resolve_access = require("lib/access").resolve_access
 
 WayHandlers = {}
 
@@ -259,6 +260,9 @@ end
 function WayHandlers.access(profile,way,result,data)
   data.forward_access, data.backward_access =
     Tags.get_forward_backward_by_set(way,data,profile.access_tags_hierarchy)
+
+  data.forward_access = resolve_access(data.forward_access, profile)
+  data.backward_access = resolve_access(data.backward_access, profile)
 
   -- only allow a subset of roads to be treated as restricted
   if profile.restricted_highway_whitelist[data.highway] then
