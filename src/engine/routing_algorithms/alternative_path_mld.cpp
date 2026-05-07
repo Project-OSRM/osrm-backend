@@ -793,7 +793,7 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     search_engine_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes(),
                                                                 facade.GetMaxBorderNodeID() + 1);
     search_engine_data.InitializeUnpackingCache(facade.GetNumberOfNodes(),
-                                                 facade.GetNumberOfEdges());
+                                                facade.GetNumberOfEdges());
 
     Heap &forward_heap = *search_engine_data.forward_heap_1;
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;

@@ -589,8 +589,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
 
             LevelID sublevel = level - 1;
 
-            constexpr bool has_cache =
-                requires { engine_working_data.unpacking_cache; };
+            constexpr bool has_cache = requires { engine_working_data.unpacking_cache; };
 
             bool cache_hit = false;
             if constexpr (has_cache)
@@ -642,8 +641,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                     MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
                     engine_working_data.unpacking_cache->insert(
                         cache_key,
-                        {std::move(unpacked_subpath.nodes),
-                         std::move(unpacked_subpath.edges)});
+                        {std::move(unpacked_subpath.nodes), std::move(unpacked_subpath.edges)});
                 }
             }
         }

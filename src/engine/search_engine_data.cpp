@@ -195,9 +195,8 @@ void SearchEngineData<MLD>::InitializeUnpackingCache(unsigned number_of_nodes,
     constexpr size_t kBytesPerNode = 16;
     constexpr size_t kBytesPerEdge = 10;
 
-    const size_t graph_memory =
-        static_cast<size_t>(number_of_nodes) * kBytesPerNode +
-        static_cast<size_t>(number_of_edges) * kBytesPerEdge;
+    const size_t graph_memory = static_cast<size_t>(number_of_nodes) * kBytesPerNode +
+                                static_cast<size_t>(number_of_edges) * kBytesPerEdge;
     const size_t total_budget = static_cast<size_t>(graph_memory * kCacheBudgetFraction);
     const size_t l1_budget = static_cast<size_t>(total_budget * kL1Fraction);
     const size_t l2_budget = static_cast<size_t>(total_budget * kL2Fraction);
