@@ -96,7 +96,7 @@ template <typename DataT> class VectorViewIterator
     }
 
     friend bool operator==(const VectorViewIterator &a, const VectorViewIterator &b) = default;
-    friend bool operator<=>(const VectorViewIterator &a, const VectorViewIterator &b) = default;
+    friend auto operator<=>(const VectorViewIterator &a, const VectorViewIterator &b) = default;
 
   private:
     DataT *m_value;
