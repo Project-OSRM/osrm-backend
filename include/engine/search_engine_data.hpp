@@ -188,6 +188,8 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
 
     static thread_local ManyToManyHeapPtr many_to_many_heap;
     static thread_local UnpackingCachePtr unpacking_cache;
+    static thread_local unsigned unpacking_cache_node_count;
+    static thread_local unsigned unpacking_cache_edge_count;
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes,
                                                   unsigned number_of_boundary_nodes);

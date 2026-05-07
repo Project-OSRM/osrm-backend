@@ -594,19 +594,22 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
             bool cache_hit = false;
             if constexpr (has_cache)
             {
-                MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
-                auto &cache = *engine_working_data.unpacking_cache;
-                if (auto *cached = cache.get(cache_key))
+                if (engine_working_data.unpacking_cache)
                 {
-                    BOOST_ASSERT(cached->nodes.size() > 1);
-                    BOOST_ASSERT(cached->nodes.front() == source);
-                    BOOST_ASSERT(cached->nodes.back() == target);
-                    unpacked_nodes.insert(unpacked_nodes.end(),
-                                          std::next(cached->nodes.begin()),
-                                          cached->nodes.end());
-                    unpacked_edges.insert(
-                        unpacked_edges.end(), cached->edges.begin(), cached->edges.end());
-                    cache_hit = true;
+                    MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
+                    auto &cache = *engine_working_data.unpacking_cache;
+                    if (auto *cached = cache.get(cache_key))
+                    {
+                        BOOST_ASSERT(cached->nodes.size() > 1);
+                        BOOST_ASSERT(cached->nodes.front() == source);
+                        BOOST_ASSERT(cached->nodes.back() == target);
+                        unpacked_nodes.insert(unpacked_nodes.end(),
+                                              std::next(cached->nodes.begin()),
+                                              cached->nodes.end());
+                        unpacked_edges.insert(
+                            unpacked_edges.end(), cached->edges.begin(), cached->edges.end());
+                        cache_hit = true;
+                    }
                 }
             }
 
@@ -638,10 +641,14 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
 
                 if constexpr (has_cache)
                 {
-                    MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
-                    engine_working_data.unpacking_cache->insert(
-                        cache_key,
-                        {std::move(unpacked_subpath.nodes), std::move(unpacked_subpath.edges)});
+                    if (engine_working_data.unpacking_cache)
+                    {
+                        MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
+                        engine_working_data.unpacking_cache->insert(
+                            cache_key,
+                            {std::move(unpacked_subpath.nodes),
+                             std::move(unpacked_subpath.edges)});
+                    }
                 }
             }
         }

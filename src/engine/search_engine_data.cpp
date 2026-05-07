@@ -124,6 +124,8 @@ thread_local SearchEngineData<MLD>::MapMatchingHeapPtr
     SearchEngineData<MLD>::map_matching_reverse_heap_1;
 thread_local SearchEngineData<MLD>::ManyToManyHeapPtr SearchEngineData<MLD>::many_to_many_heap;
 thread_local SearchEngineData<MLD>::UnpackingCachePtr SearchEngineData<MLD>::unpacking_cache;
+thread_local unsigned SearchEngineData<MLD>::unpacking_cache_node_count = 0;
+thread_local unsigned SearchEngineData<MLD>::unpacking_cache_edge_count = 0;
 
 void SearchEngineData<MLD>::InitializeOrClearMapMatchingThreadLocalStorage(
     unsigned number_of_nodes, unsigned number_of_boundary_nodes)
@@ -186,7 +188,8 @@ void SearchEngineData<MLD>::InitializeOrClearManyToManyThreadLocalStorage(
 void SearchEngineData<MLD>::InitializeUnpackingCache(unsigned number_of_nodes,
                                                      unsigned number_of_edges)
 {
-    if (unpacking_cache)
+    if (unpacking_cache && unpacking_cache_node_count == number_of_nodes &&
+        unpacking_cache_edge_count == number_of_edges)
         return;
 
     constexpr double kCacheBudgetFraction = 0.10;
@@ -202,5 +205,7 @@ void SearchEngineData<MLD>::InitializeUnpackingCache(unsigned number_of_nodes,
     const size_t l2_budget = static_cast<size_t>(total_budget * kL2Fraction);
 
     unpacking_cache.reset(new MLDUnpackingCache(l1_budget, l2_budget, MLDUnpackingCacheCostFn{}));
+    unpacking_cache_node_count = number_of_nodes;
+    unpacking_cache_edge_count = number_of_edges;
 }
 } // namespace osrm::engine

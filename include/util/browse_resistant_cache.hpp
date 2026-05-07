@@ -52,7 +52,12 @@ class BrowseResistantCache
         if (auto it = l1_map_.find(key); it != l1_map_.end())
         {
             promote(it->second);
-            return &l2_list_.front().value;
+            // After promote()+evict_l2(), the entry may have been demoted back to L1
+            // if its cost exceeds the L2 budget. Re-find in both tiers.
+            if (auto l2_it = l2_map_.find(key); l2_it != l2_map_.end())
+                return &l2_it->second->value;
+            if (auto l1_it = l1_map_.find(key); l1_it != l1_map_.end())
+                return &l1_it->second->value;
         }
 
         return nullptr;
@@ -60,6 +65,20 @@ class BrowseResistantCache
 
     void insert(const Key &key, Value value)
     {
+        // Remove any existing entry for this key to keep map/list consistent.
+        if (auto it = l2_map_.find(key); it != l2_map_.end())
+        {
+            l2_used_ -= it->second->memory_cost;
+            l2_list_.erase(it->second);
+            l2_map_.erase(it);
+        }
+        else if (auto it = l1_map_.find(key); it != l1_map_.end())
+        {
+            l1_used_ -= it->second->memory_cost;
+            l1_list_.erase(it->second);
+            l1_map_.erase(it);
+        }
+
         size_t cost = cost_fn_(value);
         l1_list_.emplace_front(Entry{key, std::move(value), cost});
         l1_map_.emplace(key, l1_list_.begin());

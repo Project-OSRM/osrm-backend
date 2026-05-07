@@ -163,4 +163,37 @@ BOOST_AUTO_TEST_CASE(browse_resistance)
     BOOST_CHECK_EQUAL(*val, 999);
 }
 
+BOOST_AUTO_TEST_CASE(insert_duplicate_key_updates_value)
+{
+    TestCache cache(10, 40, identity_cost);
+    cache.insert(1, 100);
+    BOOST_CHECK_EQUAL(cache.size(), 1);
+
+    // Re-insert same key with different value — should update cleanly
+    cache.insert(1, 200);
+    BOOST_CHECK_EQUAL(cache.size(), 1);
+    BOOST_CHECK_EQUAL(cache.l1_size(), 1);
+
+    auto *val = cache.get(1);
+    BOOST_REQUIRE(val != nullptr);
+    BOOST_CHECK_EQUAL(*val, 200);
+}
+
+BOOST_AUTO_TEST_CASE(insert_duplicate_key_in_l2_updates_value)
+{
+    TestCache cache(10, 40, identity_cost);
+    cache.insert(1, 100);
+    cache.get(1); // promote to L2
+    BOOST_CHECK_EQUAL(cache.l2_size(), 1);
+
+    // Re-insert same key while it lives in L2
+    cache.insert(1, 200);
+    BOOST_CHECK_EQUAL(cache.l2_size(), 0);
+    BOOST_CHECK_EQUAL(cache.l1_size(), 1);
+
+    auto *val = cache.get(1);
+    BOOST_REQUIRE(val != nullptr);
+    BOOST_CHECK_EQUAL(*val, 200);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
