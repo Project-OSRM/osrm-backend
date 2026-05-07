@@ -61,13 +61,13 @@ Feature: Bike - Accessability of different way types
             | runway   |      |              |              |
             | runway   | yes  | pushing bike | pushing bike |
 
-    @todo
     Scenario: Bike - Pushing bikes on ways with foot=yes in one direction
         Then routability should be
             | highway  | foot:forward | foot:backward | forw         | backw        |
             | motorway |              |               |              |              |
             | motorway | yes          |               | pushing bike |              |
             | motorway |              | yes           |              | pushing bike |
+            | motorway | yes          | yes           | pushing bike | pushing bike |
 
     @construction
     Scenario: Bike - Don't allow routing on ways still under construction

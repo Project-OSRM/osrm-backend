@@ -437,8 +437,19 @@ function WayHandlers.penalties(profile,way,result,data)
     sideroad_penalty = profile.side_road_multiplier
   end
 
-  local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
-  local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
+  local priority_forward_penalty = 1.0
+  local priority_backward_penalty = 1.0
+  if profile.priority_penalty then
+    local priority = way:get_value_by_key("priority")
+    if priority == "forward" then
+      priority_backward_penalty = profile.priority_penalty
+    elseif priority == "backward" then
+      priority_forward_penalty = profile.priority_penalty
+    end
+  end
+
+  local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, priority_forward_penalty)
+  local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, priority_backward_penalty)
 
   if profile.properties.weight_name == 'routability' then
     if result.forward_speed > 0 then

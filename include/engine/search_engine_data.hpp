@@ -2,10 +2,14 @@
 #define SEARCH_ENGINE_DATA_HPP
 
 #include "engine/algorithm.hpp"
+#include "util/browse_resistant_cache.hpp"
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
+#include <cstddef>
+#include <functional>
 #include <memory>
+#include <vector>
 
 namespace osrm::engine
 {
@@ -108,6 +112,51 @@ struct ManyToManyMultiLayerDijkstraHeapData : MultiLayerDijkstraHeapData
     }
 };
 
+struct MLDUnpackingCacheKey
+{
+    NodeID source;
+    NodeID target;
+    LevelID level;
+    CellID cell_id;
+
+    bool operator==(const MLDUnpackingCacheKey &) const = default;
+};
+
+struct MLDUnpackingCacheKeyHash
+{
+    size_t operator()(const MLDUnpackingCacheKey &k) const
+    {
+        auto h = std::hash<NodeID>{}(k.source);
+        h ^= std::hash<NodeID>{}(k.target) + 0x9e3779b9 + (h << 6) + (h >> 2);
+        h ^= std::hash<LevelID>{}(k.level) + 0x9e3779b9 + (h << 6) + (h >> 2);
+        h ^= std::hash<CellID>{}(k.cell_id) + 0x9e3779b9 + (h << 6) + (h >> 2);
+        return h;
+    }
+};
+
+struct MLDUnpackingCacheValue
+{
+    std::vector<NodeID> nodes;
+    std::vector<EdgeID> edges;
+};
+
+struct MLDUnpackingCacheCostFn
+{
+    size_t operator()(const MLDUnpackingCacheValue &v) const
+    {
+        return sizeof(MLDUnpackingCacheKey) + sizeof(MLDUnpackingCacheValue) +
+               v.nodes.capacity() * sizeof(NodeID) + v.edges.capacity() * sizeof(EdgeID) +
+               kPerEntryOverhead;
+    }
+
+    static constexpr size_t kPerEntryOverhead = 96;
+};
+
+using MLDUnpackingCache = util::BrowseResistantCache<MLDUnpackingCacheKey,
+                                                     MLDUnpackingCacheValue,
+                                                     MLDUnpackingCacheCostFn,
+                                                     MLDUnpackingCacheKeyHash>;
+
 template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
 {
     using QueryHeap = util::QueryHeap<NodeID,
@@ -130,6 +179,7 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
     using SearchEngineHeapPtr = std::unique_ptr<QueryHeap>;
     using ManyToManyHeapPtr = std::unique_ptr<ManyToManyQueryHeap>;
     using MapMatchingHeapPtr = std::unique_ptr<MapMatchingQueryHeap>;
+    using UnpackingCachePtr = std::unique_ptr<MLDUnpackingCache>;
 
     static thread_local SearchEngineHeapPtr forward_heap_1;
     static thread_local SearchEngineHeapPtr reverse_heap_1;
@@ -137,6 +187,7 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
     static thread_local MapMatchingHeapPtr map_matching_reverse_heap_1;
 
     static thread_local ManyToManyHeapPtr many_to_many_heap;
+    static thread_local UnpackingCachePtr unpacking_cache;
 
     void InitializeOrClearFirstThreadLocalStorage(unsigned number_of_nodes,
                                                   unsigned number_of_boundary_nodes);
@@ -145,6 +196,8 @@ template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
 
     void InitializeOrClearManyToManyThreadLocalStorage(unsigned number_of_nodes,
                                                        unsigned number_of_boundary_nodes);
+
+    void InitializeUnpackingCache(unsigned number_of_nodes, unsigned number_of_edges);
 };
 } // namespace osrm::engine
 
