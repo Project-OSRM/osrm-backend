@@ -27,10 +27,10 @@ function Access.resolve_access(value, profile)
     local best_priority = -1
 
     for part in value:gmatch('[^;]+') do
-        part = part:match('^%s*(.-)%s*$')
-        local priority = Access.classify_access(part, profile)
+        local trimmed = part:match('^%s*(.-)%s*$')
+        local priority = Access.classify_access(trimmed, profile)
         if priority > best_priority then
-            best = part
+            best = trimmed
             best_priority = priority
         end
     end
