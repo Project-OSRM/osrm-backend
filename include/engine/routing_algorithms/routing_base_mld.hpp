@@ -646,8 +646,7 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                         MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
                         engine_working_data.unpacking_cache->insert(
                             cache_key,
-                            {std::move(unpacked_subpath.nodes),
-                             std::move(unpacked_subpath.edges)});
+                            {std::move(unpacked_subpath.nodes), std::move(unpacked_subpath.edges)});
                     }
                 }
             }
