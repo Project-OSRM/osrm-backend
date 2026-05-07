@@ -1,6 +1,6 @@
 @routing @priority @car
 Feature: Car - Priority tag handling
-The priority tag indicates traffic priority for narrow sections of road.
+The priority tag indicates traffic right-of-way direction on a way.
 priority=forward means forward traffic has right-of-way, penalizing backward.
 priority=backward means backward traffic has right-of-way, penalizing forward.
 
@@ -15,7 +15,7 @@ priority=backward means backward traffic has right-of-way, penalizing forward.
             | primary     | 60       | forward  | 48 km/h | 48 km/h | 13.3      | 9.3        |
             | primary     | 60       | backward | 48 km/h | 48 km/h | 9.3       | 13.3       |
 
-    Scenario: Car - Priority penalty does not apply to oneways
+    Scenario: Car - Priority penalty applies to the permitted direction on oneways when it lacks priority
         Then routability should be
             | highway     | maxspeed | priority | oneway | forw    | backw   | forw_rate | backw_rate |
             | primary     | 60       | forward  | yes    | 48 km/h |         | 13.3      |            |

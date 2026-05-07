@@ -42,7 +42,7 @@ function setup()
     -- Applied to bidirectional roads to prefer roads with clear lane markings
     lane_markings_penalty     = 0.75,
 
-    -- Penalty for the non-priority direction on narrow roads with priority=forward/backward
+    -- Penalty multiplier for the non-priority direction on ways tagged priority=forward/backward
     priority_penalty          = 0.7,
 
     -- Size of the vehicle, to be limited by physical restriction of the way
