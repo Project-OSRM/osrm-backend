@@ -12,6 +12,7 @@
 #include <cstddef>
 
 #include <algorithm>
+#include <compare>
 #include <iterator>
 #include <type_traits>
 #include <utility>
@@ -94,14 +95,8 @@ template <typename DataT> class VectorViewIterator
         return it;
     }
 
-    friend bool operator==(const VectorViewIterator &a, const VectorViewIterator &b)
-    {
-        return a.m_value == b.m_value;
-    }
-    friend bool operator!=(const VectorViewIterator &a, const VectorViewIterator &b)
-    {
-        return !(a == b);
-    }
+    friend bool operator==(const VectorViewIterator &a, const VectorViewIterator &b) = default;
+    friend auto operator<=>(const VectorViewIterator &a, const VectorViewIterator &b) = default;
 
   private:
     DataT *m_value;
