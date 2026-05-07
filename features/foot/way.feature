@@ -34,7 +34,7 @@ Feature: Foot - Accessability of different way types
     Scenario: Foot - Basic access
         Then routability should be
             | highway | leisure  | forw |
-            | (nil)   | track    |   x  |
+            | (nil)   | track    |      |
 
     Scenario: Foot - Proposed ways: unbuilt proposed highways are ignored, real highways with proposed upgrade tags are routed
         Then routability should be
