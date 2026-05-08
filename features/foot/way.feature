@@ -35,6 +35,7 @@ Feature: Foot - Accessability of different way types
         Then routability should be
             | highway | leisure  | forw |
             | (nil)   | track    |      |
+            | footway | (nil)    | x    |
 
     Scenario: Foot - Proposed ways: unbuilt proposed highways are ignored, real highways with proposed upgrade tags are routed
         Then routability should be
