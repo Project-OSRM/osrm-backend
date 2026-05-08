@@ -23,8 +23,8 @@ BOOST_AUTO_TEST_CASE(least_square_regression_handles_antimeridian)
         Coordinate{FloatLongitude{179.9}, FloatLatitude{2}},
     };
 
-    const auto regression = osrm::util::coordinate_calculation::leastSquareRegression(
-        coords.begin(), coords.end());
+    const auto regression =
+        osrm::util::coordinate_calculation::leastSquareRegression(coords.begin(), coords.end());
 
     const double lon1 = static_cast<double>(toFloating(regression.first.lon));
     const double lon2 = static_cast<double>(toFloating(regression.second.lon));
@@ -43,8 +43,8 @@ BOOST_AUTO_TEST_CASE(least_square_regression_regular_case)
         Coordinate{FloatLongitude{30.0}, FloatLatitude{2}},
     };
 
-    const auto regression = osrm::util::coordinate_calculation::leastSquareRegression(
-        coords.begin(), coords.end());
+    const auto regression =
+        osrm::util::coordinate_calculation::leastSquareRegression(coords.begin(), coords.end());
 
     const double lon1 = static_cast<double>(toFloating(regression.first.lon));
     const double lon2 = static_cast<double>(toFloating(regression.second.lon));

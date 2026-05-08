@@ -7,11 +7,11 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <numeric>
 #include <optional>
 #include <utility>
 #include <vector>
-#include <functional>
 
 namespace osrm::util::coordinate_calculation
 {
@@ -163,7 +163,8 @@ inline std::pair<double, FloatCoordinate> projectPointOnSegment(const FloatCoord
         tgt_lon += 360.0;
 
     const FloatCoordinate slope_vector{FloatLongitude{tgt_lon - src_lon}, target.lat - source.lat};
-    const FloatCoordinate rel_coordinate{FloatLongitude{coord_lon - src_lon}, coordinate.lat - source.lat};
+    const FloatCoordinate rel_coordinate{FloatLongitude{coord_lon - src_lon},
+                                         coordinate.lat - source.lat};
     // dot product of two un-normed vectors
     const auto unnormed_ratio = static_cast<double>(slope_vector.lon * rel_coordinate.lon) +
                                 static_cast<double>(slope_vector.lat * rel_coordinate.lat);
@@ -188,13 +189,15 @@ inline std::pair<double, FloatCoordinate> projectPointOnSegment(const FloatCoord
     }
 
     // compute projected lon in unwrapped space, then wrap back into canonical range
-    const double projected_lon_unwrapped = (1.0 - clamped_ratio) * src_lon + clamped_ratio * tgt_lon;
+    const double projected_lon_unwrapped =
+        (1.0 - clamped_ratio) * src_lon + clamped_ratio * tgt_lon;
     const double projected_lon = wrapLongitudeDouble(projected_lon_unwrapped);
 
     return {clamped_ratio,
             {
                 FloatLongitude{projected_lon},
-                FloatLatitude{1.0 - clamped_ratio} * source.lat + target.lat * FloatLatitude{clamped_ratio},
+                FloatLatitude{1.0 - clamped_ratio} * source.lat +
+                    target.lat * FloatLatitude{clamped_ratio},
             }};
 }
 
@@ -280,13 +283,14 @@ std::pair<Coordinate, Coordinate> leastSquareRegression(const iterator_type begi
         min_lat = std::min(min_lat, lat);
         max_lat = std::max(max_lat, lat);
     }
-    // If coordinates span the antimeridian (lon span > 180°), normalize longitudes by adding 360° to
-    // negative longitudes so computations are continuous
+    // If coordinates span the antimeridian (lon span > 180°), normalize longitudes by adding 360°
+    // to negative longitudes so computations are continuous
     const bool unwrap = (max_lon - min_lon) > 180.0;
     if (unwrap)
     {
         auto orig_extract_lon = extract_lon;
-        extract_lon = [orig_extract_lon](const Coordinate coordinate) {
+        extract_lon = [orig_extract_lon](const Coordinate coordinate)
+        {
             double lon = orig_extract_lon(coordinate);
             if (lon < 0.0)
                 lon += 360.0;
