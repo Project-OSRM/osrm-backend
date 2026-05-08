@@ -440,11 +440,9 @@ function WayHandlers.penalties(profile,way,result,data)
   local priority_forward_penalty = 1.0
   local priority_backward_penalty = 1.0
   if profile.priority_penalty then
-    -- priority_penalty is applied multiplicatively to per-direction rate (speed).
-    -- A value < 1 reduces the rate for the disadvantaged direction (making it less attractive).
-    -- Note: because weight is duration / rate, reducing rate increases weight. The name
-    -- 'priority_penalty' refers to penalising the disadvantaged direction's rate; consider
-    -- renaming if the naming is confusing to users or documentation.
+    -- priority_penalty scales the disadvantaged direction's per-direction rate (speed).
+    -- A value < 1 reduces that direction's rate, which increases its routing weight
+    -- because weight is computed as duration / rate.
     local priority = way:get_value_by_key("priority")
     if priority == "forward" then
       priority_backward_penalty = profile.priority_penalty

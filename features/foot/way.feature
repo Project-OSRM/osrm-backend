@@ -31,7 +31,7 @@ Feature: Foot - Accessability of different way types
             | cycleway       |      |
             | bridleway      |      |
 
-    Scenario: Foot - Basic access
+    Scenario: Foot - Leisure track handling
         Then routability should be
             | highway | leisure  | forw |
             | (nil)   | track    |      |
