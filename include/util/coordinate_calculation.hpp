@@ -151,20 +151,16 @@ inline std::pair<double, FloatCoordinate> projectPointOnSegment(const FloatCoord
                                                                 const FloatCoordinate &target,
                                                                 const FloatCoordinate &coordinate)
 {
-    // Unwrap the target longitude so the lon difference to source is minimal (handles antimeridian)
-    const double src_lon = static_cast<double>(source.lon);
-    double tgt_lon = static_cast<double>(target.lon);
-    const double coord_lon = static_cast<double>(coordinate.lon);
+    // Standard projection of a point on a segment in the coordinate space provided.
+    // Do not perform any antimeridian-specific wrapping here — callers should
+    // normalize longitudes if needed. This keeps behaviour consistent for
+    // projected coordinates (e.g., web_mercator) used throughout the codebase.
 
-    const double dlon = tgt_lon - src_lon;
-    if (dlon > 180.0)
-        tgt_lon -= 360.0;
-    else if (dlon < -180.0)
-        tgt_lon += 360.0;
+    const FloatCoordinate slope_vector{FloatLongitude{static_cast<double>(target.lon) - static_cast<double>(source.lon)},
+                                       FloatLatitude{static_cast<double>(target.lat) - static_cast<double>(source.lat)}};
+    const FloatCoordinate rel_coordinate{FloatLongitude{static_cast<double>(coordinate.lon) - static_cast<double>(source.lon)},
+                                         FloatLatitude{static_cast<double>(coordinate.lat) - static_cast<double>(source.lat)}};
 
-    const FloatCoordinate slope_vector{FloatLongitude{tgt_lon - src_lon}, target.lat - source.lat};
-    const FloatCoordinate rel_coordinate{FloatLongitude{coord_lon - src_lon},
-                                         coordinate.lat - source.lat};
     // dot product of two un-normed vectors
     const auto unnormed_ratio = static_cast<double>(slope_vector.lon * rel_coordinate.lon) +
                                 static_cast<double>(slope_vector.lat * rel_coordinate.lat);
@@ -188,17 +184,69 @@ inline std::pair<double, FloatCoordinate> projectPointOnSegment(const FloatCoord
         clamped_ratio = 0.;
     }
 
-    // compute projected lon in unwrapped space, then wrap back into canonical range
-    const double projected_lon_unwrapped =
-        (1.0 - clamped_ratio) * src_lon + clamped_ratio * tgt_lon;
-    const double projected_lon = wrapLongitudeDouble(projected_lon_unwrapped);
+    const double projected_lon = static_cast<double>(source.lon) + clamped_ratio *
+                                 (static_cast<double>(target.lon) - static_cast<double>(source.lon));
+    const double projected_lat = static_cast<double>(source.lat) + clamped_ratio *
+                                 (static_cast<double>(target.lat) - static_cast<double>(source.lat));
 
     return {clamped_ratio,
-            {
-                FloatLongitude{projected_lon},
-                FloatLatitude{1.0 - clamped_ratio} * source.lat +
-                    target.lat * FloatLatitude{clamped_ratio},
-            }};
+            {FloatLongitude{projected_lon}, FloatLatitude{projected_lat}}};
+}
+
+// Antimeridian-aware variant: unwrap longitudes so segments crossing the antimeridian are
+// treated continuously. Callers that operate on raw WGS84 coordinates (or want explicit
+// antimeridian handling) should use this function.
+inline std::pair<double, FloatCoordinate> projectPointOnSegmentAntimeridian(
+    const FloatCoordinate &source,
+    const FloatCoordinate &target,
+    const FloatCoordinate &coordinate)
+{
+    // Unwrap the target longitude so the lon difference to source is minimal (handles antimeridian)
+    const double src_lon = static_cast<double>(source.lon);
+    double tgt_lon = static_cast<double>(target.lon);
+    const double coord_lon = static_cast<double>(coordinate.lon);
+
+    const double dlon = tgt_lon - src_lon;
+    if (dlon > 180.0)
+        tgt_lon -= 360.0;
+    else if (dlon < -180.0)
+        tgt_lon += 360.0;
+
+    const FloatCoordinate slope_vector{FloatLongitude{tgt_lon - src_lon},
+                                       FloatLatitude{static_cast<double>(target.lat) - static_cast<double>(source.lat)}};
+    const FloatCoordinate rel_coordinate{FloatLongitude{coord_lon - src_lon},
+                                         FloatLatitude{static_cast<double>(coordinate.lat) - static_cast<double>(source.lat)}};
+
+    const auto unnormed_ratio = static_cast<double>(slope_vector.lon * rel_coordinate.lon) +
+                                static_cast<double>(slope_vector.lat * rel_coordinate.lat);
+    const auto squared_length = static_cast<double>(slope_vector.lon * slope_vector.lon) +
+                                static_cast<double>(slope_vector.lat * slope_vector.lat);
+
+    if (squared_length < std::numeric_limits<double>::epsilon())
+    {
+        return {0, source};
+    }
+
+    const double normed_ratio = unnormed_ratio / squared_length;
+    double clamped_ratio = normed_ratio;
+    if (clamped_ratio > 1.)
+    {
+        clamped_ratio = 1.;
+    }
+    else if (clamped_ratio < 0.)
+    {
+        clamped_ratio = 0.;
+    }
+
+    // compute projected lon in unwrapped space, then wrap back into canonical range
+    const double projected_lon_unwrapped = (1.0 - clamped_ratio) * src_lon + clamped_ratio * tgt_lon;
+    const double projected_lon = wrapLongitudeDouble(projected_lon_unwrapped);
+
+    const double projected_lat = static_cast<double>(source.lat) + clamped_ratio *
+                                 (static_cast<double>(target.lat) - static_cast<double>(source.lat));
+
+    return {clamped_ratio,
+            {FloatLongitude{projected_lon}, FloatLatitude{projected_lat}}};
 }
 
 template <class BinaryOperation, typename iterator_type>

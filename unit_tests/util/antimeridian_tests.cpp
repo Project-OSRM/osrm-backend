@@ -14,7 +14,7 @@ BOOST_AUTO_TEST_CASE(project_point_on_segment_crossing_antimeridian)
     FloatCoordinate target{FloatLongitude{-179.5}, FloatLatitude{0}};
     FloatCoordinate query{FloatLongitude{180.0}, FloatLatitude{0}}; // midpoint over antimeridian
 
-    auto [ratio, projected] = coordinate_calculation::projectPointOnSegment(source, target, query);
+    auto [ratio, projected] = coordinate_calculation::projectPointOnSegmentAntimeridian(source, target, query);
 
     // Expect the projected point to be near lon 180 / -180 (wrapped) and ratio around 0.5
     BOOST_CHECK_CLOSE(ratio, 0.5, 1.0); // 1% tolerance
