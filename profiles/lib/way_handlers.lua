@@ -440,6 +440,11 @@ function WayHandlers.penalties(profile,way,result,data)
   local priority_forward_penalty = 1.0
   local priority_backward_penalty = 1.0
   if profile.priority_penalty then
+    -- priority_penalty is applied multiplicatively to per-direction rate (speed).
+    -- A value < 1 reduces the rate for the disadvantaged direction (making it less attractive).
+    -- Note: because weight is duration / rate, reducing rate increases weight. The name
+    -- 'priority_penalty' refers to penalising the disadvantaged direction's rate; consider
+    -- renaming if the naming is confusing to users or documentation.
     local priority = way:get_value_by_key("priority")
     if priority == "forward" then
       priority_backward_penalty = profile.priority_penalty
@@ -459,7 +464,12 @@ function WayHandlers.penalties(profile,way,result,data)
       result.backward_rate = (result.backward_speed * backward_penalty) / 3.6
     end
     if result.duration > 0 then
-      result.weight = result.duration / forward_penalty
+      -- Only set a bidirectional weight when penalties are equal.
+      -- When forward/backward penalties differ (directional penalty), avoid setting result.weight,
+      -- so the extractor uses per-direction rates (forward_rate/backward_rate) to compute weights.
+      if forward_penalty == backward_penalty then
+        result.weight = result.duration / forward_penalty
+      end
     end
   end
 end
