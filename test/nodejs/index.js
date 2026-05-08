@@ -9,6 +9,7 @@ import './match.js';
 import './tile.js';
 import './table.js';
 import './nearest.js';
+import './isochrone.js';
 
 test('constructor: throws if new keyword is not used', (assert) => {
   assert.plan(1);

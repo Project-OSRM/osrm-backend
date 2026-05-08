@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2017, Project OSRM contributors
+Copyright (c) 2016, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,36 +25,14 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_FWD_HPP
-#define OSRM_FWD_HPP
+#ifndef GLOBAL_ISOCHRONE_PARAMETERS_HPP
+#define GLOBAL_ISOCHRONE_PARAMETERS_HPP
 
-// OSRM API forward declarations for usage in interfaces. Exposes forward declarations for:
-// osrm::util::json::Object, osrm::engine::api::XParameters
+#include "engine/api/isochrone_parameters.hpp"
 
 namespace osrm
 {
-
-namespace util::json
-{
-struct Object;
-} // namespace util::json
-
-namespace engine
-{
-namespace api
-{
-struct RouteParameters;
-struct TableParameters;
-struct NearestParameters;
-struct TripParameters;
-struct MatchParameters;
-struct TileParameters;
-struct IsochroneParameters;
-} // namespace api
-
-class EngineInterface;
-struct EngineConfig;
-} // namespace engine
-} // namespace osrm
+using engine::api::IsochroneParameters;
+}
 
 #endif

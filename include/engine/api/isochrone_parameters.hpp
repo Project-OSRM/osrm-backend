@@ -1,6 +1,6 @@
 /*
 
-Copyright (c) 2017, Project OSRM contributors
+Copyright (c) 2016, Project OSRM contributors
 All rights reserved.
 
 Redistribution and use in source and binary forms, with or without modification,
@@ -25,36 +25,37 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 */
 
-#ifndef OSRM_FWD_HPP
-#define OSRM_FWD_HPP
+#ifndef ENGINE_API_ISOCHRONE_PARAMETERS_HPP
+#define ENGINE_API_ISOCHRONE_PARAMETERS_HPP
 
-// OSRM API forward declarations for usage in interfaces. Exposes forward declarations for:
-// osrm::util::json::Object, osrm::engine::api::XParameters
+#include "engine/api/base_parameters.hpp"
 
 namespace osrm
 {
-
-namespace util::json
-{
-struct Object;
-} // namespace util::json
-
 namespace engine
 {
 namespace api
 {
-struct RouteParameters;
-struct TableParameters;
-struct NearestParameters;
-struct TripParameters;
-struct MatchParameters;
-struct TileParameters;
-struct IsochroneParameters;
-} // namespace api
 
-class EngineInterface;
-struct EngineConfig;
-} // namespace engine
-} // namespace osrm
+/**
+ * Parameters specific to the OSRM Tile service.
+ *
+ * Holds member attributes:
+ *  - lon: centerpoint
+ *  - lat: centerpoint
+ *  - range: distance to travel
+ *
+ * \see OSRM, Coordinate, Hint, Bearing, RouteParame, RouteParameters, TableParameters,
+ *      NearestParameters, TripParameters, MatchParameters and TileParameters
+ */
+struct IsochroneParameters : public BaseParameters
+{
+    unsigned range = 300;
+
+    bool IsValid() const { return BaseParameters::IsValid() && range >= 1; }
+};
+}
+}
+}
 
 #endif
