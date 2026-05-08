@@ -171,3 +171,8 @@ if(MSVC)
 
   message(STATUS "MSVC warning configuration applied - suppressed informational warnings, kept bug-indicating warnings")
 endif()
+
+if(APPLE)
+  no_warning(unused-command-line-argument)
+  message(STATUS "Apple Clang detected - disabled unused-command-line-argument warning")
+endif()
