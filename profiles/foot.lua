@@ -113,10 +113,6 @@ function setup()
 
       man_made = {
         pier            = walking_speed
-      },
-
-      leisure = {
-        track           = walking_speed
       }
     },
 
@@ -225,7 +221,6 @@ function process_way(profile, way, result)
     highway = way:get_value_by_key('highway'),
     bridge = way:get_value_by_key('bridge'),
     route = way:get_value_by_key('route'),
-    leisure = way:get_value_by_key('leisure'),
     man_made = way:get_value_by_key('man_made'),
     railway = way:get_value_by_key('railway'),
     platform = way:get_value_by_key('platform'),
