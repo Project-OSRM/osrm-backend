@@ -43,6 +43,13 @@ function setup()
     -- Applied to bidirectional roads to prefer roads with clear lane markings
     lane_markings_penalty     = 0.75,
 
+    -- Penalty multiplier for the disadvantaged direction on ways tagged 'priority=forward'/'priority=backward'.
+    -- Applies to the per-direction rate (speed). A value < 1 reduces the disadvantaged
+    -- direction's rate which increases its routing weight (weight ≈ duration / rate).
+    -- This is applied to any way with a 'priority' tag; add an explicit width/lanes
+    -- guard if the penalty should only target narrow or single-lane roads.
+    priority_penalty          = 0.7,
+
     -- Size of the vehicle, to be limited by physical restriction of the way
     vehicle_height = 2.0, -- in meters, 2.0m is the height slightly above biggest SUVs
     vehicle_width = 1.9, -- in meters, ways with narrow tag are considered narrower than 2.2m
