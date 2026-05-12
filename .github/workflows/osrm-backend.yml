@@ -34,7 +34,7 @@ jobs:
     needs: format-taginfo-docs
     strategy:
       matrix:
-        os: [windows-2025]
+        os: [windows-2025-vs2026]
     runs-on: ${{ matrix.os }}
     if: github.repository == 'Project-OSRM/osrm-backend'
     continue-on-error: false
