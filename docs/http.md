@@ -700,7 +700,7 @@ Annotation of the whole route leg with fine-grained information about each segme
 - `distance`: The distance, in meters, between each pair of coordinates
 - `duration`: The duration between each pair of coordinates, in seconds.  Does not include the duration of any turns.
 - `datasources`: The index of the data source for the speed between each pair of coordinates. `0` is the default profile, other values are supplied via `--segment-speed-file` to `osrm-contract` or `osrm-customize`.  String-like names are in the `metadata.datasource_names` array.
-- `nodes`: The OSM node ID for each coordinate along the route, excluding the first/last user-supplied coordinates
+- `nodes`: Array of OpenStreetMap node ids for each coordinate along the route (excluding the first/last user-supplied coordinates). Each id is a 64-bit unsigned integer (encoded as a JSON number for the `json` format, and as `ulong` for the `flatbuffers` format). Clients consuming flatbuffers should treat these values as 64-bit integers (JS bindings expose them as BigInt).
 - `weight`: The weights between each pair of coordinates.  Does not include any turn costs.
 - `speed`: Convenience field, calculation of `distance / duration` rounded to one decimal place
 - `metadata`: Metadata related to other annotations
@@ -1094,7 +1094,7 @@ Almost the same as `json` StepManeuver object. The following properties differ:
 
 ### Annotation object
 
-Exactly the same as `json` annotation object.
+Almost the same as the `json` annotation object. Note: on the flatbuffers wire the `Annotation.nodes` field is a `[ulong]` (64-bit unsigned integers), and the generated JavaScript flatbuffers bindings will expose these values as BigInt / BigUint64Array. Clients that consume flatbuffers should handle 64-bit node ids accordingly.
 
 
 ### Position object
