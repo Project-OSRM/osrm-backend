@@ -7,6 +7,7 @@
 #include "engine/api/table_parameters.hpp"
 #include "engine/api/tile_parameters.hpp"
 #include "engine/api/trip_parameters.hpp"
+#include "engine/concepts.hpp"
 #include "engine/datafacade_provider.hpp"
 #include "engine/engine_config.hpp"
 #include "engine/plugins/match.hpp"
@@ -16,7 +17,6 @@
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
 #include "engine/routing_algorithms.hpp"
-#include "engine/concepts.hpp"
 #include "engine/status.hpp"
 
 #include "util/json_container.hpp"
