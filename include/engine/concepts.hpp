@@ -3,7 +3,6 @@
 
 #include "engine/algorithm.hpp"
 #include <concepts>
-#include <type_traits>
 
 namespace osrm::engine::routing_algorithms
 {

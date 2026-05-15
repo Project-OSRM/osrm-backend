@@ -16,6 +16,7 @@
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
 #include "engine/routing_algorithms.hpp"
+#include "engine/concepts.hpp"
 #include "engine/status.hpp"
 
 #include "util/json_container.hpp"
