@@ -66,6 +66,8 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
 {
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes(),
                                                                  facade.GetMaxBorderNodeID() + 1);
+    engine_working_data.InitializeUnpackingCache(facade.GetNumberOfNodes(),
+                                                 facade.GetNumberOfEdges());
     auto &forward_heap = *engine_working_data.forward_heap_1;
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
     insertNodesInHeaps(forward_heap, reverse_heap, endpoint_candidates);
