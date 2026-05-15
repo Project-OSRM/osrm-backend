@@ -355,10 +355,18 @@ class FileWriter
         archive_entry_free(ae);
         detail::checkArchiveError(a, ret, path, name);
 
-        auto written = archive_write_data(a, reinterpret_cast<const char *>(data), number_of_bytes);
-        if (written < 0 || static_cast<std::size_t>(written) != number_of_bytes)
+        const char *data_ptr = reinterpret_cast<const char *>(data);
+        std::size_t remaining = number_of_bytes;
+        while (remaining > 0)
         {
-            detail::checkArchiveError(a, ARCHIVE_FATAL, path, name);
+            const auto written = archive_write_data(a, data_ptr, remaining);
+            if (written <= 0 || static_cast<std::size_t>(written) > remaining)
+            {
+                detail::checkArchiveError(a, ARCHIVE_FATAL, path, name);
+            }
+
+            data_ptr += written;
+            remaining -= static_cast<std::size_t>(written);
         }
     }
 
