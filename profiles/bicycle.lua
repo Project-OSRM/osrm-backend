@@ -559,17 +559,15 @@ function bike_push_handler(profile,way,result,data)
           if not data.implied_oneway then
             push_backward_speed = profile.walking_speed
           end
+        elseif data.foot_forward == 'yes' then
+          push_forward_speed = profile.walking_speed
+        elseif data.foot_backward == 'yes' then
+          push_backward_speed = profile.walking_speed
         elseif data.way_type_allows_pushing then
           push_forward_speed = profile.walking_speed
           if not data.implied_oneway then
             push_backward_speed = profile.walking_speed
           end
-        end
-        if data.foot_forward == 'yes' then
-          push_forward_speed = profile.walking_speed
-        end
-        if data.foot_backward == 'yes' then
-          push_backward_speed = profile.walking_speed
         end
       end
 
