@@ -42,7 +42,11 @@ function setup()
     -- Applied to bidirectional roads to prefer roads with clear lane markings
     lane_markings_penalty     = 0.75,
 
-    -- Penalty multiplier for the non-priority direction on roads tagged with priority=forward/backward
+    -- Penalty multiplier for the disadvantaged direction on ways tagged 'priority=forward'/'priority=backward'.
+    -- Applies to the per-direction rate (speed). A value < 1 reduces the disadvantaged
+    -- direction's rate which increases its routing weight (weight ≈ duration / rate).
+    -- This is applied to any way with a 'priority' tag; add an explicit width/lanes
+    -- guard if the penalty should only target narrow or single-lane roads.
     priority_penalty          = 0.7,
 
     -- Size of the vehicle, to be limited by physical restriction of the way
