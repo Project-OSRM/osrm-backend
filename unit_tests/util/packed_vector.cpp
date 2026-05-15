@@ -231,7 +231,8 @@ BOOST_AUTO_TEST_CASE(packed_osm_ids_above_2pow34_roundtrip)
 
     for (std::size_t i = 0; i < inputs.size(); ++i)
     {
-        BOOST_CHECK_EQUAL(static_cast<std::uint64_t>(ids[i]), inputs[i]);
+        const auto id_val = ids[i];
+        BOOST_CHECK_EQUAL(static_cast<std::uint64_t>(id_val), inputs[i]);
     }
 }
 
