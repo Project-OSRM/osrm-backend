@@ -15,10 +15,13 @@ struct Algorithm final
 };
 } // namespace routing_algorithms::offline
 
-// Mark offline::Algorithm as a supported routing algorithm so it satisfies the RoutingAlgorithm concept
+// Mark offline::Algorithm as a supported routing algorithm so it satisfies the RoutingAlgorithm
+// concept
 namespace routing_algorithms
 {
-template <> struct IsRoutingAlgorithm<offline::Algorithm> final : std::true_type {};
+template <> struct IsRoutingAlgorithm<offline::Algorithm> final : std::true_type
+{
+};
 } // namespace routing_algorithms
 
 // Define engine data for offline data facade
