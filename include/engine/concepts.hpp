@@ -54,7 +54,7 @@ concept RoutingAlgorithm = requires {
     { SupportsDistanceAnnotationType<T>::value } -> std::convertible_to<bool>;
     { HasGetTileTurns<T>::value } -> std::convertible_to<bool>;
     { HasExcludeFlags<T>::value } -> std::convertible_to<bool>;
-};
+} && IsRoutingAlgorithm<T>::value;
 
 } // namespace osrm::engine::routing_algorithms
 
