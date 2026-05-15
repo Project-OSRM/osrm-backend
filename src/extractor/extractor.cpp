@@ -632,6 +632,7 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         const auto &current_node = extraction_containers.used_nodes[index];
         osm_coordinates[index].lon = current_node.lon;
         osm_coordinates[index].lat = current_node.lat;
+        checkPackedOSMNodeIdFits(current_node.node_id);
         osm_node_ids.push_back(current_node.node_id);
     }
 

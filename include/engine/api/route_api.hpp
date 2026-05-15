@@ -522,7 +522,7 @@ class RouteAPI : public BaseAPI
                                                    [](const guidance::LegGeometry::Annotation &anno)
                                                    { return anno.datasource; });
         }
-        std::vector<uint32_t> nodes;
+        std::vector<uint64_t> nodes;
         if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
         {
             nodes.reserve(leg_geometry.node_ids.size());
