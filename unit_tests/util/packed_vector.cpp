@@ -215,13 +215,13 @@ BOOST_AUTO_TEST_CASE(packed_osm_ids_above_2pow34_roundtrip)
     const std::vector<std::uint64_t> inputs = {
         0ull,
         1ull,
-        (1ull << 33),                                          // 2^33
-        (1ull << 34),                                          // 2^34, the old truncation boundary
-        (1ull << 34) + 1,                                      // just above 2^34
-        20'000'000'000ull,                                     // realistic projected OSM node ID
-        (1ull << 35),                                          // 2^35
-        osrm::extractor::MAX_PACKED_OSM_NODE_ID - 1,           // just below the new limit
-        osrm::extractor::MAX_PACKED_OSM_NODE_ID,               // exactly at the new limit
+        (1ull << 33),                                // 2^33
+        (1ull << 34),                                // 2^34, the old truncation boundary
+        (1ull << 34) + 1,                            // just above 2^34
+        20'000'000'000ull,                           // realistic projected OSM node ID
+        (1ull << 35),                                // 2^35
+        osrm::extractor::MAX_PACKED_OSM_NODE_ID - 1, // just below the new limit
+        osrm::extractor::MAX_PACKED_OSM_NODE_ID,     // exactly at the new limit
     };
 
     for (auto raw : inputs)
