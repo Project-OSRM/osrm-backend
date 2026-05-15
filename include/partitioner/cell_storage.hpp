@@ -89,20 +89,14 @@ template <storage::Ownership Ownership> class CellStorageImpl
         // Possibly replace with
         // http://www.boost.org/doc/libs/1_55_0/libs/range/doc/html/range/reference/adaptors/reference/strided.html
 
-        template <typename ValuePtrT>
-        class ColumnIterator : public boost::iterator_facade<ColumnIterator<ValuePtrT>,
-                                                             decltype(*std::declval<ValuePtrT>()),
-                                                             boost::random_access_traversal_tag>
+        template <typename ValuePtrT> class ColumnIterator
         {
-
             using ValueT = decltype(*std::declval<ValuePtrT>());
-            using base_t = boost::
-                iterator_facade<ColumnIterator<ValueT>, ValueT, boost::random_access_traversal_tag>;
 
           public:
-            using value_type = typename base_t::value_type;
-            using difference_type = typename base_t::difference_type;
-            using reference = typename base_t::reference;
+            using value_type = ValueT;
+            using difference_type = std::ptrdiff_t;
+            using reference = ValueT &;
             using iterator_category = std::random_access_iterator_tag;
 
             explicit ColumnIterator() : current(nullptr), stride(1) {}
@@ -113,18 +107,58 @@ template <storage::Ownership Ownership> class CellStorageImpl
                 BOOST_ASSERT(begin != nullptr);
             }
 
-          private:
-            void increment() { current += stride; }
-            void decrement() { current -= stride; }
-            void advance(difference_type offset) { current += stride * offset; }
-            bool equal(const ColumnIterator &other) const { return current == other.current; }
-            reference dereference() const { return *current; }
-            difference_type distance_to(const ColumnIterator &other) const
+            ColumnIterator &operator+=(difference_type n)
             {
-                return (other.current - current) / static_cast<std::intptr_t>(stride);
+                current += stride * n;
+                return *this;
+            }
+            ColumnIterator &operator-=(difference_type n)
+            {
+                current -= stride * n;
+                return *this;
             }
 
-            friend class ::boost::iterator_core_access;
+            ColumnIterator &operator++()
+            {
+                current += stride;
+                return *this;
+            }
+            ColumnIterator operator++(int)
+            {
+                auto tmp = *this;
+                ++*this;
+                return tmp;
+            }
+
+            ColumnIterator &operator--()
+            {
+                current -= stride;
+                return *this;
+            }
+            ColumnIterator operator--(int)
+            {
+                auto tmp = *this;
+                --*this;
+                return tmp;
+            }
+
+            reference operator*() const { return *current; }
+
+            friend difference_type operator-(const ColumnIterator &a, const ColumnIterator &b)
+            {
+                return (a.current - b.current) / static_cast<std::intptr_t>(a.stride);
+            }
+
+            friend bool operator==(const ColumnIterator &a, const ColumnIterator &b)
+            {
+                return a.current == b.current;
+            }
+            friend bool operator!=(const ColumnIterator &a, const ColumnIterator &b)
+            {
+                return !(a == b);
+            }
+
+          private:
             ValuePtrT current;
             std::size_t stride;
         };

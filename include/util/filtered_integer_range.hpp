@@ -1,55 +1,55 @@
 #ifndef FILTERED_INTEGER_RANGE_HPP
 #define FILTERED_INTEGER_RANGE_HPP
 
-#include <boost/iterator/iterator_facade.hpp>
-
+#include <cstddef>
+#include <iterator>
 #include <type_traits>
 
 namespace osrm::util
 {
 
-// This implements a single-pass integer range.
-// We need our own implementation here because using boost::adaptor::filtered() has
-// the problem that the return-type depends on the lambda-type you pass into the function.
-// That makes it unsuitable to use in interface where we would expect all filtered ranges
-// to be off the same type.
-
-template <typename Integer, typename Filter>
-class filtered_integer_iterator
-    : public boost::iterator_facade<filtered_integer_iterator<Integer, Filter>,
-                                    Integer,
-                                    boost::single_pass_traversal_tag,
-                                    Integer>
+template <typename Integer, typename Filter> class filtered_integer_iterator
 {
-    using base_t = boost::iterator_facade<filtered_integer_iterator<Integer, Filter>,
-                                          Integer,
-                                          boost::single_pass_traversal_tag,
-                                          Integer>;
-
   public:
-    using value_type = typename base_t::value_type;
-    using difference_type = typename base_t::difference_type;
-    using reference = typename base_t::reference;
-    using iterator_category = std::random_access_iterator_tag;
+    using value_type = Integer;
+    using difference_type = std::ptrdiff_t;
+    using reference = value_type;
+    using iterator_category = std::input_iterator_tag;
 
-    filtered_integer_iterator() : value(), filter(nullptr) {}
+    filtered_integer_iterator() : value(), end_value(), filter(nullptr) {}
     explicit filtered_integer_iterator(value_type x, value_type end_value, const Filter *filter)
         : value(x), end_value(end_value), filter(filter)
     {
     }
 
-  private:
-    void increment()
+    reference operator*() const { return value; }
+
+    filtered_integer_iterator &operator++()
     {
         do
         {
             ++value;
         } while (value < end_value && !(*filter)[value]);
+        return *this;
     }
-    bool equal(const filtered_integer_iterator &other) const { return value == other.value; }
-    reference dereference() const { return value; }
 
-    friend class ::boost::iterator_core_access;
+    filtered_integer_iterator operator++(int)
+    {
+        auto tmp = *this;
+        ++*this;
+        return tmp;
+    }
+
+    friend bool operator==(const filtered_integer_iterator &a, const filtered_integer_iterator &b)
+    {
+        return a.value == b.value;
+    }
+    friend bool operator!=(const filtered_integer_iterator &a, const filtered_integer_iterator &b)
+    {
+        return !(a == b);
+    }
+
+  private:
     value_type value;
     value_type end_value;
     const Filter *filter;
@@ -79,7 +79,6 @@ template <typename Integer, typename Filter> class filtered_range
     iterator last;
 };
 
-// convenience function to construct an integer range with type deduction
 template <typename Integer, typename Filter>
 filtered_range<Integer, Filter> filtered_irange(
     const Integer first,
@@ -89,6 +88,7 @@ filtered_range<Integer, Filter> filtered_irange(
 {
     return filtered_range<Integer, Filter>(first, last, filter);
 }
+
 } // namespace osrm::util
 
-#endif // INTEGER_RANGE_HPP
+#endif // FILTERED_INTEGER_RANGE_HPP
