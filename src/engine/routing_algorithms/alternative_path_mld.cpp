@@ -792,6 +792,8 @@ InternalManyRoutesResult alternativePathSearch(SearchEngineData<Algorithm> &sear
     // Prepare heaps for usage below. The searches will modify them in-place.
     search_engine_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes(),
                                                                 facade.GetMaxBorderNodeID() + 1);
+    search_engine_data.InitializeUnpackingCache(facade.GetNumberOfNodes(),
+                                                facade.GetNumberOfEdges());
 
     Heap &forward_heap = *search_engine_data.forward_heap_1;
     Heap &reverse_heap = *search_engine_data.reverse_heap_1;
