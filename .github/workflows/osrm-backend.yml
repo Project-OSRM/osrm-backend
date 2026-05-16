@@ -713,7 +713,7 @@ jobs:
         if: steps.changes.outputs.python_cpp == 'true'
         with:
           python-version: '3.12'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@v8
         if: steps.changes.outputs.python_cpp == 'true'
         with:
           name: wheel-linux-stub-check
