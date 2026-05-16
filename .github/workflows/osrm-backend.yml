@@ -128,7 +128,7 @@ jobs:
         # exported by lukka/run-vcpkg above and inherited by cibuildwheel.
       - name: Upload Windows wheel
         if: startsWith(github.ref, 'refs/tags/v')
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-windows
           path: dist/*.whl
@@ -609,7 +609,7 @@ jobs:
           npm run nodejs-tests
 
       - name: Upload test logs
-        uses: actions/upload-artifact@v6
+        uses: actions/upload-artifact@v7
         if: failure()
         with:
           name: logs
@@ -669,7 +669,7 @@ jobs:
 
       - name: Upload wheels and sdist
         if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheels-${{ matrix.name }}
           path: |
@@ -679,7 +679,7 @@ jobs:
 
       - name: Upload Linux wheel for stub check
         if: ${{ env.BUILD_BINDINGS && runner.os == 'Linux' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: wheel-linux-stub-check
           path: dist/*.whl
