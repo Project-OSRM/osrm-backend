@@ -174,6 +174,13 @@ class ObstacleMap
     // inexpensive general test
     bool any(NodeID to) const { return obstacles.contains(to); }
 
+    // is there any obstacle of type 'type' at node 'to' (from any direction)?
+    // 'type' can be a bitwise-or combination of Obstacle::Type
+    bool any(NodeID to, Obstacle::Type type) const
+    {
+        return any(to) && !get(SPECIAL_NODEID, to, type).empty();
+    }
+
     // is there any obstacle of type 'type' at node 'to' when coming from node 'from'?
     // pass SPECIAL_NODEID as 'from' to query all obstacles at 'to'
     // 'type' can be a bitwise-or combination of Obstacle::Type

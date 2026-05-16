@@ -82,6 +82,7 @@ struct ExtractionTurn
                    int number_of_roads,
                    bool is_u_turn,
                    bool has_traffic_light,
+                   bool has_turning_facility,
                    bool is_left_hand_driving,
 
                    bool source_restricted,
@@ -112,7 +113,8 @@ struct ExtractionTurn
                    const NodeID via,
                    const NodeID to)
         : angle(180. - angle), number_of_roads(number_of_roads), is_u_turn(is_u_turn),
-          has_traffic_light(has_traffic_light), is_left_hand_driving(is_left_hand_driving),
+          has_traffic_light(has_traffic_light), has_turning_facility(has_turning_facility),
+          is_left_hand_driving(is_left_hand_driving),
 
           source_restricted(source_restricted), source_mode(source_mode),
           source_is_motorway(source_is_motorway), source_is_link(source_is_link),
@@ -146,11 +148,13 @@ struct ExtractionTurn
                    const ExtractionTurnLeg::EdgeData &target_edge,
                    const std::vector<ExtractionTurnLeg> &roads_on_the_right,
                    const std::vector<ExtractionTurnLeg> &roads_on_the_left,
-                   const bool has_traffic_light)
+                   const bool has_traffic_light,
+                   const bool has_turning_facility)
         : ExtractionTurn{0,
                          2,
                          false,
                          has_traffic_light,
+                         has_turning_facility,
                          false,
                          // source
                          false,
@@ -187,6 +191,7 @@ struct ExtractionTurn
     const int number_of_roads;
     const bool is_u_turn;
     const bool has_traffic_light;
+    const bool has_turning_facility;
     const bool is_left_hand_driving;
 
     // source info

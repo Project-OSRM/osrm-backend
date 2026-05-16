@@ -8,7 +8,7 @@ import { When } from '@cucumber/cucumber';
 
 When(/^I request nearest I should get$/, async function (table) {
   await this.reprocessAndLoadData();
-  const testRow = function (row, ri) {
+  const testRow = function (row, _ri) {
     return new Promise((resolve, reject) => {
       const inNode = this.findNodeByName(row.in);
       if (!inNode) return reject(new Error(util.format('*** unknown in-node "%s"', row.in)));
@@ -79,7 +79,7 @@ When(/^I request nearest I should get$/, async function (table) {
 
 When(/^I request nearest with flatbuffers I should get$/, async function (table) {
   await this.reprocessAndLoadData();
-  const testRow = function (row, ri) {
+  const testRow = function (row, _ri) {
     return new Promise((resolve, reject) => {
       const inNode = this.findNodeByName(row.in);
       if (!inNode) return reject(new Error(util.format('*** unknown in-node "%s"', row.in)));
