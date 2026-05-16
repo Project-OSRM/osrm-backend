@@ -119,7 +119,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run CIBuildWheel
         if: github.event_name != 'pull_request'
-        uses: pypa/cibuildwheel@v3.4.0
+        uses: pypa/cibuildwheel@v3.4.1
         with:
           output-dir: dist
         # The wheel-build CMAKE_ARGS (vcpkg toolchain + triplet) and the
