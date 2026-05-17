@@ -40,6 +40,7 @@ jobs:
     continue-on-error: false
     env:
       BUILD_TYPE: Release
+      CXXFLAGS: "/Zm256 /MP2"
     steps:
       - uses: actions/checkout@v6
       - run: cmake --version
@@ -82,25 +83,22 @@ jobs:
         run: |
           cmake --preset ci-windows -DENABLE_NODE_BINDINGS=ON
           cmake --build --preset ci-windows
+      - name: Run tests
+        shell: bash
+        run: |
+          cd build
+          cmake --build . --config Release --target tests
+      - name: Run node tests
+        shell: bash
+        run: |
+          ./lib/binding_napi_v8/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
 
-      # TODO: MSVC goes out of memory when building our tests
-      # - name: Run tests
-      #   shell: bash
-      #   run: |
-      #     cd build
-      #     cmake --build . --config Release --target tests
-      #     # TODO: run tests
-      # - name: Run node tests
-      #   shell: bash
-      #   run: |
-      #     ./lib/binding_napi_v8/osrm-extract.exe -p profiles/car.lua test/data/monaco.osm.pbf
+          mkdir -p test/data/ch
+          cp test/data/monaco.osrm* test/data/ch/
+          ./lib/binding_napi_v8/osrm-contract.exe test/data/ch/monaco.osrm
 
-      #     mkdir -p test/data/ch
-      #     cp test/data/monaco.osrm* test/data/ch/
-      #     ./lib/binding_napi_v8/osrm-contract.exe test/data/ch/monaco.osrm
-
-      #     ./lib/binding_napi_v8/osrm-datastore.exe test/data/ch/monaco.osrm
-      #     node test/nodejs/index.js
+          ./lib/binding_napi_v8/osrm-datastore.exe test/data/ch/monaco.osrm
+          node test/nodejs/index.js
       - name: Build Node package
         shell: bash
         run: ./scripts/ci/node_package.sh
