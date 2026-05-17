@@ -16,23 +16,11 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
 
-list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_SOURCE_DIR}/cmake")
-
-if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-  message(STATUS "Building on a 64 bit system")
-else()
-  message(STATUS "Building on a 32 bit system")
-endif()
-
-find_package(Boost REQUIRED CONFIG COMPONENTS date_time iostreams thread)
-
-link_directories(${LibOSRM_LIBRARY_DIRS})
-add_executable(osrm-example example.cpp)
-
+# find_package(LibOSRM) resolves via the CMake Config package installed
+# at <prefix>/lib/cmake/LibOSRM/ (LibOSRMConfig.cmake). That package
+# re-declares Boost / TBB / Threads / ZLIB as find_dependency() calls,
+# so consumers do not have to call find_package() for them by hand.
 find_package(LibOSRM REQUIRED)
 
-set(LibOSRM_LINKABLE_LIBRARIES ${LibOSRM_LIBRARIES} ${LibOSRM_DEPENDENT_LIBRARIES})
-list(REMOVE_DUPLICATES LibOSRM_LINKABLE_LIBRARIES)
-target_link_libraries(osrm-example ${LibOSRM_LINKABLE_LIBRARIES})
-include_directories(SYSTEM ${LibOSRM_INCLUDE_DIRS})
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${LibOSRM_CXXFLAGS}")
+add_executable(osrm-example example.cpp)
+target_link_libraries(osrm-example PRIVATE osrm::osrm)
