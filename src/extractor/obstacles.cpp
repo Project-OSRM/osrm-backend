@@ -147,7 +147,7 @@ void ObstacleMap::compress(NodeID node1, NodeID delendus, NodeID node2)
         const auto &[begin, end] = obstacles.equal_range(last);
         for (auto i = begin; i != end; ++i)
         {
-            auto &[from, to, obstacle] = i->second;
+            auto &[from, obstacle] = i->second;
             if (from == delendus)
                 from = first;
         }

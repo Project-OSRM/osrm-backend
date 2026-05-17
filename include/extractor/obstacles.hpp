@@ -122,7 +122,7 @@ class ObstacleMap
     using WayNodeIDOffsets = std::vector<size_t>;
 
     using OsmFromToObstacle = std::tuple<OSMNodeID, OSMNodeID, Obstacle>;
-    using FromToObstacle = std::tuple<NodeID, NodeID, Obstacle>;
+    using FromToObstacle = std::pair<NodeID, Obstacle>;
 
   public:
     ObstacleMap() = default;
@@ -141,7 +141,7 @@ class ObstacleMap
     // Convenient for testing.
     void emplace(NodeID from, NodeID to, const Obstacle &obstacle)
     {
-        obstacles.emplace(to, std::make_tuple(from, to, obstacle));
+        obstacles.emplace(to, std::make_pair(from, obstacle));
     };
 
     // get all obstacles at node 'to' when coming from node 'from'
@@ -155,7 +155,7 @@ class ObstacleMap
         auto [begin, end] = obstacles.equal_range(to);
         for (auto &[key, value] : std::ranges::subrange(begin, end))
         {
-            auto &[from_id, to_id, obstacle] = value;
+            auto &[from_id, obstacle] = value;
             if ((from_id == SPECIAL_NODEID || from_id == from) &&
                 (static_cast<uint16_t>(obstacle.type) & static_cast<uint16_t>(type)))
             {
