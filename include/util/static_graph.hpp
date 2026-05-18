@@ -98,8 +98,7 @@ template <typename EdgeDataT> struct SortableEdgeWithData : SortableEdgeWithData
     }
 };
 
-template <typename EntryT, typename OtherEdge>
-EntryT edgeToEntry(const OtherEdge &from)
+template <typename EntryT, typename OtherEdge> EntryT edgeToEntry(const OtherEdge &from)
 {
     if constexpr (traits::HasDataMember<EntryT>)
         return EntryT{from.target, from.data};
@@ -304,9 +303,7 @@ class StaticGraph
                        end,
                        edge_array.begin(),
                        [](const auto &from)
-                       {
-                           return static_graph_details::edgeToEntry<EdgeArrayEntry>(from);
-                       });
+                       { return static_graph_details::edgeToEntry<EdgeArrayEntry>(from); });
     }
 
   protected:
