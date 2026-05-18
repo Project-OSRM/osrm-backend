@@ -10,6 +10,7 @@
 #include <archive.h>
 #include <archive_entry.h>
 
+#include <cstdint>
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
@@ -21,6 +22,15 @@ namespace osrm::storage::tar
 {
 namespace detail
 {
+inline int fseek64(std::FILE *file, std::int64_t offset, int origin)
+{
+#ifdef _WIN32
+    return _fseeki64(file, offset, origin);
+#else
+    return fseeko(file, offset, origin);
+#endif
+}
+
 inline void checkArchiveError(struct archive *a,
                               int ret,
                               const std::filesystem::path &filepath,
@@ -110,7 +120,7 @@ class FileReader
                                      SOURCE_REF);
         }
 
-        if (std::fseek(file, static_cast<long>(entry.offset), SEEK_SET) != 0)
+        if (detail::fseek64(file, static_cast<std::int64_t>(entry.offset), SEEK_SET) != 0)
         {
             throw util::RuntimeError(path.string() + " : " + name,
                                      ErrorCode::FileIOError,
@@ -154,7 +164,7 @@ class FileReader
                                      SOURCE_REF);
         }
 
-        if (std::fseek(file, static_cast<long>(entry.offset), SEEK_SET) != 0)
+        if (detail::fseek64(file, static_cast<std::int64_t>(entry.offset), SEEK_SET) != 0)
         {
             throw util::RuntimeError(path.string() + " : " + name,
                                      ErrorCode::FileIOError,
@@ -210,7 +220,7 @@ class FileReader
             {
                 std::string name = archive_entry_pathname(ae);
                 std::size_t size = static_cast<std::size_t>(archive_entry_size(ae));
-                // In USTAR format, data starts 512 bytes after the header position
+                // In tar format, data starts 512 bytes after the header position
                 std::size_t data_offset =
                     static_cast<std::size_t>(archive_read_header_position(a)) + 512;
 
@@ -273,7 +283,7 @@ class FileWriter
     FileWriter(const std::filesystem::path &path, FingerprintFlag flag) : path(path)
     {
         a = archive_write_new();
-        archive_write_set_format_ustar(a);
+        archive_write_set_format_pax_restricted(a);
         int ret = archive_write_open_filename(a, path.string().c_str());
         if (ret != ARCHIVE_OK)
         {
