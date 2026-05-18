@@ -283,8 +283,9 @@ class FileWriter
     FileWriter(const std::filesystem::path &path, FingerprintFlag flag) : path(path)
     {
         a = archive_write_new();
-        archive_write_set_format_pax_restricted(a);
-        int ret = archive_write_open_filename(a, path.string().c_str());
+        int ret = archive_write_set_format_pax_restricted(a);
+        detail::checkArchiveError(a, ret, path, "set format pax restricted");
+        ret = archive_write_open_filename(a, path.string().c_str());
         if (ret != ARCHIVE_OK)
         {
             const char *err = archive_error_string(a);
