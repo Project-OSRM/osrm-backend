@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <algorithm>
 #include <string>
 #include <vector>
+#include <stdexcept>
 
 namespace osrm::extractor
 {
@@ -140,6 +141,7 @@ class ObstacleMap
     void emplace(NodeID from, NodeID to, const Obstacle &obstacle)
     {
         obstacles.push_back({to, from, obstacle});
+        sorted = false;
     }
 
     // get all obstacles at node 'to' when coming from node 'from'
@@ -196,6 +198,9 @@ class ObstacleMap
     // compressed.  Call this function once only.
     void fixupNodes(const NodeIDVector &);
 
+    // Sort internal obstacles by 'to' node. Call before running any queries.
+    void sort();
+
     // Replace a leading node that is going to be deleted during graph
     // compression with the leading node of the leading node.
     void compress(NodeID from, NodeID delendus, NodeID to);
@@ -214,6 +219,8 @@ class ObstacleMap
 
     std::pair<ConstObstacleIter, ConstObstacleIter> find_range(NodeID to) const
     {
+        if (!sorted)
+            throw std::logic_error("ObstacleMap: obstacles not sorted; call sort() before querying");
         return std::equal_range(obstacles.begin(),
                                 obstacles.end(),
                                 InternalObstacle{to, {}, Obstacle{Obstacle::Type::None}});
@@ -221,6 +228,8 @@ class ObstacleMap
 
     std::pair<ObstacleIter, ObstacleIter> find_range(NodeID to)
     {
+        if (!sorted)
+            throw std::logic_error("ObstacleMap: obstacles not sorted; call sort() before querying");
         return std::equal_range(obstacles.begin(),
                                 obstacles.end(),
                                 InternalObstacle{to, {}, Obstacle{Obstacle::Type::None}});
@@ -228,6 +237,9 @@ class ObstacleMap
 
     // obstacles according to external id
     tbb::concurrent_vector<OsmFromToObstacle> osm_obstacles;
+
+    // Whether the internal 'obstacles' vector is sorted by 'to'
+    bool sorted{false};
 
     // obstacles according to internal id, sorted by 'to' node
     std::vector<InternalObstacle> obstacles;

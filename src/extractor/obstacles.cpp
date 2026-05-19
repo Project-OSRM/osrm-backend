@@ -215,9 +215,15 @@ void ObstacleMap::fixupNodes(const NodeIDVector &node_ids)
     }
 
     osm_obstacles.clear();
-    std::sort(obstacles.begin(), obstacles.end());
+    sort();
     TIMER_STOP(obstacle_renumbering);
     log << "ok, after " << TIMER_SEC(obstacle_renumbering) << "s";
+}
+
+void ObstacleMap::sort()
+{
+    std::sort(obstacles.begin(), obstacles.end());
+    sorted = true;
 }
 
 void ObstacleMap::compress(const NodeID node1, const NodeID delendus, const NodeID node2)
