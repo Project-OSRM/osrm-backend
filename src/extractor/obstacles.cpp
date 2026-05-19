@@ -104,10 +104,8 @@ void ObstacleMap::preProcess(const NodeIDVector &node_ids, const WayNodeIDOffset
                 {
                     using NodeIdIterator = NodeIDVector::const_iterator;
 
-                    NodeIdIterator begin =
-                        node_ids.cbegin() + way_node_offsets[wno_iter->second];
-                    NodeIdIterator end =
-                        node_ids.cbegin() + way_node_offsets[wno_iter->second + 1];
+                    NodeIdIterator begin = node_ids.cbegin() + way_node_offsets[wno_iter->second];
+                    NodeIdIterator end = node_ids.cbegin() + way_node_offsets[wno_iter->second + 1];
                     if (forward)
                         ++begin;
                     else

@@ -214,14 +214,16 @@ class ObstacleMap
 
     std::pair<ConstObstacleIter, ConstObstacleIter> find_range(NodeID to) const
     {
-        return std::equal_range(
-            obstacles.begin(), obstacles.end(), InternalObstacle{to, {}, Obstacle{Obstacle::Type::None}});
+        return std::equal_range(obstacles.begin(),
+                                obstacles.end(),
+                                InternalObstacle{to, {}, Obstacle{Obstacle::Type::None}});
     }
 
     std::pair<ObstacleIter, ObstacleIter> find_range(NodeID to)
     {
-        return std::equal_range(
-            obstacles.begin(), obstacles.end(), InternalObstacle{to, {}, Obstacle{Obstacle::Type::None}});
+        return std::equal_range(obstacles.begin(),
+                                obstacles.end(),
+                                InternalObstacle{to, {}, Obstacle{Obstacle::Type::None}});
     }
 
     // obstacles according to external id
