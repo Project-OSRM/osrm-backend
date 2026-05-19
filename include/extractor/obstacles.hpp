@@ -33,9 +33,8 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <osmium/osm/node.hpp>
 #include <tbb/concurrent_vector.h>
 
-#include <ranges>
+#include <algorithm>
 #include <string>
-#include <unordered_map>
 #include <vector>
 
 namespace osrm::extractor
@@ -122,7 +121,6 @@ class ObstacleMap
     using WayNodeIDOffsets = std::vector<size_t>;
 
     using OsmFromToObstacle = std::tuple<OSMNodeID, OSMNodeID, Obstacle>;
-    using FromToObstacle = std::pair<NodeID, Obstacle>;
 
   public:
     ObstacleMap() = default;
@@ -133,7 +131,7 @@ class ObstacleMap
     void emplace(OSMNodeID osm_node_id, const Obstacle &obstacle)
     {
         osm_obstacles.emplace_back(SPECIAL_OSM_NODEID, osm_node_id, obstacle);
-    };
+    }
 
     // Insert an obstacle using internal node ids.
     //
@@ -141,8 +139,8 @@ class ObstacleMap
     // Convenient for testing.
     void emplace(NodeID from, NodeID to, const Obstacle &obstacle)
     {
-        obstacles.emplace(to, std::make_pair(from, obstacle));
-    };
+        obstacles.push_back({to, from, obstacle});
+    }
 
     // get all obstacles at node 'to' when coming from node 'from'
     // pass SPECIAL_NODEID as 'from' to get all obstacles at 'to'
@@ -152,17 +150,16 @@ class ObstacleMap
     {
         std::vector<Obstacle> result;
 
-        auto [begin, end] = obstacles.equal_range(to);
-        for (auto &[key, value] : std::ranges::subrange(begin, end))
+        auto [begin, end] = find_range(to);
+        for (auto it = begin; it != end; ++it)
         {
-            auto &[from_id, obstacle] = value;
-            if ((from_id == SPECIAL_NODEID || from_id == from) &&
-                (static_cast<uint16_t>(obstacle.type) & static_cast<uint16_t>(type)))
+            if ((it->from == SPECIAL_NODEID || it->from == from) &&
+                (static_cast<uint16_t>(it->obstacle.type) & static_cast<uint16_t>(type)))
             {
-                result.push_back(obstacle);
+                result.push_back(it->obstacle);
             }
         }
-        return result; // vector has move semantics
+        return result;
     }
 
     std::vector<Obstacle> get(NodeID to) const
@@ -172,7 +169,11 @@ class ObstacleMap
 
     // is there any obstacle at node 'to'?
     // inexpensive general test
-    bool any(NodeID to) const { return obstacles.contains(to); }
+    bool any(NodeID to) const
+    {
+        auto [begin, end] = find_range(to);
+        return begin != end;
+    }
 
     // is there any obstacle of type 'type' at node 'to' when coming from node 'from'?
     // pass SPECIAL_NODEID as 'from' to query all obstacles at 'to'
@@ -200,12 +201,34 @@ class ObstacleMap
     void compress(NodeID from, NodeID delendus, NodeID to);
 
   private:
+    struct InternalObstacle
+    {
+        NodeID to;
+        NodeID from;
+        Obstacle obstacle;
+        bool operator<(const InternalObstacle &other) const { return to < other.to; }
+    };
+
+    using ObstacleIter = std::vector<InternalObstacle>::iterator;
+    using ConstObstacleIter = std::vector<InternalObstacle>::const_iterator;
+
+    std::pair<ConstObstacleIter, ConstObstacleIter> find_range(NodeID to) const
+    {
+        return std::equal_range(
+            obstacles.begin(), obstacles.end(), InternalObstacle{to, {}, Obstacle{Obstacle::Type::None}});
+    }
+
+    std::pair<ObstacleIter, ObstacleIter> find_range(NodeID to)
+    {
+        return std::equal_range(
+            obstacles.begin(), obstacles.end(), InternalObstacle{to, {}, Obstacle{Obstacle::Type::None}});
+    }
+
     // obstacles according to external id
     tbb::concurrent_vector<OsmFromToObstacle> osm_obstacles;
 
-    // obstacles according to internal id, with a leading node if unidirectional
-    // bidirectional obstacles are stored with a leading node id == SPECIAL_NODE_ID
-    std::unordered_multimap<NodeID, FromToObstacle> obstacles;
+    // obstacles according to internal id, sorted by 'to' node
+    std::vector<InternalObstacle> obstacles;
 };
 
 } // namespace osrm::extractor
