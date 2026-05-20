@@ -155,7 +155,8 @@ class ObstacleMap
         auto [begin, end] = find_range(to);
         for (auto it = begin; it != end; ++it)
         {
-            if ((it->from == SPECIAL_NODEID || it->from == from) &&
+            // If caller requests all origins (from == SPECIAL_NODEID), accept any stored 'from'.
+            if ((from == SPECIAL_NODEID || it->from == SPECIAL_NODEID || it->from == from) &&
                 (static_cast<uint16_t>(it->obstacle.type) & static_cast<uint16_t>(type)))
             {
                 result.push_back(it->obstacle);
@@ -221,18 +222,26 @@ class ObstacleMap
     {
         if (!sorted)
             throw std::logic_error("ObstacleMap: obstacles not sorted; call sort() before querying");
-        return std::equal_range(obstacles.begin(),
-                                obstacles.end(),
-                                InternalObstacle{to, {}, Obstacle{Obstacle::Type::None}});
+        auto lower = std::lower_bound(
+            obstacles.begin(), obstacles.end(), to,
+            [](const InternalObstacle &a, const NodeID value) { return a.to < value; });
+        auto upper = std::upper_bound(
+            lower, obstacles.end(), to,
+            [](const NodeID value, const InternalObstacle &a) { return value < a.to; });
+        return {lower, upper};
     }
 
     std::pair<ObstacleIter, ObstacleIter> find_range(NodeID to)
     {
         if (!sorted)
             throw std::logic_error("ObstacleMap: obstacles not sorted; call sort() before querying");
-        return std::equal_range(obstacles.begin(),
-                                obstacles.end(),
-                                InternalObstacle{to, {}, Obstacle{Obstacle::Type::None}});
+        auto lower = std::lower_bound(
+            obstacles.begin(), obstacles.end(), to,
+            [](const InternalObstacle &a, const NodeID value) { return a.to < value; });
+        auto upper = std::upper_bound(
+            lower, obstacles.end(), to,
+            [](const NodeID value, const InternalObstacle &a) { return value < a.to; });
+        return {lower, upper};
     }
 
     // obstacles according to external id
