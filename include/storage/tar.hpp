@@ -259,8 +259,8 @@ class FileReader
                 continue;
 
             auto padded_size = ((all_entries[i].size + 511) / 512) * 512;
-            std::int64_t next_pos = (i + 1 < all_entries.size()) ? all_entries[i + 1].header_pos
-                                                                  : end_of_archive_pos;
+            std::int64_t next_pos =
+                (i + 1 < all_entries.size()) ? all_entries[i + 1].header_pos : end_of_archive_pos;
             std::size_t data_offset = static_cast<std::size_t>(next_pos) - padded_size;
 
             index[all_entries[i].name] = IndexEntry{data_offset, all_entries[i].size};
