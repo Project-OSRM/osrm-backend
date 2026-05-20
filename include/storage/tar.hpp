@@ -214,23 +214,58 @@ class FileReader
         }
 
         struct archive_entry *ae;
+
+        // Collect header positions for all entries in order.
+        // archive_read_header_position returns the position of the first header
+        // block for an entry. For pax entries with extended attributes (e.g. entries
+        // > 8GB), this points to the pax extension header, not the actual file header,
+        // so the naive "header_position + 512" calculation is wrong for such entries.
+        //
+        // Instead, we compute data offsets from consecutive header positions:
+        // each entry's padded data ends exactly where the next entry's header begins.
+        //   data_offset[i] = header_position[i+1] - ceil_to_512(size[i])
+        struct RawEntry
+        {
+            std::string name;
+            std::size_t size;
+            std::int64_t header_pos;
+            bool is_regular;
+        };
+        std::vector<RawEntry> all_entries;
+
         while (archive_read_next_header(a, &ae) == ARCHIVE_OK)
         {
-            if (archive_entry_filetype(ae) == AE_IFREG)
+            std::int64_t pos = archive_read_header_position(a);
+            bool is_reg = (archive_entry_filetype(ae) == AE_IFREG);
+            std::string name;
+            std::size_t size = 0;
+            if (is_reg)
             {
-                std::string name = archive_entry_pathname(ae);
-                std::size_t size = static_cast<std::size_t>(archive_entry_size(ae));
-                // In tar format, data starts 512 bytes after the header position
-                std::size_t data_offset =
-                    static_cast<std::size_t>(archive_read_header_position(a)) + 512;
-
-                index[name] = IndexEntry{data_offset, size};
-                entries.push_back(FileEntry{name, size, data_offset});
+                name = archive_entry_pathname(ae);
+                size = static_cast<std::size_t>(archive_entry_size(ae));
             }
+            all_entries.push_back({std::move(name), size, pos, is_reg});
             archive_read_data_skip(a);
         }
 
+        // After ARCHIVE_EOF, header_position points to the end-of-archive marker
+        auto end_of_archive_pos = archive_read_header_position(a);
+
         archive_read_free(a);
+
+        for (std::size_t i = 0; i < all_entries.size(); ++i)
+        {
+            if (!all_entries[i].is_regular)
+                continue;
+
+            auto padded_size = ((all_entries[i].size + 511) / 512) * 512;
+            std::int64_t next_pos = (i + 1 < all_entries.size()) ? all_entries[i + 1].header_pos
+                                                                  : end_of_archive_pos;
+            std::size_t data_offset = static_cast<std::size_t>(next_pos) - padded_size;
+
+            index[all_entries[i].name] = IndexEntry{data_offset, all_entries[i].size};
+            entries.push_back(FileEntry{all_entries[i].name, all_entries[i].size, data_offset});
+        }
     }
 
     bool ReadAndCheckFingerprint()
