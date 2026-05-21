@@ -14,9 +14,9 @@ namespace detail
 // Bit width for packed OSM node IDs. Real-world OSM node IDs already exceed
 // 2^33 and grow over time, so 34 bits is no longer sufficient and would
 // silently truncate IDs >= 2^34 when written into PackedVector storage.
-// 40 bits supports IDs up to ~1.1 * 10^12, providing decades of headroom.
+// 35 bits supports IDs up to ~3.4 * 10^10, providing less headroom.
 // See https://github.com/Project-OSRM/osrm-backend/issues/7069
-inline constexpr std::size_t PACKED_OSM_ID_BITS = 40;
+inline constexpr std::size_t PACKED_OSM_ID_BITS = 35;
 
 template <storage::Ownership Ownership>
 using PackedOSMIDs = util::detail::PackedVector<OSMNodeID, PACKED_OSM_ID_BITS, Ownership>;
