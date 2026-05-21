@@ -34,9 +34,9 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <tbb/concurrent_vector.h>
 
 #include <algorithm>
+#include <stdexcept>
 #include <string>
 #include <vector>
-#include <stdexcept>
 
 namespace osrm::extractor
 {
@@ -221,26 +221,36 @@ class ObstacleMap
     std::pair<ConstObstacleIter, ConstObstacleIter> find_range(NodeID to) const
     {
         if (!sorted)
-            throw std::logic_error("ObstacleMap: obstacles not sorted; call sort() before querying");
-        auto lower = std::lower_bound(
-            obstacles.begin(), obstacles.end(), to,
-            [](const InternalObstacle &a, const NodeID value) { return a.to < value; });
-        auto upper = std::upper_bound(
-            lower, obstacles.end(), to,
-            [](const NodeID value, const InternalObstacle &a) { return value < a.to; });
+            throw std::logic_error(
+                "ObstacleMap: obstacles not sorted; call sort() before querying");
+        auto lower = std::lower_bound(obstacles.begin(),
+                                      obstacles.end(),
+                                      to,
+                                      [](const InternalObstacle &a, const NodeID value)
+                                      { return a.to < value; });
+        auto upper = std::upper_bound(lower,
+                                      obstacles.end(),
+                                      to,
+                                      [](const NodeID value, const InternalObstacle &a)
+                                      { return value < a.to; });
         return {lower, upper};
     }
 
     std::pair<ObstacleIter, ObstacleIter> find_range(NodeID to)
     {
         if (!sorted)
-            throw std::logic_error("ObstacleMap: obstacles not sorted; call sort() before querying");
-        auto lower = std::lower_bound(
-            obstacles.begin(), obstacles.end(), to,
-            [](const InternalObstacle &a, const NodeID value) { return a.to < value; });
-        auto upper = std::upper_bound(
-            lower, obstacles.end(), to,
-            [](const NodeID value, const InternalObstacle &a) { return value < a.to; });
+            throw std::logic_error(
+                "ObstacleMap: obstacles not sorted; call sort() before querying");
+        auto lower = std::lower_bound(obstacles.begin(),
+                                      obstacles.end(),
+                                      to,
+                                      [](const InternalObstacle &a, const NodeID value)
+                                      { return a.to < value; });
+        auto upper = std::upper_bound(lower,
+                                      obstacles.end(),
+                                      to,
+                                      [](const NodeID value, const InternalObstacle &a)
+                                      { return value < a.to; });
         return {lower, upper};
     }
 
