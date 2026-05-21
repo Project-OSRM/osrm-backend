@@ -115,6 +115,7 @@ lib/binding_napi_v8
 ##########################
 __pycache__/
 *.whl
+src/python/osrm/osrm_ext.pyi
 
 # documentation related files
 ##########################
