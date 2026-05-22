@@ -337,15 +337,6 @@ jobs:
             CXXCOMPILER: g++-13
             ENABLE_COVERAGE: ON
 
-          - name: gcc-12-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-22.04
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-12
-            CXXCOMPILER: g++-12
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
-
           - name: vcpkg-linux-release-bindings
             build_bindings: true
             continue-on-error: false
