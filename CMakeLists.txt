@@ -373,6 +373,22 @@ add_compile_definitions(FMT_HEADER_ONLY)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 find_package(flatbuffers CONFIG REQUIRED)
+# TBB is linked later, but discover it here so the include-harvesting loop
+# below can see TBB::tbb for OBJECT libraries that were already created.
+find_package(TBB CONFIG REQUIRED)
+# Always link the release build of TBB, even in Debug/Coverage configurations.
+# vcpkg's debug TBB enables internal debug assertions (e.g. intrusive_list
+# invariants) that trip during osrm-extract's test-data generation on
+# ubuntu-24.04 under gcc-13. The master branch never hit this because it
+# linked the system's release-only TBB. Do the same here.
+foreach(_tbb_target TBB::tbb TBB::tbbmalloc TBB::tbbmalloc_proxy)
+  if(TARGET ${_tbb_target})
+    set_target_properties(${_tbb_target} PROPERTIES
+      MAP_IMPORTED_CONFIG_DEBUG        Release
+      MAP_IMPORTED_CONFIG_MINSIZEREL   Release
+      MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+  endif()
+endforeach()
 
 # Generate flatbuffers C++ headers from .fbs schemas at build time.
 # This removes the need to commit pre-generated headers and pin the
@@ -445,20 +461,6 @@ endif()
 # All dependencies below come from vcpkg (vcpkg.json). The vcpkg toolchain
 # file exposes them via standard CMake find_package() / imported targets.
 find_package(Boost 1.83 REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
-find_package(TBB CONFIG REQUIRED)
-# Always link the release build of TBB, even in Debug/Coverage configurations.
-# vcpkg's debug TBB enables internal debug assertions (e.g. intrusive_list
-# invariants) that trip during osrm-extract's test-data generation on
-# ubuntu-24.04 under gcc-13. The master branch never hit this because it
-# linked the system's release-only TBB. Do the same here.
-foreach(_tbb_target TBB::tbb TBB::tbbmalloc TBB::tbbmalloc_proxy)
-  if(TARGET ${_tbb_target})
-    set_target_properties(${_tbb_target} PROPERTIES
-      MAP_IMPORTED_CONFIG_DEBUG        Release
-      MAP_IMPORTED_CONFIG_MINSIZEREL   Release
-      MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
-  endif()
-endforeach()
 find_package(EXPAT REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(Lua 5.4 REQUIRED)
