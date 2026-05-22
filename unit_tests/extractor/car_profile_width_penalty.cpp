@@ -33,8 +33,8 @@ process_way(std::initializer_list<std::pair<const char *, const char *>> tags)
     }
     buffer.commit();
 
-    osrm::extractor::Sol2ScriptingEnvironment scripting_environment(
-        OSRM_PROFILES_DIR "/car.lua", {});
+    osrm::extractor::Sol2ScriptingEnvironment scripting_environment(OSRM_PROFILES_DIR "/car.lua",
+                                                                    {});
     osrm::extractor::RestrictionParser restriction_parser(
         false, false, scripting_environment.GetRestrictions());
     osrm::extractor::ManeuverOverrideRelationParser maneuver_override_parser;
