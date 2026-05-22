@@ -428,7 +428,7 @@ function WayHandlers.penalties(profile,way,result,data)
     end
   end
 
-  if (width and width <= 3) or (lanes <= 1 and is_bidirectional) then
+  if lanes <= 1 and is_bidirectional then
     width_penalty = 0.5
   end
 
