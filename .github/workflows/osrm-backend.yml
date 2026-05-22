@@ -301,15 +301,6 @@ jobs:
             CXXCOMPILER: clang++-17
             ENABLE_LTO: OFF
 
-          - name: clang-16-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
-            ENABLE_LTO: OFF
-
           - name: gcc-14-release
             continue-on-error: false
             node: 24
@@ -343,17 +334,16 @@ jobs:
             node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
-            NODE_PACKAGE_TESTS_ONLY: ON
+            CCOMPILER: clang-17
+            CXXCOMPILER: clang++-17
 
           - name: vcpkg-linux-debug
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
+            CCOMPILER: clang-17
+            CXXCOMPILER: clang++-17
             NODE_PACKAGE_TESTS_ONLY: ON
 
           - name: vcpkg-linux-arm64-release
