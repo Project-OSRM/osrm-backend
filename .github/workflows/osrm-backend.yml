@@ -301,15 +301,6 @@ jobs:
             CXXCOMPILER: clang++-17
             ENABLE_LTO: OFF
 
-          - name: clang-16-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
-            ENABLE_LTO: OFF
-
           - name: gcc-14-release
             continue-on-error: false
             node: 24
@@ -343,8 +334,8 @@ jobs:
             node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
+            CCOMPILER: clang-17
+            CXXCOMPILER: clang++-17
             NODE_PACKAGE_TESTS_ONLY: ON
 
           - name: vcpkg-linux-debug
@@ -352,8 +343,8 @@ jobs:
             node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-16
-            CXXCOMPILER: clang++-16
+            CCOMPILER: clang-17
+            CXXCOMPILER: clang++-17
             NODE_PACKAGE_TESTS_ONLY: ON
 
           - name: vcpkg-linux-arm64-release
@@ -365,7 +356,7 @@ jobs:
             CXXCOMPILER: clang++-18
             ENABLE_LTO: OFF
 
-          - name: vcpkg-macos-x64-release
+          - name: vcpkg-macos-26-x64-release
             continue-on-error: true
             node: 24
             runs-on: macos-26-intel # x86_64
@@ -374,7 +365,7 @@ jobs:
             CXXCOMPILER: clang++
             ENABLE_ASSERTIONS: ON
 
-          - name: vcpkg-macos-arm64-release
+          - name: vcpkg-macos-26-arm64-release
             continue-on-error: true
             node: 24
             runs-on: macos-26 # arm64
@@ -383,8 +374,8 @@ jobs:
             CXXCOMPILER: clang++
             ENABLE_ASSERTIONS: ON
 
-          # only for python & nodeJS release, needs a low macos version
-          - name: vcpkg-macos-x64-release-bindings
+          # python & nodeJS release bindings — macos-15 for broad binary compatibility
+          - name: vcpkg-macos-15-x64-release-bindings
             build_bindings: true
             continue-on-error: true
             node: 24
@@ -394,7 +385,7 @@ jobs:
             CXXCOMPILER: clang++
             ENABLE_ASSERTIONS: ON
 
-          - name: vcpkg-macos-arm64-release-bindings
+          - name: vcpkg-macos-15-arm64-release-bindings
             build_bindings: true
             continue-on-error: true
             node: 24
