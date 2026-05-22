@@ -151,6 +151,7 @@ endif()
 
 
 target_compile_definitions(extractor-tests PRIVATE COMPILE_DEFINITIONS OSRM_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/unit_tests/fixtures")
+target_compile_definitions(extractor-tests PRIVATE OSRM_PROFILES_DIR="${CMAKE_SOURCE_DIR}/profiles")
 target_compile_definitions(library-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
 target_compile_definitions(library-extract-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
 target_compile_definitions(library-contract-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")

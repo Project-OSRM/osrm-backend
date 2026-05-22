@@ -399,12 +399,8 @@ function WayHandlers.penalties(profile,way,result,data)
   end
 
   local width_penalty = 1.0
-  local width = math.huge
+  local width = Measure.get_max_width(way:get_value_by_key("width"))
   local lanes = math.huge
-  local width_string = way:get_value_by_key("width")
-  if width_string and tonumber(width_string:match("%d*")) then
-    width = tonumber(width_string:match("%d*"))
-  end
 
   local lanes_string = way:get_value_by_key("lanes")
   if lanes_string and tonumber(lanes_string:match("%d*")) then
@@ -420,7 +416,19 @@ function WayHandlers.penalties(profile,way,result,data)
     width_penalty = profile.lane_markings_penalty
   end
 
-  if width <= 3 or (lanes <= 1 and is_bidirectional) then
+  if width and is_bidirectional then
+    if width <= 3 then
+      width_penalty = 0.5
+    elseif width < 4 then
+      width_penalty = 0.6
+    elseif width < 5 then
+      width_penalty = 0.75
+    elseif width < 6 then
+      width_penalty = 0.8
+    end
+  end
+
+  if (width and width <= 3) or (lanes <= 1 and is_bidirectional) then
     width_penalty = 0.5
   end
 
