@@ -14,7 +14,6 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
-#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -99,15 +98,12 @@ template <typename EdgeDataT> struct SortableEdgeWithData : SortableEdgeWithData
     }
 };
 
-template <typename EntryT, typename OtherEdge>
-EntryT edgeToEntry(const OtherEdge &from, std::true_type)
+template <typename EntryT, typename OtherEdge> EntryT edgeToEntry(const OtherEdge &from)
 {
-    return EntryT{from.target, from.data};
-}
-template <typename EntryT, typename OtherEdge>
-EntryT edgeToEntry(const OtherEdge &from, std::false_type)
-{
-    return EntryT{from.target};
+    if constexpr (traits::HasDataMember<EntryT>)
+        return EntryT{from.target, from.data};
+    else
+        return EntryT{from.target};
 }
 
 } // namespace static_graph_details
@@ -204,7 +200,7 @@ class StaticGraph
     EdgeIterator
     FindSmallestEdge(const NodeIterator from, const NodeIterator to, FilterFunction &&filter) const
     {
-        static_assert(traits::HasDataMember<EdgeArrayEntry>::value,
+        static_assert(traits::HasDataMember<EdgeArrayEntry>,
                       "Filtering on .data not possible without .data member attribute");
 
         EdgeIterator smallest_edge = SPECIAL_EDGEID;
@@ -307,10 +303,7 @@ class StaticGraph
                        end,
                        edge_array.begin(),
                        [](const auto &from)
-                       {
-                           return static_graph_details::edgeToEntry<EdgeArrayEntry>(
-                               from, traits::HasDataMember<EdgeArrayEntry>{});
-                       });
+                       { return static_graph_details::edgeToEntry<EdgeArrayEntry>(from); });
     }
 
   protected:

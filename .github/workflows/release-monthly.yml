@@ -261,7 +261,7 @@ jobs:
         run: npm publish
 
       - name: Download wheels from CI run
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v8
         with:
           pattern: wheels-*
           path: dist
@@ -270,7 +270,7 @@ jobs:
           github-token: ${{ github.token }}
 
       - name: Publish to PyPI
-        uses: pypa/gh-action-pypi-publish@v1.13.0
+        uses: pypa/gh-action-pypi-publish@v1.14.0
         with:
           skip-existing: true
           verbose: true
