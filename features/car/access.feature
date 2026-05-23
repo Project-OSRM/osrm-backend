@@ -130,6 +130,15 @@ Feature: Car - Restricted access
             | delivery     | x     |
             | some_tag     | x     |
             | destination  | x     |
+            | permit       | x     |
+            | residents    | x     |
+            | foot         |       |
+            | restricted   |       |
+            | military     |       |
+            | official           |       |
+            | emergency_vehicle  |       |
+            | unknown            | x     |
+            | agricultural;forestry |  |
 
 
     Scenario: Car - Access tags on nodes
@@ -149,6 +158,39 @@ Feature: Car - Restricted access
             | bus          |       |
             | delivery     | x     |
             | some_tag     | x     |
+            | permit       | x     |
+            | residents    | x     |
+            | foot         |       |
+            | restricted   |       |
+            | military     |       |
+            | official           |       |
+            | emergency_vehicle  |       |
+            | unknown            | x     |
+            | agricultural;forestry |  |
+
+    Scenario: Car - Motorcar access tags on ways
+        Then routability should be
+            | motorcar              | bothw |
+            | yes                   | x     |
+            | permissive            | x     |
+            | designated            | x     |
+            | no                    |       |
+            | private               | x     |
+            | agricultural          |       |
+            | forestry              |       |
+            | psv                   |       |
+            | delivery              | x     |
+            | destination           | x     |
+            | permit                | x     |
+            | customers             | x     |
+            | residents             | x     |
+            | foot                  |       |
+            | restricted            |       |
+            | military              |       |
+            | official              |       |
+            | emergency_vehicle     |       |
+            | unknown               | x     |
+            | agricultural;forestry |       |
 
     Scenario: Car - Access tags on both node and way
         Then routability should be
@@ -275,7 +317,25 @@ Feature: Car - Restricted access
             | primary |                          | no                    | destination            |      | x     |   |
             | primary | destination;agricultural | destination           |                        | x    | x     |   |
             | footway |                          |                       | destination            |      |       | temporary #3373 |
-            | track   | destination;agricultural | destination           |                        |      | x     | temporary #3373 |
+            | track   | destination;agricultural | destination           |                        |      |       | temporary #3373 |
+
+    Scenario: Car - Semicolon-separated access tags are split and resolved individually
+        Then routability should be
+            | highway | access                   | motorcar                 | bothw | # |
+            | primary | agricultural;forestry    |                          |       | access: both blacklisted |
+            | primary | destination;agricultural |                          | x     | access: restricted wins over blacklisted |
+            | primary | yes;agricultural         |                          | x     | access: whitelisted wins over blacklisted |
+            | primary | yes;no                   |                          | x     | access: whitelisted wins over blacklisted |
+            | primary | permissive;forestry      |                          | x     | access: whitelisted wins over blacklisted |
+            | primary | destination;delivery     |                          | x     | access: both restricted |
+            | primary |                          | agricultural;forestry    |       | motorcar: both blacklisted |
+            | primary |                          | destination;agricultural | x     | motorcar: restricted wins over blacklisted |
+            | primary |                          | yes;agricultural         | x     | motorcar: whitelisted wins over blacklisted |
+            | primary |                          | yes;no                   | x     | motorcar: whitelisted wins over blacklisted |
+            | primary |                          | permissive;forestry      | x     | motorcar: whitelisted wins over blacklisted |
+            | primary |                          | destination;delivery     | x     | motorcar: both restricted |
+            | primary | forestry;permissive      |                          | x     | access: whitelisted wins over blacklisted |
+            | primary |                          | forestry;permissive      | x     | motorcar: whitelisted wins over blacklisted |
 
     Scenario: Car - Don't route over steps even if marked as accessible
         Then routability should be
@@ -305,14 +365,21 @@ Feature: Car - Restricted access
 
     Scenario: Car - Access blacklist
         Then routability should be
-            | highway    | access       | bothw |
-            | primary    |              |   x   |
-            | primary    | emergency    |       |
-            | primary    | forestry     |       |
-            | primary    | agricultural |       |
-            | primary    | psv          |       |
-            | primary    | no           |       |
-            | primary    | customers    |   x   |
+            | highway    | access               | bothw |
+            | primary    |                      |   x   |
+            | primary    | emergency            |       |
+            | primary    | forestry             |       |
+            | primary    | agricultural         |       |
+            | primary    | agricultural;forestry|       |
+            | primary    | psv                  |       |
+            | primary    | no                   |       |
+            | primary    | foot                 |       |
+            | primary    | restricted           |       |
+            | primary    | military             |       |
+            | primary    | official             |       |
+            | primary    | customers            |   x   |
+            | primary    | permit               |   x   |
+            | primary    | residents            |   x   |
 
     Scenario: Car - Winter/ice roads with restricted access
         Then routability should be
@@ -322,10 +389,12 @@ Feature: Car - Restricted access
             | winter_road| private     |   x   |
             | winter_road| delivery    |   x   |
             | winter_road| destination |   x   |
+            | winter_road| permit      |   x   |
             | winter_road| no          |       |
             | ice_road   |             |   x   |
             | ice_road   | yes         |   x   |
             | ice_road   | private     |   x   |
             | ice_road   | delivery    |   x   |
             | ice_road   | destination |   x   |
+            | ice_road   | permit      |   x   |
             | ice_road   | no          |       |
