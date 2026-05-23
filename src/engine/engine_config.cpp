@@ -18,6 +18,7 @@ bool EngineConfig::IsValid() const
                               unlimited_or_more_than(max_locations_trip, 2) &&
                               unlimited_or_more_than(max_locations_viaroute, 2) &&
                               unlimited_or_more_than(max_results_nearest, 0) &&
+                              max_isochrone_range > 0 &&
                               unlimited_or_more_than(default_radius, 0) && max_alternatives >= 0;
 
     return ((use_shared_memory && all_path_are_empty) || (use_mmap && storage_config.IsValid()) ||

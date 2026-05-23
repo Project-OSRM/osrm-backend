@@ -22,11 +22,14 @@ namespace plugins
 class IsochronePlugin final : public BasePlugin
 {
   public:
-    explicit IsochronePlugin();
+    explicit IsochronePlugin(int max_range_seconds);
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::IsochroneParameters &parameters,
                          osrm::engine::api::ResultT &result) const;
+
+  private:
+    const int max_range_seconds;
 };
 }
 }

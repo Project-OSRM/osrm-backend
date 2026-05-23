@@ -74,6 +74,9 @@ void populate_cfg_from_kwargs(const nb::kwargs &kwargs, EngineConfig &config)
                    {"max_results_nearest",
                     [&config](const std::pair<nb::handle, nb::handle> &val)
                     { assign_val(config.max_results_nearest, val); }},
+                   {"max_isochrone_range",
+                    [&config](const std::pair<nb::handle, nb::handle> &val)
+                    { assign_val(config.max_isochrone_range, val); }},
                    {"default_radius",
                     [&config](const std::pair<nb::handle, nb::handle> &val)
                     {

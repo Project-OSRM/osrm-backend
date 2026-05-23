@@ -39,6 +39,7 @@ var osrm = new OSRM('network.osrm');
     *   `options.max_locations_map_matching` **[Number][6]?** Max. locations supported in map-matching query (default: unlimited).
     *   `options.max_radius_map_matching` **[Number][6]?** Max. radius size supported in map matching query (default: 5).
     *   `options.max_results_nearest` **[Number][6]?** Max. results supported in nearest query (default: unlimited).
+    *   `options.max_isochrone_range` **[Number][6]?** Max. isochrone range supported in query, in seconds (default: 900).
     *   `options.max_alternatives` **[Number][6]?** Max. number of alternatives supported in alternative routes query (default: 3).
     *   `options.default_radius` **[Number][6]?** Default radius for queries (default: unlimited).
 

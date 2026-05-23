@@ -22,6 +22,7 @@ engine = osrm.OSRM(
     max_locations_distance_table=3,
     max_locations_map_matching=3,
     max_results_nearest=1,
+    max_isochrone_range=900,
     max_alternatives=1,
     default_radius="unlimited",
 )
@@ -43,6 +44,7 @@ engine = osrm.OSRM(use_shared_memory=True)
 - **`max_locations_distance_table`** `int` - Max locations in table queries.
 - **`max_locations_map_matching`** `int` - Max locations in match queries.
 - **`max_results_nearest`** `int` - Max results in nearest queries.
+- **`max_isochrone_range`** `int` - Max isochrone range in seconds.
 - **`max_alternatives`** `int` - Max alternative routes.
 - **`default_radius`** `float | "unlimited"` - Default search radius in meters.
 

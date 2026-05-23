@@ -22,7 +22,10 @@ namespace engine
 namespace plugins
 {
 
-IsochronePlugin::IsochronePlugin() {}
+IsochronePlugin::IsochronePlugin(int max_range_seconds_)
+    : max_range_seconds(max_range_seconds_)
+{
+}
 
 Status
 IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
@@ -61,9 +64,10 @@ IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     std::vector<std::pair<NodeID, EdgeDuration>> reachable_nodes;
 
-    // Duration threshold: limit to 15 minutes (900s) and convert seconds -> deciseconds (EdgeDuration units)
-    const unsigned max_seconds = 15 * 60; // 900 seconds
-    const unsigned effective_range = std::min(range, max_seconds);
+    // Duration threshold: clamp request to configured max and convert seconds -> deciseconds.
+    const unsigned configured_max_range =
+        max_range_seconds > 0 ? static_cast<unsigned>(max_range_seconds) : 1;
+    const unsigned effective_range = std::min(range, configured_max_range);
     const EdgeDuration duration_threshold = to_alias<EdgeDuration>(static_cast<int>(effective_range * 10));
 
     const auto &df_base = algorithms.GetFacade();

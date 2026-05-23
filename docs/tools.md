@@ -157,6 +157,7 @@ osrm-routed <base.osrm> [options]
 | `--max-table-size <n>` | `100` | Maximum number of locations in a table query. |
 | `--max-matching-size <n>` | `100` | Maximum number of locations in a map-matching query. |
 | `--max-nearest-size <n>` | `100` | Maximum number of results in a nearest query. |
+| `--max-isochrone-range <s>` | `900` | Maximum isochrone range in seconds (15 minutes). |
 | `--max-alternatives <n>` | `3` | Maximum number of alternative routes (MLD only). |
 | `--max-matching-radius <m>` | `-1` (unlimited) | Maximum search radius in metres for map-matching. |
 | `--default-radius <m>` | `-1` (unlimited) | Default snap radius for all queries. |

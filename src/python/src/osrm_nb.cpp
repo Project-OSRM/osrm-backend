@@ -73,6 +73,7 @@ NB_MODULE(osrm_ext, m)
                         max_locations_distance_table = 3,\n\
                         max_locations_map_matching = 3,\n\
                         max_results_nearest = 1,\n\
+                        max_isochrone_range = 900,\n\
                         max_alternatives = 1,\n\
                         default_radius = 'unlimited'\n\
                     )\n\n"

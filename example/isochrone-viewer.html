@@ -19,6 +19,22 @@
             bottom: 0;
             width: 100%;
         }
+
+        #controls {
+            position: absolute;
+            top: 12px;
+            left: 12px;
+            z-index: 2;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 4px;
+            padding: 10px 12px;
+            font-family: sans-serif;
+            font-size: 13px;
+        }
+
+        #range-value {
+            font-weight: bold;
+        }
     </style>
     <style type='text/css'>
         #info {
@@ -40,8 +56,108 @@
 <body>
 
     <div id='map'></div>
+    <div id="controls">
+        <label for="range-slider">Range (seconds): <span id="range-value">900</span></label><br />
+        <input id="range-slider" type="range" min="60" max="1800" step="30" value="900" />
+    </div>
     <div id="info"></div>
     <script>
+        var currentController = null;
+        var lastClickedLngLat = null;
+        var slider = document.getElementById('range-slider');
+        var rangeValue = document.getElementById('range-value');
+
+        function updateRangeLabel() {
+            rangeValue.textContent = slider.value;
+        }
+
+        function renderIsochrone(j) {
+            if (map.getSource("isochrone")) {
+                map.getSource("isochrone").setData(j);
+            } else {
+                map.addSource("isochrone", {
+                    "type": "geojson",
+                    "data": j
+                });
+            }
+
+            if (!map.getLayer("isochrone-heat")) {
+                map.addLayer({
+                    "id": "isochrone-heat",
+                    "type": "heatmap",
+                    "source": "isochrone",
+                    "maxzoom": 15,
+                    "paint": {
+                        "heatmap-weight": ["interpolate", ["linear"], ["/", ["get", "weight"], 10], 0, 0, 900, 1],
+                        "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 15, 3],
+                        "heatmap-color": [
+                            "interpolate", ["linear"], ["heatmap-density"],
+                            0, "rgba(33,102,172,0)",
+                            0.2, "rgb(103,169,207)",
+                            0.4, "rgb(209,229,240)",
+                            0.6, "rgb(253,219,199)",
+                            0.8, "rgb(239,138,98)",
+                            1, "rgb(178,24,43)"
+                        ],
+                        "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 2, 15, 20],
+                        "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 1, 15, 0]
+                    }
+                });
+            }
+
+            if (!map.getLayer("isochrone-points")) {
+                map.addLayer({
+                    "id": "isochrone-points",
+                    "type": "circle",
+                    "source": "isochrone",
+                    "minzoom": 14,
+                    "paint": {
+                        "circle-radius": 3,
+                        "circle-color": [
+                            "interpolate", ["linear"], ["/", ["get", "weight"], 10],
+                            0, "blue",
+                            300, "red",
+                            600, "yellow",
+                            900, "green"
+                        ],
+                        "circle-stroke-color": "#ffffff",
+                        "circle-stroke-width": 1,
+                        "circle-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 1]
+                    }
+                });
+            }
+        }
+
+        function requestIsochrone(lngLat) {
+            if (currentController) {
+                currentController.abort();
+            }
+            currentController = new AbortController();
+            var range = slider.value;
+            updateRangeLabel();
+
+            var url = "http://localhost:5000/isochrone/v1/driving/" +
+                lngLat.lng + "," + lngLat.lat + "?range=" + encodeURIComponent(range);
+
+            fetch(url, { signal: currentController.signal })
+                .then(function (response) {
+                    if (!response.ok) {
+                        throw new Error("HTTP " + response.status);
+                    }
+                    return response.json();
+                })
+                .then(function (json) {
+                    renderIsochrone(json);
+                })
+                .catch(function (error) {
+                    if (error.name !== "AbortError") {
+                        console.error(error);
+                    }
+                });
+        }
+
+        updateRangeLabel();
+
         var map = new maplibregl.Map({
             container: 'map',
             style: 'https://pnorman.github.io/tilekiln-shortbread-demo/colorful.json',
@@ -61,87 +177,15 @@
 
         map.on('click', function (e) {
             console.log(JSON.stringify(e.lngLat));
-            var xhttp = new XMLHttpRequest();
-            xhttp.onreadystatechange = function () {
-                if (this.readyState == 4 && this.status == 200) {
-                    var j = JSON.parse(this.responseText);
+            lastClickedLngLat = e.lngLat;
+            requestIsochrone(lastClickedLngLat);
+        });
 
-                    // Update existing source data if present, otherwise add source+layer.
-                    if (map.getSource("isochrone")) {
-                        try {
-                            map.getSource("isochrone").setData(j);
-                        } catch (e) {
-                            // Fallback: remove source/layer and re-add
-                            if (map.getLayer("isochrone-points")) map.removeLayer("isochrone-points");
-                            map.removeSource("isochrone");
-                            map.addSource("isochrone", {
-                                "type": "geojson",
-                                "data": j
-                            });
-                        }
-                    } else {
-                        map.addSource("isochrone", {
-                            "type": "geojson",
-                            "data": j
-                        });
-                    }
-
-                    // Ensure old heatmap/point layers are removed before adding new to avoid duplicates
-                    if (map.getLayer("isochrone-heat")) {
-                        map.removeLayer("isochrone-heat");
-                    }
-                    if (map.getLayer("isochrone-points")) {
-                        map.removeLayer("isochrone-points");
-                    }
-
-                    // Add heatmap layer for a smooth density visualization
-                    map.addLayer({
-                        "id": "isochrone-heat",
-                        "type": "heatmap",
-                        "source": "isochrone",
-                        "maxzoom": 15,
-                        "paint": {
-                            // Weight points by the 'weight' property (convert deciseconds -> seconds)
-                            "heatmap-weight": ["interpolate", ["linear"], ["/", ["get", "weight"], 10], 0, 0, 900, 1],
-                            "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 15, 3],
-                            "heatmap-color": [
-                                "interpolate", ["linear"], ["heatmap-density"],
-                                0, "rgba(33,102,172,0)",
-                                0.2, "rgb(103,169,207)",
-                                0.4, "rgb(209,229,240)",
-                                0.6, "rgb(253,219,199)",
-                                0.8, "rgb(239,138,98)",
-                                1, "rgb(178,24,43)"
-                            ],
-                            "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 2, 15, 20],
-                            "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 1, 15, 0]
-                        }
-                    });
-
-                    // Add a small circle layer at high zoom to show individual points
-                    map.addLayer({
-                        "id": "isochrone-points",
-                        "type": "circle",
-                        "source": "isochrone",
-                        "minzoom": 14,
-                        "paint": {
-                            "circle-radius": 3,
-                            "circle-color": [
-                                "interpolate", ["linear"], ["/", ["get", "weight"], 10],
-                                0, "blue",
-                                300, "red",
-                                600, "yellow",
-                                900, "green"
-                            ],
-                            "circle-stroke-color": "#ffffff",
-                            "circle-stroke-width": 1,
-                            "circle-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 1]
-                        }
-                    });
-                }
-            };
-            xhttp.open("GET", "http://localhost:5000/isochrone/v1/driving/" + e.lngLat.lng + "," + e.lngLat.lat, true);
-            xhttp.send();
+        slider.addEventListener('input', function () {
+            updateRangeLabel();
+            if (lastClickedLngLat) {
+                requestIsochrone(lastClickedLngLat);
+            }
         });
     </script>
 

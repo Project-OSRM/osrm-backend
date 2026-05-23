@@ -318,6 +318,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     auto max_locations_distance_table = params.Get("max_locations_distance_table");
     auto max_locations_map_matching = params.Get("max_locations_map_matching");
     auto max_results_nearest = params.Get("max_results_nearest");
+    auto max_isochrone_range = params.Get("max_isochrone_range");
     auto max_alternatives = params.Get("max_alternatives");
     auto max_radius_map_matching = params.Get("max_radius_map_matching");
     auto default_radius = params.Get("default_radius");
@@ -345,6 +346,11 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     if (!max_results_nearest.IsUndefined() && !max_results_nearest.IsNumber())
     {
         ThrowError(args.Env(), "max_results_nearest must be an integral number");
+        return engine_config_ptr();
+    }
+    if (!max_isochrone_range.IsUndefined() && !max_isochrone_range.IsNumber())
+    {
+        ThrowError(args.Env(), "max_isochrone_range must be an integral number");
         return engine_config_ptr();
     }
     if (!max_alternatives.IsUndefined() && !max_alternatives.IsNumber())
@@ -377,6 +383,8 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
             max_locations_map_matching.ToNumber().Int32Value();
     if (max_results_nearest.IsNumber())
         engine_config->max_results_nearest = max_results_nearest.ToNumber().Int32Value();
+    if (max_isochrone_range.IsNumber())
+        engine_config->max_isochrone_range = max_isochrone_range.ToNumber().Int32Value();
     if (max_alternatives.IsNumber())
         engine_config->max_alternatives = max_alternatives.ToNumber().Int32Value();
 
