@@ -193,7 +193,7 @@ IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
     std::stringstream buf;
     buf << std::setprecision(12);
-    buf << "{\"type\":\"FeatureCollection\",\"features\":\n[";
+    buf << "{\"type\":\"FeatureCollection\",\"max_range\":" << effective_range << ",\"features\":[";
     bool first_feature = true;
 
     // To avoid duplicate points when geometries overlap, track seen coordinate strings
