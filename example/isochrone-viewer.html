@@ -167,12 +167,16 @@
 
 
         map.on('mousemove', function (e) {
+            var formattedLngLat = {
+                lng: e.lngLat.lng.toFixed(7),
+                lat: e.lngLat.lat.toFixed(7)
+            };
             document.getElementById('info').innerHTML =
                 // e.point is the x, y coordinates of the mousemove event relative
                 // to the top-left corner of the map
                 JSON.stringify(e.point) + '<br />' +
                 // e.lngLat is the longitude, latitude geographical position of the event
-                JSON.stringify(e.lngLat);
+                JSON.stringify(formattedLngLat);
         });
 
         map.on('click', function (e) {
