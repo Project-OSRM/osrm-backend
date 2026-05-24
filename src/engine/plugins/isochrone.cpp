@@ -142,6 +142,8 @@ IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
                     const EdgeDuration edge_cost = node_dur + turn_pen;
                     const EdgeDuration nd = cur.d + edge_cost;
+                    if (nd > duration_threshold)
+                        continue;
                     if (nd < dist[to])
                     {
                         dist[to] = nd;
@@ -162,6 +164,8 @@ IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                     // Edge duration is stored on CH edge data
                     const EdgeDuration edge_dur = to_alias<EdgeDuration>(edata.duration);
                     const EdgeDuration nd = cur.d + edge_dur;
+                    if (nd > duration_threshold)
+                        continue;
                     if (nd < dist[to])
                     {
                         dist[to] = nd;
