@@ -9,9 +9,12 @@
 #include "engine/datafacade/contiguous_internalmem_datafacade.hpp"
 #include "engine/routing_algorithms.hpp"
 
+#include <algorithm>
+#include <cstdint>
 #include <queue>
 #include <iomanip>
 #include <cmath>
+#include <unordered_map>
 #include <unordered_set>
 #include <numeric>
 
@@ -195,9 +198,7 @@ IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     buf << std::setprecision(12);
     buf << "{\"type\":\"FeatureCollection\",\"max_range\":" << effective_range << ",\"features\":[";
     bool first_feature = true;
-
-    // To avoid duplicate points when geometries overlap, track seen coordinate strings
-    std::unordered_set<std::string> seen_coords;
+    std::unordered_map<std::uint64_t, EdgeDuration> geometry_weights;
 
     for (const auto &p : reachable_nodes)
     {
@@ -208,72 +209,70 @@ IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         if (dur > duration_threshold)
             continue;
 
-        // Map edge-based node -> full geometry (forward or reverse) and emit all vertices
+        // Map edge-based node -> full geometry (forward or reverse)
         const auto geom = algorithms.GetFacade().GetGeometryIndex(node);
-
-        if (geom.id != SPECIAL_GEOMETRYID)
+        if (geom.id == SPECIAL_GEOMETRYID)
         {
-            // get forward or reverse geometry depending on stored flag
-            if (geom.forward)
-            {
-                for (const auto repr : algorithms.GetFacade().GetUncompressedForwardGeometry(geom.id))
-                {
-                    const auto coord = algorithms.GetFacade().GetCoordinateOfNode(repr);
-                    std::ostringstream key_ss;
-                    key_ss << std::setprecision(12) << toFloating(coord.lon) << ',' << toFloating(coord.lat);
-                    const auto key = key_ss.str();
-                    if (seen_coords.find(key) != seen_coords.end())
-                        continue;
-                    seen_coords.insert(key);
+            continue;
+        }
 
-                    if (!first_feature)
-                        buf << ',';
-                    first_feature = false;
-                    buf << "{\"type\":\"Feature\",\"properties\":{\"weight\":" << from_alias<int>(dur) << "},\"geometry\":{\"type\":\"Point\",\"coordinates\":[";
-                    buf << toFloating(coord.lon) << ',' << toFloating(coord.lat);
-                    buf << "]}}";
-                }
-            }
-            else
-            {
-                for (const auto repr : algorithms.GetFacade().GetUncompressedReverseGeometry(geom.id))
-                {
-                    const auto coord = algorithms.GetFacade().GetCoordinateOfNode(repr);
-                    std::ostringstream key_ss;
-                    key_ss << std::setprecision(12) << toFloating(coord.lon) << ',' << toFloating(coord.lat);
-                    const auto key = key_ss.str();
-                    if (seen_coords.find(key) != seen_coords.end())
-                        continue;
-                    seen_coords.insert(key);
+        const std::uint64_t key = (static_cast<std::uint64_t>(geom.id) << 1u) | (geom.forward ? 1u : 0u);
+        const auto found = geometry_weights.find(key);
+        if (found == geometry_weights.end() || dur < found->second)
+        {
+            geometry_weights[key] = dur;
+        }
+    }
 
-                    if (!first_feature)
-                        buf << ',';
-                    first_feature = false;
-                    buf << "{\"type\":\"Feature\",\"properties\":{\"weight\":" << from_alias<int>(dur) << "},\"geometry\":{\"type\":\"Point\",\"coordinates\":[";
-                    buf << toFloating(coord.lon) << ',' << toFloating(coord.lat);
-                    buf << "]}}";
-                }
-            }
+    std::vector<std::pair<std::uint64_t, EdgeDuration>> sorted_edges(geometry_weights.begin(),
+                                                                      geometry_weights.end());
+    std::sort(sorted_edges.begin(), sorted_edges.end());
+
+    for (const auto &entry : sorted_edges)
+    {
+        const auto key = entry.first;
+        const auto dur = entry.second;
+        const auto geometry_id = static_cast<PackedGeometryID>(key >> 1u);
+        const bool forward = (key & 1u) == 1u;
+
+        std::stringstream geometry_buf;
+        geometry_buf << std::setprecision(12);
+        geometry_buf << "{\"type\":\"Feature\",\"properties\":{\"weight\":" << from_alias<int>(dur)
+                     << "},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[";
+
+        bool first_coordinate = true;
+        std::size_t coordinate_count = 0;
+        const auto append_coordinate = [&](const NodeID node_id)
+        {
+            const auto coord = algorithms.GetFacade().GetCoordinateOfNode(node_id);
+            if (!first_coordinate)
+                geometry_buf << ',';
+            first_coordinate = false;
+            geometry_buf << '[' << toFloating(coord.lon) << ',' << toFloating(coord.lat) << ']';
+            ++coordinate_count;
+        };
+
+        if (forward)
+        {
+            for (const auto node_id : algorithms.GetFacade().GetUncompressedForwardGeometry(geometry_id))
+                append_coordinate(node_id);
         }
         else
         {
-            // fallback: single representative coordinate
-            const auto coord = algorithms.GetFacade().GetCoordinateOfNode(node);
-            std::ostringstream key_ss;
-            key_ss << std::setprecision(12) << toFloating(coord.lon) << ',' << toFloating(coord.lat);
-            const auto key = key_ss.str();
-            if (seen_coords.find(key) == seen_coords.end())
-            {
-                seen_coords.insert(key);
-                if (!first_feature)
-                    buf << ',';
-                first_feature = false;
-                buf << "{\"type\":\"Feature\",\"properties\":{\"weight\":" << from_alias<int>(dur) << "},\"geometry\":{\"type\":\"Point\",\"coordinates\":[";
-                buf << toFloating(coord.lon) << ',' << toFloating(coord.lat);
-                buf << "]}}";
-            }
+            for (const auto node_id : algorithms.GetFacade().GetUncompressedReverseGeometry(geometry_id))
+                append_coordinate(node_id);
         }
+
+        if (coordinate_count < 2)
+            continue;
+
+        geometry_buf << "]}}";
+        if (!first_feature)
+            buf << ',';
+        first_feature = false;
+        buf << geometry_buf.str();
     }
+
     buf << "]}";
 
     result = std::string(buf.str());

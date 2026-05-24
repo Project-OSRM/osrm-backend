@@ -98,68 +98,6 @@
             };
         }
 
-        function buildConnectionData(features) {
-            var points = [];
-            for (var i = 0; i < features.length; i++) {
-                var feature = features[i];
-                if (!feature.geometry || feature.geometry.type !== "Point") {
-                    continue;
-                }
-                var coord = feature.geometry.coordinates;
-                if (!coord || coord.length < 2) {
-                    continue;
-                }
-                points.push({
-                    coordinates: [coord[0], coord[1]],
-                    ratio: Number(feature.properties.weight_ratio) || 0
-                });
-            }
-
-            if (points.length < 2) {
-                return { type: "FeatureCollection", features: [] };
-            }
-
-            if (points.length > 4000) {
-                var stride = Math.ceil(points.length / 4000);
-                points = points.filter(function (_point, idx) { return idx % stride === 0; });
-            }
-
-            var lines = [];
-            for (var idx = 1; idx < points.length; idx++) {
-                var current = points[idx];
-                var nearestIndex = 0;
-                var nearestDistance = Infinity;
-
-                for (var jdx = 0; jdx < idx; jdx++) {
-                    var candidate = points[jdx];
-                    var dx = current.coordinates[0] - candidate.coordinates[0];
-                    var dy = current.coordinates[1] - candidate.coordinates[1];
-                    var distSq = dx * dx + dy * dy;
-                    if (distSq < nearestDistance) {
-                        nearestDistance = distSq;
-                        nearestIndex = jdx;
-                    }
-                }
-
-                var nearest = points[nearestIndex];
-                lines.push({
-                    type: "Feature",
-                    geometry: {
-                        type: "LineString",
-                        coordinates: [nearest.coordinates, current.coordinates]
-                    },
-                    properties: {
-                        weight_ratio: (nearest.ratio + current.ratio) / 2
-                    }
-                });
-            }
-
-            return {
-                type: "FeatureCollection",
-                features: lines
-            };
-        }
-
         function renderIsochrone(j) {
             var maxRangeSeconds = Number(j.max_range);
             if (!Number.isFinite(maxRangeSeconds) || maxRangeSeconds <= 0) {
@@ -167,7 +105,6 @@
             }
             var maxWeight = Math.max(1, maxRangeSeconds * 10);
             var normalizedData = normalizeIsochroneData(j, maxWeight);
-            var connectionData = buildConnectionData(normalizedData.features);
 
             if (map.getSource("isochrone")) {
                 map.getSource("isochrone").setData(normalizedData);
@@ -178,47 +115,14 @@
                 });
             }
 
-            if (map.getSource("isochrone-connections")) {
-                map.getSource("isochrone-connections").setData(connectionData);
-            } else {
-                map.addSource("isochrone-connections", {
-                    "type": "geojson",
-                    "data": connectionData
-                });
-            }
-
-            if (!map.getLayer("isochrone-heat")) {
+            if (!map.getLayer("isochrone-edges")) {
                 map.addLayer({
-                    "id": "isochrone-heat",
-                    "type": "heatmap",
-                    "source": "isochrone",
-                    "maxzoom": 15,
-                    "paint": {
-                        "heatmap-weight": ["get", "weight_ratio"],
-                        "heatmap-intensity": ["interpolate", ["linear"], ["zoom"], 0, 1, 15, 3],
-                        "heatmap-color": [
-                            "interpolate", ["linear"], ["heatmap-density"],
-                            0, "rgba(33,102,172,0)",
-                            0.2, "rgb(103,169,207)",
-                            0.4, "rgb(209,229,240)",
-                            0.6, "rgb(253,219,199)",
-                            0.8, "rgb(239,138,98)",
-                            1, "rgb(178,24,43)"
-                        ],
-                        "heatmap-radius": ["interpolate", ["linear"], ["zoom"], 0, 2, 15, 20],
-                        "heatmap-opacity": ["interpolate", ["linear"], ["zoom"], 7, 1, 15, 0]
-                    }
-                });
-            }
-
-            if (!map.getLayer("isochrone-links")) {
-                map.addLayer({
-                    "id": "isochrone-links",
+                    "id": "isochrone-edges",
                     "type": "line",
-                    "source": "isochrone-connections",
+                    "source": "isochrone",
                     "paint": {
-                        "line-width": ["interpolate", ["linear"], ["zoom"], 11, 0.4, 15, 2.0],
-                        "line-opacity": 0.55,
+                        "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.8, 14, 3.5],
+                        "line-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.65, 14, 0.9],
                         "line-color": [
                             "interpolate", ["linear"], ["get", "weight_ratio"],
                             0.0, "#313695",
@@ -227,45 +131,12 @@
                             0.6, "#fdae61",
                             0.8, "#f46d43",
                             1.0, "#a50026"
-                        ]
-                    }
-                });
-            }
-
-            if (!map.getLayer("isochrone-points")) {
-                map.addLayer({
-                    "id": "isochrone-points",
-                    "type": "circle",
-                    "source": "isochrone",
-                    "minzoom": 14,
-                    "paint": {
-                        "circle-radius": 3,
-                        "circle-color": [
-                            "interpolate", ["linear"], ["get", "weight_ratio"],
-                            0.0, "#313695",
-                            0.2, "#4575b4",
-                            0.4, "#74add1",
-                            0.6, "#fdae61",
-                            0.8, "#f46d43",
-                            1.0, "#a50026"
                         ],
-                        "circle-stroke-color": "#ffffff",
-                        "circle-stroke-width": 0.5,
-                        "circle-opacity": ["interpolate", ["linear"], ["zoom"], 14, 0, 15, 1]
+                        "line-blur": 0.1
                     }
                 });
             }
-
-            map.setPaintProperty("isochrone-points", "circle-color", [
-                "interpolate", ["linear"], ["get", "weight_ratio"],
-                0.0, "#313695",
-                0.2, "#4575b4",
-                0.4, "#74add1",
-                0.6, "#fdae61",
-                0.8, "#f46d43",
-                1.0, "#a50026"
-            ]);
-            map.setPaintProperty("isochrone-links", "line-color", [
+            map.setPaintProperty("isochrone-edges", "line-color", [
                 "interpolate", ["linear"], ["get", "weight_ratio"],
                 0.0, "#313695",
                 0.2, "#4575b4",
