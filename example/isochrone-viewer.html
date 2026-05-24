@@ -139,6 +139,15 @@
             return [[minLng, minLat], [maxLng, maxLat]];
         }
 
+        function boundsFitViewport(bounds) {
+            if (!bounds || !map || !map.getBounds) {
+                return false;
+            }
+
+            var currentBounds = map.getBounds();
+            return currentBounds.contains(bounds[0]) && currentBounds.contains(bounds[1]);
+        }
+
         function renderIsochrone(j) {
             var maxRangeSeconds = Number(j.max_range);
             if (!Number.isFinite(maxRangeSeconds) || maxRangeSeconds <= 0) {
@@ -226,7 +235,7 @@
             ]);
 
             var bounds = getBoundsForFeatures(features);
-            if (bounds) {
+            if (bounds && !boundsFitViewport(bounds)) {
                 map.fitBounds(bounds, { padding: 30, duration: 250, maxZoom: 15 });
             }
 
