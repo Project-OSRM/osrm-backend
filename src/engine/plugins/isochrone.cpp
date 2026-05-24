@@ -24,6 +24,13 @@ namespace engine
 {
 namespace plugins
 {
+namespace
+{
+thread_local std::unordered_map<std::uint64_t, std::vector<NodeID>> unpacked_path_cache;
+thread_local unsigned unpacked_path_cache_nodes = 0;
+thread_local unsigned unpacked_path_cache_edges = 0;
+constexpr std::size_t MAX_UNPACKED_PATH_CACHE_ENTRIES = 50000;
+}
 
 IsochronePlugin::IsochronePlugin(int max_range_seconds_)
     : max_range_seconds(max_range_seconds_)
@@ -232,6 +239,47 @@ IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                                                                       geometry_weights.end());
     std::sort(sorted_edges.begin(), sorted_edges.end());
 
+    const unsigned current_node_count =
+        mld_facade ? mld_facade->GetNumberOfNodes() : (ch_facade ? ch_facade->GetNumberOfNodes() : 0);
+    const unsigned current_edge_count =
+        mld_facade ? mld_facade->GetNumberOfEdges() : (ch_facade ? ch_facade->GetNumberOfEdges() : 0);
+    if (unpacked_path_cache_nodes != current_node_count ||
+        unpacked_path_cache_edges != current_edge_count)
+    {
+        unpacked_path_cache.clear();
+        unpacked_path_cache_nodes = current_node_count;
+        unpacked_path_cache_edges = current_edge_count;
+    }
+
+    const auto get_unpacked_geometry_nodes = [&](const PackedGeometryID geometry_id, const bool forward)
+        -> const std::vector<NodeID> &
+    {
+        const std::uint64_t cache_key = (static_cast<std::uint64_t>(geometry_id) << 1u) |
+                                        static_cast<std::uint64_t>(forward ? 1u : 0u);
+        const auto found = unpacked_path_cache.find(cache_key);
+        if (found != unpacked_path_cache.end())
+            return found->second;
+
+        if (unpacked_path_cache.size() >= MAX_UNPACKED_PATH_CACHE_ENTRIES)
+        {
+            unpacked_path_cache.clear();
+        }
+
+        auto [it, _inserted] = unpacked_path_cache.emplace(cache_key, std::vector<NodeID>{});
+        auto &nodes = it->second;
+        if (forward)
+        {
+            for (const auto node_id : algorithms.GetFacade().GetUncompressedForwardGeometry(geometry_id))
+                nodes.push_back(node_id);
+        }
+        else
+        {
+            for (const auto node_id : algorithms.GetFacade().GetUncompressedReverseGeometry(geometry_id))
+                nodes.push_back(node_id);
+        }
+        return nodes;
+    };
+
     for (const auto &entry : sorted_edges)
     {
         const auto key = entry.first;
@@ -244,6 +292,7 @@ IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         geometry_buf << "{\"type\":\"Feature\",\"properties\":{\"weight\":" << from_alias<int>(dur)
                      << "},\"geometry\":{\"type\":\"LineString\",\"coordinates\":[";
 
+        const auto &geometry_nodes = get_unpacked_geometry_nodes(geometry_id, forward);
         bool first_coordinate = true;
         std::size_t coordinate_count = 0;
         const auto append_coordinate = [&](const NodeID node_id)
@@ -256,16 +305,8 @@ IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             ++coordinate_count;
         };
 
-        if (forward)
-        {
-            for (const auto node_id : algorithms.GetFacade().GetUncompressedForwardGeometry(geometry_id))
-                append_coordinate(node_id);
-        }
-        else
-        {
-            for (const auto node_id : algorithms.GetFacade().GetUncompressedReverseGeometry(geometry_id))
-                append_coordinate(node_id);
-        }
+        for (const auto node_id : geometry_nodes)
+            append_coordinate(node_id);
 
         if (coordinate_count < 2)
             continue;

@@ -98,6 +98,47 @@
             };
         }
 
+        function getBoundsForFeatures(features) {
+            var minLng = Infinity;
+            var minLat = Infinity;
+            var maxLng = -Infinity;
+            var maxLat = -Infinity;
+            var hasCoordinates = false;
+
+            function includeCoordinate(coord) {
+                if (!coord || coord.length < 2) {
+                    return;
+                }
+                var lng = Number(coord[0]);
+                var lat = Number(coord[1]);
+                if (!Number.isFinite(lng) || !Number.isFinite(lat)) {
+                    return;
+                }
+                minLng = Math.min(minLng, lng);
+                minLat = Math.min(minLat, lat);
+                maxLng = Math.max(maxLng, lng);
+                maxLat = Math.max(maxLat, lat);
+                hasCoordinates = true;
+            }
+
+            features.forEach(function (feature) {
+                if (!feature || !feature.geometry) {
+                    return;
+                }
+                var geometry = feature.geometry;
+                if (geometry.type === "Point") {
+                    includeCoordinate(geometry.coordinates);
+                } else if (geometry.type === "LineString" && Array.isArray(geometry.coordinates)) {
+                    geometry.coordinates.forEach(includeCoordinate);
+                }
+            });
+
+            if (!hasCoordinates) {
+                return null;
+            }
+            return [[minLng, minLat], [maxLng, maxLat]];
+        }
+
         function renderIsochrone(j) {
             var maxRangeSeconds = Number(j.max_range);
             if (!Number.isFinite(maxRangeSeconds) || maxRangeSeconds <= 0) {
@@ -105,6 +146,13 @@
             }
             var maxWeight = Math.max(1, maxRangeSeconds * 10);
             var normalizedData = normalizeIsochroneData(j, maxWeight);
+            var features = normalizedData.features || [];
+            var lineFeatureCount = features.filter(function (f) {
+                return f.geometry && f.geometry.type === "LineString";
+            }).length;
+            var pointFeatureCount = features.filter(function (f) {
+                return f.geometry && f.geometry.type === "Point";
+            }).length;
 
             if (map.getSource("isochrone")) {
                 map.getSource("isochrone").setData(normalizedData);
@@ -120,6 +168,7 @@
                     "id": "isochrone-edges",
                     "type": "line",
                     "source": "isochrone",
+                    "filter": ["==", ["geometry-type"], "LineString"],
                     "paint": {
                         "line-width": ["interpolate", ["linear"], ["zoom"], 8, 0.8, 14, 3.5],
                         "line-opacity": ["interpolate", ["linear"], ["zoom"], 8, 0.65, 14, 0.9],
@@ -136,6 +185,27 @@
                     }
                 });
             }
+            if (!map.getLayer("isochrone-points")) {
+                map.addLayer({
+                    "id": "isochrone-points",
+                    "type": "circle",
+                    "source": "isochrone",
+                    "filter": ["==", ["geometry-type"], "Point"],
+                    "paint": {
+                        "circle-radius": 2.5,
+                        "circle-color": [
+                            "interpolate", ["linear"], ["get", "weight_ratio"],
+                            0.0, "#313695",
+                            0.2, "#4575b4",
+                            0.4, "#74add1",
+                            0.6, "#fdae61",
+                            0.8, "#f46d43",
+                            1.0, "#a50026"
+                        ],
+                        "circle-opacity": 0.9
+                    }
+                });
+            }
             map.setPaintProperty("isochrone-edges", "line-color", [
                 "interpolate", ["linear"], ["get", "weight_ratio"],
                 0.0, "#313695",
@@ -145,6 +215,25 @@
                 0.8, "#f46d43",
                 1.0, "#a50026"
             ]);
+            map.setPaintProperty("isochrone-points", "circle-color", [
+                "interpolate", ["linear"], ["get", "weight_ratio"],
+                0.0, "#313695",
+                0.2, "#4575b4",
+                0.4, "#74add1",
+                0.6, "#fdae61",
+                0.8, "#f46d43",
+                1.0, "#a50026"
+            ]);
+
+            var bounds = getBoundsForFeatures(features);
+            if (bounds) {
+                map.fitBounds(bounds, { padding: 30, duration: 250, maxZoom: 15 });
+            }
+
+            document.getElementById('info').innerHTML =
+                "features: " + features.length +
+                " (lines: " + lineFeatureCount + ", points: " + pointFeatureCount + ")" +
+                "<br />max range: " + maxRangeSeconds + " s";
         }
 
         function requestIsochrone(lngLat) {
@@ -156,21 +245,26 @@
             updateRangeLabel();
 
             var url = "http://localhost:5000/isochrone/v1/driving/" +
-                lngLat.lng + "," + lngLat.lat + "?range=" + encodeURIComponent(range);
+                lngLat.lng + "," + lngLat.lat + ".json?range=" + encodeURIComponent(range);
 
             fetch(url, { signal: currentController.signal })
                 .then(function (response) {
                     if (!response.ok) {
                         throw new Error("HTTP " + response.status);
                     }
-                    return response.json();
+                    return response.text();
                 })
-                .then(function (json) {
+                .then(function (body) {
+                    var json = JSON.parse(body);
+                    if (json && json.code && json.code !== "Ok") {
+                        throw new Error((json.message || json.code));
+                    }
                     renderIsochrone(json);
                 })
                 .catch(function (error) {
                     if (error.name !== "AbortError") {
                         console.error(error);
+                        document.getElementById('info').innerHTML = "isochrone request failed: " + error.message;
                     }
                 });
         }
