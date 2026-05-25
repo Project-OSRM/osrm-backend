@@ -108,6 +108,26 @@ static_assert(std::is_trivially_default_constructible<UnsafeFloatLongitude>(),
 static_assert(std::is_trivially_copyable<UnsafeFloatLongitude>(),
               "UnsafeFloatLongitude must be trivially copyable.");
 
+inline FixedLatitude operator""_lat(unsigned long long latitude)
+{
+    return FixedLatitude{boost::numeric_cast<std::int32_t>(latitude)};
+}
+
+constexpr FloatLatitude operator""_lat(long double latitude)
+{
+    return FloatLatitude{static_cast<double>(latitude)};
+}
+
+inline FixedLongitude operator""_lon(unsigned long long longitude)
+{
+    return FixedLongitude{boost::numeric_cast<std::int32_t>(longitude)};
+}
+
+constexpr FloatLongitude operator""_lon(long double longitude)
+{
+    return FloatLongitude{static_cast<double>(longitude)};
+}
+
 /**
  * Converts a typed latitude from floating to fixed representation.
  *
