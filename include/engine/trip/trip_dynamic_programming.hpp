@@ -29,7 +29,8 @@ DynamicProgrammingTrip(const std::size_t number_of_locations,
                      "number_of_locations too large for DP solver");
 
     const std::size_t n = number_of_locations;
-    const std::size_t mask_count = static_cast<std::size_t>(1ULL << n);
+    const std::size_t one = std::size_t{1};
+    const std::size_t mask_count = one << n;
 
     // dp[mask * n + i] == minimum cost to visit set "mask" and end at i
     const EdgeDuration INF = INVALID_EDGE_DURATION;
@@ -38,17 +39,17 @@ DynamicProgrammingTrip(const std::size_t number_of_locations,
     auto idx = [n](std::size_t mask, std::size_t i) { return mask * n + i; };
 
     // start at node 0
-    dp[idx(1u, 0u)] = EdgeDuration{0};
+    dp[idx(one, 0u)] = EdgeDuration{0};
 
     for (std::size_t mask = 1; mask < mask_count; ++mask)
     {
         // only consider masks that include the starting node (0)
-        if ((mask & 1u) == 0u)
+        if ((mask & one) == 0u)
             continue;
 
         for (std::size_t i = 0; i < n; ++i)
         {
-            if ((mask & (1u << i)) == 0u)
+            if ((mask & (one << i)) == 0u)
                 continue;
 
             const auto current = dp[idx(mask, i)];
@@ -57,14 +58,14 @@ DynamicProgrammingTrip(const std::size_t number_of_locations,
 
             for (std::size_t j = 0; j < n; ++j)
             {
-                if (mask & (1u << j))
+                if (mask & (one << j))
                     continue; // j already visited
 
                 const auto edge = dist_table(static_cast<NodeID>(i), static_cast<NodeID>(j));
                 if (edge == INVALID_EDGE_DURATION)
                     continue;
 
-                const auto next_mask = mask | (1u << j);
+                const auto next_mask = mask | (one << j);
                 const auto cand = current + edge;
                 auto &dst = dp[idx(next_mask, j)];
                 if (cand < dst)
@@ -113,11 +114,11 @@ DynamicProgrammingTrip(const std::size_t number_of_locations,
 
     for (std::size_t pos = n - 1; pos > 0; --pos)
     {
-        const std::size_t prev_mask = mask ^ (1u << curr);
+        const std::size_t prev_mask = mask ^ (one << curr);
         int found_prev = -1;
         for (std::size_t p = 0; p < n; ++p)
         {
-            if ((prev_mask & (1u << p)) == 0u)
+            if ((prev_mask & (one << p)) == 0u)
                 continue;
             const auto prev_val = dp[idx(prev_mask, p)];
             if (prev_val == INF)

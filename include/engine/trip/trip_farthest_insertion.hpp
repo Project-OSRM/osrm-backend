@@ -8,6 +8,7 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <cstdint>
 #include <cstdlib>
 #include <limits>
 #include <vector>
@@ -156,8 +157,21 @@ inline std::vector<NodeID> TwoOptTrip(std::vector<NodeID> route,
                 const auto c = route[k];
                 const auto d = route[(k + 1) % route_size];
 
-                const auto current_cost = dist_table(a, b) + dist_table(c, d);
-                const auto swapped_cost = dist_table(a, c) + dist_table(b, d);
+                const auto ab = dist_table(a, b);
+                const auto cd = dist_table(c, d);
+                const auto ac = dist_table(a, c);
+                const auto bd = dist_table(b, d);
+
+                if (ab == INVALID_EDGE_DURATION || cd == INVALID_EDGE_DURATION ||
+                    ac == INVALID_EDGE_DURATION || bd == INVALID_EDGE_DURATION)
+                {
+                    continue;
+                }
+
+                const auto current_cost = static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(ab)) +
+                                          static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(cd));
+                const auto swapped_cost = static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(ac)) +
+                                          static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(bd));
 
                 if (swapped_cost < current_cost)
                 {
