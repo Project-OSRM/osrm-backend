@@ -108,9 +108,9 @@ static_assert(std::is_trivially_default_constructible<UnsafeFloatLongitude>(),
 static_assert(std::is_trivially_copyable<UnsafeFloatLongitude>(),
               "UnsafeFloatLongitude must be trivially copyable.");
 
-constexpr FixedLatitude operator"" _lat(unsigned long long latitude)
+inline FixedLatitude operator"" _lat(unsigned long long latitude)
 {
-    return FixedLatitude{static_cast<std::int32_t>(latitude)};
+    return FixedLatitude{boost::numeric_cast<std::int32_t>(latitude)};
 }
 
 constexpr FloatLatitude operator"" _lat(long double latitude)
@@ -118,9 +118,9 @@ constexpr FloatLatitude operator"" _lat(long double latitude)
     return FloatLatitude{static_cast<double>(latitude)};
 }
 
-constexpr FixedLongitude operator"" _lon(unsigned long long longitude)
+inline FixedLongitude operator"" _lon(unsigned long long longitude)
 {
-    return FixedLongitude{static_cast<std::int32_t>(longitude)};
+    return FixedLongitude{boost::numeric_cast<std::int32_t>(longitude)};
 }
 
 constexpr FloatLongitude operator"" _lon(long double longitude)
