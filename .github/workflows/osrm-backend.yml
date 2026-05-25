@@ -30,8 +30,44 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  vcpkg-smoke-prereq:
+    if: github.repository == 'Project-OSRM/osrm-backend'
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v6
+      - uses: dorny/paths-filter@v4
+        id: dep_changes
+        with:
+          filters: |
+            deps:
+              - 'vcpkg.json'
+              - 'vcpkg-configuration.json'
+              - 'vcpkg-overlay-ports/**'
+              - 'CMakePresets.json'
+              - '.github/workflows/osrm-backend.yml'
+              - '.github/workflows/vcpkg-smoke.yml'
+      - name: Enable vcpkg binary cache
+        if: steps.dep_changes.outputs.deps == 'true'
+        uses: actions/cache@v5
+        with:
+          path: ${{ github.workspace }}/.vcpkg-bincache
+          key: vcpkg-smoke-${{ runner.os }}-${{ runner.arch }}-x64-linux-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
+          restore-keys: |
+            vcpkg-smoke-${{ runner.os }}-${{ runner.arch }}-x64-linux-${{ env.VCPKG_COMMIT_ID }}-
+      - name: Setup vcpkg (smoke)
+        if: steps.dep_changes.outputs.deps == 'true'
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          runVcpkgInstall: true
+          # Pin to top-level manifest; the default glob **/vcpkg.json would
+          # otherwise pick up overlay port manifests in vcpkg-overlay-ports/.
+          vcpkgJsonGlob: 'vcpkg.json'
+        env:
+          VCPKG_DEFAULT_TRIPLET: x64-linux
+
   vcpkg-windows-release-bindings:
-    needs: format-taginfo-docs
+    needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     strategy:
       matrix:
         os: [windows-2025]
@@ -180,7 +216,7 @@ jobs:
     strategy:
       matrix:
         docker-base-image: ['debian', 'alpine']
-    needs: format-taginfo-docs
+    needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-22.04
     continue-on-error: false
@@ -234,7 +270,7 @@ jobs:
           docker stop osrm-container
 
   build-matrix:
-    needs: format-taginfo-docs
+    needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     if: github.repository == 'Project-OSRM/osrm-backend'
     strategy:
       matrix:
