@@ -26,6 +26,8 @@ concurrency:
   cancel-in-progress: true
 
 env:
+  # Keep in sync with vcpkg-configuration.json baseline.
+  VCPKG_COMMIT_ID: c3867e714dd3a51c272826eea77267876517ed99
   # Use a local filesystem directory as vcpkg's binary cache. The directory
   # itself is persisted across CI runs via actions/cache@v5. The x-gha
   # backend was removed upstream; files+actions/cache is the replacement.
@@ -55,15 +57,15 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
-          key: vcpkg-${{ matrix.os }}-${{ matrix.triplet }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.triplet }}-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
           restore-keys: |
-            vcpkg-${{ matrix.os }}-${{ matrix.triplet }}-
+            vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.triplet }}-${{ env.VCPKG_COMMIT_ID }}-
 
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
-          # Pinned to vcpkg-configuration.json baseline (2026.03.18).
-          vcpkgGitCommitId: c3867e714dd3a51c272826eea77267876517ed99
+          # Pinned to vcpkg-configuration.json baseline.
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
           runVcpkgInstall: true
           # Pin to top-level manifest; the default glob **/vcpkg.json would
           # otherwise pick up overlay port manifests in vcpkg-overlay-ports/.
