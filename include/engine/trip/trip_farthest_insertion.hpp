@@ -132,6 +132,48 @@ inline std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
 }
 
 inline std::vector<NodeID>
+TwoOptTrip(std::vector<NodeID> route, const util::DistTableWrapper<EdgeDuration> &dist_table)
+{
+    if (route.size() < 4)
+        return route;
+
+    bool improved = true;
+    while (improved)
+    {
+        improved = false;
+        const auto route_size = route.size();
+
+        for (std::size_t i = 0; i + 2 < route_size && !improved; ++i)
+        {
+            const auto a = route[i];
+            const auto b = route[(i + 1) % route_size];
+
+            for (std::size_t k = i + 2; k < route_size; ++k)
+            {
+                if (i == 0 && k + 1 == route_size)
+                    continue;
+
+                const auto c = route[k];
+                const auto d = route[(k + 1) % route_size];
+
+                const auto current_cost = dist_table(a, b) + dist_table(c, d);
+                const auto swapped_cost = dist_table(a, c) + dist_table(b, d);
+
+                if (swapped_cost < current_cost)
+                {
+                    std::reverse(std::begin(route) + static_cast<std::ptrdiff_t>(i + 1),
+                                  std::begin(route) + static_cast<std::ptrdiff_t>(k + 1));
+                    improved = true;
+                    break;
+                }
+            }
+        }
+    }
+
+    return route;
+}
+
+inline std::vector<NodeID>
 FarthestInsertionTrip(const std::size_t number_of_locations,
                       const util::DistTableWrapper<EdgeDuration> &dist_table)
 {
