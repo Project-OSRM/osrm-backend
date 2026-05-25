@@ -122,4 +122,30 @@ BOOST_AUTO_TEST_CASE(two_opt_improves_suboptimal_route)
     BOOST_CHECK(route_cost(dist, optimized) < route_cost(dist, route));
 }
 
+BOOST_AUTO_TEST_CASE(two_opt_does_not_worsen_asymmetric_route)
+{
+    const std::size_t n = 5;
+    std::vector<EdgeDuration> table;
+    table.reserve(n * n);
+    const int raw[n][n] = {
+        {0, 7, 31, 38, 40},
+        {37, 0, 6, 13, 24},
+        {39, 15, 0, 26, 22},
+        {8, 6, 5, 0, 15},
+        {17, 37, 21, 32, 0},
+    };
+
+    for (std::size_t i = 0; i < n; ++i)
+        for (std::size_t j = 0; j < n; ++j)
+            table.push_back(EdgeDuration{raw[i][j]});
+
+    DistTableWrapper<EdgeDuration> dist(table, n);
+    const std::vector<NodeID> route = {0, 1, 2, 3, 4};
+
+    const auto optimized = osrm::engine::trip::TwoOptTrip(route, dist);
+
+    BOOST_CHECK(route_cost(dist, optimized) != INVALID_EDGE_DURATION);
+    BOOST_CHECK(route_cost(dist, optimized) <= route_cost(dist, route));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

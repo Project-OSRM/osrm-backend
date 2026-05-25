@@ -143,6 +143,38 @@ inline std::vector<NodeID> TwoOptTrip(std::vector<NodeID> route,
     {
         improved = false;
         const auto route_size = route.size();
+        std::vector<EdgeDuration> forward(route_size);
+        std::vector<std::int64_t> prefix_delta(route_size + 1, 0);
+        std::vector<std::size_t> prefix_invalid_reverse(route_size + 1, 0);
+
+        // Precompute edge costs and prefix sums for directed 2-opt delta in O(1) per candidate.
+        for (std::size_t edge = 0; edge < route_size; ++edge)
+        {
+            const auto from = route[edge];
+            const auto to = route[(edge + 1) % route_size];
+            const auto edge_forward = dist_table(from, to);
+            if (edge_forward == INVALID_EDGE_DURATION)
+            {
+                return route;
+            }
+
+            const auto edge_reverse = dist_table(to, from);
+
+            forward[edge] = edge_forward;
+            prefix_delta[edge + 1] = prefix_delta[edge];
+            prefix_invalid_reverse[edge + 1] = prefix_invalid_reverse[edge];
+
+            if (edge_reverse == INVALID_EDGE_DURATION)
+            {
+                ++prefix_invalid_reverse[edge + 1];
+            }
+            else
+            {
+                prefix_delta[edge + 1] +=
+                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(edge_reverse)) -
+                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(edge_forward));
+            }
+        }
 
         for (std::size_t i = 0; i + 2 < route_size && !improved; ++i)
         {
@@ -156,26 +188,32 @@ inline std::vector<NodeID> TwoOptTrip(std::vector<NodeID> route,
 
                 const auto c = route[k];
                 const auto d = route[(k + 1) % route_size];
-
-                const auto ab = dist_table(a, b);
-                const auto cd = dist_table(c, d);
+                const auto ab = forward[i];
+                const auto cd = forward[k];
                 const auto ac = dist_table(a, c);
                 const auto bd = dist_table(b, d);
 
-                if (ab == INVALID_EDGE_DURATION || cd == INVALID_EDGE_DURATION ||
-                    ac == INVALID_EDGE_DURATION || bd == INVALID_EDGE_DURATION)
+                if (ac == INVALID_EDGE_DURATION || bd == INVALID_EDGE_DURATION)
                 {
                     continue;
                 }
 
-                const auto current_cost =
-                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(ab)) +
-                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(cd));
-                const auto swapped_cost =
-                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(ac)) +
-                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(bd));
+                // Reversing the segment [i+1, k] turns each interior edge (u->v) into (v->u).
+                const auto invalid_reverse_edges =
+                    prefix_invalid_reverse[k] - prefix_invalid_reverse[i + 1];
+                if (invalid_reverse_edges > 0)
+                {
+                    continue;
+                }
 
-                if (swapped_cost < current_cost)
+                const auto interior_delta = prefix_delta[k] - prefix_delta[i + 1];
+                const auto boundary_delta =
+                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(ac)) +
+                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(bd)) -
+                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(ab)) -
+                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(cd));
+
+                if (boundary_delta + interior_delta < 0)
                 {
                     std::reverse(std::begin(route) + static_cast<std::ptrdiff_t>(i + 1),
                                  std::begin(route) + static_cast<std::ptrdiff_t>(k + 1));
