@@ -38,10 +38,7 @@ BOOST_AUTO_TEST_CASE(dp_equals_bruteforce_small)
     const std::size_t n = 4;
     std::vector<EdgeDuration> table;
     table.reserve(n * n);
-    const int raw[n][n] = {{0, 1, 3, 4},
-                           {1, 0, 2, 5},
-                           {3, 2, 0, 1},
-                           {4, 5, 1, 0}};
+    const int raw[n][n] = {{0, 1, 3, 4}, {1, 0, 2, 5}, {3, 2, 0, 1}, {4, 5, 1, 0}};
 
     for (std::size_t i = 0; i < n; ++i)
         for (std::size_t j = 0; j < n; ++j)
@@ -109,10 +106,7 @@ BOOST_AUTO_TEST_CASE(two_opt_improves_suboptimal_route)
     const std::size_t n = 4;
     std::vector<EdgeDuration> table;
     table.reserve(n * n);
-    const int raw[n][n] = {{0, 10, 1, 10},
-                           {10, 0, 10, 1},
-                           {1, 10, 0, 10},
-                           {10, 1, 10, 0}};
+    const int raw[n][n] = {{0, 10, 1, 10}, {10, 0, 10, 1}, {1, 10, 0, 10}, {10, 1, 10, 0}};
 
     for (std::size_t i = 0; i < n; ++i)
         for (std::size_t j = 0; j < n; ++j)

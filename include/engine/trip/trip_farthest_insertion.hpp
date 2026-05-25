@@ -131,8 +131,8 @@ inline std::vector<NodeID> FindRoute(const std::size_t &number_of_locations,
     return route;
 }
 
-inline std::vector<NodeID>
-TwoOptTrip(std::vector<NodeID> route, const util::DistTableWrapper<EdgeDuration> &dist_table)
+inline std::vector<NodeID> TwoOptTrip(std::vector<NodeID> route,
+                                      const util::DistTableWrapper<EdgeDuration> &dist_table)
 {
     if (route.size() < 4)
         return route;
@@ -162,7 +162,7 @@ TwoOptTrip(std::vector<NodeID> route, const util::DistTableWrapper<EdgeDuration>
                 if (swapped_cost < current_cost)
                 {
                     std::reverse(std::begin(route) + static_cast<std::ptrdiff_t>(i + 1),
-                                  std::begin(route) + static_cast<std::ptrdiff_t>(k + 1));
+                                 std::begin(route) + static_cast<std::ptrdiff_t>(k + 1));
                     improved = true;
                     break;
                 }

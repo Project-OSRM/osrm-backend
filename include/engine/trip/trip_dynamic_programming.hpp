@@ -15,8 +15,9 @@
 namespace osrm::engine::trip
 {
 
-inline std::vector<NodeID> DynamicProgrammingTrip(const std::size_t number_of_locations,
-                                                  const util::DistTableWrapper<EdgeDuration> &dist_table)
+inline std::vector<NodeID>
+DynamicProgrammingTrip(const std::size_t number_of_locations,
+                       const util::DistTableWrapper<EdgeDuration> &dist_table)
 {
     BOOST_ASSERT_MSG(number_of_locations * number_of_locations == dist_table.size(),
                      "number_of_locations and dist_table size do not match");
