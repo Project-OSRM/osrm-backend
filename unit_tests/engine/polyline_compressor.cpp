@@ -95,8 +95,8 @@ BOOST_AUTO_TEST_CASE(polyline_large_coordinate_difference_test)
     using namespace osrm::engine;
     using namespace osrm::util;
 
-    const std::vector<Coordinate> coords({{-179.000000_lon, -89.000000_lat},
-                                          {179.000000_lon, 89.000000_lat}});
+    const std::vector<Coordinate> coords(
+        {{-179.000000_lon, -89.000000_lat}, {179.000000_lon, 89.000000_lat}});
 
     const std::string encoded = encodePolyline(coords.begin(), coords.end());
     BOOST_CHECK_EQUAL(encoded, "~xe~O~|oca@_sl}`@_{`hcA");

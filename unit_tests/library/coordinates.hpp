@@ -24,10 +24,7 @@ inline Locations get_split_trace_locations()
             {7.421489_lon, 43.736553_lat}};
 }
 
-inline Location get_dummy_location()
-{
-    return {7.437069_lon, 43.749249_lat};
-}
+inline Location get_dummy_location() { return {7.437069_lon, 43.749249_lat}; }
 
 inline Locations get_locations_in_small_component()
 {

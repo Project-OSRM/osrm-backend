@@ -90,9 +90,7 @@ BOOST_AUTO_TEST_CASE(polyline_sign_check)
 {
     // check sign conversion correctness from zig-zag encoding to two's complement
     std::vector<util::Coordinate> coords = {
-        {0.0_lon, 0.0_lat},
-        {-0.00001_lon, 0.00000_lat},
-        {0.00000_lon, -0.00001_lat}};
+        {0.0_lon, 0.0_lat}, {-0.00001_lon, 0.00000_lat}, {0.00000_lon, -0.00001_lat}};
 
     const auto polyline = encodePolyline<100000>(coords.begin(), coords.end());
     const auto result = decodePolyline(polyline);
@@ -109,9 +107,7 @@ BOOST_AUTO_TEST_CASE(polyline_short_strings)
     // check zero longitude difference in the last coordinate
     // the polyline is incorrect, but decodePolyline must not fail
     std::vector<util::Coordinate> coords = {
-        {13.32476_lon, 52.52632_lat},
-        {13.30179_lon, 52.59155_lat},
-        {13.30179_lon, 52.60391_lat}};
+        {13.32476_lon, 52.52632_lat}, {13.30179_lon, 52.59155_lat}, {13.30179_lon, 52.60391_lat}};
 
     const auto polyline = encodePolyline<100000>(coords.begin(), coords.end());
     BOOST_CHECK(polyline.back() == '?');
