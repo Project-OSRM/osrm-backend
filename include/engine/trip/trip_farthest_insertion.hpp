@@ -168,10 +168,12 @@ inline std::vector<NodeID> TwoOptTrip(std::vector<NodeID> route,
                     continue;
                 }
 
-                const auto current_cost = static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(ab)) +
-                                          static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(cd));
-                const auto swapped_cost = static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(ac)) +
-                                          static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(bd));
+                const auto current_cost =
+                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(ab)) +
+                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(cd));
+                const auto swapped_cost =
+                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(ac)) +
+                    static_cast<std::int64_t>(static_cast<EdgeDuration::value_type>(bd));
 
                 if (swapped_cost < current_cost)
                 {
