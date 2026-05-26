@@ -50,7 +50,10 @@ class synchronized_streambuf : public std::streambuf
 class redirect_stderr
 {
   public:
-    explicit redirect_stderr(std::streambuf *buf) : sync_buf_(buf), old_(std::cerr.rdbuf(&sync_buf_)) {}
+    explicit redirect_stderr(std::streambuf *buf)
+        : sync_buf_(buf), old_(std::cerr.rdbuf(&sync_buf_))
+    {
+    }
     ~redirect_stderr() { std::cerr.rdbuf(old_); }
 
   private:
