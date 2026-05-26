@@ -8,7 +8,7 @@ import { When } from '@cucumber/cucumber';
 
 When(/^I request nearest I should get$/, async function (table) {
   await this.reprocessAndLoadData();
-  const testRow = function (row, ri) {
+  const testRow = function (row, _ri) {
     return new Promise((resolve, reject) => {
       const inNode = this.findNodeByName(row.in);
       if (!inNode) return reject(new Error(util.format('*** unknown in-node "%s"', row.in)));
@@ -30,38 +30,53 @@ When(/^I request nearest I should get$/, async function (table) {
               got.data_version = json.data_version || '';
             }
 
-            if (json.waypoints && json.waypoints.length && row.out) {
-              coord = json.waypoints[0].location;
+            if (json.waypoints && json.waypoints.length) {
+              if (headers.has('result_count')) {
+                got.result_count = json.waypoints.length.toString();
+              }
 
-              got.out = row.out;
+              if (headers.has('name')) {
+                got.name = json.waypoints[0].name || '';
+              }
 
-              const outNode = this.findNodeByName(row.out);
-              if (!outNode) return reject(new Error(util.format('*** unknown out-node "%s"', row.out)));
+              if (headers.has('snapping_distance')) {
+                const dist = json.waypoints[0].distance;
+                got.snapping_distance = dist != null ? dist.toFixed(1) : '';
+              }
 
-              Object.keys(row).forEach((key) => {
-                if (key === 'out') {
-                  if (this.FuzzyMatch.matchLocation(coord, outNode)) {
-                    got[key] = row[key];
-                  } else {
-                    row[key] = util.format('%s [%d,%d]', row[key], outNode.lat, outNode.lon);
+              if (row.out) {
+                coord = json.waypoints[0].location;
+
+                got.out = row.out;
+
+                const outNode = this.findNodeByName(row.out);
+                if (!outNode) return reject(new Error(util.format('*** unknown out-node "%s"', row.out)));
+
+                Object.keys(row).forEach((key) => {
+                  if (key === 'out') {
+                    if (this.FuzzyMatch.matchLocation(coord, outNode)) {
+                      got[key] = row[key];
+                    } else {
+                      row[key] = util.format('%s [%d,%d]', row[key], outNode.lat, outNode.lon);
+                    }
+                  } else if (key === 'nodes') {
+                    const nodeNames = row.nodes.split(',').map(n => n.trim()).filter(n => n.length > 0);
+                    if (nodeNames.length !== 2)
+                      throw new Error(util.format('*** nodes column must be "from,to", got "%s"', row.nodes));
+                    const fromNode = this.findNodeByName(nodeNames[0]);
+                    const toNode = this.findNodeByName(nodeNames[1]);
+                    if (!fromNode) throw new Error(util.format('*** unknown from-node "%s"', nodeNames[0]));
+                    if (!toNode) throw new Error(util.format('*** unknown to-node "%s"', nodeNames[1]));
+                    const actualNodes = json.waypoints[0].nodes;
+                    if (actualNodes && actualNodes[0] === fromNode.id && actualNodes[1] === toNode.id) {
+                      got.nodes = row.nodes;
+                    } else {
+                      row.nodes = util.format('%s [got: %s,%s]', row.nodes,
+                        actualNodes ? actualNodes[0] : '?', actualNodes ? actualNodes[1] : '?');
+                    }
                   }
-                } else if (key === 'nodes') {
-                  const nodeNames = row.nodes.split(',').map(n => n.trim()).filter(n => n.length > 0);
-                  if (nodeNames.length !== 2)
-                    throw new Error(util.format('*** nodes column must be "from,to", got "%s"', row.nodes));
-                  const fromNode = this.findNodeByName(nodeNames[0]);
-                  const toNode = this.findNodeByName(nodeNames[1]);
-                  if (!fromNode) throw new Error(util.format('*** unknown from-node "%s"', nodeNames[0]));
-                  if (!toNode) throw new Error(util.format('*** unknown to-node "%s"', nodeNames[1]));
-                  const actualNodes = json.waypoints[0].nodes;
-                  if (actualNodes && actualNodes[0] === fromNode.id && actualNodes[1] === toNode.id) {
-                    got.nodes = row.nodes;
-                  } else {
-                    row.nodes = util.format('%s [got: %s,%s]', row.nodes,
-                      actualNodes ? actualNodes[0] : '?', actualNodes ? actualNodes[1] : '?');
-                  }
-                }
-              });
+                });
+              }
             }
 
           }
@@ -79,7 +94,7 @@ When(/^I request nearest I should get$/, async function (table) {
 
 When(/^I request nearest with flatbuffers I should get$/, async function (table) {
   await this.reprocessAndLoadData();
-  const testRow = function (row, ri) {
+  const testRow = function (row, _ri) {
     return new Promise((resolve, reject) => {
       const inNode = this.findNodeByName(row.in);
       if (!inNode) return reject(new Error(util.format('*** unknown in-node "%s"', row.in)));

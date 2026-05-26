@@ -68,6 +68,9 @@ When(/^I plan a trip I should get$/, async function (table) {
         let trip_distance;
         let ok = res.statusCode === 200;
         if (ok) {
+          if (headers.has('weight_name')) {
+            got.weight_name = json.trips && json.trips[0] ? json.trips[0].weight_name : '';
+          }
           if (headers.has('trips')) {
             // Prefer waypoint_index/trips_index from the API response to reconstruct
             // trip order. This is robust against route-geometry details and still

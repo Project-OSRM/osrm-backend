@@ -61,6 +61,24 @@ Feature: Basic trip planning
             | waypoints   | trips  | data_version          | code |
             | a,a         | aa     | cucumber_data_version | Ok   |
 
+    Scenario: Testbot - Trip: weight_name is reported
+        Given the node map
+            """
+            a b
+            c d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | cb    |
+            | da    |
+
+        When I plan a trip I should get
+            | waypoints   | trips  | weight_name | code |
+            | a,a         | aa     | duration    | Ok   |
+
     Scenario: Testbot - Trip: Roundtrip with waypoints (less than 10)
         Given the node map
             """
