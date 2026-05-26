@@ -1,130 +1,193 @@
 from collections.abc import Iterator, Sequence
 from typing import overload
 
+
 class EngineConfig:
     @overload
     def __init__(self) -> None: ...
+
     @overload
     def __init__(self, **kwargs) -> None: ...
+
     def IsValid(self) -> bool: ...
+
     def SetStorageConfig(self, arg: str, /) -> None: ...
+
     @property
     def max_locations_trip(self) -> int: ...
+
     @max_locations_trip.setter
     def max_locations_trip(self, arg: int, /) -> None: ...
+
     @property
     def max_locations_viaroute(self) -> int: ...
+
     @max_locations_viaroute.setter
     def max_locations_viaroute(self, arg: int, /) -> None: ...
+
     @property
     def max_locations_distance_table(self) -> int: ...
+
     @max_locations_distance_table.setter
     def max_locations_distance_table(self, arg: int, /) -> None: ...
+
     @property
     def max_locations_map_matching(self) -> int: ...
+
     @max_locations_map_matching.setter
     def max_locations_map_matching(self, arg: int, /) -> None: ...
+
     @property
     def max_radius_map_matching(self) -> float: ...
+
     @max_radius_map_matching.setter
     def max_radius_map_matching(self, arg: float, /) -> None: ...
+
     @property
     def max_results_nearest(self) -> int: ...
+
     @max_results_nearest.setter
     def max_results_nearest(self, arg: int, /) -> None: ...
+
     @property
     def default_radius(self) -> float: ...
+
     @default_radius.setter
     def default_radius(self, arg: float, /) -> None: ...
+
     @property
     def max_alternatives(self) -> int: ...
+
     @max_alternatives.setter
     def max_alternatives(self, arg: int, /) -> None: ...
+
     @property
     def use_shared_memory(self) -> bool: ...
+
     @use_shared_memory.setter
     def use_shared_memory(self, arg: bool, /) -> None: ...
+
     @property
     def memory_file(self) -> str: ...
+
     @memory_file.setter
     def memory_file(self, arg: str, /) -> None: ...
+
     @property
     def use_mmap(self) -> bool: ...
+
     @use_mmap.setter
     def use_mmap(self, arg: bool, /) -> None: ...
+
     @property
     def algorithm(self) -> Algorithm: ...
+
     @algorithm.setter
     def algorithm(self, arg: Algorithm, /) -> None: ...
+
     @property
     def verbosity(self) -> str: ...
+
     @verbosity.setter
     def verbosity(self, arg: str, /) -> None: ...
+
     @property
     def dataset_name(self) -> str: ...
+
     @dataset_name.setter
     def dataset_name(self, arg: str, /) -> None: ...
 
 class Algorithm:
     def __init__(self, arg: str, /) -> None: ...
+
     def __repr__(self) -> str: ...
 
 class Approach:
     def __init__(self, arg: str, /) -> None: ...
+
     def __repr__(self) -> str: ...
 
 class Bearing:
     @overload
     def __init__(self) -> None: ...
+
     @overload
     def __init__(self, arg: tuple[int, int], /) -> None: ...
+
     @property
     def bearing(self) -> int: ...
+
     @bearing.setter
     def bearing(self, arg: int, /) -> None: ...
+
     @property
     def range(self) -> int: ...
+
     @range.setter
     def range(self, arg: int, /) -> None: ...
+
     def IsValid(self) -> bool: ...
+
     def __eq__(self, arg: Bearing, /) -> bool: ...
+
     def __ne__(self, arg: Bearing, /) -> bool: ...
 
 class Coordinate:
     @overload
     def __init__(self) -> None: ...
+
     @overload
     def __init__(self, coordinate: Coordinate) -> None: ...
+
     @overload
     def __init__(self, arg: tuple[float, float], /) -> None: ...
+
     @property
     def lon(self) -> float: ...
+
     @lon.setter
     def lon(self, arg: float, /) -> None: ...
+
     @property
     def lat(self) -> float: ...
+
     @lat.setter
     def lat(self, arg: float, /) -> None: ...
+
     def IsValid(self) -> bool: ...
+
     def __repr__(self) -> str: ...
+
     def __eq__(self, arg: Coordinate, /) -> bool: ...
+
     def __ne__(self, arg: Coordinate, /) -> bool: ...
 
 class Object:
     def __init__(self) -> None: ...
+
     def __len__(self) -> int: ...
+
     def __bool__(self) -> bool: ...
+
     def __repr__(self) -> str: ...
+
     def __getitem__(self, arg: str, /) -> object: ...
+
     def __contains__(self, arg: str, /) -> bool: ...
+
     def __iter__(self) -> Iterator[str]: ...
 
 class Array:
     def __init__(self) -> None: ...
+
     def __len__(self) -> int: ...
+
     def __bool__(self) -> bool: ...
+
     def __repr__(self) -> str: ...
+
     def __getitem__(self, arg: int, /) -> object: ...
+
     def __iter__(self) -> Iterator: ...
 
 class String:
@@ -170,44 +233,64 @@ class BaseParameters:
 
     @property
     def coordinates(self) -> list[Coordinate]: ...
+
     @coordinates.setter
     def coordinates(self, arg: Sequence[Coordinate], /) -> None: ...
+
     @property
     def hints(self) -> list: ...
+
     @hints.setter
     def hints(self, arg: list, /) -> None: ...
+
     @property
     def radiuses(self) -> list[float | None]: ...
+
     @radiuses.setter
     def radiuses(self, arg: Sequence[float | None], /) -> None: ...
+
     @property
     def bearings(self) -> list[Bearing | None]: ...
+
     @bearings.setter
     def bearings(self, arg: Sequence[Bearing | None], /) -> None: ...
+
     @property
     def approaches(self) -> list[Approach | None]: ...
+
     @approaches.setter
     def approaches(self, arg: Sequence[Approach | None], /) -> None: ...
+
     @property
     def exclude(self) -> list[str]: ...
+
     @exclude.setter
     def exclude(self, arg: Sequence[str], /) -> None: ...
+
     @property
     def format(self) -> OutputFormatType | None: ...
+
     @format.setter
     def format(self, arg: OutputFormatType | None) -> None: ...
+
     @property
     def generate_hints(self) -> bool: ...
+
     @generate_hints.setter
     def generate_hints(self, arg: bool, /) -> None: ...
+
     @property
     def skip_waypoints(self) -> bool: ...
+
     @skip_waypoints.setter
     def skip_waypoints(self, arg: bool, /) -> None: ...
+
     @property
     def snapping(self) -> SnappingType: ...
+
     @snapping.setter
     def snapping(self, arg: SnappingType, /) -> None: ...
+
     def IsValid(self) -> bool: ...
 
 class SnappingType:
@@ -251,21 +334,14 @@ class NearestParameters(BaseParameters):
         """
 
     @overload
-    def __init__(
-        self,
-        coordinates: Sequence[Coordinate] = [],
-        hints: Sequence[str | None] = [],
-        radiuses: Sequence[float | None] = [],
-        bearings: Sequence[Bearing | None] = [],
-        approaches: Sequence[Approach | None] = [],
-        generate_hints: bool = True,
-        exclude: Sequence[str] = [],
-        snapping: SnappingType = "",
-    ) -> None: ...
+    def __init__(self, coordinates: Sequence[Coordinate] = [], hints: Sequence[str | None] = [], radiuses: Sequence[float | None] = [], bearings: Sequence[Bearing | None] = [], approaches: Sequence[Approach | None] = [], generate_hints: bool = True, exclude: Sequence[str] = [], snapping: SnappingType = '') -> None: ...
+
     @property
     def number_of_results(self) -> int: ...
+
     @number_of_results.setter
     def number_of_results(self, arg: int, /) -> None: ...
+
     def IsValid(self) -> bool: ...
 
 class TableParameters(BaseParameters):
@@ -311,47 +387,44 @@ class TableParameters(BaseParameters):
         """
 
     @overload
-    def __init__(
-        self,
-        sources: Sequence[int] = [],
-        destinations: Sequence[int] = [],
-        annotations: Sequence[TableAnnotationsType] = [],
-        fallback_speed: float = 3.4028234663852886e38,
-        fallback_coordinate_type: TableFallbackCoordinateType = "",
-        scale_factor: float = 1.0,
-        coordinates: Sequence[Coordinate] = [],
-        hints: Sequence[str | None] = [],
-        radiuses: Sequence[float | None] = [],
-        bearings: Sequence[Bearing | None] = [],
-        approaches: Sequence[Approach | None] = [],
-        generate_hints: bool = True,
-        exclude: Sequence[str] = [],
-        snapping: SnappingType = "",
-    ) -> None: ...
+    def __init__(self, sources: Sequence[int] = [], destinations: Sequence[int] = [], annotations: Sequence[TableAnnotationsType] = [], fallback_speed: float = 3.4028234663852886e+38, fallback_coordinate_type: TableFallbackCoordinateType = '', scale_factor: float = 1.0, coordinates: Sequence[Coordinate] = [], hints: Sequence[str | None] = [], radiuses: Sequence[float | None] = [], bearings: Sequence[Bearing | None] = [], approaches: Sequence[Approach | None] = [], generate_hints: bool = True, exclude: Sequence[str] = [], snapping: SnappingType = '') -> None: ...
+
     @property
     def sources(self) -> list[int]: ...
+
     @sources.setter
     def sources(self, arg: Sequence[int], /) -> None: ...
+
     @property
     def destinations(self) -> list[int]: ...
+
     @destinations.setter
     def destinations(self, arg: Sequence[int], /) -> None: ...
+
     @property
     def fallback_speed(self) -> float: ...
+
     @fallback_speed.setter
     def fallback_speed(self, arg: float, /) -> None: ...
+
     @property
     def fallback_coordinate_type(self) -> TableFallbackCoordinateType: ...
+
     @fallback_coordinate_type.setter
     def fallback_coordinate_type(self, arg: TableFallbackCoordinateType, /) -> None: ...
+
     @property
     def annotations(self) -> TableAnnotationsType: ...
+
     @annotations.setter
     def annotations(self, arg: TableAnnotationsType, /) -> None: ...
+
     @property
     def scale_factor(self) -> float: ...
+
     @scale_factor.setter
     def scale_factor(self, arg: float, /) -> None: ...
+
     def IsValid(self) -> bool: ...
 
 class TableFallbackCoordinateType:
@@ -429,52 +502,50 @@ class RouteParameters(BaseParameters):
         """
 
     @overload
-    def __init__(
-        self,
-        steps: bool = False,
-        number_of_alternatives: int = 0,
-        annotations: Sequence[RouteAnnotationsType] = [],
-        geometries: RouteGeometriesType = "",
-        overview: RouteOverviewType = "",
-        continue_straight: bool | None = None,
-        waypoints: Sequence[int] = [],
-        coordinates: Sequence[Coordinate] = [],
-        hints: Sequence[str | None] = [],
-        radiuses: Sequence[float | None] = [],
-        bearings: Sequence[Bearing | None] = [],
-        approaches: Sequence[Approach | None] = [],
-        generate_hints: bool = True,
-        exclude: Sequence[str] = [],
-        snapping: SnappingType = "",
-    ) -> None: ...
+    def __init__(self, steps: bool = False, number_of_alternatives: int = 0, annotations: Sequence[RouteAnnotationsType] = [], geometries: RouteGeometriesType = '', overview: RouteOverviewType = '', continue_straight: bool | None = None, waypoints: Sequence[int] = [], coordinates: Sequence[Coordinate] = [], hints: Sequence[str | None] = [], radiuses: Sequence[float | None] = [], bearings: Sequence[Bearing | None] = [], approaches: Sequence[Approach | None] = [], generate_hints: bool = True, exclude: Sequence[str] = [], snapping: SnappingType = '') -> None: ...
+
     @property
     def steps(self) -> bool: ...
+
     @steps.setter
     def steps(self, arg: bool, /) -> None: ...
+
     @property
     def alternatives(self) -> bool: ...
+
     @alternatives.setter
     def alternatives(self, arg: bool, /) -> None: ...
+
     @property
     def number_of_alternatives(self) -> int: ...
+
     @number_of_alternatives.setter
     def number_of_alternatives(self, arg: int, /) -> None: ...
+
     @property
     def annotations_type(self) -> RouteAnnotationsType: ...
+
     @annotations_type.setter
     def annotations_type(self, arg: RouteAnnotationsType, /) -> None: ...
+
     @property
     def geometries(self) -> RouteGeometriesType: ...
+
     @geometries.setter
     def geometries(self, arg: RouteGeometriesType, /) -> None: ...
+
     @property
     def overview(self) -> RouteOverviewType: ...
+
     @overview.setter
     def overview(self, arg: RouteOverviewType, /) -> None: ...
+
     @property
     def continue_straight(self) -> bool | None: ...
+
     @continue_straight.setter
     def continue_straight(self, arg: bool | None) -> None: ...
+
     def IsValid(self) -> bool: ...
 
 class RouteGeometriesType:
@@ -541,39 +612,26 @@ class MatchParameters(RouteParameters):
         """
 
     @overload
-    def __init__(
-        self,
-        timestamps: Sequence[int] = [],
-        gaps: MatchGapsType = "",
-        tidy: bool = False,
-        steps: bool = False,
-        number_of_alternatives: int = 0,
-        annotations: Sequence[RouteAnnotationsType] = [],
-        geometries: RouteGeometriesType = "",
-        overview: RouteOverviewType = "",
-        continue_straight: bool | None = None,
-        waypoints: Sequence[int] = [],
-        coordinates: Sequence[Coordinate] = [],
-        hints: Sequence[str | None] = [],
-        radiuses: Sequence[float | None] = [],
-        bearings: Sequence[Bearing | None] = [],
-        approaches: Sequence[Approach | None] = [],
-        generate_hints: bool = True,
-        exclude: Sequence[str] = [],
-        snapping: SnappingType = "",
-    ) -> None: ...
+    def __init__(self, timestamps: Sequence[int] = [], gaps: MatchGapsType = '', tidy: bool = False, steps: bool = False, number_of_alternatives: int = 0, annotations: Sequence[RouteAnnotationsType] = [], geometries: RouteGeometriesType = '', overview: RouteOverviewType = '', continue_straight: bool | None = None, waypoints: Sequence[int] = [], coordinates: Sequence[Coordinate] = [], hints: Sequence[str | None] = [], radiuses: Sequence[float | None] = [], bearings: Sequence[Bearing | None] = [], approaches: Sequence[Approach | None] = [], generate_hints: bool = True, exclude: Sequence[str] = [], snapping: SnappingType = '') -> None: ...
+
     @property
     def timestamps(self) -> list[int]: ...
+
     @timestamps.setter
     def timestamps(self, arg: Sequence[int], /) -> None: ...
+
     @property
     def gaps(self) -> MatchGapsType: ...
+
     @gaps.setter
     def gaps(self, arg: MatchGapsType, /) -> None: ...
+
     @property
     def tidy(self) -> bool: ...
+
     @tidy.setter
     def tidy(self, arg: bool, /) -> None: ...
+
     def IsValid(self) -> bool: ...
 
 class MatchGapsType:
@@ -617,39 +675,26 @@ class TripParameters(RouteParameters):
         """
 
     @overload
-    def __init__(
-        self,
-        source: TripSourceType = "",
-        destination: TripDestinationType = "",
-        roundtrip: bool = True,
-        steps: bool = False,
-        alternatives: int = 0,
-        annotations: Sequence[RouteAnnotationsType] = [],
-        geometries: RouteGeometriesType = "",
-        overview: RouteOverviewType = "",
-        continue_straight: bool | None = None,
-        waypoints: Sequence[int] = [],
-        coordinates: Sequence[Coordinate] = [],
-        hints: Sequence[str | None] = [],
-        radiuses: Sequence[float | None] = [],
-        bearings: Sequence[Bearing | None] = [],
-        approaches: Sequence[Approach | None] = [],
-        generate_hints: bool = True,
-        exclude: Sequence[str] = [],
-        snapping: SnappingType = "",
-    ) -> None: ...
+    def __init__(self, source: TripSourceType = '', destination: TripDestinationType = '', roundtrip: bool = True, steps: bool = False, alternatives: int = 0, annotations: Sequence[RouteAnnotationsType] = [], geometries: RouteGeometriesType = '', overview: RouteOverviewType = '', continue_straight: bool | None = None, waypoints: Sequence[int] = [], coordinates: Sequence[Coordinate] = [], hints: Sequence[str | None] = [], radiuses: Sequence[float | None] = [], bearings: Sequence[Bearing | None] = [], approaches: Sequence[Approach | None] = [], generate_hints: bool = True, exclude: Sequence[str] = [], snapping: SnappingType = '') -> None: ...
+
     @property
     def source(self) -> TripSourceType: ...
+
     @source.setter
     def source(self, arg: TripSourceType, /) -> None: ...
+
     @property
     def destination(self) -> TripDestinationType: ...
+
     @destination.setter
     def destination(self, arg: TripDestinationType, /) -> None: ...
+
     @property
     def roundtrip(self) -> bool: ...
+
     @roundtrip.setter
     def roundtrip(self, arg: bool, /) -> None: ...
+
     def IsValid(self) -> bool: ...
 
 class TripSourceType:
@@ -700,20 +745,28 @@ class TileParameters:
 
     @overload
     def __init__(self, arg0: int, arg1: int, arg2: int, /) -> None: ...
+
     @overload
     def __init__(self, arg: Sequence[int], /) -> None: ...
+
     @property
     def x(self) -> int: ...
+
     @x.setter
     def x(self, arg: int, /) -> None: ...
+
     @property
     def y(self) -> int: ...
+
     @y.setter
     def y(self, arg: int, /) -> None: ...
+
     @property
     def z(self) -> int: ...
+
     @z.setter
     def z(self, arg: int, /) -> None: ...
+
     def IsValid(self) -> bool: ...
 
 class OSRM:
@@ -750,8 +803,10 @@ class OSRM:
 
     @overload
     def __init__(self, arg: str, /) -> None: ...
+
     @overload
     def __init__(self, **kwargs) -> None: ...
+
     def Match(self, arg: MatchParameters, /) -> Object:
         """
         Matches/snaps given GPS points to the road network in the most plausible way.
