@@ -11,14 +11,18 @@ on:
     paths:
       - 'vcpkg.json'
       - 'vcpkg-configuration.json'
+      - 'vcpkg-overlay-ports/**'
       - 'CMakePresets.json'
       - '.github/workflows/vcpkg-smoke.yml'
+      - '.github/workflows/osrm-backend.yml'
   pull_request:
     paths:
       - 'vcpkg.json'
       - 'vcpkg-configuration.json'
+      - 'vcpkg-overlay-ports/**'
       - 'CMakePresets.json'
       - '.github/workflows/vcpkg-smoke.yml'
+      - '.github/workflows/osrm-backend.yml'
   workflow_dispatch:
 
 concurrency:
