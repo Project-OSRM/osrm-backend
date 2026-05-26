@@ -750,6 +750,7 @@ endif()
 
 
 # Modular build system: each directory registered here provides its own CMakeLists.txt
+enable_testing()
 add_subdirectory(unit_tests)
 add_subdirectory(src/benchmarks)
 
