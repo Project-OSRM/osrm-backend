@@ -77,8 +77,8 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints | trips  | durations | code |
-            | a,b,c,d   | abcda  | 7.6       | Ok   |
-            | d,b,c,a   | dbcad  | 7.6       | Ok   |
+            | a,b,c,d   | adcba  | 7.6       | Ok   |
+            | d,b,c,a   | dacbd  | 7.6       | Ok   |
 
     Scenario: Testbot - Trip: Roundtrip waypoints (more than 10)
         Given the node map
@@ -131,8 +131,8 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints               | trips         | roundtrip | durations |
-            | a,b,c,d,e,g,i,j,l       | abcdegijla    | true      | 22        |
-            | a,b,c,d,e,g,i,j,l       | abcljiged     | false     | 13        |
+            | a,b,c,d,e,g,i,j,l       | aljigedcba    | true      | 22        |
+            | a,b,c,d,e,g,i,j,l       | acbljiged     | false     | 13        |
 
 
     Scenario: Testbot - Trip: FS waypoints (more than 10)
@@ -190,8 +190,8 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints             | trips        | roundtrip | durations |
-            | a,b,c,d,e,g,i,j,l     | labcdegijl   | true      | 22        |
-            | a,b,c,d,e,g,i,j,l     | degijabcl    | false     | 14        |
+            | a,b,c,d,e,g,i,j,l     | ljigedcbal   | true      | 22        |
+            | a,b,c,d,e,g,i,j,l     | degijcbal    | false     | 14        |
 
     Scenario: Testbot - Trip: FE waypoints (more than 10)
         Given the query options
@@ -221,7 +221,7 @@ Feature: Basic trip planning
         When I plan a trip I should get
             | waypoints               | trips         | roundtrip | durations |
             | a,b,c,d,e,f,g,h,i,j,k,l | lkjihgfedcbal | true      | 22        |
-            | a,b,c,d,e,f,g,h,i,j,k,l | cbakjihgfedl  | false     | 19        |
+            | a,b,c,d,e,f,g,h,i,j,k,l | defghijkcbal  | false     | 14        |
 
     Scenario: Testbot - Trip: Unroutable roundtrip with waypoints (less than 10)
         Given the node map
@@ -343,7 +343,7 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             |  waypoints              | source | destination | roundtrip |  trips       | durations  | distance  |
-            |  a,b,c,d,e,h,i,j,k,g,f  | first  | last        | false     | abcdeghijkf  | 15         | 149.8     |
+            |  a,b,c,d,e,h,i,j,k,g,f  | first  | last        | false     | abcdegkjihf  | 15         | 149.8     |
 
     Scenario: Testbot - Trip: FSE roundtrip with waypoints (less than 10)
         Given the node map
@@ -423,8 +423,8 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints | trips  | durations | geometry                                                               |
-            | a,b,c,d   | abcda  | 7.6       | 1,1,1.00009,1,1,0.99991,1.00009,1,1,1,1.00009,0.99991,1,1              |
-            | d,b,c,a   | dbcad  | 7.6       | 1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009,1,1,1,1.00009,0.99991  |
+            | a,b,c,d   | adcba  | 7.6       | 1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009,1,1,1              |
+            | d,b,c,a   | dacbd  | 7.6       | 1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009,1,1,1,1.00009,0.99991  |
 
     Scenario: Testbot - Trip: geometry details of polyline
         Given the query options
@@ -445,8 +445,8 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints | trips  | durations | geometry                                                              |
-            | a,b,c,d   | abcda  | 7.6       | 1,1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009,1,1             |
-            | d,b,c,a   | dbcad  | 7.6       | 0.99991,1.00009,1,1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009 |
+            | a,b,c,d   | adcba  | 7.6       | 1,1,0.99991,1.00009,1,1,1,1.00009,0.99991,1,1,1.00009,1,1             |
+            | d,b,c,a   | dacbd  | 7.6       | 0.99991,1.00009,1,1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009 |
 
     Scenario: Testbot - Trip: geometry details of polyline6
         Given the query options
@@ -467,5 +467,5 @@ Feature: Basic trip planning
 
         When I plan a trip I should get
             | waypoints | trips | durations | geometry                                                              |
-            | a,b,c,d   | abcda |       7.6 | 1,1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009,1,1             |
-            | d,b,c,a   | dbcad |       7.6 | 0.99991,1.00009,1,1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009 |
+            | a,b,c,d   | adcba |       7.6 | 1,1,0.99991,1.00009,1,1,1,1.00009,0.99991,1,1,1.00009,1,1             |
+            | d,b,c,a   | dacbd |       7.6 | 0.99991,1.00009,1,1,1,1.00009,0.99991,1,1,1.00009,1,1,0.99991,1.00009 |
