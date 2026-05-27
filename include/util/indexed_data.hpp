@@ -11,6 +11,7 @@
 #include <boost/assert.hpp>
 
 #include <array>
+#include <functional>
 #include <iterator>
 #include <limits>
 #include <string>
