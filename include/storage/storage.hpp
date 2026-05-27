@@ -39,7 +39,10 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm::storage
 {
 
-void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseDataLayout &layout);
+void populateLayoutFromFile(
+    const std::filesystem::path &path,
+    storage::BaseDataLayout &layout,
+    const std::vector<storage::FeatureDataset> &disabled_feature_datasets = {});
 
 class Storage
 {

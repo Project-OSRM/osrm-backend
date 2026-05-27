@@ -227,11 +227,16 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
                 engine_config->disable_feature_dataset.push_back(
                     osrm::storage::FeatureDataset::ROUTE_STEPS);
             }
+            else if (dataset_str == "ROUTE_WAY_IDS")
+            {
+                engine_config->disable_feature_dataset.push_back(
+                    osrm::storage::FeatureDataset::ROUTE_WAY_IDS);
+            }
             else
             {
-                ThrowError(
-                    args.Env(),
-                    "disable_feature_dataset array can include 'ROUTE_GEOMETRY', 'ROUTE_STEPS'.");
+                ThrowError(args.Env(),
+                           "disable_feature_dataset array can include 'ROUTE_GEOMETRY', "
+                           "'ROUTE_STEPS', 'ROUTE_WAY_IDS'.");
                 return engine_config_ptr();
             }
         }
@@ -240,7 +245,7 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     {
         ThrowError(args.Env(),
                    "disable_feature_dataset option must be an array and can include the string "
-                   "values 'ROUTE_GEOMETRY', 'ROUTE_STEPS'.");
+                   "values 'ROUTE_GEOMETRY', 'ROUTE_STEPS', 'ROUTE_WAY_IDS'.");
         return engine_config_ptr();
     }
 

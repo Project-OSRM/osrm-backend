@@ -799,3 +799,32 @@ test('route: ok on disabled steps', (assert) => {
     assert.ok(response.routes[0].legs.every(l => { return l.annotation;}), 'every leg has annotations');
   });
 });
+
+test('route: throws on disabled way ids', (assert) => {
+  assert.plan(1);
+  const osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_WAY_IDS']});
+  const options = {
+    overview: 'false',
+    annotations: ['way_ids'],
+    coordinates: three_test_coordinates,
+  };
+  osrm.route(options, (err) => {
+    assert.match(err.message, /DisabledDatasetException/);
+  });
+});
+
+test('route: ok on disabled way ids if not requested', (assert) => {
+  assert.plan(4);
+  const osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_WAY_IDS']});
+  const options = {
+    overview: 'false',
+    annotations: ['duration'],
+    coordinates: three_test_coordinates,
+  };
+  osrm.route(options, (err, response) => {
+    assert.ifError(err);
+    assert.equal(response.routes.length, 1);
+    assert.ok(response.routes[0].legs.every(l => { return l.annotation.duration; }), 'every leg has duration annotations');
+    assert.ok(response.routes[0].legs.every(l => { return !l.annotation.way_ids; }), 'no leg has way ids');
+  });
+});

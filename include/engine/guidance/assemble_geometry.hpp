@@ -118,7 +118,10 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         reversed_target ? target_node.reverse_segment_id.id : target_node.forward_segment_id.id;
     const auto target_geometry_id = facade.GetGeometryIndex(target_node_id).id;
     const auto forward_datasources = facade.GetUncompressedForwardDatasources(target_geometry_id);
-    const auto forward_way_ids = facade.GetUncompressedForwardWayIDs(target_geometry_id);
+    const auto target_way_id = facade.HasRouteWayIDs()
+                                   ? facade.GetUncompressedForwardWayIDs(
+                                         target_geometry_id)[target_node.fwd_segment_position]
+                                   : SPECIAL_OSM_WAYID;
 
     // This happens when the source/target are on the same edge-based-node
     // There will be no entries in the unpacked path, thus no annotations.
@@ -144,7 +147,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                                     duration,
                                     weight,
                                     forward_datasources[target_node.fwd_segment_position],
-                                    forward_way_ids[target_node.fwd_segment_position]});
+                                    target_way_id});
     }
     else
     {
@@ -157,7 +160,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
                                                : target_node.forward_weight) /
                 facade.GetWeightMultiplier(),
             forward_datasources[target_node.fwd_segment_position],
-            forward_way_ids[target_node.fwd_segment_position]});
+            target_way_id});
     }
 
     geometry.segment_offsets.push_back(geometry.locations.size());

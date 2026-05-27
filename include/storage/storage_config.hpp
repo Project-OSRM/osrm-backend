@@ -80,6 +80,8 @@ GetRequiredFiles(const std::vector<storage::FeatureDataset> &disabled_feature_da
                 required.erase(dataset);
             }
             break;
+        case FeatureDataset::ROUTE_WAY_IDS:
+            break;
         }
     }
 
@@ -106,9 +108,12 @@ struct StorageConfig final : IOConfig
         : IOConfig(
               GetRequiredFiles(disabled_feature_datasets_),
               {".osrm.hsgr", ".osrm.cells", ".osrm.cell_metrics", ".osrm.mldgr", ".osrm.partition"},
-              {})
+              {}),
+          disabled_feature_datasets(disabled_feature_datasets_)
     {
     }
+
+    std::vector<storage::FeatureDataset> disabled_feature_datasets;
 };
 } // namespace osrm::storage
 

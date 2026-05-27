@@ -204,7 +204,10 @@ void annotatePath(const FacadeT &facade,
             copy(weight_vector, facade.GetUncompressedForwardWeights(geometry_index.id));
             copy(duration_vector, facade.GetUncompressedForwardDurations(geometry_index.id));
             copy(datasource_vector, facade.GetUncompressedForwardDatasources(geometry_index.id));
-            copy(way_id_vector, facade.GetUncompressedForwardWayIDs(geometry_index.id));
+            if (facade.HasRouteWayIDs())
+                copy(way_id_vector, facade.GetUncompressedForwardWayIDs(geometry_index.id));
+            else
+                way_id_vector.assign(weight_vector.size(), SPECIAL_OSM_WAYID);
         }
         else
         {
@@ -212,7 +215,10 @@ void annotatePath(const FacadeT &facade,
             copy(weight_vector, facade.GetUncompressedReverseWeights(geometry_index.id));
             copy(duration_vector, facade.GetUncompressedReverseDurations(geometry_index.id));
             copy(datasource_vector, facade.GetUncompressedReverseDatasources(geometry_index.id));
-            copy(way_id_vector, facade.GetUncompressedReverseWayIDs(geometry_index.id));
+            if (facade.HasRouteWayIDs())
+                copy(way_id_vector, facade.GetUncompressedReverseWayIDs(geometry_index.id));
+            else
+                way_id_vector.assign(weight_vector.size(), SPECIAL_OSM_WAYID);
         }
     };
 

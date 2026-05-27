@@ -151,9 +151,17 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
     auto rev_datasources_list =
         make_vector_view<DatasourceID>(index, name + "/reverse_data_sources");
 
-    auto fwd_way_ids_list = make_vector_view<OSMWayID>(index, name + "/forward_way_ids");
+    extractor::SegmentDataView::SegmentWayIDVector fwd_way_ids_list;
+    if (index.HasBlock(name + "/forward_way_ids"))
+    {
+        fwd_way_ids_list = make_vector_view<OSMWayID>(index, name + "/forward_way_ids");
+    }
 
-    auto rev_way_ids_list = make_vector_view<OSMWayID>(index, name + "/reverse_way_ids");
+    extractor::SegmentDataView::SegmentWayIDVector rev_way_ids_list;
+    if (index.HasBlock(name + "/reverse_way_ids"))
+    {
+        rev_way_ids_list = make_vector_view<OSMWayID>(index, name + "/reverse_way_ids");
+    }
 
     return extractor::SegmentDataView{geometry_begin_indices,
                                       node_list,

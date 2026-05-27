@@ -112,6 +112,7 @@ class BaseDataFacade
 
     virtual WayIDForwardRange GetUncompressedForwardWayIDs(const PackedGeometryID id) const = 0;
     virtual WayIDReverseRange GetUncompressedReverseWayIDs(const PackedGeometryID id) const = 0;
+    virtual bool HasRouteWayIDs() const { return true; }
 
     // Gets the name of a datasource
     virtual std::string_view GetDatasourceName(const DatasourceID id) const = 0;

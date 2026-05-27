@@ -26,7 +26,8 @@ namespace serialization
 template <storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
-                 detail::SegmentDataContainerImpl<Ownership> &segment_data);
+                 detail::SegmentDataContainerImpl<Ownership> &segment_data,
+                 const bool read_way_ids = true);
 template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
@@ -227,7 +228,8 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     friend void
     serialization::read<Ownership>(storage::tar::FileReader &reader,
                                    const std::string &name,
-                                   detail::SegmentDataContainerImpl<Ownership> &segment_data);
+                                   detail::SegmentDataContainerImpl<Ownership> &segment_data,
+                                   const bool read_way_ids);
     friend void serialization::write<Ownership>(
         storage::tar::FileWriter &writer,
         const std::string &name,

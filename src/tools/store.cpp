@@ -135,7 +135,7 @@ bool generateDataStoreOptions(const int argc,
              &disable_feature_dataset)
              ->multitoken(),
          "Disables a feature dataset from being loaded into memory if not needed. Options: "
-         "ROUTE_STEPS, ROUTE_GEOMETRY") //
+         "ROUTE_STEPS, ROUTE_GEOMETRY, ROUTE_WAY_IDS") //
         ("list",
          boost::program_options::value<bool>(&list_datasets)
              ->default_value(false)

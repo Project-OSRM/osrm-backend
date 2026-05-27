@@ -32,7 +32,7 @@ var osrm = new OSRM('network.osrm');
         Old behaviour: Path to a file on disk to store the memory using mmap.  Current behaviour: setting this value is the same as setting `mmap_memory: true`.
     *   `options.mmap_memory` **[Boolean][4]?** Map on-disk files to virtual memory addresses (mmap), rather than loading into RAM.
     *   `options.path` **[String][3]?** The path to the `.osrm` files. This is mutually exclusive with setting {options.shared\_memory} to true.
-    *   `options.disable_feature_dataset` **[Array][5]?** Disables a feature dataset from being loaded into memory if not needed. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`.
+    *   `options.disable_feature_dataset` **[Array][5]?** Disables a feature dataset from being loaded into memory if not needed. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`, `ROUTE_WAY_IDS`.
     *   `options.max_locations_trip` **[Number][6]?** Max. locations supported in trip query (default: unlimited).
     *   `options.max_locations_viaroute` **[Number][6]?** Max. locations supported in viaroute query (default: unlimited).
     *   `options.max_locations_distance_table` **[Number][6]?** Max. locations supported in distance table query (default: unlimited).

@@ -178,7 +178,7 @@ test('constructor: ok on valid disable_feature_dataset option', (assert) => {
   assert.plan(1);
   const osrm = new OSRM({
     path: monaco_path,
-    disable_feature_dataset: ['ROUTE_GEOMETRY'],
+    disable_feature_dataset: ['ROUTE_WAY_IDS'],
   });
   assert.ok(osrm);
 });
@@ -187,7 +187,7 @@ test('constructor: ok on multiple overlapping disable_feature_dataset options', 
   assert.plan(1);
   const osrm = new OSRM({
     path: monaco_path,
-    disable_feature_dataset: ['ROUTE_GEOMETRY', 'ROUTE_STEPS'],
+    disable_feature_dataset: ['ROUTE_GEOMETRY', 'ROUTE_STEPS', 'ROUTE_WAY_IDS'],
   });
   assert.ok(osrm);
 });

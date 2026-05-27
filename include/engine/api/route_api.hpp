@@ -526,6 +526,10 @@ class RouteAPI : public BaseAPI
         flatbuffers::Offset<flatbuffers::Vector<uint64_t>> way_ids;
         if (requested_annotations & RouteParameters::AnnotationsType::WayIds)
         {
+            if (!facade.HasRouteWayIDs())
+            {
+                throw util::DisabledDatasetException("RouteWayIds");
+            }
             way_ids = GetAnnotations<uint64_t>(fb_result,
                                                leg_geometry,
                                                [](const guidance::LegGeometry::Annotation &anno)
@@ -884,6 +888,10 @@ class RouteAPI : public BaseAPI
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::WayIds)
                 {
+                    if (!facade.HasRouteWayIDs())
+                    {
+                        throw util::DisabledDatasetException("RouteWayIds");
+                    }
                     annotation.values.emplace(
                         "way_ids",
                         GetAnnotations(leg_geometry,
