@@ -54,7 +54,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         static NodeID data[] = {0, 1, 2, 3};
         static extractor::SegmentDataView::SegmentNodeVector nodes(data, 4);
-        return std::ranges::subrange(nodes.cbegin(), nodes.cend());
+        return NodeForwardRange{nodes.data(), nodes.size()};
     }
     NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const override
     {
@@ -148,13 +148,13 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         return {};
     }
 
-    NameID GetNameIndex(const NodeID /* id */) const override { return 0; }
+    StringViewID GetNameIndex(const NodeID /* id */) const override { return 0; }
 
-    std::string_view GetNameForID(const NameID) const override final { return {}; }
-    std::string_view GetRefForID(const NameID) const override final { return {}; }
-    std::string_view GetPronunciationForID(const NameID) const override final { return {}; }
-    std::string_view GetDestinationsForID(const NameID) const override final { return {}; }
-    std::string_view GetExitsForID(const NameID) const override final { return {}; }
+    std::string_view GetNameForID(const StringViewID) const override final { return {}; }
+    std::string_view GetRefForID(const StringViewID) const override final { return {}; }
+    std::string_view GetPronunciationForID(const StringViewID) const override final { return {}; }
+    std::string_view GetDestinationsForID(const StringViewID) const override final { return {}; }
+    std::string_view GetExitsForID(const StringViewID) const override final { return {}; }
 
     bool GetContinueStraightDefault() const override { return true; }
     double GetMapMatchingMaxSpeed() const override { return 180 / 3.6; }

@@ -7,10 +7,11 @@
 #include "util/format.hpp"
 #include "util/vector_view.hpp"
 
+#include "util/iterator_adapters.hpp"
 #include <boost/assert.hpp>
-#include <boost/iterator/function_output_iterator.hpp>
 
 #include <array>
+#include <functional>
 #include <iterator>
 #include <limits>
 #include <string>
@@ -321,7 +322,7 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
             { values_byte_iter = std::copy_n(&data, sizeof(ValueType), values_byte_iter); };
             std::copy(data + *curr,
                       data + *next,
-                      boost::make_function_output_iterator(std::cref(to_bytes)));
+                      osrm::util::make_function_output_iterator(std::cref(to_bytes)));
         }
     }
 
@@ -360,8 +361,9 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
 
   private:
     template <typename Iter, typename T>
-    using IsValueIterator =
-        std::enable_if_t<std::is_same<T, typename std::iterator_traits<Iter>::value_type>::value>;
+    using IsValueIterator = std::enable_if_t<
+        std::is_same<T,
+                     std::remove_const_t<typename std::iterator_traits<Iter>::value_type>>::value>;
 
     template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
     typename std::enable_if<!std::is_same<T, std::string_view>::value, T>::type

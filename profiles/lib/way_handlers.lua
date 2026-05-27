@@ -9,6 +9,7 @@ local set_classification = require("lib/guidance").set_classification
 local get_destination = require("lib/destination").get_destination
 local Tags = require('lib/tags')
 local Measure = require("lib/measure")
+local resolve_access = require("lib/access").resolve_access
 
 WayHandlers = {}
 
@@ -260,6 +261,9 @@ function WayHandlers.access(profile,way,result,data)
   data.forward_access, data.backward_access =
     Tags.get_forward_backward_by_set(way,data,profile.access_tags_hierarchy)
 
+  data.forward_access = resolve_access(data.forward_access, profile)
+  data.backward_access = resolve_access(data.backward_access, profile)
+
   -- only allow a subset of roads to be treated as restricted
   if profile.restricted_highway_whitelist[data.highway] then
       if profile.restricted_access_tag_list[data.forward_access] then
@@ -399,12 +403,8 @@ function WayHandlers.penalties(profile,way,result,data)
   end
 
   local width_penalty = 1.0
-  local width = math.huge
+  local width = Measure.get_max_width(way:get_value_by_key("width"))
   local lanes = math.huge
-  local width_string = way:get_value_by_key("width")
-  if width_string and tonumber(width_string:match("%d*")) then
-    width = tonumber(width_string:match("%d*"))
-  end
 
   local lanes_string = way:get_value_by_key("lanes")
   if lanes_string and tonumber(lanes_string:match("%d*")) then
@@ -414,7 +414,25 @@ function WayHandlers.penalties(profile,way,result,data)
   local is_bidirectional = result.forward_mode ~= mode.inaccessible and
                            result.backward_mode ~= mode.inaccessible
 
-  if width <= 3 or (lanes <= 1 and is_bidirectional) then
+  -- Apply penalty for roads with no lane markings (on bidirectional roads)
+  local lane_markings = way:get_value_by_key("lane_markings")
+  if lane_markings == "no" and is_bidirectional then
+    width_penalty = profile.lane_markings_penalty
+  end
+
+  if width and is_bidirectional then
+    if width <= 3 then
+      width_penalty = 0.5
+    elseif width < 4 then
+      width_penalty = 0.6
+    elseif width < 5 then
+      width_penalty = 0.75
+    elseif width < 6 then
+      width_penalty = 0.8
+    end
+  end
+
+  if lanes <= 1 and is_bidirectional then
     width_penalty = 0.5
   end
 
@@ -431,8 +449,22 @@ function WayHandlers.penalties(profile,way,result,data)
     sideroad_penalty = profile.side_road_multiplier
   end
 
-  local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
-  local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty)
+  local priority_forward_penalty = 1.0
+  local priority_backward_penalty = 1.0
+  if profile.priority_penalty then
+    -- priority_penalty scales the disadvantaged direction's per-direction rate (speed).
+    -- A value < 1 reduces that direction's rate, which increases its routing weight
+    -- because weight is computed as duration / rate.
+    local priority = way:get_value_by_key("priority")
+    if priority == "forward" then
+      priority_backward_penalty = profile.priority_penalty
+    elseif priority == "backward" then
+      priority_forward_penalty = profile.priority_penalty
+    end
+  end
+
+  local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, priority_forward_penalty)
+  local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, priority_backward_penalty)
 
   if profile.properties.weight_name == 'routability' then
     if result.forward_speed > 0 then
@@ -442,7 +474,12 @@ function WayHandlers.penalties(profile,way,result,data)
       result.backward_rate = (result.backward_speed * backward_penalty) / 3.6
     end
     if result.duration > 0 then
-      result.weight = result.duration / forward_penalty
+      -- Only set a bidirectional weight when penalties are equal.
+      -- When forward/backward penalties differ (directional penalty), avoid setting result.weight,
+      -- so the extractor uses per-direction rates (forward_rate/backward_rate) to compute weights.
+      if forward_penalty == backward_penalty then
+        result.weight = result.duration / forward_penalty
+      end
     end
   end
 end
@@ -672,7 +709,12 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   -- http://wiki.openstreetmap.org/wiki/Key:proposed
   -- https://taginfo.openstreetmap.org/keys/proposed#values
   if profile.avoid.proposed and way:get_value_by_key('proposed') then
-    return false
+    -- Only block if the highway itself is 'proposed' (road not yet built).
+    -- A road with a real highway type and a proposed upgrade tag (e.g. highway=tertiary,
+    -- proposed=secondary) is a real, routable road -- the proposed tag is implicitly ignored.
+    if not data.highway or data.highway == 'proposed' then
+      return false
+    end
   end
 
   -- Reversible oneways change direction with low frequency (think twice a day):
@@ -694,6 +736,20 @@ function WayHandlers.blocked_ways(profile,way,result,data)
   end
 end
 
+-- Apply vehicle-specific maximum speed cap
+-- This handler ensures that no derived speed exceeds the vehicle_max_speed
+-- if it is defined in the profile. When vehicle_max_speed is nil, no capping occurs.
+function WayHandlers.vehicle_speed_cap(profile,way,result,data)
+  if profile.vehicle_max_speed then
+    if result.forward_speed and result.forward_speed > 0 then
+      result.forward_speed = math.min(result.forward_speed, profile.vehicle_max_speed)
+    end
+    if result.backward_speed and result.backward_speed > 0 then
+      result.backward_speed = math.min(result.backward_speed, profile.vehicle_max_speed)
+    end
+  end
+end
+
 function WayHandlers.driving_side(profile, way, result, data)
    local driving_side = way:get_value_by_key('driving_side')
    if driving_side == nil then
@@ -707,6 +763,40 @@ function WayHandlers.driving_side(profile, way, result, data)
    else
       result.is_left_hand_driving = profile.properties.left_hand_driving
    end
+end
+
+-- Handle conveying tag on escalators and moving walkways
+-- The conveying tag indicates the direction of movement on a conveyor device
+-- Only applies to highway=steps (escalators) and highway=footway (moving walkways)
+-- conveying=forward: movement in way direction only (block backward unless oneway=no)
+-- conveying=backward: movement opposite to way direction only (block forward unless oneway=no)
+-- conveying=reversible: movement can go either direction
+-- Escalators and moving walkways are directional and block travel in the opposite direction
+function WayHandlers.conveying(profile, way, result, data)
+  local conveying = way:get_value_by_key("conveying")
+
+  if not conveying or conveying == "yes" or conveying == "reversible" then
+    return
+  end
+
+  local highway = data.highway
+  if highway ~= "steps" and highway ~= "footway" then
+    return
+  end
+
+  local oneway = data.oneway or way:get_value_by_key("oneway")
+  local allow_reverse = oneway == "no"
+  if conveying == "forward" then
+    -- Block backward travel unless explicitly allowed by oneway=no
+    if not allow_reverse then
+      result.backward_mode = mode.inaccessible
+    end
+  elseif conveying == "backward" then
+    -- Block forward travel unless explicitly allowed by oneway=no
+    if not allow_reverse then
+      result.forward_mode = mode.inaccessible
+    end
+  end
 end
 
 

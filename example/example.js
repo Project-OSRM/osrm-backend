@@ -1,14 +1,16 @@
-process.env.UV_THREADPOOL_SIZE = Math.ceil(require('os').cpus().length * 1.5);
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const express = require('express');
-const OSRM = require('..');
-const path = require('path');
+import express from 'express';
+
+import OSRM from '../lib/index.js';
 
 const app = express();
-const osrm = new OSRM(path.join(__dirname,"../test/data/ch/monaco.osrm"));
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const osrm = new OSRM(join(__dirname,"../test/data/ch/monaco.osrm"));
 
 // Accepts a query like:
-// http://localhost:8888?start=13.414307,52.521835&end=13.402290,52.523728
+// http://localhost:8888?start=7.419758,43.731142&end=7.419505,43.736825
 app.get('/', function(req, res) {
     if (!req.query.start || !req.query.end) {
         return res.json({"error":"invalid start and end query"});
@@ -20,7 +22,7 @@ app.get('/', function(req, res) {
     coordinates.push([+end[0],+end[1]]);
     const query = {
         coordinates: coordinates,
-        alternateRoute: req.query.alternatives !== 'false'
+        alternatives: req.query.alternatives !== 'false'
     };
     osrm.route(query, function(err, result) {
         if (err) return res.json({"error":err.message});
@@ -28,5 +30,6 @@ app.get('/', function(req, res) {
     });
 });
 
-console.log('Listening on port: ' + 8888);
-app.listen(8888);
+const port = 8888;
+console.log('Listening on port: ' + port);
+app.listen(port);

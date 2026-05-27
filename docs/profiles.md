@@ -327,17 +327,33 @@ end
 ```
 
 ### process_way(profile, way, result, relations)
->>>>>>> origin/master
 Given an OpenStreetMap way, the `process_way` function will either return nothing (meaning we are not going to route over this way at all), or it will set up a result hash.
 
-Argument  | Type       | Description
-----------|------------|-------------------------------------------------
-profile   | Properties | The @ref properties configured in `setup`.
-way       | Way        | The input way to process (read-only).
-result    |            | The output that you will modify.
-relations | Relations  | Contains the parent relations of `way`.
+Argument | Description
+---------|-------------------------------------------------------
+profile  | The configuration table you returned in `setup`.
+way      | The input way to process (read-only).
+result   | The output that you will modify.
+relations| Storage of relations to access relations, where `way` is a member.
 
 Importantly it will set `result.forward_mode` and `result.backward_mode` to indicate the travel mode in each direction, as well as set `result.forward_speed` and `result.backward_speed` to integer values representing the speed for traversing the way.
+
+It will also set a number of other attributes on `result`.
+
+Using the power of the scripting language you wouldn't typically see something as simple as a `result.forward_speed = 20` line within the `process_way` function. Instead `process_way` will examine the tag set on the way, process this information in various ways, calling other local functions and referencing the configuration in `profile`, etc., before arriving at the result.
+
+The following attributes can be set on the result in `process_way`:
+
+Attribute                               | Type     | Notes
+----------------------------------------|----------|--------------------------------------------------------------------------
+forward_speed                           | Float    | Speed on this way in km/h. Mandatory.
+backward_speed                          | Float    |  ""
+forward_rate                            | Float    | Routing weight, expressed as meters/*weight* (e.g. for a fastest-route weighting, you would want it to be meters/second, so set it to forward_speed/3.6)
+backward_rate                           | Float    |  ""
+forward_mode                            | Enum     | Mode of travel (e.g. `car`, `ferry`). Mandatory. Defined in `include/extractor/travel_mode.hpp`.
+backward_mode                           | Enum     |  ""
+forward_classes                         | Table    | Mark this way as being of a specific class, e.g. `result.classes["toll"] = true`. This will be exposed in the API as `classes` on each `RouteStep`.
+backward_classes                        | Table    |  ""
 
 It will also set a number of other attributes on `result`.
 

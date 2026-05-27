@@ -114,6 +114,7 @@ no_warning(comma-subscript)
 no_warning(ambiguous-reversed-operator)
 no_warning(restrict)
 no_warning(free-nonheap-object)
+no_warning(unneeded-internal-declaration)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
   no_warning(stringop-overflow)
 endif()
@@ -169,4 +170,9 @@ if(MSVC)
   # C4061: Switch statement case not handled
 
   message(STATUS "MSVC warning configuration applied - suppressed informational warnings, kept bug-indicating warnings")
+endif()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "AppleClang" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  no_warning(unused-command-line-argument)
+  message(STATUS "Clang/AppleClang detected - disabled unused-command-line-argument warning")
 endif()

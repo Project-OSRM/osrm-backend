@@ -4,7 +4,7 @@ OSRM comes with a testsuite containing both unit-tests using the Boost library a
 
 ## Unit Tests
 
-For a general introduction on Boost.Test have a look at [its docs](http://www.boost.org/doc/libs/1_60_0/libs/test/doc/html/index.html).
+For a general introduction on Boost.Test have a look at [its docs](https://www.boost.org/doc/libs/release/libs/test/doc/html/index.html).
 
 ### Separate Test Binaries
 
@@ -15,8 +15,8 @@ See `CMakeLists.txt` in the unit test directory for how to register new unit tes
 ### Using Boost.Test Primitives
 
 There is a difference between only reporting a failed condition and aborting the test right at a failed condition.
-Have a look at [`BOOST_CHECK` vs `BOOST_REQUIRE`](http://www.boost.org/doc/libs/1_60_0/libs/test/doc/html/boost_test/utf_reference/testing_tool_ref/assertion_boost_level.html).
-Instead of manually checking e.g. for equality, less than, if a function throws etc. use their [corresponding Boost.Test primitives](http://www.boost.org/doc/libs/1_60_0/libs/test/doc/html/boost_test/utf_reference/testing_tool_ref.html).
+Have a look at [`BOOST_CHECK` vs `BOOST_REQUIRE`](https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/testing_tool_ref/assertion_boost_level.html).
+Instead of manually checking e.g. for equality, less than, if a function throws etc. use their [corresponding Boost.Test primitives](https://www.boost.org/doc/libs/release/libs/test/doc/html/boost_test/utf_reference/testing_tool_ref.html).
 
 If you use `BOOST_CHECK_EQUAL` you have to implement `operator<<` for your type so that Boost.Test can print mismatches.
 If you do not want to do this, define `BOOST_TEST_DONT_PRINT_LOG_VALUE` (and undef it after the check call) or sidestep it with `BOOST_CHECK(fst == snd);`.

@@ -99,7 +99,7 @@ std::vector<TurnData> generateTurns(const datafacade &facade,
     // Look at every node in the directed graph we created
     for (const auto &startnode : sorted_startnodes)
     {
-        BOOST_ASSERT(directed_graph.find(startnode) != directed_graph.end());
+        BOOST_ASSERT(directed_graph.contains(startnode));
         const auto &nodedata = directed_graph.find(startnode)->second;
         // For all the outgoing edges from the node
         for (const auto &approachedge : nodedata)

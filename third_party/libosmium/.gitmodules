@@ -1,3 +1,0 @@
-[submodule "test/data-tests/osm-testdata"]
-	path = test/data-tests/osm-testdata
-	url = https://github.com/osmcode/osm-testdata

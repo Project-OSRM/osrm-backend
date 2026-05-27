@@ -467,9 +467,16 @@ updateTurnPenalties(const UpdaterConfig &config,
 
         if (turn_weight_penalty < TurnPenalty{0})
         {
-            util::Log(logWARNING) << "Negative turn penalty at " << osm_turn.from << ", "
+            util::Log(logWARNING) << "Negative turn weight penalty at " << osm_turn.from << ", "
                                   << osm_turn.via << ", " << osm_turn.to << ": turn penalty "
                                   << turn_weight_penalty;
+        }
+
+        if (turn_duration_penalty < TurnPenalty{0})
+        {
+            util::Log(logWARNING) << "Negative turn duration penalty at " << osm_turn.from << ", "
+                                  << osm_turn.via << ", " << osm_turn.to << ": turn penalty "
+                                  << turn_duration_penalty;
         }
     }
 
@@ -788,6 +795,25 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 else
                 {
                     new_weight = weight_min_value;
+                }
+            }
+
+            const auto duration_min_value = to_alias<EdgeDuration>(num_nodes);
+            if (alias_cast<EdgeDuration>(turn_duration_penalty) + new_duration < duration_min_value)
+            {
+                if (turn_duration_penalty < TurnPenalty{0})
+                {
+                    util::Log(logWARNING)
+                        << "turn penalty " << turn_duration_penalty << " for turn_id "
+                        << edge.data.turn_id << " (edge " << edge.source << " -> " << edge.target
+                        << ") is too negative: clamping turn duration to " << duration_min_value;
+                    turn_duration_penalty =
+                        alias_cast<TurnPenalty>(duration_min_value - new_duration);
+                    turn_duration_penalties[edge.data.turn_id] = turn_duration_penalty;
+                }
+                else
+                {
+                    new_duration = duration_min_value;
                 }
             }
 

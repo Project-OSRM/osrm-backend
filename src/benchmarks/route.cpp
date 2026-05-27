@@ -11,7 +11,6 @@
 #include "osrm/osrm.hpp"
 #include "osrm/status.hpp"
 
-#include <boost/optional/optional.hpp>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -64,8 +63,8 @@ try
 
         if (benchmark.radius)
         {
-            params.radiuses = std::vector<std::optional<double>>(
-                params.coordinates.size(), std::make_optional(*benchmark.radius));
+            params.radiuses =
+                std::vector<std::optional<double>>(params.coordinates.size(), benchmark.radius);
         }
 
         TIMER_START(routes);
@@ -75,7 +74,7 @@ try
             engine::api::ResultT result = json::Object();
             const auto rc = osrm.Route(params, result);
             auto &json_result = std::get<json::Object>(result);
-            if (rc != Status::Ok || json_result.values.find("routes") == json_result.values.end())
+            if (rc != Status::Ok || !json_result.values.contains("routes"))
             {
                 throw std::runtime_error{"Couldn't route"};
             }

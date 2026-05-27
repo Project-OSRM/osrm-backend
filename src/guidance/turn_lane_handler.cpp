@@ -10,8 +10,6 @@
 
 #include <cstddef>
 
-#include <boost/numeric/conversion/cast.hpp>
-
 using osrm::util::angularDeviation;
 
 namespace osrm::guidance::lanes

@@ -6,7 +6,7 @@ file(GLOB PackedVectorBenchmarkSources packed_vector.cpp)
 add_executable(rtree-bench
 	EXCLUDE_FROM_ALL
 	${RTreeBenchmarkSources}
-    $<TARGET_OBJECTS:MICROTAR> $<TARGET_OBJECTS:UTIL>)
+    $<TARGET_OBJECTS:UTIL>)
 
 target_include_directories(rtree-bench
 	PUBLIC
@@ -16,7 +16,8 @@ target_link_libraries(rtree-bench
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
-	${MAYBE_SHAPEFILE})
+	${MAYBE_SHAPEFILE}
+	LibArchive::LibArchive)
 
 
 add_executable(match-bench
@@ -79,18 +80,27 @@ target_link_libraries(alias-bench
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE})
 
-
-
 add_executable(packedvector-bench
 	EXCLUDE_FROM_ALL
-    ${PackedVectorBenchmarkSources}
+  ${PackedVectorBenchmarkSources}
 	$<TARGET_OBJECTS:UTIL>)
 
 target_link_libraries(packedvector-bench
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
-    ${MAYBE_SHAPEFILE})
+  ${MAYBE_SHAPEFILE})
+
+add_executable(storage-bench
+	EXCLUDE_FROM_ALL
+	storage.cpp
+	$<TARGET_OBJECTS:UTIL>)
+
+target_link_libraries(storage-bench
+	${BOOST_BASE_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
+	${TBB_LIBRARIES}
+	${MAYBE_SHAPEFILE})
 
 
 if(BUILD_AS_SUBPROJECT)
@@ -101,6 +111,7 @@ if(BUILD_AS_SUBPROJECT)
 	match-bench
 	route-bench
 	bench
+  storage-bench
 	json-render-bench
 	alias-bench)
 else()
@@ -111,6 +122,7 @@ else()
 	match-bench
 	route-bench
 	bench
+  storage-bench
 	json-render-bench
 	alias-bench)
 endif()

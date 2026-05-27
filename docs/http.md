@@ -137,7 +137,7 @@ possible. In that case, only the `code` field will be returned.
 
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
 - `waypoints` array of `Waypoint` objects sorted by distance to the input coordinate. Each object has at least the following additional properties:
-  - `nodes`: Array of OpenStreetMap node ids.
+  - `nodes`: Array of OpenStreetMap node ids. Each id is a 64-bit unsigned integer (encoded as a JSON number for the `json` format, and as `ulong` for the `flatbuffers` format).
 
 #### Example Requests
 
@@ -188,7 +188,7 @@ curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?numb
          "location" : [
             13.388775,
             52.51717
-         ],
+         ]
       }
    ],
    "code" : "Ok"
@@ -211,7 +211,7 @@ In addition to the [general options](#general-options) the following options are
 |steps       |`true`, `false` (default)                    |Returned route steps for each route leg                                        |
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.      |
 |geometries  |`polyline` (default), `polyline6`, `geojson` |Returned route geometry format (influences overview and per step)              |
-|overview    |`simplified` (default), `full`, `false`      |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, or not at all.|
+|overview    |`simplified` (default), `full`, `false`, `by_legs`      |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, not at all, or split by leg.|
 |continue\_straight |`default` (default), `true`, `false`  |Forces the route to keep going straight at waypoints constraining uturns there even if it would be faster. Default value depends on the profile. |
 |waypoints   | `{index};{index};{index}...`                |Treats input coordinates indicated by given indices as waypoints in returned Match object. Default is to treat all input coordinates as waypoints.    |
 
@@ -432,7 +432,7 @@ In addition to the [general options](#general-options) the following options are
 |steps       |`true`, `false` (default)                       |Returned route steps for each route                                                       |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)                         |
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed`  |Returns additional metadata for each coordinate along the route geometry.                 |
-|overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, or not at all.|
+|overview    |`simplified` (default), `full`, `false`, `by_legs`         |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, not at all, or split by leg.|
 |timestamps  |`{timestamp};{timestamp}[;{timestamp} ...]`     |Timestamps for the input locations in seconds since UNIX epoch. Timestamps need to be monotonically increasing. |
 |radiuses    |`{radius};{radius}[;{radius} ...]`              |Standard deviation of GPS precision used for map matching. If applicable use GPS accuracy.|
 |gaps        |`split` (default), `ignore`                     |Allows the input track splitting based on huge timestamp gaps between points.             |
@@ -476,7 +476,7 @@ The returned path does not have to be the fastest one. As TSP is NP-hard it only
 Note that all input coordinates have to be connected for the trip service to work.
 
 ```endpoint
-GET /trip/v1/{profile}/{coordinates}?roundtrip={true|false}&source{any|first}&destination{any|last}&steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}'
+GET /trip/v1/{profile}/{coordinates}?roundtrip={true|false}&source={any|first}&destination={any|last}&steps={true|false}&geometries={polyline|polyline6|geojson}&overview={simplified|full|false}&annotations={true|false}
 ```
 
 In addition to the [general options](#general-options) the following options are supported for this service:
@@ -489,7 +489,7 @@ In addition to the [general options](#general-options) the following options are
 |steps       |`true`, `false` (default)                       |Returned route instructions for each trip                                  |
 |annotations |`true`, `false` (default), `nodes`, `distance`, `duration`, `datasources`, `weight`, `speed` |Returns additional metadata for each coordinate along the route geometry.  |
 |geometries  |`polyline` (default), `polyline6`, `geojson`    |Returned route geometry format (influences overview and per step)          |
-|overview    |`simplified` (default), `full`, `false`         |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, or not at all.|
+|overview    |`simplified` (default), `full`, `false`, `by_legs`         |Add overview geometry either full, simplified according to highest zoom level it could be displayed on, not at all, or split by leg.|
 
 **Fixing Start and End Points**
 
@@ -700,7 +700,7 @@ Annotation of the whole route leg with fine-grained information about each segme
 - `distance`: The distance, in meters, between each pair of coordinates
 - `duration`: The duration between each pair of coordinates, in seconds.  Does not include the duration of any turns.
 - `datasources`: The index of the data source for the speed between each pair of coordinates. `0` is the default profile, other values are supplied via `--segment-speed-file` to `osrm-contract` or `osrm-customize`.  String-like names are in the `metadata.datasource_names` array.
-- `nodes`: The OSM node ID for each coordinate along the route, excluding the first/last user-supplied coordinates
+- `nodes`: Array of OpenStreetMap node ids for each coordinate along the route (excluding the first/last user-supplied coordinates). Each id is a 64-bit unsigned integer (encoded as a JSON number for the `json` format, and as `ulong` for the `flatbuffers` format). Clients consuming flatbuffers should treat these values as 64-bit integers (JS bindings expose them as BigInt).
 - `weight`: The weights between each pair of coordinates.  Does not include any turn costs.
 - `speed`: Convenience field, calculation of `distance / duration` rounded to one decimal place
 - `metadata`: Metadata related to other annotations
@@ -1094,7 +1094,7 @@ Almost the same as `json` StepManeuver object. The following properties differ:
 
 ### Annotation object
 
-Exactly the same as `json` annotation object.
+Almost the same as the `json` annotation object. Note: on the flatbuffers wire the `Annotation.nodes` field is a `[ulong]` (64-bit unsigned integers), and the generated JavaScript flatbuffers bindings will expose these values as BigInt / BigUint64Array. Clients that consume flatbuffers should handle 64-bit node ids accordingly.
 
 
 ### Position object

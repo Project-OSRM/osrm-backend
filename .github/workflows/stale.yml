@@ -14,7 +14,7 @@ jobs:
   stale:
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/stale@v9
+      - uses: actions/stale@v10
         with:
           operations-per-run: 3000
           stale-issue-message: 'This issue seems to be stale. It will be closed in 30 days if no further activity occurs.'
@@ -24,6 +24,4 @@ jobs:
           days-before-pr-stale: 180 # 6 months
           days-before-pr-close: -1 # never close PRs
           exempt-issue-labels: 'Do Not Stale,Feature Request,Performance,Bug Report,CI,Starter Task,Refactor,Guidance'
-
-  
 

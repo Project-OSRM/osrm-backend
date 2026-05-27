@@ -53,6 +53,7 @@ void benchmark(BenchStaticRTree &rtree, unsigned num_queries)
     std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
     std::uniform_int_distribution<> lon_udist(WORLD_MIN_LON, WORLD_MAX_LON);
     std::vector<util::Coordinate> queries;
+    queries.reserve(num_queries);
     for (unsigned i = 0; i < num_queries; i++)
     {
         queries.emplace_back(util::FixedLongitude{lon_udist(mt_rand)},

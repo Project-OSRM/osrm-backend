@@ -2,6 +2,7 @@
 #define OSRM_CONTRACTOR_GRAPH_CONTRACTOR_HPP
 
 #include "contractor/contractor_graph.hpp"
+#include "contractor/query_graph.hpp"
 
 #include "util/filtered_graph.hpp"
 
@@ -9,6 +10,15 @@
 
 namespace osrm::contractor
 {
+
+using GraphAndFilter = std::tuple<QueryGraph, std::vector<std::vector<bool>>>;
+
+GraphAndFilter contractFullGraph(ContractorGraph contractor_graph,
+                                 std::vector<EdgeWeight> node_weights);
+
+GraphAndFilter contractExcludableGraph(ContractorGraph contractor_graph_,
+                                       std::vector<EdgeWeight> node_weights,
+                                       const std::vector<std::vector<bool>> &filters);
 
 std::vector<bool> contractGraph(ContractorGraph &graph,
                                 std::vector<bool> node_is_uncontracted,

@@ -22,11 +22,11 @@ BOOST_AUTO_TEST_CASE(decode)
 
     // Test coordinates; these would be the coordinates we give the loc parameter,
     // e.g. loc=10.00,10.0&loc=10.01,10.1...
-    util::Coordinate coord1(util::FloatLongitude{10.0}, util::FloatLatitude{10.00});
-    util::Coordinate coord2(util::FloatLongitude{10.1}, util::FloatLatitude{10.01});
-    util::Coordinate coord3(util::FloatLongitude{10.2}, util::FloatLatitude{10.02});
-    util::Coordinate coord4(util::FloatLongitude{10.3}, util::FloatLatitude{10.03});
-    util::Coordinate coord5(util::FloatLongitude{10.4}, util::FloatLatitude{10.04});
+    util::Coordinate coord1(10.0_lon, 10.00_lat);
+    util::Coordinate coord2(10.1_lon, 10.01_lat);
+    util::Coordinate coord3(10.2_lon, 10.02_lat);
+    util::Coordinate coord4(10.3_lon, 10.03_lat);
+    util::Coordinate coord5(10.4_lon, 10.04_lat);
 
     // Put the test coordinates into the vector for comparison
     std::vector<util::Coordinate> cmp_coords = {coord1, coord2, coord3, coord4, coord5};
@@ -48,11 +48,11 @@ BOOST_AUTO_TEST_CASE(encode)
 {
     // Coordinates; these would be the coordinates we give the loc parameter,
     // e.g. loc=10.00,10.0&loc=10.01,10.1...
-    util::Coordinate coord1(util::FloatLongitude{10.0}, util::FloatLatitude{10.00});
-    util::Coordinate coord2(util::FloatLongitude{10.1}, util::FloatLatitude{10.01});
-    util::Coordinate coord3(util::FloatLongitude{10.2}, util::FloatLatitude{10.02});
-    util::Coordinate coord4(util::FloatLongitude{10.3}, util::FloatLatitude{10.03});
-    util::Coordinate coord5(util::FloatLongitude{10.4}, util::FloatLatitude{10.04});
+    util::Coordinate coord1(10.0_lon, 10.00_lat);
+    util::Coordinate coord2(10.1_lon, 10.01_lat);
+    util::Coordinate coord3(10.2_lon, 10.02_lat);
+    util::Coordinate coord4(10.3_lon, 10.03_lat);
+    util::Coordinate coord5(10.4_lon, 10.04_lat);
 
     // Test polyline string for the 5 coordinates
     const std::string polyline = "_c`|@_c`|@o}@_pRo}@_pRo}@_pRo}@_pR";
@@ -69,11 +69,11 @@ BOOST_AUTO_TEST_CASE(encode6)
 {
     // Coordinates; these would be the coordinates we give the loc parameter,
     // e.g. loc=10.00,10.0&loc=10.01,10.1...
-    util::Coordinate coord1(util::FloatLongitude{10.0}, util::FloatLatitude{10.00});
-    util::Coordinate coord2(util::FloatLongitude{10.1}, util::FloatLatitude{10.01});
-    util::Coordinate coord3(util::FloatLongitude{10.2}, util::FloatLatitude{10.02});
-    util::Coordinate coord4(util::FloatLongitude{10.3}, util::FloatLatitude{10.03});
-    util::Coordinate coord5(util::FloatLongitude{10.4}, util::FloatLatitude{10.04});
+    util::Coordinate coord1(10.0_lon, 10.00_lat);
+    util::Coordinate coord2(10.1_lon, 10.01_lat);
+    util::Coordinate coord3(10.2_lon, 10.02_lat);
+    util::Coordinate coord4(10.3_lon, 10.03_lat);
+    util::Coordinate coord5(10.4_lon, 10.04_lat);
 
     // Test polyline string for the 6 coordinates
     const std::string polyline = "_gjaR_gjaR_pR_ibE_pR_ibE_pR_ibE_pR_ibE";
@@ -90,9 +90,7 @@ BOOST_AUTO_TEST_CASE(polyline_sign_check)
 {
     // check sign conversion correctness from zig-zag encoding to two's complement
     std::vector<util::Coordinate> coords = {
-        {util::FloatLongitude{0}, util::FloatLatitude{0}},
-        {util::FloatLongitude{-0.00001}, util::FloatLatitude{0.00000}},
-        {util::FloatLongitude{0.00000}, util::FloatLatitude{-0.00001}}};
+        {0.0_lon, 0.0_lat}, {-0.00001_lon, 0.00000_lat}, {0.00000_lon, -0.00001_lat}};
 
     const auto polyline = encodePolyline<100000>(coords.begin(), coords.end());
     const auto result = decodePolyline(polyline);
@@ -109,9 +107,7 @@ BOOST_AUTO_TEST_CASE(polyline_short_strings)
     // check zero longitude difference in the last coordinate
     // the polyline is incorrect, but decodePolyline must not fail
     std::vector<util::Coordinate> coords = {
-        {util::FloatLongitude{13.32476}, util::FloatLatitude{52.52632}},
-        {util::FloatLongitude{13.30179}, util::FloatLatitude{52.59155}},
-        {util::FloatLongitude{13.30179}, util::FloatLatitude{52.60391}}};
+        {13.32476_lon, 52.52632_lat}, {13.30179_lon, 52.59155_lat}, {13.30179_lon, 52.60391_lat}};
 
     const auto polyline = encodePolyline<100000>(coords.begin(), coords.end());
     BOOST_CHECK(polyline.back() == '?');
@@ -133,7 +129,7 @@ BOOST_AUTO_TEST_CASE(incorrect_polylines)
         "?_",      // unfinished longitude
         "?_______" // too long longitude (35 bits)
     };
-    util::Coordinate coord{util::FloatLongitude{0}, util::FloatLatitude{0}};
+    util::Coordinate coord{0.0_lon, 0.0_lat};
 
     for (const auto &polyline : polylines)
     {

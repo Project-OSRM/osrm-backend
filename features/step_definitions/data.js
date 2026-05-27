@@ -2,7 +2,6 @@
 import util from 'util';
 import path from 'path';
 import fs from 'fs';
-import d3 from 'd3-queue';
 import * as OSM from '../lib/osm.js';
 import { Given } from '@cucumber/cucumber';
 import { env } from '../support/env.js';
@@ -46,18 +45,10 @@ Given(
 );
 
 Given(/^the shortcuts$/, function (table, callback) {
-  const q = d3.queue();
-
-  const addShortcut = (row, cb) => {
-    this.shortcutsHash[row.key] = row.value;
-    cb();
-  };
-
   table.hashes().forEach((row) => {
-    q.defer(addShortcut, row);
+    this.shortcutsHash[row.key] = row.value;
   });
-
-  q.awaitAll(callback);
+  callback();
 });
 
 Given(/^the node map$/, function (docstring, callback) {
@@ -132,9 +123,7 @@ Given(
         '*** Map data already defined - did you pass an input file in this scenario?',
       );
 
-    const q = d3.queue();
-
-    const addWay = (row, cb) => {
+    const addWay = (row) => {
       const way = new OSM.Way(
         this.makeOSMId(),
         env.OSM_USER,
@@ -183,12 +172,10 @@ Given(
       way.setTags(tags);
       this.OSMDB.addWay(way);
       this.nameWayHash[nodes] = way;
-      cb();
     };
 
-    table.hashes().forEach((row) => q.defer(addWay, row));
-
-    q.awaitAll(callback);
+    table.hashes().forEach((row) => addWay(row));
+    callback();
   },
 );
 
@@ -198,9 +185,7 @@ Given(/^the relations$/, function (table, callback) {
       '*** Map data already defined - did you pass an input file in this scenario?',
     );
 
-  const q = d3.queue();
-
-  const addRelation = (headers, row, cb) => {
+  const addRelation = (headers, row) => {
     const relation = new OSM.Relation(
       this.makeOSMId(),
       env.OSM_USER,
@@ -290,14 +275,11 @@ Given(/^the relations$/, function (table, callback) {
     }
 
     this.OSMDB.addRelation(relation);
-
-    cb();
   };
 
   const headers = table.raw()[0];
-  table.rows().forEach((row) => q.defer(addRelation, headers, row));
-
-  q.awaitAll(callback);
+  table.rows().forEach((row) => addRelation(headers, row));
+  callback();
 });
 
 Given(/^the input file ([^"]*)$/, (file, callback) => {

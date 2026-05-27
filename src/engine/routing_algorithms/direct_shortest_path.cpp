@@ -44,16 +44,16 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
         unpacked_nodes.reserve(packed_leg.size());
         unpacked_edges.reserve(packed_leg.size());
         unpacked_nodes.push_back(packed_leg.front());
-        ch::unpackPath(
-            facade,
-            packed_leg.begin(),
-            packed_leg.end(),
-            [&unpacked_nodes, &unpacked_edges](std::pair<NodeID, NodeID> &edge, const auto &edge_id)
-            {
-                BOOST_ASSERT(edge.first == unpacked_nodes.back());
-                unpacked_nodes.push_back(edge.second);
-                unpacked_edges.push_back(edge_id);
-            });
+        ch::unpackPath(facade,
+                       packed_leg.begin(),
+                       packed_leg.end(),
+                       [&unpacked_nodes, &unpacked_edges](
+                           [[maybe_unused]] NodeID first, NodeID second, const auto &edge_id)
+                       {
+                           BOOST_ASSERT(first == unpacked_nodes.back());
+                           unpacked_nodes.push_back(second);
+                           unpacked_edges.push_back(edge_id);
+                       });
     }
 
     return extractRoute(facade, weight, endpoint_candidates, unpacked_nodes, unpacked_edges);
@@ -66,6 +66,8 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
 {
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(facade.GetNumberOfNodes(),
                                                                  facade.GetMaxBorderNodeID() + 1);
+    engine_working_data.InitializeUnpackingCache(facade.GetNumberOfNodes(),
+                                                 facade.GetNumberOfEdges());
     auto &forward_heap = *engine_working_data.forward_heap_1;
     auto &reverse_heap = *engine_working_data.reverse_heap_1;
     insertNodesInHeaps(forward_heap, reverse_heap, endpoint_candidates);

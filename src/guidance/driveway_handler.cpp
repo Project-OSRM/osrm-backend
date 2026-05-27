@@ -12,7 +12,7 @@ DrivewayHandler::DrivewayHandler(const util::NodeBasedDynamicGraph &node_based_g
                                  const extractor::RestrictionMap &node_restriction_map,
                                  const extractor::ObstacleMap &obstacle_nodes,
                                  const extractor::TurnLanesIndexedArray &turn_lanes_data,
-                                 const extractor::NameTable &name_table,
+                                 const extractor::StringTable &string_table,
                                  const extractor::SuffixTable &street_name_suffix_table)
     : IntersectionHandler(node_based_graph,
                           node_data_container,
@@ -21,7 +21,7 @@ DrivewayHandler::DrivewayHandler(const util::NodeBasedDynamicGraph &node_based_g
                           node_restriction_map,
                           obstacle_nodes,
                           turn_lanes_data,
-                          name_table,
+                          string_table,
                           street_name_suffix_table)
 {
 }

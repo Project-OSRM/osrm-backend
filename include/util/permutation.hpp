@@ -21,12 +21,12 @@ static inline void swap(std::vector<bool>::reference a, std::vector<bool>::refer
 } // namespace permutation_detail
 
 template <typename RandomAccessIterator, typename IndexT>
-void inplacePermutation(RandomAccessIterator begin,
+void inplacePermutation(const RandomAccessIterator &begin,
                         RandomAccessIterator end,
                         const std::vector<IndexT> &old_to_new)
 {
 
-    std::size_t size = std::distance(begin, end);
+    std::size_t size = std::distance(begin, std::move(end));
     BOOST_ASSERT(old_to_new.size() == size);
     // we need a little bit auxililary space since we need to mark
     // replaced elements in a non-destructive way

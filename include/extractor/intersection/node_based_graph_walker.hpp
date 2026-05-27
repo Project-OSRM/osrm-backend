@@ -102,7 +102,7 @@ struct LengthLimitedCoordinateAccumulator
  */
 struct SelectRoadByNameOnlyChoiceAndStraightness
 {
-    SelectRoadByNameOnlyChoiceAndStraightness(const NameID desired_name_id,
+    SelectRoadByNameOnlyChoiceAndStraightness(const StringViewID desired_name_id,
                                               const bool requires_entry);
 
     /*
@@ -118,7 +118,7 @@ struct SelectRoadByNameOnlyChoiceAndStraightness
                                      const EdgeBasedNodeDataContainer &node_data_container) const;
 
   private:
-    const NameID desired_name_id;
+    const StringViewID desired_name_id;
     const bool requires_entry;
 };
 
@@ -127,7 +127,7 @@ struct SelectRoadByNameOnlyChoiceAndStraightness
  */
 struct SelectStraightmostRoadByNameAndOnlyChoice
 {
-    SelectStraightmostRoadByNameAndOnlyChoice(const NameID desired_name_id,
+    SelectStraightmostRoadByNameAndOnlyChoice(const StringViewID desired_name_id,
                                               const double initial_bearing,
                                               const bool requires_entry,
                                               const bool stop_on_ambiguous_turns);
@@ -145,7 +145,7 @@ struct SelectStraightmostRoadByNameAndOnlyChoice
                                      const EdgeBasedNodeDataContainer &node_data_container) const;
 
   private:
-    const NameID desired_name_id;
+    const StringViewID desired_name_id;
     const double initial_bearing;
     const bool requires_entry;
     const bool stop_on_ambiguous_turns;

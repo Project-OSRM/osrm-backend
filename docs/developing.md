@@ -26,7 +26,7 @@ The field `data-for-conversion` can be an arbitrary long set of features and nee
 
 The policy itself offers a `operator()` accepting a `vector` of `NodeID`.
 
-For outputting data into our file (debug.geojson), we simply need to call the matching logging routine of the guard: `util::ScioedGeojsonLoggerGuard<util::NodeIdVectorToLineString>::Write(list_of_node_ids);`
+For outputting data into our file (debug.geojson), we simply need to call the matching logging routine of the guard: `util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString>::Write(list_of_node_ids);`
 (or `guard.Write(list_of_node_ids)` if you created an instance).
 
 ### Possible Scopeguard Location
@@ -57,6 +57,6 @@ If we want to use the same policy for multiple files, we need to use different t
 
 as well as,
  
-`util::ScopedGeojsonLoggerGuardr<util::NodeIdVectorToLineString,0>::Write(list_of_node_ids);`
+`util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString,0>::Write(list_of_node_ids);`
 
-`util::ScopedGeojsonLoggerGuardr<util::NodeIdVectorToLineString,1>::Write(list_of_node_ids);`
+`util::ScopedGeojsonLoggerGuard<util::NodeIdVectorToLineString,1>::Write(list_of_node_ids);`

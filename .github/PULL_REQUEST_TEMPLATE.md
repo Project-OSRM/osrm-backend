@@ -14,7 +14,6 @@ Please note our [contribution guidlines](https://github.com/Project-OSRM/osrm-ba
  - [ ] self-review code for correctness and following the [coding guidelines](https://github.com/Project-OSRM/osrm-backend/wiki/Coding-Standards)
  - [ ] add tests (see [testing](https://github.com/Project-OSRM/osrm-backend/blob/master/docs/testing.md))
  - [ ] update relevant [wiki pages](https://github.com/Project-OSRM/osrm-backend/wiki)
- - [ ] CHANGELOG.md entry (see [how to](http://keepachangelog.com/en/1.0.0/#how))
  - [ ] review
  - [ ] adjust for comments
 

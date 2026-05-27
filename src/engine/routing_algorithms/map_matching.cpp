@@ -268,10 +268,7 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             if (model.breakage[t])
             {
                 // save start of breakage -> we need this as split point
-                if (t < breakage_begin)
-                {
-                    breakage_begin = t;
-                }
+                breakage_begin = std::min(t, breakage_begin);
 
                 BOOST_ASSERT(prev_unbroken_timestamps.size() > 0);
                 // remove both ends of the breakage

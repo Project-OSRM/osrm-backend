@@ -11,8 +11,6 @@
 
 #include <osmium/memory/buffer.hpp>
 
-#include <boost/optional/optional.hpp>
-
 #include <string>
 #include <vector>
 

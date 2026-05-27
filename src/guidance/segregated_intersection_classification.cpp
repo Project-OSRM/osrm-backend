@@ -37,7 +37,7 @@ struct EdgeInfo
 };
 
 std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFactory &factory,
-                                               const extractor::NameTable &names)
+                                               const extractor::StringTable &names)
 {
     auto const &graph = factory.GetGraph();
     auto const &annotation = factory.GetAnnotationData();
@@ -76,8 +76,8 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
     {
         /// @todo Make string normalization/lowercase/trim for comparison ...
 
-        auto const id = annotation[edge_data.annotation_data].name_id;
-        BOOST_ASSERT(id != INVALID_NAMEID);
+        auto const id = annotation[edge_data.annotation_data].string_view_id;
+        BOOST_ASSERT(id != INVALID_STRINGVIEWID);
         auto const name = names.GetNameForID(id);
         return {edge_id,
                 node,
@@ -99,14 +99,14 @@ std::unordered_set<EdgeID> findSegregatedNodes(const extractor::NodeBasedGraphFa
     // Lambda to check if the turn set includes a right turn type
     const auto has_turn_right = [](std::set<guidance::DirectionModifier::Enum> &turn_types)
     {
-        return turn_types.find(guidance::DirectionModifier::Right) != turn_types.end() ||
-               turn_types.find(guidance::DirectionModifier::SharpRight) != turn_types.end();
+        return turn_types.contains(guidance::DirectionModifier::Right) ||
+               turn_types.contains(guidance::DirectionModifier::SharpRight);
     };
     // Lambda to check if the turn set includes a left turn type
     const auto has_turn_left = [](std::set<guidance::DirectionModifier::Enum> &turn_types)
     {
-        return turn_types.find(guidance::DirectionModifier::Left) != turn_types.end() ||
-               turn_types.find(guidance::DirectionModifier::SharpLeft) != turn_types.end();
+        return turn_types.contains(guidance::DirectionModifier::Left) ||
+               turn_types.contains(guidance::DirectionModifier::SharpLeft);
     };
 
     auto isSegregated = [&](NodeID node1,

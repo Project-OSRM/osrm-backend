@@ -11,9 +11,9 @@
 #include "osrm/osrm.hpp"
 #include "osrm/storage_config.hpp"
 
+#include "util/program_options_path.hpp"
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/any.hpp>
-#include <boost/optional/optional_io.hpp>
 #include <boost/program_options.hpp>
 
 #include <cstdlib>
@@ -23,6 +23,7 @@
 #include <chrono>
 #include <exception>
 #include <filesystem>
+#include <functional>
 #include <future>
 #include <iostream>
 #include <new>
@@ -30,7 +31,7 @@
 #include <thread>
 
 #ifdef _WIN32
-boost::function0<void> console_ctrl_function;
+std::function<void()> console_ctrl_function;
 
 BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 {
@@ -230,19 +231,19 @@ inline unsigned generateServerProgramOptions(const int argc,
         return INIT_FAILED;
     }
 
-    if (option_variables.count("version"))
+    if (option_variables.contains("version"))
     {
         std::cout << OSRM_VERSION << std::endl;
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 
-    if (option_variables.count("help"))
+    if (option_variables.contains("help"))
     {
         std::cout << visible_options;
         return INIT_OK_DO_NOT_START_ENGINE;
     }
 
-    if (option_variables.count("list-inputs"))
+    if (option_variables.contains("list-inputs"))
     {
         storage::StorageConfig storage_config;
         storage_config.ListInputFiles(std::cout);
@@ -256,15 +257,15 @@ inline unsigned generateServerProgramOptions(const int argc,
         max_header_size = server::deriveMaxHeaderSize(config);
     }
 
-    if (!config.use_shared_memory && option_variables.count("base"))
+    if (!config.use_shared_memory && option_variables.contains("base"))
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (config.use_shared_memory && !option_variables.count("base"))
+    else if (config.use_shared_memory && !option_variables.contains("base"))
     {
         return INIT_OK_START_ENGINE;
     }
-    else if (config.use_shared_memory && option_variables.count("base"))
+    else if (config.use_shared_memory && option_variables.contains("base"))
     {
         util::Log(logWARNING) << "Shared memory settings conflict with path settings.";
     }

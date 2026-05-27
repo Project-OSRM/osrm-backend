@@ -5,7 +5,6 @@
 #include "util/bearing.hpp"
 #include "util/coordinate_calculation.hpp"
 
-#include <boost/optional/optional_io.hpp>
 #include <numbers>
 
 namespace osrm::extractor::intersection

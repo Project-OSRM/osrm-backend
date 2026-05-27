@@ -1,7 +1,6 @@
 // Performance benchmarking tool for OSRM routing services
-import OSRM from '../../lib/index.js';
 import { performance, createHistogram } from 'node:perf_hooks';
-import { mld_data_path } from './constants.js';
+import { OSRM, mld_data_path } from './constants.js';
 
 // usage: node test/nodejs/benchmark.js berlin-latest.osrm 13.388860,52.517037;13.385983,52.496891
 const args = process.argv.slice(2);
@@ -9,47 +8,46 @@ const path = args[0] || mld_data_path;
 
 // Parse semicolon-separated waypoints from command line arguments
 function parseWaypoints(waypoints) {
-    if (waypoints == undefined) {
-        return undefined;
-    }
-    return waypoints.split(';').map((waypoint) => {
-        const [lon, lat] = waypoint.split(',');
-        return [parseFloat(lon), parseFloat(lat)];
-    });
+  if (waypoints == undefined) {
+    return undefined;
+  }
+  return waypoints.split(';').map((waypoint) => {
+    const [lon, lat] = waypoint.split(',');
+    return [parseFloat(lon), parseFloat(lat)];
+  });
 }
 const waypoints = parseWaypoints(args[1]) || [[7.41337, 43.72956],[7.41546, 43.73077]];
 const osrm = new OSRM({path, algorithm: 'MLD'});
 
 // Promisify the OSRM route callback for async/await usage
 async function route(coordinates) {
-    const promise = new Promise((resolve, reject) => {
-        osrm.route({coordinates, steps: true, overview: 'full'}, (err, result) => {
-            if (err) {
-                reject(err);
-            } else {
-                resolve(result);
-            }
-        });
+  const promise = new Promise((resolve, reject) => {
+    osrm.route({coordinates, steps: true, overview: 'full'}, (err, result) => {
+      if (err) {
+        reject(err);
+      } else {
+        resolve(result);
+      }
     });
-    return promise;
+  });
+  return promise;
 }
 
 async function benchmark() {
-    // warmup
+  // warmup
+  await route(waypoints);
+
+  const performanceHistorgram = createHistogram();
+
+  for (let i = 0; i < 1000; i++) {
+    const start = performance.now();
     await route(waypoints);
-
-    const performanceHistorgram = createHistogram();
-
-    for (let i = 0; i < 1000; i++) {
-        const start = performance.now();
-        await route(waypoints);
-        const end = performance.now();
-        // record result in microseconds
-        performanceHistorgram.record(Math.ceil((end - start) * 1000));
-    }
+    const end = performance.now();
+    // record result in microseconds
+    performanceHistorgram.record(Math.ceil((end - start) * 1000));
+  }
 
 
-    console.log(performanceHistorgram);
+  console.log(performanceHistorgram);
 }
 benchmark();
-

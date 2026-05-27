@@ -100,8 +100,9 @@ function BoundingBox(x) {
 }
 const optionsList = [
   {name: 'help', alias: 'h', type: Boolean, description: 'Display this usage guide.', defaultValue: false},
+  {name: 'verbose', alias: 'v', type: Boolean, description: 'Print detailed CSV output for each query', defaultValue: false},
   {name: 'server', alias: 's', type: ServerDetails, defaultValue: ServerDetails('localhost:5000'), description: 'OSRM routing server', typeLabel: '{underline hostname[:port]}'},
-  {name: 'path', alias: 'p', type: String, defaultValue: '/route/v1/driving/{};{}', description: 'OSRM query path with \\{\\} coordinate placeholders, default /route/v2/driving/\\{\\};\\{\\}', typeLabel: '{underline path}'},
+  {name: 'path', alias: 'p', type: String, defaultValue: '/route/v1/driving/{};{}', description: 'OSRM query path with \\{\\} coordinate placeholders, default /route/v1/driving/\\{\\};\\{\\}', typeLabel: '{underline path}'},
   {name: 'filter', alias: 'f', type: String, defaultValue: ['$.routes[0].weight'], multiple: true, description: 'JSONPath filters, default "$.routes[0].weight"', typeLabel: '{underline filter}'},
   {name: 'bounding-box', alias: 'b', type: BoundingBox, defaultValue: BoundingBox('5.86442,47.2654,15.0508,55.1478'), multiple: true, description: 'queries bounding box, default "5.86442,47.2654,15.0508,55.1478"', typeLabel: '{underline west,south,east,north}'},
   {name: 'max-sockets', alias: 'm', type: Number, defaultValue: 1, description: 'how many concurrent sockets the agent can have open per origin, default 1', typeLabel: '{underline number}'},
@@ -132,7 +133,12 @@ if (options.hasOwnProperty('queries-files')) {
     .toString()
     .split('\n')
     .map(r => { const match = /^"([^\"]+)"/.exec(r); return match ? match[1] : null; })
-    .filter(q => q);
+    .filter(q => q)
+    .map(q => {
+      // If query is a full URL, extract just the path portion
+      const url_match = /^https?:\/\/[^\/]+(\/.*?)$/.exec(q);
+      return url_match ? url_match[1] : q;
+    });
 } else {
   const polygon = options['bounding-box'].map(x => x.poly).reduce((x,y) => turf.union(x, y));
   const coordinates_number = (options.path.match(/{}/g) || []).length;
@@ -143,10 +149,89 @@ queries = queries.map(q => { return {hostname: options.server.hostname, port: op
 
 // Execute all queries and output results in CSV format
 http.globalAgent.maxSockets = options['max-sockets'];
-queries.map(query => {
+
+// Collect all results for statistics
+const all_results = [];
+let completed_queries = 0;
+
+queries.forEach(query => {
   run_query(query, options.filter, (query, code, ttfb, total, results) => {
     const data = results ? JSON.stringify(results[0]) : '';
-    const record = [[query, code, ttfb, total, data]];
-    process.stdout.write(csv_stringify(record));
+    const record = {
+      query,
+      code,
+      ttfb: ttfb ?? 0,
+      total: total ?? 0,
+      data
+    };
+    all_results.push(record);
+    completed_queries++;
+
+    // When all queries are done, print statistics and CSV output
+    if (completed_queries === queries.length) {
+      print_statistics(all_results);
+
+      // Output CSV data only if verbose flag is set
+      if (options.verbose) {
+        const csv_records = all_results.map(r => [r.query, r.code, r.ttfb, r.total, r.data]);
+        process.stdout.write(csv_stringify(csv_records));
+      }
+    }
   });
 });
+
+// Calculate and print query statistics
+function print_statistics(results) {
+  const total_queries = results.length;
+  const successful = results.filter(r => r.code === 200 && r.total > 0);
+  const successful_count = successful.length;
+  const failed_count = total_queries - successful_count;
+
+  process.stderr.write('\n=== Query Statistics ===\n');
+  process.stderr.write(`Total queries: ${total_queries}\n`);
+  process.stderr.write(`Successful: ${successful_count}\n`);
+  process.stderr.write(`Failed: ${failed_count}\n`);
+
+  if (successful_count === 0) {
+    // Show sample of error codes to help debug
+    const error_codes = {};
+    results.forEach(r => {
+      error_codes[r.code] = (error_codes[r.code] || 0) + 1;
+    });
+    process.stderr.write('\nError breakdown:\n');
+    Object.entries(error_codes).forEach(([code, count]) => {
+      process.stderr.write(`  ${code}: ${count} queries\n`);
+    });
+    process.stderr.write('========================\n\n');
+    return;
+  }
+
+  // Extract total times from successful queries (filter out any 0 or invalid times)
+  const times = successful.map(r => r.total).filter(t => t > 0).sort((a, b) => a - b);
+
+  if (times.length === 0) {
+    process.stderr.write('No valid response times recorded\n');
+    process.stderr.write('========================\n\n');
+    return;
+  }
+
+  const min = times[0];
+  const max = times[times.length - 1];
+  const avg = times.reduce((sum, t) => sum + t, 0) / times.length;
+
+  // Calculate median
+  let median;
+  const mid = Math.floor(times.length / 2);
+  if (times.length % 2 === 0) {
+    median = (times[mid - 1] + times[mid]) / 2;
+  } else {
+    median = times[mid];
+  }
+
+  process.stderr.write(`\nResponse times (ms):\n`);
+  process.stderr.write(`  Min:    ${min.toFixed(2)}\n`);
+  process.stderr.write(`  Max:    ${max.toFixed(2)}\n`);
+  process.stderr.write(`  Avg:    ${avg.toFixed(2)}\n`);
+  process.stderr.write(`  Median: ${median.toFixed(2)}\n`);
+  process.stderr.write('========================\n\n');
+}

@@ -4,60 +4,39 @@
 #include "server/api/route_parameters_grammar.hpp"
 #include "engine/api/match_parameters.hpp"
 
-#include <boost/phoenix.hpp>
-#include <boost/spirit/include/qi.hpp>
+#include <boost/spirit/home/x3.hpp>
 
-namespace osrm::server::api
+namespace osrm::server::api::match_grammar
 {
 
-namespace
+namespace x3 = boost::spirit::x3;
+
+inline const auto gaps_type = []()
 {
-namespace ph = boost::phoenix;
-namespace qi = boost::spirit::qi;
-} // namespace
+    x3::symbols<engine::api::MatchParameters::GapsType> sym;
+    sym.add("split", engine::api::MatchParameters::GapsType::Split)(
+        "ignore", engine::api::MatchParameters::GapsType::Ignore);
+    return sym;
+}();
 
-template <typename Iterator = std::string::iterator,
-          typename Signature = void(engine::api::MatchParameters &)>
-struct MatchParametersGrammar final : public RouteParametersGrammar<Iterator, Signature>
-{
-    using BaseGrammar = RouteParametersGrammar<Iterator, Signature>;
+inline const auto timestamps_rule =
+    x3::lit("timestamps=") >
+    (x3::uint_ %
+     ';')[([](auto &ctx) { x3::get<params_tag>(ctx).get().timestamps = x3::_attr(ctx); })];
 
-    MatchParametersGrammar() : BaseGrammar(root_rule)
-    {
-#ifdef BOOST_HAS_LONG_LONG
-        if (std::is_same<std::size_t, unsigned long long>::value)
-            size_t_ = qi::ulong_long;
-        else
-            size_t_ = qi::ulong_;
-#else
-        size_t_ = qi::ulong_;
-#endif
+inline const auto gaps_rule =
+    x3::lit("gaps=") >
+    gaps_type[([](auto &ctx) { x3::get<params_tag>(ctx).get().gaps = x3::_attr(ctx); })];
 
-        timestamps_rule =
-            qi::lit("timestamps=") >
-            (qi::uint_ %
-             ';')[ph::bind(&engine::api::MatchParameters::timestamps, qi::_r1) = qi::_1];
+inline const auto tidy_rule =
+    x3::lit("tidy=") >
+    x3::bool_[([](auto &ctx) { x3::get<params_tag>(ctx).get().tidy = x3::_attr(ctx); })];
 
-        gaps_type.add("split", engine::api::MatchParameters::GapsType::Split)(
-            "ignore", engine::api::MatchParameters::GapsType::Ignore);
+// Match root rule
+inline const auto root_rule = x3::rule<struct match_root_tag>{"match_root"} =
+    base_grammar::query_rule > base_grammar::format_rule >
+    -('?' > (timestamps_rule | route_grammar::route_options | gaps_rule | tidy_rule) % '&');
 
-        root_rule =
-            BaseGrammar::query_rule(qi::_r1) > BaseGrammar::format_rule(qi::_r1) >
-            -('?' > (timestamps_rule(qi::_r1) | BaseGrammar::base_rule(qi::_r1) |
-                     (qi::lit("gaps=") >
-                      gaps_type[ph::bind(&engine::api::MatchParameters::gaps, qi::_r1) = qi::_1]) |
-                     (qi::lit("tidy=") >
-                      qi::bool_[ph::bind(&engine::api::MatchParameters::tidy, qi::_r1) = qi::_1])) %
-                        '&');
-    }
-
-  private:
-    qi::rule<Iterator, Signature> root_rule;
-    qi::rule<Iterator, Signature> timestamps_rule;
-    qi::rule<Iterator, std::size_t()> size_t_;
-
-    qi::symbols<char, engine::api::MatchParameters::GapsType> gaps_type;
-};
-} // namespace osrm::server::api
+} // namespace osrm::server::api::match_grammar
 
 #endif

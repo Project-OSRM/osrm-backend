@@ -3,8 +3,6 @@
 
 #include "extractor/restriction.hpp"
 
-#include <boost/optional/optional.hpp>
-
 #include <osmium/tags/filter.hpp>
 #include <set>
 #include <string>

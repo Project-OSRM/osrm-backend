@@ -22,7 +22,7 @@ using TestNodeArrayEntry = TestStaticGraph::NodeArrayEntry;
 using TestEdgeArrayEntry = TestStaticGraph::EdgeArrayEntry;
 using TestInputEdge = static_graph_details::SortableEdgeWithData<TestData>;
 
-static_assert(traits::HasDataMember<TestInputEdge>::value, "TestInputEdge needs to have data");
+static_assert(traits::HasDataMember<TestInputEdge>, "TestInputEdge needs to have data");
 
 constexpr unsigned TEST_NUM_NODES = 100;
 constexpr unsigned TEST_NUM_EDGES = 500;
@@ -37,6 +37,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomArrayEntryFixture
 
         std::uniform_int_distribution<> edge_udist(0, NUM_EDGES - 1);
         std::vector<unsigned> offsets;
+        offsets.reserve(NUM_NODES);
         for (unsigned i = 0; i < NUM_NODES; i++)
         {
             offsets.push_back(edge_udist(g));

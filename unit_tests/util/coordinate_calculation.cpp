@@ -332,6 +332,7 @@ BOOST_AUTO_TEST_CASE(vertical_regression)
 {
     // check a vertical line for its bearing
     std::vector<Coordinate> coordinates;
+    coordinates.reserve(100);
     for (std::size_t i = 0; i < 100; ++i)
         coordinates.push_back(Coordinate(FloatLongitude{0.0}, FloatLatitude{i / 100.0}));
 
@@ -347,6 +348,7 @@ BOOST_AUTO_TEST_CASE(sinus_curve)
 {
     // create a full sinus curve, sampled in 3.6 degree
     std::vector<Coordinate> coordinates;
+    coordinates.reserve(360);
     for (std::size_t i = 0; i < 360; ++i)
         coordinates.push_back(Coordinate(
             FloatLongitude{i / 360.0},
@@ -364,10 +366,12 @@ BOOST_AUTO_TEST_CASE(sinus_curve)
 BOOST_AUTO_TEST_CASE(parallel_lines_slight_offset)
 {
     std::vector<Coordinate> coordinates_lhs;
+    coordinates_lhs.reserve(100);
     for (std::size_t i = 0; i < 100; ++i)
         coordinates_lhs.push_back(Coordinate(util::FloatLongitude{(50 - (rand() % 101)) / 100000.0},
                                              util::FloatLatitude{i / 100000.0}));
     std::vector<Coordinate> coordinates_rhs;
+    coordinates_rhs.reserve(100);
     for (std::size_t i = 0; i < 100; ++i)
         coordinates_rhs.push_back(
             Coordinate(util::FloatLongitude{(150 - (rand() % 101)) / 100000.0},

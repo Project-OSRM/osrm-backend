@@ -91,7 +91,8 @@ BOOST_AUTO_TEST_CASE(two_blobs_in_traces_needs_tidiying_test)
     BOOST_CHECK_EQUAL(result.tidied_to_original[1], 3);
     BOOST_CHECK_EQUAL(result.tidied_to_original[2], 5);
 
-    const auto redundant = result.can_be_removed.count();
+    const auto redundant =
+        std::count(result.can_be_removed.begin(), result.can_be_removed.end(), true);
     BOOST_CHECK_EQUAL(redundant, params.coordinates.size() - 3);
 
     BOOST_CHECK_EQUAL(result.can_be_removed[0], false);
@@ -123,7 +124,8 @@ BOOST_AUTO_TEST_CASE(two_blobs_in_traces_needs_tidiying_no_timestamps_test)
     BOOST_CHECK_EQUAL(result.tidied_to_original[1], 3);
     BOOST_CHECK_EQUAL(result.tidied_to_original[2], 5);
 
-    const auto redundant = result.can_be_removed.count();
+    const auto redundant =
+        std::count(result.can_be_removed.begin(), result.can_be_removed.end(), true);
     BOOST_CHECK_EQUAL(redundant, params.coordinates.size() - 3);
 
     BOOST_CHECK_EQUAL(result.can_be_removed[0], false);

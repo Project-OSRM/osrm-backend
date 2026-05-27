@@ -31,9 +31,11 @@
 #include "osrm/coordinate.hpp"
 #include <cstddef>
 
+#include "util/vector_view.hpp"
 #include <engine/bearing.hpp>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -46,21 +48,18 @@ class BaseDataFacade
   public:
     using RTreeLeaf = extractor::EdgeBasedNodeSegment;
 
-    using NodeForwardRange =
-        std::ranges::subrange<extractor::SegmentDataView::SegmentNodeVector::const_iterator>;
+    using NodeForwardRange = std::span<const NodeID>;
     using NodeReverseRange = std::ranges::reverse_view<NodeForwardRange>;
 
     using WeightForwardRange =
         std::ranges::subrange<extractor::SegmentDataView::SegmentWeightVector::const_iterator>;
-
     using WeightReverseRange = std::ranges::reverse_view<WeightForwardRange>;
 
     using DurationForwardRange =
         std::ranges::subrange<extractor::SegmentDataView::SegmentDurationVector::const_iterator>;
     using DurationReverseRange = std::ranges::reverse_view<DurationForwardRange>;
 
-    using DatasourceForwardRange =
-        std::ranges::subrange<extractor::SegmentDataView::SegmentDatasourceVector::const_iterator>;
+    using DatasourceForwardRange = std::span<const DatasourceID>;
     using DatasourceReverseRange = std::ranges::reverse_view<DatasourceForwardRange>;
 
     BaseDataFacade() {}
@@ -148,17 +147,17 @@ class BaseDataFacade
     virtual extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID lane_description_id) const = 0;
 
-    virtual NameID GetNameIndex(const NodeID edge_based_node_id) const = 0;
+    virtual StringViewID GetNameIndex(const NodeID edge_based_node_id) const = 0;
 
-    virtual std::string_view GetNameForID(const NameID id) const = 0;
+    virtual std::string_view GetNameForID(const StringViewID id) const = 0;
 
-    virtual std::string_view GetRefForID(const NameID id) const = 0;
+    virtual std::string_view GetRefForID(const StringViewID id) const = 0;
 
-    virtual std::string_view GetPronunciationForID(const NameID id) const = 0;
+    virtual std::string_view GetPronunciationForID(const StringViewID id) const = 0;
 
-    virtual std::string_view GetDestinationsForID(const NameID id) const = 0;
+    virtual std::string_view GetDestinationsForID(const StringViewID id) const = 0;
 
-    virtual std::string_view GetExitsForID(const NameID id) const = 0;
+    virtual std::string_view GetExitsForID(const StringViewID id) const = 0;
 
     virtual bool GetContinueStraightDefault() const = 0;
 

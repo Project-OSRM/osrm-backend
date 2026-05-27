@@ -54,6 +54,14 @@ Feature: Bike - Max speed restrictions
             | a    | b  | ab,ab    | 15 km/h |
             | b    | c  | bc,bc    | 15 km/h |
 
+    Scenario: Bicycle - High maxspeed should be capped at vehicle_max_speed
+        Then routability should be
+            | highway     | maxspeed | bothw   |
+            | residential |          | 15 km/h |
+            | residential | 100      | 15 km/h |
+            | cycleway    |          | 15 km/h |
+            | cycleway    | 100      | 15 km/h |
+
     Scenario: Bike - Forward/backward maxspeed
         Given the shortcuts
             | key   | value     |
@@ -71,6 +79,10 @@ Feature: Bike - Max speed restrictions
             | 2        | 10               |                   | 10 km/h | 2 km/h  |
             | 2        |                  | 10                | 2 km/h  | 10 km/h |
             | 2        | 5                | 10                | 5 km/h  | 10 km/h |
+            | 100      |                  |                   | 15 km/h | 15 km/h |
+            |          | 100              |                   | 15 km/h | 15 km/h |
+            |          |                  | 100               | 15 km/h | 15 km/h |
+            | 100      | 100              | 100               | 15 km/h | 15 km/h |
 
     Scenario: Bike - Maxspeed should not allow routing on unroutable ways
         Then routability should be
