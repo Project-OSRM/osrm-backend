@@ -5,27 +5,60 @@
 #include "osrm/extractor_config.hpp"
 
 #include <filesystem>
+#include <iostream>
+#include <mutex>
+#include <sstream>
+#include <streambuf>
 #include <string>
 #include <thread>
 
-// utility class to redirect stderr so we can test it
-// inspired by https://stackoverflow.com/questions/5405016
-class redirect_stderr
+// Thread-safe streambuf wrapper. std::cerr's thread-safety guarantee depends on
+// its original buffer's internal locking. When we replace it with a plain
+// std::stringbuf for testing, concurrent TBB writes cause heap corruption.
+// This wrapper serializes all writes to the underlying buffer.
+class synchronized_streambuf : public std::streambuf
 {
-    // constructor: accept a pointer to a buffer where stderr will be redirected
   public:
-    redirect_stderr(std::streambuf *buf)
-        // store the original buffer for later (original buffer returned by rdbuf)
-        : old(std::cerr.rdbuf(buf))
+    explicit synchronized_streambuf(std::streambuf *wrapped) : wrapped_(wrapped) {}
+
+  protected:
+    int overflow(int c) override
     {
+        std::lock_guard<std::mutex> lock(mtx_);
+        if (traits_type::eq_int_type(c, traits_type::eof()))
+            return traits_type::not_eof(c);
+        return wrapped_->sputc(traits_type::to_char_type(c));
     }
 
-    // destructor: restore the original cerr, regardless of how this class gets destroyed
-    ~redirect_stderr() { std::cerr.rdbuf(old); }
+    std::streamsize xsputn(const char *s, std::streamsize n) override
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        return wrapped_->sputn(s, n);
+    }
 
-    // place to store the buffer
+    int sync() override
+    {
+        std::lock_guard<std::mutex> lock(mtx_);
+        return wrapped_->pubsync();
+    }
+
   private:
-    std::streambuf *old;
+    std::streambuf *wrapped_;
+    std::mutex mtx_;
+};
+
+class redirect_stderr
+{
+  public:
+    explicit redirect_stderr(std::streambuf *buf)
+        : sync_buf_(buf), old_(std::cerr.rdbuf(&sync_buf_))
+    {
+    }
+    ~redirect_stderr() { std::cerr.rdbuf(old_); }
+
+  private:
+    synchronized_streambuf sync_buf_;
+    std::streambuf *old_;
 };
 
 BOOST_AUTO_TEST_SUITE(library_extract)
