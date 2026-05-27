@@ -714,6 +714,13 @@ jobs:
           if-no-files-found: error
           retention-days: 1
 
+      - name: Save compiler cache
+        if: always() && steps.build.outcome != 'cancelled'
+        uses: actions/cache/save@v5
+        with:
+          path: ~/.ccache
+          key: ccache-${{ matrix.name }}-${{ github.sha }}
+
       - name: Show CCache statistics
         run: |
           ccache -p
