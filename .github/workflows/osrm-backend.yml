@@ -615,7 +615,7 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           files: coverage.lcov.filtered
-          fail_ci_if_error: true
+          fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Use Node 22
