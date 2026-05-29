@@ -616,6 +616,7 @@ jobs:
         with:
           files: coverage.lcov.filtered
           fail_ci_if_error: true
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Use Node 22
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
