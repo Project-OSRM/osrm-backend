@@ -612,7 +612,7 @@ jobs:
           lcov --remove coverage.lcov '*/include/nlohmann/json*' '*/test/*' '*/unit_tests/*' --output-file coverage.lcov.filtered
       - name: Upload coverage to codecov.io
         if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v6
         with:
           files: coverage.lcov.filtered
           fail_ci_if_error: false
