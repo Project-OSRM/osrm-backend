@@ -361,13 +361,13 @@ jobs:
             CXXCOMPILER: g++-13
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-14-debug-cov
+          - name: gcc-13-debug-cov
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: gcc-14
-            CXXCOMPILER: g++-14
+            CCOMPILER: gcc-13
+            CXXCOMPILER: g++-13
             ENABLE_COVERAGE: ON
 
           - name: vcpkg-linux-release-bindings
