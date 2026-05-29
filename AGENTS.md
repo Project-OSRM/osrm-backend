@@ -131,6 +131,8 @@ pytest test/python/
 <IMPORTANT>
 Use the [PR template](.github/PULL_REQUEST_TEMPLATE.md) to build the PR description.
 Remove irrelevant tasks, but NEVER remove `review` or submit it checked.
-Ensure the description includes which AI tool and model was used, add a robot emoji to the description.
+Disclose AI participation in the PR description by stating only the harness name and model (e.g. "GitHub Copilot, Claude Sonnet 4.6"), add a robot emoji. Do not include links, fake email addresses, or session identifiers.
+
+Do NOT include any AI attribution (e.g. `Co-authored-by:` trailers) in git commit messages.
 </IMPORTANT>
 
