@@ -608,7 +608,7 @@ jobs:
       - name: Generate coverage report
         if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
         run: |
-          lcov --ignore-errors negative --directory ${OSRM_BUILD_DIR} --capture --output-file coverage.lcov
+          lcov --ignore-errors mismatch negative --directory ${OSRM_BUILD_DIR} --capture --output-file coverage.lcov
           lcov --remove coverage.lcov '*/include/nlohmann/json*' '*/test/*' '*/unit_tests/*' --output-file coverage.lcov.filtered
       - name: Upload coverage to codecov.io
         if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
