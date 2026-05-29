@@ -361,13 +361,13 @@ jobs:
             CXXCOMPILER: g++-13
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-13-debug-cov
+          - name: gcc-14-debug-cov
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
+            CCOMPILER: gcc-14
+            CXXCOMPILER: g++-14
             ENABLE_COVERAGE: ON
 
           - name: vcpkg-linux-release-bindings
@@ -604,6 +604,18 @@ jobs:
           popd
           ./scripts/ci/test_cli_parsing.sh -b "${OSRM_BUILD_DIR}"
           npm test -- --parallel $JOBS
+
+      - name: Generate coverage report
+        if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+        run: |
+          lcov --directory ${OSRM_BUILD_DIR} --capture --output-file coverage.lcov
+          lcov --remove coverage.lcov '*/include/nlohmann/json*' '*/test/*' '*/unit_tests/*' --output-file coverage.lcov.filtered
+      - name: Upload coverage to codecov.io
+        if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+        uses: codecov/codecov-action@v5
+        with:
+          files: coverage.lcov.filtered
+          fail_ci_if_error: true
 
       - name: Use Node 22
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
