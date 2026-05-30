@@ -361,13 +361,13 @@ jobs:
             CXXCOMPILER: g++-13
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-13-debug-cov
+          - name: clang-20-debug-cov
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
+            CCOMPILER: clang-20
+            CXXCOMPILER: clang++-20
             ENABLE_COVERAGE: ON
 
           - name: vcpkg-linux-release-bindings
@@ -534,7 +534,7 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y ${CCOMPILER} ${CXXCOMPILER} ccache
             if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
-              sudo apt-get install -y lcov
+              sudo apt-get install -y lcov llvm-20
             fi
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
             brew install ccache
@@ -604,6 +604,25 @@ jobs:
           popd
           ./scripts/ci/test_cli_parsing.sh -b "${OSRM_BUILD_DIR}"
           npm test -- --parallel $JOBS
+
+      - name: Generate coverage report
+        if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+        run: |
+          cat > llvm-gcov.sh <<'EOF'
+          #!/usr/bin/env bash
+          exec llvm-cov-20 gcov "$@"
+          EOF
+          chmod +x llvm-gcov.sh
+          lcov --gcov-tool "${PWD}/llvm-gcov.sh" --directory ${OSRM_BUILD_DIR} --capture --output-file coverage.lcov
+          lcov --remove coverage.lcov '*/test/*' '*/unit_tests/*' --output-file coverage.lcov.filtered
+
+      - name: Upload coverage to codecov.io
+        if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+        uses: codecov/codecov-action@v6
+        with:
+          files: coverage.lcov.filtered
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Use Node 22
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
