@@ -15,6 +15,8 @@ Feature: Route annotations - way ids
           | cd    |
 
     Scenario: Route annotations expose traversed OSM way ids per segment
+        Given the data load extra arguments "--enable-feature-dataset ROUTE_WAY_IDS"
+
         Given the query options
           | steps       | false   |
           | annotations | way_ids |

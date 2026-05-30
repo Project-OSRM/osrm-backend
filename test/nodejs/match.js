@@ -132,7 +132,7 @@ test('match: match in Monaco with speed annotations options', (assert) => {
 
 test('match: match in Monaco with several (duration, distance, nodes, way_ids) annotations options', (assert) => {
   assert.plan(13);
-  const osrm = new OSRM(data_path);
+  const osrm = new OSRM({path: data_path, enable_feature_dataset: ['ROUTE_WAY_IDS']});
   const options = {
     timestamps: [1424684612, 1424684616, 1424684620],
     coordinates: three_test_coordinates,
@@ -162,7 +162,7 @@ test('match: match in Monaco with several (duration, distance, nodes, way_ids) a
 
 test('match: match in Monaco with all options', (assert) => {
   assert.plan(9);
-  const osrm = new OSRM(data_path);
+  const osrm = new OSRM({path: data_path, enable_feature_dataset: ['ROUTE_WAY_IDS']});
   const options = {
     coordinates: three_test_coordinates,
     timestamps: [1424684612, 1424684616, 1424684620],

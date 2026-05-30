@@ -234,7 +234,7 @@ test('route: routes Monaco with speed annotations options', (assert) => {
 
 test('route: routes Monaco with several (duration, distance, nodes, way_ids) annotations options', (assert) => {
   assert.plan(18);
-  const osrm = new OSRM(monaco_path);
+  const osrm = new OSRM({path: monaco_path, enable_feature_dataset: ['ROUTE_WAY_IDS']});
   const options = {
     coordinates: two_test_coordinates,
     continue_straight: false,
@@ -274,7 +274,7 @@ test('route: routes Monaco with several (duration, distance, nodes, way_ids) ann
 
 test('route: routes Monaco with options', (assert) => {
   assert.plan(18);
-  const osrm = new OSRM(monaco_path);
+  const osrm = new OSRM({path: monaco_path, enable_feature_dataset: ['ROUTE_WAY_IDS']});
   const options = {
     coordinates: two_test_coordinates,
     continue_straight: false,
@@ -800,9 +800,9 @@ test('route: ok on disabled steps', (assert) => {
   });
 });
 
-test('route: throws on disabled way ids', (assert) => {
+test('route: throws on default-disabled way ids', (assert) => {
   assert.plan(1);
-  const osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_WAY_IDS']});
+  const osrm = new OSRM({'path': monaco_path});
   const options = {
     overview: 'false',
     annotations: ['way_ids'],
@@ -813,9 +813,9 @@ test('route: throws on disabled way ids', (assert) => {
   });
 });
 
-test('route: ok on disabled way ids if not requested', (assert) => {
+test('route: ok on default-disabled way ids if not requested', (assert) => {
   assert.plan(4);
-  const osrm = new OSRM({'path': monaco_path, 'disable_feature_dataset': ['ROUTE_WAY_IDS']});
+  const osrm = new OSRM({'path': monaco_path});
   const options = {
     overview: 'false',
     annotations: ['duration'],

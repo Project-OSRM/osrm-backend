@@ -74,7 +74,8 @@ NB_MODULE(osrm_ext, m)
                         max_locations_map_matching = 3,\n\
                         max_results_nearest = 1,\n\
                         max_alternatives = 1,\n\
-                        default_radius = 'unlimited'\n\
+                        default_radius = 'unlimited',\n\
+                        enable_feature_dataset = ['ROUTE_WAY_IDS']\n\
                     )\n\n"
              "Args:\n\
                 storage_config (string): File path string to storage config.\n\

@@ -69,7 +69,8 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
  *        Old behaviour: Path to a file on disk to store the memory using mmap.  Current behaviour: setting this value is the same as setting `mmap_memory: true`.
  * @param {Boolean} [options.mmap_memory] Map on-disk files to virtual memory addresses (mmap), rather than loading into RAM.
  * @param {String} [options.path] The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
- * @param {Array}  [options.disable_feature_dataset] Disables a feature dataset from being loaded into memory if not needed. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`, `ROUTE_WAY_IDS`.
+ * @param {Array}  [options.disable_feature_dataset] Disables a feature dataset from being loaded into memory if not needed. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`.
+ * @param {Array}  [options.enable_feature_dataset] Enables a feature dataset that is skipped by default. Options: `ROUTE_WAY_IDS`.
  * @param {Number} [options.max_locations_trip] Max. locations supported in trip query (default: unlimited).
  * @param {Number} [options.max_locations_viaroute] Max. locations supported in viaroute query (default: unlimited).
  * @param {Number} [options.max_locations_distance_table] Max. locations supported in distance table query (default: unlimited).

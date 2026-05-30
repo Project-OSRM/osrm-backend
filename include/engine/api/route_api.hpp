@@ -30,6 +30,7 @@
 #include <bitset>
 #include <iterator>
 #include <map>
+#include <type_traits>
 #include <vector>
 
 namespace osrm::engine::api
@@ -382,6 +383,7 @@ class RouteAPI : public BaseAPI
             {
                 requested_annotations = RouteParameters::AnnotationsType::All;
             }
+            requested_annotations = GetAvailableAnnotations(requested_annotations);
 
             flatbuffers::Offset<fbresult::Annotation> annotation_buffer;
             if (requested_annotations != RouteParameters::AnnotationsType::None)
@@ -570,13 +572,27 @@ class RouteAPI : public BaseAPI
         annotation.add_weight(weight);
         annotation.add_datasources(datasources);
         annotation.add_nodes(nodes_vector);
-        annotation.add_way_ids(way_ids);
         if (use_metadata)
         {
             annotation.add_metadata(metadata_buffer);
         }
+        annotation.add_way_ids(way_ids);
 
         return annotation.Finish();
+    }
+
+    RouteParameters::AnnotationsType
+    GetAvailableAnnotations(const RouteParameters::AnnotationsType requested_annotations) const
+    {
+        if (requested_annotations == RouteParameters::AnnotationsType::All &&
+            !facade.HasRouteWayIDs())
+        {
+            using AnnotationType = std::underlying_type_t<RouteParameters::AnnotationsType>;
+            return static_cast<RouteParameters::AnnotationsType>(
+                static_cast<AnnotationType>(requested_annotations) &
+                ~static_cast<AnnotationType>(RouteParameters::AnnotationsType::WayIds));
+        }
+        return requested_annotations;
     }
 
     template <typename Builder> class GeometryVisitor
@@ -822,6 +838,7 @@ class RouteAPI : public BaseAPI
         {
             requested_annotations = RouteParameters::AnnotationsType::All;
         }
+        requested_annotations = GetAvailableAnnotations(requested_annotations);
 
         if (requested_annotations != RouteParameters::AnnotationsType::None)
         {

@@ -85,6 +85,7 @@ struct EngineConfig final
     bool use_mmap = true;
     Algorithm algorithm = Algorithm::CH;
     std::vector<storage::FeatureDataset> disable_feature_dataset;
+    std::vector<storage::FeatureDataset> enable_feature_dataset;
     std::string verbosity;
     std::string dataset_name;
 };

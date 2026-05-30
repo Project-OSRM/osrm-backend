@@ -210,7 +210,7 @@ test('trip: trip through Monaco with speed annotations options', (assert) => {
 
 test('trip: trip through Monaco with several (duration, distance, nodes, way_ids) annotations options', (assert) => {
   assert.plan(13);
-  const osrm = new OSRM(data_path);
+  const osrm = new OSRM({path: data_path, enable_feature_dataset: ['ROUTE_WAY_IDS']});
   const options = {
     coordinates: two_test_coordinates,
     steps: true,
@@ -238,7 +238,7 @@ test('trip: trip through Monaco with several (duration, distance, nodes, way_ids
 
 test('trip: trip through Monaco with options', (assert) => {
   assert.plan(7);
-  const osrm = new OSRM(data_path);
+  const osrm = new OSRM({path: data_path, enable_feature_dataset: ['ROUTE_WAY_IDS']});
   const options = {
     coordinates: two_test_coordinates,
     steps: true,
