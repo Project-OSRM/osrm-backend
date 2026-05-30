@@ -614,7 +614,7 @@ jobs:
           EOF
           chmod +x llvm-gcov.sh
           lcov --gcov-tool "${PWD}/llvm-gcov.sh" --directory "${OSRM_BUILD_DIR}" --capture --output-file coverage.lcov
-          lcov --remove coverage.lcov '*/test/*' '*/unit_tests/*' --output-file coverage.lcov.filtered
+          lcov --ignore-errors inconsistent --remove coverage.lcov '*/test/*' '*/unit_tests/*' --output-file coverage.lcov.filtered
 
       - name: Upload coverage to codecov.io
         if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
