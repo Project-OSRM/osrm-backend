@@ -3,8 +3,7 @@
 #include "../common/range_tools.hpp"
 #include "../common/temporary_file.hpp"
 
-#include <boost/iterator/function_input_iterator.hpp>
-#include <boost/iterator/function_output_iterator.hpp>
+#include "util/iterator_adapters.hpp"
 #include <boost/test/unit_test.hpp>
 
 BOOST_AUTO_TEST_SUITE(tar)
@@ -94,9 +93,9 @@ BOOST_AUTO_TEST_CASE(write_tar_file)
     CHECK_EQUAL_COLLECTIONS(result_32bit_vector, vector_32bit);
 }
 
-BOOST_AUTO_TEST_CASE(continue_write_tar_file)
+BOOST_AUTO_TEST_CASE(write_large_tar_file)
 {
-    TemporaryFile tmp{TEST_DATA_DIR "/tar_continue_write_test.tar"};
+    TemporaryFile tmp{TEST_DATA_DIR "/tar_large_write_test.tar"};
 
     // more than 64 values to ensure we fill up more than one tar block of 512 bytes
     std::vector<std::uint64_t> vector_64bit = {0,
@@ -173,11 +172,7 @@ BOOST_AUTO_TEST_CASE(continue_write_tar_file)
     {
         storage::tar::FileWriter writer(tmp.path, storage::tar::FileWriter::GenerateFingerprint);
         writer.WriteElementCount64("baz/bla/64bit_vector", vector_64bit.size());
-        writer.WriteFrom("baz/bla/64bit_vector", vector_64bit.data(), 12);
-        writer.ContinueFrom("baz/bla/64bit_vector", vector_64bit.data() + 12, 30);
-        writer.ContinueFrom("baz/bla/64bit_vector", vector_64bit.data() + 42, 10);
-        writer.ContinueFrom(
-            "baz/bla/64bit_vector", vector_64bit.data() + 52, vector_64bit.size() - 52);
+        writer.WriteFrom("baz/bla/64bit_vector", vector_64bit.data(), vector_64bit.size());
     }
 
     storage::tar::FileReader reader(tmp.path, storage::tar::FileReader::VerifyFingerprint);
@@ -206,17 +201,15 @@ BOOST_AUTO_TEST_CASE(write_huge_tar_file, *boost::unit_test::disabled())
         };
         std::uint64_t num_elements = (10ULL * 1024ULL * 1024ULL * 1024ULL) / sizeof(std::uint64_t);
         writer.WriteStreaming<std::uint64_t>(
-            "huge_data",
-            boost::make_function_input_iterator(encode_function, boost::infinite()),
-            num_elements);
+            "huge_data", osrm::util::make_function_input_iterator(encode_function), num_elements);
     }
 
     std::uint64_t checksum = 0;
     {
         storage::tar::FileReader reader(tmp.path, storage::tar::FileReader::VerifyFingerprint);
-        reader.ReadStreaming<std::uint64_t>(
-            "huge_data",
-            boost::make_function_output_iterator([&](const auto &value) { checksum += value; }));
+        reader.ReadStreaming<std::uint64_t>("huge_data",
+                                            osrm::util::make_function_output_iterator(
+                                                [&](const auto &value) { checksum += value; }));
     }
 
     BOOST_CHECK_EQUAL(checksum, reference_checksum);

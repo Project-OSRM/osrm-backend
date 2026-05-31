@@ -62,10 +62,10 @@ BOOST_AUTO_TEST_CASE(polygon_tests)
     CHECK_EQUAL_RANGE(data.GetPropertyIndexes(point_t(1, 7)), 1);
     CHECK_EQUAL_RANGE(data.GetPropertyIndexes(point_t(-2, 6)), 1);
 
-    BOOST_CHECK_EQUAL(data.FindByKey({}, "answer").which(), 0);
-    BOOST_CHECK_EQUAL(data.FindByKey({0}, "foo").which(), 0);
-    BOOST_CHECK_EQUAL(boost::get<double>(data.FindByKey({0}, "answer")), 42);
-    BOOST_CHECK_EQUAL(boost::get<bool>(data.FindByKey({1}, "answer")), true);
+    BOOST_CHECK_EQUAL(data.FindByKey({}, "answer").index(), 0);
+    BOOST_CHECK_EQUAL(data.FindByKey({0}, "foo").index(), 0);
+    BOOST_CHECK_EQUAL(std::get<double>(data.FindByKey({0}, "answer")), 42);
+    BOOST_CHECK_EQUAL(std::get<bool>(data.FindByKey({1}, "answer")), true);
 }
 
 BOOST_AUTO_TEST_CASE(multy_polygon_tests)
@@ -133,12 +133,12 @@ BOOST_AUTO_TEST_CASE(polygon_merging_tests)
     CHECK_EQUAL_RANGE(data.GetPropertyIndexes(point_t(8, -1)), 2);
     CHECK_EQUAL_RANGE(data.GetPropertyIndexes(point_t(8, -3)), 2);
 
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey({0}, "answer")), "a");
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey({1}, "answer")), "b");
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey({2}, "answer")), "c");
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey({0, 1, 2}, "answer")), "a");
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey({1, 2}, "answer")), "b");
-    BOOST_CHECK_EQUAL(boost::get<std::string>(data.FindByKey({2, 1, 0}, "answer")), "c");
+    BOOST_CHECK_EQUAL(std::get<std::string>(data.FindByKey({0}, "answer")), "a");
+    BOOST_CHECK_EQUAL(std::get<std::string>(data.FindByKey({1}, "answer")), "b");
+    BOOST_CHECK_EQUAL(std::get<std::string>(data.FindByKey({2}, "answer")), "c");
+    BOOST_CHECK_EQUAL(std::get<std::string>(data.FindByKey({0, 1, 2}, "answer")), "a");
+    BOOST_CHECK_EQUAL(std::get<std::string>(data.FindByKey({1, 2}, "answer")), "b");
+    BOOST_CHECK_EQUAL(std::get<std::string>(data.FindByKey({2, 1, 0}, "answer")), "c");
 }
 
 BOOST_AUTO_TEST_CASE(staircase_polygon)

@@ -19,9 +19,10 @@
 #include <sys/mman.h>
 #endif
 
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/interprocess/sync/file_lock.hpp>
 #include <boost/interprocess/sync/scoped_lock.hpp>
+#include <chrono>
+#include <thread>
 
 #include <cstdint>
 #include <filesystem>
@@ -91,17 +92,21 @@ bool swapData(Monitor &monitor,
 
         if (max_wait >= 0)
         {
-            if (!lock.timed_lock(boost::posix_time::microsec_clock::universal_time() +
-                                 boost::posix_time::seconds(max_wait)))
+            auto deadline = std::chrono::steady_clock::now() + std::chrono::seconds(max_wait);
+            while (!lock.try_lock())
             {
-                util::Log(logERROR) << "Could not aquire current region lock after " << max_wait
-                                    << " seconds. Data update failed.";
-
-                for (auto &pair : handles)
+                if (std::chrono::steady_clock::now() >= deadline)
                 {
-                    Remove(pair.second.proj_id);
+                    util::Log(logERROR) << "Could not acquire current region lock after "
+                                        << max_wait << " seconds. Data update failed.";
+
+                    for (auto &pair : handles)
+                    {
+                        Remove(pair.second.proj_id);
+                    }
+                    return false;
                 }
-                return false;
+                std::this_thread::sleep_for(std::chrono::milliseconds(10));
             }
         }
         else

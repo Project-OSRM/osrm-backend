@@ -9,11 +9,10 @@
 #include "storage/shared_monitor.hpp"
 
 #include <boost/interprocess/sync/named_upgradable_mutex.hpp>
-#include <boost/thread/lock_types.hpp>
-#include <boost/thread/locks.hpp>
-#include <boost/thread/shared_mutex.hpp>
 
 #include <memory>
+#include <mutex>
+#include <shared_mutex>
 #include <thread>
 
 namespace osrm::engine
@@ -54,7 +53,7 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
             updatable_region = *updatable_shared_region;
 
             {
-                boost::unique_lock<boost::shared_mutex> swap_lock(factory_mutex);
+                std::unique_lock<std::shared_mutex> swap_lock(factory_mutex);
                 facade_factory =
                     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                         std::make_shared<datafacade::SharedMemoryAllocator>(
@@ -76,13 +75,13 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
     std::shared_ptr<const Facade> Get(const api::BaseParameters &params) const
     {
         // make sure facade_factory stays stable while we call Get()
-        boost::shared_lock<boost::shared_mutex> swap_lock(factory_mutex);
+        std::shared_lock<std::shared_mutex> swap_lock(factory_mutex);
         return facade_factory.Get(params);
     }
     std::shared_ptr<const Facade> Get(const api::TileParameters &params) const
     {
         // make sure facade_factory stays stable while we call Get()
-        boost::shared_lock<boost::shared_mutex> swap_lock(factory_mutex);
+        std::shared_lock<std::shared_mutex> swap_lock(factory_mutex);
         return facade_factory.Get(params);
     }
 
@@ -112,7 +111,7 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
             }
 
             {
-                boost::unique_lock<boost::shared_mutex> swap_lock(factory_mutex);
+                std::unique_lock<std::shared_mutex> swap_lock(factory_mutex);
                 facade_factory =
                     DataFacadeFactory<datafacade::ContiguousInternalMemoryDataFacade, AlgorithmT>(
                         std::make_shared<datafacade::SharedMemoryAllocator>(
@@ -128,7 +127,7 @@ class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacad
         util::Log() << "DataWatchdog thread stopped";
     }
 
-    mutable boost::shared_mutex factory_mutex;
+    mutable std::shared_mutex factory_mutex;
     const std::string dataset_name;
     storage::SharedMonitor<storage::SharedRegionRegister> barrier;
     std::thread watcher;

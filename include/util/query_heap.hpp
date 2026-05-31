@@ -2,12 +2,11 @@
 #define OSRM_UTIL_QUERY_HEAP_HPP
 
 #include <boost/assert.hpp>
-#include <boost/heap/d_ary_heap.hpp>
 
 #include "d_ary_heap.hpp"
 #include <algorithm>
+#include <cstddef>
 #include <limits>
-#include <optional>
 #include <unordered_map>
 #include <vector>
 
@@ -168,9 +167,14 @@ class QueryHeap
         heap.clear();
         inserted_nodes.clear();
         node_index.Clear();
+        occupancy = 0;
     }
 
+    /** Returns the number of nodes currently in the heap. */
     std::size_t Size() const { return heap.size(); }
+
+    /** Returns the total number of nodes inserted into the heap storage. */
+    std::size_t Occupancy() const { return occupancy; }
 
     bool Empty() const { return 0 == Size(); }
 
@@ -186,6 +190,7 @@ class QueryHeap
                      [this](const auto &heapData, auto new_handle)
                      { inserted_nodes[heapData.index].handle = new_handle; });
         node_index[node] = index;
+        ++occupancy;
 
         checkInvariants();
     }
@@ -337,6 +342,7 @@ class QueryHeap
     std::vector<HeapNode> inserted_nodes;
     HeapContainer heap;
     IndexStorage node_index;
+    std::size_t occupancy{0};
 };
 
 } // namespace osrm::util

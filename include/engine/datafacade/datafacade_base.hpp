@@ -31,9 +31,11 @@
 #include "osrm/coordinate.hpp"
 #include <cstddef>
 
+#include "util/vector_view.hpp"
 #include <engine/bearing.hpp>
 #include <optional>
 #include <ranges>
+#include <span>
 #include <string>
 #include <string_view>
 #include <vector>
@@ -46,21 +48,18 @@ class BaseDataFacade
   public:
     using RTreeLeaf = extractor::EdgeBasedNodeSegment;
 
-    using NodeForwardRange =
-        std::ranges::subrange<extractor::SegmentDataView::SegmentNodeVector::const_iterator>;
+    using NodeForwardRange = std::span<const NodeID>;
     using NodeReverseRange = std::ranges::reverse_view<NodeForwardRange>;
 
     using WeightForwardRange =
         std::ranges::subrange<extractor::SegmentDataView::SegmentWeightVector::const_iterator>;
-
     using WeightReverseRange = std::ranges::reverse_view<WeightForwardRange>;
 
     using DurationForwardRange =
         std::ranges::subrange<extractor::SegmentDataView::SegmentDurationVector::const_iterator>;
     using DurationReverseRange = std::ranges::reverse_view<DurationForwardRange>;
 
-    using DatasourceForwardRange =
-        std::ranges::subrange<extractor::SegmentDataView::SegmentDatasourceVector::const_iterator>;
+    using DatasourceForwardRange = std::span<const DatasourceID>;
     using DatasourceReverseRange = std::ranges::reverse_view<DatasourceForwardRange>;
 
     BaseDataFacade() {}

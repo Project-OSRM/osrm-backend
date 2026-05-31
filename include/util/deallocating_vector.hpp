@@ -4,8 +4,6 @@
 #include "storage/io_fwd.hpp"
 #include "util/integer_range.hpp"
 
-#include <boost/iterator/iterator_facade.hpp>
-
 #include <algorithm>
 #include <limits>
 #include <utility>
@@ -66,41 +64,88 @@ template <typename ElementT> struct DeallocatingVectorIteratorState
     }
 };
 
-template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK>
-class ConstDeallocatingVectorIterator
-    : public boost::iterator_facade<ConstDeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>,
-                                    ElementT,
-                                    std::random_access_iterator_tag>
+template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK> class ConstDeallocatingVectorIterator
 {
     ConstDeallocatingVectorIteratorState<ElementT> current_state;
 
   public:
+    using value_type = ElementT;
+    using difference_type = std::ptrdiff_t;
+    using reference = ElementT &;
+    using pointer = ElementT *;
+    using iterator_category = std::random_access_iterator_tag;
+
     ConstDeallocatingVectorIterator() {}
     ConstDeallocatingVectorIterator(std::size_t idx, const std::vector<ElementT *> *input_list)
         : current_state(idx, input_list)
     {
     }
 
-    friend class boost::iterator_core_access;
-
-    void advance(std::size_t n) { current_state.index += n; }
-
-    void increment() { advance(1); }
-
-    void decrement() { advance(-1); }
-
-    bool equal(ConstDeallocatingVectorIterator const &other) const
+    ConstDeallocatingVectorIterator &operator+=(difference_type n)
     {
-        return current_state.index == other.current_state.index;
+        current_state.index += n;
+        return *this;
+    }
+    ConstDeallocatingVectorIterator &operator-=(difference_type n)
+    {
+        current_state.index -= n;
+        return *this;
     }
 
-    std::ptrdiff_t distance_to(ConstDeallocatingVectorIterator const &other) const
+    ConstDeallocatingVectorIterator &operator++() { return *this += 1; }
+    ConstDeallocatingVectorIterator operator++(int)
     {
-        // it is important to implement it 'other minus this'. otherwise sorting breaks
-        return other.current_state.index - current_state.index;
+        auto tmp = *this;
+        ++*this;
+        return tmp;
     }
 
-    ElementT &dereference() const
+    ConstDeallocatingVectorIterator &operator--() { return *this -= 1; }
+    ConstDeallocatingVectorIterator operator--(int)
+    {
+        auto tmp = *this;
+        --*this;
+        return tmp;
+    }
+
+    friend bool operator==(ConstDeallocatingVectorIterator const &a,
+                           ConstDeallocatingVectorIterator const &b)
+    {
+        return a.current_state.index == b.current_state.index;
+    }
+    friend bool operator!=(ConstDeallocatingVectorIterator const &a,
+                           ConstDeallocatingVectorIterator const &b)
+    {
+        return !(a == b);
+    }
+
+    friend std::ptrdiff_t operator-(ConstDeallocatingVectorIterator const &a,
+                                    ConstDeallocatingVectorIterator const &b)
+    {
+        return static_cast<std::ptrdiff_t>(a.current_state.index) -
+               static_cast<std::ptrdiff_t>(b.current_state.index);
+    }
+
+    friend ConstDeallocatingVectorIterator operator+(ConstDeallocatingVectorIterator it,
+                                                     difference_type n)
+    {
+        it += n;
+        return it;
+    }
+    friend ConstDeallocatingVectorIterator operator-(ConstDeallocatingVectorIterator it,
+                                                     difference_type n)
+    {
+        it -= n;
+        return it;
+    }
+    friend ConstDeallocatingVectorIterator operator+(difference_type n,
+                                                     ConstDeallocatingVectorIterator it)
+    {
+        it += n;
+        return it;
+    }
+
+    ElementT &operator*() const
     {
         const std::size_t current_bucket = current_state.index / ELEMENTS_PER_BLOCK;
         const std::size_t current_index = current_state.index % ELEMENTS_PER_BLOCK;
@@ -115,41 +160,84 @@ class ConstDeallocatingVectorIterator
     }
 };
 
-template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK>
-class DeallocatingVectorIterator
-    : public boost::iterator_facade<DeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>,
-                                    ElementT,
-                                    std::random_access_iterator_tag>
+template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK> class DeallocatingVectorIterator
 {
     DeallocatingVectorIteratorState<ElementT> current_state;
 
   public:
+    using value_type = ElementT;
+    using difference_type = std::ptrdiff_t;
+    using reference = ElementT &;
+    using pointer = ElementT *;
+    using iterator_category = std::random_access_iterator_tag;
+
     DeallocatingVectorIterator() {}
     DeallocatingVectorIterator(std::size_t idx, std::vector<ElementT *> *input_list)
         : current_state(idx, input_list)
     {
     }
 
-    friend class boost::iterator_core_access;
-
-    void advance(std::size_t n) { current_state.index += n; }
-
-    void increment() { advance(1); }
-
-    void decrement() { advance(-1); }
-
-    bool equal(DeallocatingVectorIterator const &other) const
+    DeallocatingVectorIterator &operator+=(difference_type n)
     {
-        return current_state.index == other.current_state.index;
+        current_state.index += n;
+        return *this;
+    }
+    DeallocatingVectorIterator &operator-=(difference_type n)
+    {
+        current_state.index -= n;
+        return *this;
     }
 
-    std::ptrdiff_t distance_to(DeallocatingVectorIterator const &other) const
+    DeallocatingVectorIterator &operator++() { return *this += 1; }
+    DeallocatingVectorIterator operator++(int)
     {
-        // it is important to implement it 'other minus this'. otherwise sorting breaks
-        return other.current_state.index - current_state.index;
+        auto tmp = *this;
+        ++*this;
+        return tmp;
     }
 
-    ElementT &dereference() const
+    DeallocatingVectorIterator &operator--() { return *this -= 1; }
+    DeallocatingVectorIterator operator--(int)
+    {
+        auto tmp = *this;
+        --*this;
+        return tmp;
+    }
+
+    friend bool operator==(DeallocatingVectorIterator const &a, DeallocatingVectorIterator const &b)
+    {
+        return a.current_state.index == b.current_state.index;
+    }
+
+    friend bool operator!=(DeallocatingVectorIterator const &a, DeallocatingVectorIterator const &b)
+    {
+        return !(a == b);
+    }
+
+    friend std::ptrdiff_t operator-(DeallocatingVectorIterator const &a,
+                                    DeallocatingVectorIterator const &b)
+    {
+        return static_cast<std::ptrdiff_t>(a.current_state.index) -
+               static_cast<std::ptrdiff_t>(b.current_state.index);
+    }
+
+    friend DeallocatingVectorIterator operator+(DeallocatingVectorIterator it, difference_type n)
+    {
+        it += n;
+        return it;
+    }
+    friend DeallocatingVectorIterator operator-(DeallocatingVectorIterator it, difference_type n)
+    {
+        it -= n;
+        return it;
+    }
+    friend DeallocatingVectorIterator operator+(difference_type n, DeallocatingVectorIterator it)
+    {
+        it += n;
+        return it;
+    }
+
+    ElementT &operator*() const
     {
         const std::size_t current_bucket = current_state.index / ELEMENTS_PER_BLOCK;
         const std::size_t current_index = current_state.index % ELEMENTS_PER_BLOCK;

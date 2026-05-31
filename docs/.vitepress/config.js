@@ -7,23 +7,29 @@ export default defineConfig({
   title: 'OSRM API Documentation',
   description: 'The Open Source Routing Machine API documentation',
   base: docsBase,
+  cleanUrls: true,
   ignoreDeadLinks: true,
 
   themeConfig: {
     nav: [
       { text: 'Home', link: '/' },
       { text: 'HTTP API', link: '/http' },
-      { text: 'Node.js API', link: '/nodejs/api' }
+      { text: 'Node.js API', link: '/nodejs/api' },
+      { text: 'Python', items: [
+        { text: 'API', link: '/python/api' },
+        { text: 'Development', link: '/python/development' }
+      ]}
     ],
 
     sidebar: [
       {
         text: 'Getting Started',
         items: [
-          { text: 'Introduction', link: '/' },
+          { text: 'Tool options', link: '/tools'},
           { text: 'Developing', link: '/developing' },
           { text: 'Testing', link: '/testing' },
-          { text: 'Releasing', link: '/releasing' }
+          { text: 'Releasing', link: '/releasing' },
+          { text: 'Python Development', link: '/python/development' }
         ]
       },
       {
@@ -32,6 +38,7 @@ export default defineConfig({
           { text: 'HTTP API', link: '/http' },
           { text: 'Node.js API', link: '/nodejs/api' },
           { text: 'libosrm C++ API', link: '/libosrm' },
+          { text: 'Python API', link: '/python/api' },
         ]
       },
       {

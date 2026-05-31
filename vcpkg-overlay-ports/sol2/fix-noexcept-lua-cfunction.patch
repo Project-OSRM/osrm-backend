@@ -1,0 +1,122 @@
+--- a/include/sol/function_types_stateless.hpp
++++ b/include/sol/function_types_stateless.hpp
+@@ -88,11 +88,6 @@
+ 
+ 		template <bool is_yielding, bool no_trampoline>
+ 		static int call(lua_State* L)
+-#if SOL_IS_ON(SOL_COMPILER_VCXX)
+-		// MSVC is broken, what a surprise...
+-#else
+-			noexcept(traits_type::is_noexcept)
+-#endif
+ 		{
+ 			int nr;
+ 			if constexpr (no_trampoline) {
+@@ -116,7 +111,7 @@
+ 			noexcept(traits_type::is_noexcept)
+ #endif
+ 		{
+-			return call(L);
++			return call<false, false>(L);
+ 		}
+ 	};
+ 
+@@ -153,11 +148,6 @@
+ 
+ 		template <bool is_yielding, bool no_trampoline>
+ 		static int call(lua_State* L)
+-#if SOL_IS_ON(SOL_COMPILER_VCXX)
+-		// MSVC is broken, what a surprise...
+-#else
+-			noexcept(traits_type::is_noexcept)
+-#endif
+ 		{
+ 			int nr;
+ 			if constexpr (no_trampoline) {
+@@ -181,7 +171,7 @@
+ 			noexcept(traits_type::is_noexcept)
+ #endif
+ 		{
+-			return call(L);
++			return call<false, false>(L);
+ 		}
+ 	};
+ 
+@@ -216,11 +206,6 @@
+ 
+ 		template <bool is_yielding, bool no_trampoline>
+ 		static int call(lua_State* L)
+-#if SOL_IS_ON(SOL_COMPILER_VCXX)
+-		// MSVC is broken, what a surprise...
+-#else
+-			noexcept(traits_type::is_noexcept)
+-#endif
+ 		{
+ 			int nr;
+ 			if constexpr (no_trampoline) {
+@@ -244,7 +229,7 @@
+ 			noexcept(traits_type::is_noexcept)
+ #endif
+ 		{
+-			return call(L);
++			return call<false, false>(L);
+ 		}
+ 	};
+ 
+@@ -268,11 +253,6 @@
+ 
+ 		template <bool is_yielding, bool no_trampoline>
+ 		static int call(lua_State* L)
+-#if SOL_IS_ON(SOL_COMPILER_VCXX)
+-		// MSVC is broken, what a surprise...
+-#else
+-			noexcept(traits_type::is_noexcept)
+-#endif
+ 		{
+ 			int nr;
+ 			if constexpr (no_trampoline) {
+@@ -296,7 +276,7 @@
+ 			noexcept(traits_type::is_noexcept)
+ #endif
+ 		{
+-			return call(L);
++			return call<false, false>(L);
+ 		}
+ 	};
+ 
+@@ -320,7 +300,7 @@
+ 		}
+ 
+ 		template <bool is_yielding, bool no_trampoline>
+-		static int call(lua_State* L) noexcept(std::is_nothrow_copy_assignable_v<T>) {
++		static int call(lua_State* L) {
+ 			int nr;
+ 			if constexpr (no_trampoline) {
+ 				nr = real_call(L);
+@@ -337,7 +317,7 @@
+ 		}
+ 
+ 		int operator()(lua_State* L) noexcept(std::is_nothrow_copy_assignable_v<T>) {
+-			return call(L);
++			return call<false, false>(L);
+ 		}
+ 	};
+ 
+@@ -360,7 +340,7 @@
+ 		}
+ 
+ 		template <bool is_yielding, bool no_trampoline>
+-		static int call(lua_State* L) noexcept(std::is_nothrow_copy_assignable_v<T>) {
++		static int call(lua_State* L) {
+ 			int nr;
+ 			if constexpr (no_trampoline) {
+ 				nr = real_call(L);
+@@ -377,7 +357,7 @@
+ 		}
+ 
+ 		int operator()(lua_State* L) noexcept(std::is_nothrow_copy_assignable_v<T>) {
+-			return call(L);
++			return call<false, false>(L);
+ 		}
+ 	};
+ }} // namespace sol::function_detail

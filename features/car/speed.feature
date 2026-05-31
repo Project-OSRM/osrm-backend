@@ -23,6 +23,8 @@ Feature: Car - speeds
             | residential    | no     | 25 km/h |
             | living_street  | no     | 10 km/h  |
             | service        | no     | 15 km/h |
+            | winter_road    | no     | 20 km/h |
+            | ice_road       | no     | 15 km/h |
 
     # Alternating oneways scale rates but not speeds
     Scenario: Car - scaled speeds for oneway=alternating

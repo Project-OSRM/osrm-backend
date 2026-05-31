@@ -82,7 +82,7 @@ class FilteredGraphImpl<util::StaticGraph<EdgeDataT, Ownership>, Ownership>
     EdgeIterator
     FindSmallestEdge(const NodeIterator from, const NodeIterator to, FilterFunction &&filter) const
     {
-        static_assert(traits::HasDataMember<typename Graph::EdgeArrayEntry>::value,
+        static_assert(traits::HasDataMember<typename Graph::EdgeArrayEntry>,
                       "Filtering on .data not possible without .data member attribute");
 
         EdgeIterator smallest_edge = SPECIAL_EDGEID;

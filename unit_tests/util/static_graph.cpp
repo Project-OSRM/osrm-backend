@@ -22,7 +22,7 @@ using TestNodeArrayEntry = TestStaticGraph::NodeArrayEntry;
 using TestEdgeArrayEntry = TestStaticGraph::EdgeArrayEntry;
 using TestInputEdge = static_graph_details::SortableEdgeWithData<TestData>;
 
-static_assert(traits::HasDataMember<TestInputEdge>::value, "TestInputEdge needs to have data");
+static_assert(traits::HasDataMember<TestInputEdge>, "TestInputEdge needs to have data");
 
 constexpr unsigned TEST_NUM_NODES = 100;
 constexpr unsigned TEST_NUM_EDGES = 500;

@@ -6,6 +6,7 @@
 #include "util/meminfo.hpp"
 #include "util/version.hpp"
 
+#include "util/program_options_path.hpp"
 #include <boost/program_options.hpp>
 #include <cstdlib>
 #include <filesystem>

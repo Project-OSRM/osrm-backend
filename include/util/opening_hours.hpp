@@ -1,10 +1,13 @@
 #ifndef OSRM_OPENING_HOURS_HPP
 #define OSRM_OPENING_HOURS_HPP
 
-#include <boost/date_time/gregorian/gregorian.hpp>
-
+#include <algorithm>
+#include <chrono>
 #include <cstdint>
+#include <ctime>
 #include <string>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace osrm::util
@@ -133,32 +136,59 @@ struct OpeningHours
 
         bool IsInRange(const struct tm &time, bool use_curr_day, bool use_next_day) const
         {
-            using boost::gregorian::date;
-            using boost::gregorian::date_duration;
+            using std::chrono::day;
+            using std::chrono::days;
+            using std::chrono::month;
+            using std::chrono::month_day_last;
+            using std::chrono::sys_days;
+            using std::chrono::year;
+            using std::chrono::year_month_day;
+            using std::chrono::year_month_day_last;
 
-            const auto year = time.tm_year + 1900;
-            const auto month = time.tm_mon + 1;
+            const auto year_val = time.tm_year + 1900;
+            const auto month_val = time.tm_mon + 1;
 
-            date date_current(year, month, time.tm_mday);
-            date date_from(boost::gregorian::min_date_time);
-            date date_to(boost::gregorian::max_date_time);
+            year_month_day ymd_current{year{year_val},
+                                       month{static_cast<unsigned>(month_val)},
+                                       day{static_cast<unsigned>(time.tm_mday)}};
+            if (!ymd_current.ok())
+                return false;
+            sys_days date_current = sys_days{ymd_current};
+
+            sys_days date_from = std::chrono::sys_days::min();
+            sys_days date_to = std::chrono::sys_days::max();
 
             if (from.IsValid())
             {
-                date_from = (from.day == 0) ? date(from.year == 0 ? year : from.year,
-                                                   from.month == 0 ? month : from.month,
-                                                   1)
-                                            : date(from.year == 0 ? year : from.year,
-                                                   from.month == 0 ? month : from.month,
-                                                   from.day);
+                int fy = (from.year == 0) ? year_val : from.year;
+                unsigned fm = (from.month == 0) ? static_cast<unsigned>(month_val)
+                                                : static_cast<unsigned>(from.month);
+                unsigned fd = (from.day == 0) ? 1u : static_cast<unsigned>(from.day);
+                year_month_day ymd_from{year{fy}, month{fm}, day{fd}};
+                if (!ymd_from.ok())
+                    return false;
+                date_from = sys_days{ymd_from};
             }
+
             if (to.IsValid())
             {
-                date_to = date(to.year == 0 ? (from.year == 0 ? year : from.year) : to.year,
-                               to.month == 0 ? (from.month == 0 ? month : from.month) : to.month,
-                               1);
-                date_to = (to.day == 0) ? date_to.end_of_month()
-                                        : date(date_to.year(), date_to.month(), to.day);
+                int ty = (to.year == 0) ? ((from.year == 0) ? year_val : from.year) : to.year;
+                unsigned tm = (to.month == 0)
+                                  ? ((from.month == 0) ? static_cast<unsigned>(month_val)
+                                                       : static_cast<unsigned>(from.month))
+                                  : static_cast<unsigned>(to.month);
+                if (to.day == 0)
+                {
+                    year_month_day_last ymdl{year{ty}, month_day_last{month{tm}}};
+                    date_to = sys_days{ymdl};
+                }
+                else
+                {
+                    year_month_day ymd_to{year{ty}, month{tm}, day{static_cast<unsigned>(to.day)}};
+                    if (!ymd_to.ok())
+                        return false;
+                    date_to = sys_days{ymd_to};
+                }
             }
             else if (to == Monthday())
             {
@@ -172,9 +202,9 @@ struct OpeningHours
             }
 
             if (!use_curr_day)
-                date_from += date_duration(1);
-            if (use_next_day && date_to != date(boost::gregorian::max_date_time))
-                date_to += date_duration(1);
+                date_from += days{1};
+            if (use_next_day && date_to != std::chrono::sys_days::max())
+                date_to += days{1};
 
             return (date_from <= date_current && date_current <= date_to) ^ inverse;
         }

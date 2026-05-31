@@ -7,7 +7,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assert.hpp>
-#include <boost/foreach.hpp>
 
 #include <storage/io.hpp>
 

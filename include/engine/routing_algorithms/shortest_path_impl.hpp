@@ -218,6 +218,7 @@ inline void initializeHeap<mld::Algorithm>(SearchEngineData<mld::Algorithm> &eng
     const auto nodes_number = facade.GetNumberOfNodes();
     const auto border_nodes_number = facade.GetMaxBorderNodeID() + 1;
     engine_working_data.InitializeOrClearFirstThreadLocalStorage(nodes_number, border_nodes_number);
+    engine_working_data.InitializeUnpackingCache(nodes_number, facade.GetNumberOfEdges());
 }
 
 template <typename Algorithm>
