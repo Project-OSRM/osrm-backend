@@ -134,13 +134,13 @@ bool generateDataStoreOptions(const int argc,
         ("disable-feature-dataset",
          boost::program_options::value<std::vector<storage::FeatureDataset>>(
              &disable_feature_dataset)
-             ->multitoken(),
+             ->composing(),
          "Disables a feature dataset from being loaded into memory if not needed. Options: "
          "ROUTE_STEPS, ROUTE_GEOMETRY") //
         ("enable-feature-dataset",
          boost::program_options::value<std::vector<storage::FeatureDataset>>(
              &enable_feature_dataset)
-             ->multitoken(),
+             ->composing(),
          "Enables a feature dataset that is skipped by default. Options: ROUTE_WAY_IDS") //
         ("list",
          boost::program_options::value<bool>(&list_datasets)

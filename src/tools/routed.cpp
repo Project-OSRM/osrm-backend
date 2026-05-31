@@ -165,11 +165,11 @@ inline unsigned generateServerProgramOptions(const int argc,
              ->default_value(EngineConfig::Algorithm::CH, "CH"),
          "Algorithm to use for the data. Can be CH, MLD.") //
         ("disable-feature-dataset",
-         value<std::vector<storage::FeatureDataset>>(&config.disable_feature_dataset)->multitoken(),
+         value<std::vector<storage::FeatureDataset>>(&config.disable_feature_dataset)->composing(),
          "Disables a feature dataset from being loaded into memory if not needed. Options: "
          "ROUTE_STEPS, ROUTE_GEOMETRY") //
         ("enable-feature-dataset",
-         value<std::vector<storage::FeatureDataset>>(&config.enable_feature_dataset)->multitoken(),
+         value<std::vector<storage::FeatureDataset>>(&config.enable_feature_dataset)->composing(),
          "Enables a feature dataset that is skipped by default. Options: ROUTE_WAY_IDS") //
         ("max-viaroute-size",
          value<int>(&config.max_locations_viaroute)->default_value(500),
