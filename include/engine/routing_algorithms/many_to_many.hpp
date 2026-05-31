@@ -71,7 +71,7 @@ struct NodeBucket
     {
         unsigned column_idx;
 
-        ColumnCompare(unsigned column_idx) : column_idx(column_idx) {};
+        ColumnCompare(unsigned column_idx) : column_idx(column_idx){};
 
         bool operator()(const NodeBucket &lhs, const NodeID &rhs) const // lowerbound
         {
