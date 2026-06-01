@@ -3,7 +3,7 @@ FROM debian:trixie-slim AS builder
 ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
 # Pinned vcpkg baseline; keep in sync with vcpkg-configuration.json at the repo root.
-ARG VCPKG_COMMIT=c3867e714dd3a51c272826eea77267876517ed99
+ARG VCPKG_COMMIT=d015e31e90838a4c9dfa3eed45979bc70d9357fc
 
 RUN apt-get update && \
     apt-get -y --no-install-recommends --no-install-suggests install \

@@ -1,5 +1,5 @@
 # syntax=docker/dockerfile:1.7
-FROM alpine:3.21.2 AS alpine-mimalloc
+FROM alpine:3.23.4 AS alpine-mimalloc
 
 RUN apk update && \
     apk upgrade && \
@@ -13,7 +13,7 @@ FROM alpine-mimalloc AS builder
 ARG DOCKER_TAG
 ARG BUILD_CONCURRENCY
 # Pinned vcpkg baseline; keep in sync with vcpkg-configuration.json at the repo root.
-ARG VCPKG_COMMIT=c3867e714dd3a51c272826eea77267876517ed99
+ARG VCPKG_COMMIT=d015e31e90838a4c9dfa3eed45979bc70d9357fc
 
 # vcpkg needs system-provided build tools on musl — VCPKG_FORCE_SYSTEM_BINARIES
 # prevents it from downloading glibc-built cmake/ninja that would fail on Alpine.
@@ -26,6 +26,7 @@ RUN apk add --no-cache \
         ccache \
         cmake \
         curl \
+        curl-dev \
         g++ \
         gcc \
         git \

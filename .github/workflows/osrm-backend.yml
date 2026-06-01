@@ -18,7 +18,7 @@ env:
   ENABLE_NODE_BINDINGS: 'ON'
   # vcpkg baseline is also pinned in vcpkg-configuration.json; this env var
   # is what lukka/run-vcpkg consumes to pick the vcpkg tool version.
-  VCPKG_COMMIT_ID: c3867e714dd3a51c272826eea77267876517ed99
+  VCPKG_COMMIT_ID: d015e31e90838a4c9dfa3eed45979bc70d9357fc
   # Use a local filesystem directory as vcpkg's binary cache. The directory
   # itself is persisted across CI runs via actions/cache@v5. The x-gha
   # backend was removed upstream; files+actions/cache is the replacement.
