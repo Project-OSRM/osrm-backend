@@ -302,7 +302,7 @@ Feature: Car - Use turning circles for u-turns
     # no_u_turn at b blocks the direct u-turn.
     # The router must choose: u-turn at turning circle e (5s), or continue to
     # dead-end g (20s), or go the long way via f-h (20s + further distance).
-    # The turning circle e wins because its u-turn penalty is lowest.
+    # The turning circle e wins because its u-turn penalty is lowest (5s vs 20s).
     Scenario: Car - U-turn at intermediate turning circle beats competing dead-end paths
         Given the node map
             """
@@ -332,8 +332,8 @@ Feature: Car - Use turning circles for u-turns
             | restriction | ab       | b        | ab     | no_u_turn   |
 
         When I route I should get
-            | waypoints | bearings     | route                                    | turns                                             |
-            | a,a       | 90,10 270,10 | Main St,East Rd,East Rd,Main St,Main St  | depart,turn right,continue uturn,turn left,arrive |
+            | waypoints | bearings     | route                                    | turns                                             | time     | weight  |
+            | a,a       | 90,10 270,10 | Main St,East Rd,East Rd,Main St,Main St  | depart,turn right,continue uturn,turn left,arrive | 59s +-10 | 59 +-10 |
 
     # Same topology as above but without the no_u_turn restriction.
     # U-turns at degree-3 intersections are already blocked by intersection_analysis,
@@ -365,5 +365,5 @@ Feature: Car - Use turning circles for u-turns
             | e    | turning_circle |
 
         When I route I should get
-            | waypoints | bearings     | route                                    | turns                                             |
-            | a,a       | 90,10 270,10 | Main St,East Rd,East Rd,Main St,Main St  | depart,turn right,continue uturn,turn left,arrive |
+            | waypoints | bearings     | route                                    | turns                                             | time     | weight  |
+            | a,a       | 90,10 270,10 | Main St,East Rd,East Rd,Main St,Main St  | depart,turn right,continue uturn,turn left,arrive | 59s +-10 | 59 +-10 |
