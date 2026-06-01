@@ -215,7 +215,7 @@ jobs:
   docker-image-matrix:
     strategy:
       matrix:
-        docker-base-image: ['debian', 'alpine']
+        docker-base-image: ['alpine']
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-22.04
@@ -240,7 +240,7 @@ jobs:
           tags: osrm-backend-local
           load: true
           # Persist BuildKit layer + vcpkg/ccache mount cache across runs via
-          # GitHub Actions cache. Scope per base image so alpine/debian don't
+          # GitHub Actions cache. Scope per base image so different images don't
           # collide.
           cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           cache-to: type=gha,mode=max,scope=docker-${{ matrix.docker-base-image }}

@@ -51,8 +51,12 @@ RUN git clone --no-checkout https://github.com/microsoft/vcpkg.git ${VCPKG_ROOT}
 
 WORKDIR /src
 
-# Install manifest deps as their own layer — see Dockerfile-debian for the
-# rationale. Cache mounts persist across docker builds on the host.
+# Install manifest deps as their own layer so source-only changes don't
+# invalidate the (expensive) vcpkg install. The three cache mounts persist
+# across docker builds on the host:
+#   - /root/.cache/vcpkg/archives : vcpkg's per-package binary cache (the big win)
+#   - /vcpkg/downloads            : upstream tarball cache (avoids re-downloading boost, etc.)
+#   - /vcpkg/buildtrees           : partial builds (helps when a single port fails)
 COPY vcpkg.json vcpkg-configuration.json ./
 COPY vcpkg-overlay-ports/ ./vcpkg-overlay-ports/
 RUN --mount=type=cache,target=/root/.cache/vcpkg/archives,sharing=locked \
