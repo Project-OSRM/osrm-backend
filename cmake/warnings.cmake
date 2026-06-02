@@ -171,3 +171,8 @@ if(MSVC)
 
   message(STATUS "MSVC warning configuration applied - suppressed informational warnings, kept bug-indicating warnings")
 endif()
+
+if (CMAKE_CXX_COMPILER_ID MATCHES "AppleClang" OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  no_warning(unused-command-line-argument)
+  message(STATUS "Clang/AppleClang detected - disabled unused-command-line-argument warning")
+endif()

@@ -797,3 +797,33 @@ Feature: Basic Map Matching
           | 2345  | 1.00018,1,1.000314,1 | 14.91466649  | 1.4        | 1.4      | 1.4      |
           | 4321  | 1.00027,1,1.000135,1 | 15.02596997  | 1.5        | 1.5      | 1.5      |
 
+    Scenario: Testbot - Map matching matchings_index is reported for split traces
+        Given the node map
+            """
+            a b c d
+                e
+            """
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | timestamps | matchings | matchings_index |
+            | abcd  | 0 1 62 63  | ab,cd     | 0,0,1,1         |
+
+    Scenario: Testbot - Map matching confidence is reported
+        Given a grid size of 10 meters
+        Given the node map
+            """
+            a b c d
+            """
+
+        And the ways
+            | nodes | oneway |
+            | abcd  | no     |
+
+        When I match I should get
+            | trace | matchings | confidence |
+            | abcd  | abcd      | 1 ~5%      |
+

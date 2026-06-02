@@ -2,7 +2,6 @@
 #define OSRM_UTIL_QUERY_HEAP_HPP
 
 #include <boost/assert.hpp>
-#include <boost/heap/d_ary_heap.hpp>
 
 #include "d_ary_heap.hpp"
 #include <algorithm>

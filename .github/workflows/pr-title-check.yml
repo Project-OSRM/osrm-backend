@@ -1,0 +1,27 @@
+name: PR Title Check
+
+on:
+  pull_request:
+    types: [opened, edited, synchronize, reopened]
+    branches:
+      - master
+
+permissions:
+  contents: read
+
+jobs:
+  conventional-pr-title:
+    runs-on: ubuntu-slim
+
+    steps:
+      - name: Validate pull request title
+        env:
+          PR_TITLE: ${{ github.event.pull_request.title }}
+        run: |
+          pattern='^(build|chore|ci|docs|feat|fix|perf|refactor|revert|style|test)(\([[:alnum:]_.-]+\))?(!)?: .+$'
+
+          if [[ ! "$PR_TITLE" =~ $pattern ]]; then
+            echo "PR title must follow Conventional Commits, for example: feat(ui): add route summary"
+            echo "Got: $PR_TITLE"
+            exit 1
+          fi

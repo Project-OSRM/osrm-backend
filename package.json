@@ -1,6 +1,6 @@
 {
   "name": "@project-osrm/osrm",
-  "version": "26.4.1",
+  "version": "26.6.0",
   "private": false,
   "type": "module",
   "description": "The Open Source Routing Machine is a high performance routing engine written in C++ designed to run on OpenStreetMap data.",
@@ -15,7 +15,7 @@
     "docs": "./scripts/build_api_docs.sh",
     "docs:dev": "vitepress dev docs",
     "install": "node-pre-gyp install --fallback-to-build=false || ./scripts/node_install.sh",
-    "nodejs-tests": "make -C test/data && ./lib/binding_napi_v8/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.js | faucet",
+    "nodejs-tests": "make -C test/data && ./lib/binding_napi_v8/osrm-datastore test/data/ch/monaco.osrm && node test/nodejs/index.js | tap-spec",
     "prepare": "husky"
   },
   "repository": {
@@ -48,13 +48,13 @@
     "eslint": "^10.0.0",
     "express": "^5.2.1",
     "fast-xml-parser": "^5.5.11",
-    "faucet": "^0.0.4",
     "flatbuffers": "^25.9.23",
     "husky": "^9.1.7",
     "jsonpath-plus": "^10.4.0",
     "lint-staged": "^16.2.7",
     "node-addon-api": "^8.5.0",
     "strip-ansi": "^7.1.0",
+    "tap-spec": "^2.2.2",
     "tape": "5.9.0",
     "vitepress": "^1.6.4",
     "wait-on": "^9.0.4",

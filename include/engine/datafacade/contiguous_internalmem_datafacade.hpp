@@ -192,7 +192,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         bool result = false;
         index.List(name,
-                   boost::make_function_output_iterator([&](const auto &) { result = true; }));
+                   osrm::util::make_function_output_iterator([&](const auto &) { result = true; }));
         return result;
     }
 
@@ -444,7 +444,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                        indexes.end(),
                        classes.begin(),
                        [this](const auto index)
-                       { return m_profile_properties->GetClassName(index); });
+                       { return m_profile_properties->GetClassNameForIndex(index); });
 
         return classes;
     }

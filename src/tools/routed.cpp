@@ -11,6 +11,7 @@
 #include "osrm/osrm.hpp"
 #include "osrm/storage_config.hpp"
 
+#include "util/program_options_path.hpp"
 #include <boost/algorithm/string/case_conv.hpp>
 #include <boost/any.hpp>
 #include <boost/program_options.hpp>
@@ -22,6 +23,7 @@
 #include <chrono>
 #include <exception>
 #include <filesystem>
+#include <functional>
 #include <future>
 #include <iostream>
 #include <new>
@@ -29,7 +31,7 @@
 #include <thread>
 
 #ifdef _WIN32
-boost::function0<void> console_ctrl_function;
+std::function<void()> console_ctrl_function;
 
 BOOL WINAPI console_ctrl_handler(DWORD ctrl_type)
 {

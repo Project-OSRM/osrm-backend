@@ -2,8 +2,6 @@
 
 #include <string>
 
-#include <boost/range/adaptors.hpp>
-
 namespace osrm::extractor::intersection
 {
 

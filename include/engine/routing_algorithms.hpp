@@ -2,6 +2,7 @@
 #define OSRM_ENGINE_ROUTING_ALGORITHM_HPP
 
 #include "engine/algorithm.hpp"
+#include "engine/concepts.hpp"
 #include "engine/internal_route_result.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/routing_algorithms/alternative_path.hpp"
@@ -61,7 +62,8 @@ class RoutingAlgorithmsInterface
 };
 
 // Short-lived object passed to each plugin in request to wrap routing algorithms
-template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgorithmsInterface
+template <routing_algorithms::RoutingAlgorithm Algorithm>
+class RoutingAlgorithms final : public RoutingAlgorithmsInterface
 {
   public:
     RoutingAlgorithms(SearchEngineData<Algorithm> &heaps,
@@ -149,7 +151,7 @@ template <typename Algorithm> class RoutingAlgorithms final : public RoutingAlgo
     std::shared_ptr<const DataFacade<Algorithm>> facade;
 };
 
-template <typename Algorithm>
+template <routing_algorithms::RoutingAlgorithm Algorithm>
 InternalManyRoutesResult RoutingAlgorithms<Algorithm>::AlternativePathSearch(
     const PhantomEndpointCandidates &endpoint_candidates, unsigned number_of_alternatives) const
 {
@@ -157,7 +159,7 @@ InternalManyRoutesResult RoutingAlgorithms<Algorithm>::AlternativePathSearch(
         heaps, *facade, endpoint_candidates, number_of_alternatives);
 }
 
-template <typename Algorithm>
+template <routing_algorithms::RoutingAlgorithm Algorithm>
 InternalRouteResult RoutingAlgorithms<Algorithm>::ShortestPathSearch(
     const std::vector<PhantomNodeCandidates> &waypoint_candidates,
     const std::optional<bool> continue_straight_at_waypoint) const
@@ -166,14 +168,14 @@ InternalRouteResult RoutingAlgorithms<Algorithm>::ShortestPathSearch(
         heaps, *facade, waypoint_candidates, continue_straight_at_waypoint);
 }
 
-template <typename Algorithm>
+template <routing_algorithms::RoutingAlgorithm Algorithm>
 InternalRouteResult RoutingAlgorithms<Algorithm>::DirectShortestPathSearch(
     const PhantomEndpointCandidates &endpoint_candidates) const
 {
     return routing_algorithms::directShortestPathSearch(heaps, *facade, endpoint_candidates);
 }
 
-template <typename Algorithm>
+template <routing_algorithms::RoutingAlgorithm Algorithm>
 inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatching(
     const routing_algorithms::CandidateLists &candidates_list,
     const std::vector<util::Coordinate> &trace_coordinates,
@@ -190,7 +192,7 @@ inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatc
                                            allow_splitting);
 }
 
-template <typename Algorithm>
+template <routing_algorithms::RoutingAlgorithm Algorithm>
 std::pair<std::vector<EdgeDuration>, std::vector<EdgeDistance>>
 RoutingAlgorithms<Algorithm>::ManyToManySearch(
     const std::vector<PhantomNodeCandidates> &candidates_list,
@@ -222,7 +224,7 @@ RoutingAlgorithms<Algorithm>::ManyToManySearch(
                                                 calculate_distance);
 }
 
-template <typename Algorithm>
+template <routing_algorithms::RoutingAlgorithm Algorithm>
 inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::GetTileTurns(
     const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
     const std::vector<std::size_t> &sorted_edge_indexes) const

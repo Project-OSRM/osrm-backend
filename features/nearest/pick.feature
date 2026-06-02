@@ -104,6 +104,59 @@ Feature: Locating Nearest node on a Way - pick closest way
             | y  | b   |
             | z  | c   |
 
+    Scenario: Nearest - multiple results with number parameter
+        Given the node map
+            """
+              0 c 1
+            7   n   2
+            a k x m b
+            6   l   3
+              5 d 4
+            """
+
+        And the ways
+            | nodes |
+            | axb   |
+            | cxd   |
+
+        And the query options
+            | number | 3 |
+
+        When I request nearest I should get
+            | in | result_count |
+            | 0  | 3            |
+            | k  | 3            |
+
+    Scenario: Nearest - waypoint name from named road
+        Given the node map
+            """
+            0
+            a x b
+            """
+
+        And the ways
+            | nodes | name     |
+            | axb   | Main St  |
+
+        When I request nearest I should get
+            | in | out | name    |
+            | 0  | a   | Main St |
+
+    Scenario: Nearest - snapping distance is reported
+        Given the node map
+            """
+            0
+            a x b
+            """
+
+        And the ways
+            | nodes |
+            | axb   |
+
+        When I request nearest I should get
+            | in | out | snapping_distance |
+            | a  | a   | 0.0               |
+
     Scenario: Nearest - data version
         Given the node map
             """

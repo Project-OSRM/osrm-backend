@@ -1,7 +1,8 @@
 #include "util/opening_hours.hpp"
 
-#include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/test/unit_test.hpp>
+#include <iomanip>
+#include <sstream>
 
 BOOST_AUTO_TEST_SUITE(opening_hours)
 
@@ -13,14 +14,11 @@ using osrm::util::ParseOpeningHours;
 // convert a string representation of time to a tm structure
 struct tm time(const char *str)
 {
-    const std::locale loc = std::locale(
-        std::locale::classic(), new boost::posix_time::time_input_facet("%a, %d %b %Y %H:%M:%S"));
+    std::tm tm = {};
     std::istringstream is(str);
-    is.imbue(loc);
-
-    boost::posix_time::ptime t;
-    is >> t;
-    return boost::posix_time::to_tm(t);
+    is.imbue(std::locale::classic());
+    is >> std::get_time(&tm, "%a, %d %b %Y %H:%M:%S");
+    return tm;
 }
 
 BOOST_AUTO_TEST_CASE(check_opening_hours_grammar)
