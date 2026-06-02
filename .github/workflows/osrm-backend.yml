@@ -18,7 +18,7 @@ env:
   ENABLE_NODE_BINDINGS: 'ON'
   # vcpkg baseline is also pinned in vcpkg-configuration.json; this env var
   # is what lukka/run-vcpkg consumes to pick the vcpkg tool version.
-  VCPKG_COMMIT_ID: c3867e714dd3a51c272826eea77267876517ed99
+  VCPKG_COMMIT_ID: d015e31e90838a4c9dfa3eed45979bc70d9357fc
   # Use a local filesystem directory as vcpkg's binary cache. The directory
   # itself is persisted across CI runs via actions/cache@v5. The x-gha
   # backend was removed upstream; files+actions/cache is the replacement.
@@ -215,7 +215,7 @@ jobs:
   docker-image-matrix:
     strategy:
       matrix:
-        docker-base-image: ['debian', 'alpine']
+        docker-base-image: ['alpine']
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-22.04
@@ -240,7 +240,7 @@ jobs:
           tags: osrm-backend-local
           load: true
           # Persist BuildKit layer + vcpkg/ccache mount cache across runs via
-          # GitHub Actions cache. Scope per base image so alpine/debian don't
+          # GitHub Actions cache. Scope per base image so different images don't
           # collide.
           cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           cache-to: type=gha,mode=max,scope=docker-${{ matrix.docker-base-image }}
