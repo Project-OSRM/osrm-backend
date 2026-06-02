@@ -36,7 +36,6 @@ RUN apk add --no-cache \
         musl-dev \
         ninja \
         perl \
-        perl-ipc-cmd \
         pkgconfig \
         tar \
         unzip \
