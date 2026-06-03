@@ -11,7 +11,7 @@ on:
         type: string
 
 env:
-  SEMVER_REF: ${{ inputs.ref || github.ref }}
+  SEMVER_REF: ${{ inputs.ref || github.ref_name }}
 
 jobs:
   build-amd64:
