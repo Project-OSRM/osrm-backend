@@ -177,7 +177,8 @@ jobs:
       - name: Capture tag SHA
         id: tag_sha
         run: |
-          echo "sha=$(git rev-list -n 1 "${{ steps.version.outputs.tag }}")" >> "$GITHUB_OUTPUT"
+          TAG="${{ steps.version.outputs.tag }}"
+          echo "sha=$(git rev-list -n 1 "$TAG")" >> "$GITHUB_OUTPUT"
 
 
   publish-npm:
@@ -190,6 +191,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: read
     steps:
       - uses: actions/checkout@v6
         with:
@@ -259,7 +261,7 @@ jobs:
               break
             elif [ "$BINDING_STATUS" = "failed" ]; then
               echo "::error::A required binding job failed — Node binaries not uploaded"
-              echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name | test("vcpkg-linux-release-bindings|vcpkg-windows-release-bindings")) | "  \(.name): \(.status)/\(.conclusion // "null")"'
+              echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name | test("vcpkg-linux-release-bindings|vcpkg-windows-release-bindings")) | "  \(.name): \(.status)/\(.conclusion)"'
               exit 1
             fi
 
@@ -285,6 +287,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: read
     steps:
       - uses: actions/setup-python@v6
         with:
@@ -347,7 +350,7 @@ jobs:
               break
             elif [ "$BINDING_STATUS" = "failed" ]; then
               echo "::error::A required binding job failed"
-              echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name | test("vcpkg-linux-release-bindings|vcpkg-windows-release-bindings")) | "  \(.name): \(.status)/\(.conclusion // "null")"'
+              echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name | test("vcpkg-linux-release-bindings|vcpkg-windows-release-bindings")) | "  \(.name): \(.status)/\(.conclusion)"'
               exit 1
             fi
 
@@ -387,6 +390,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: read
     steps:
       - uses: actions/setup-python@v6
         with:
@@ -448,7 +452,7 @@ jobs:
               break
             elif [ "$MACOS_STATUS" = "failed" ]; then
               echo "::warning::A macOS binding job failed — skipping macOS wheels"
-              echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name | test("vcpkg-macos-.*-bindings")) | "  \(.name): \(.status)/\(.conclusion // "null")"'
+              echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name | test("vcpkg-macos-.*-bindings")) | "  \(.name): \(.status)/\(.conclusion)"'
               echo "SKIP_MACOS=true" >> "$GITHUB_ENV"
               break
             fi
