@@ -208,17 +208,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
           TAG_SHA: ${{ needs.release.outputs.tag_sha }}
+          TAG: ${{ needs.release.outputs.tag }}
         run: |
           MAX_WAIT=3600  # 1 hour
           ELAPSED=0
           POLL_INTERVAL=10
           RUN_ID=""
 
-          echo "Finding CI run for commit $TAG_SHA"
+          echo "Finding tag-triggered CI run for commit $TAG_SHA (tag $TAG)"
 
           while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,displayTitle 2>/dev/null || echo '[]')"
-            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha) | @json' | head -1)"
+            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,headBranch,displayTitle 2>/dev/null || echo '[]')"
+            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" --arg tag "$TAG" '.[] | select(.headSha == $sha and .headBranch == $tag) | @json' | head -1)"
 
             if [ -n "$MATCHING_RUN" ] && [ "$MATCHING_RUN" != "null" ]; then
               RUN_ID="$(echo "$MATCHING_RUN" | jq -r '.databaseId')"
@@ -294,18 +295,19 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
           TAG_SHA: ${{ needs.release.outputs.tag_sha }}
+          TAG: ${{ needs.release.outputs.tag }}
         run: |
           MAX_WAIT=3600  # 1 hour
           ELAPSED=0
           POLL_INTERVAL=10
           RUN_ID=""
 
-          echo "Finding CI run for commit $TAG_SHA"
+          echo "Finding tag-triggered CI run for commit $TAG_SHA (tag $TAG)"
 
           # Find the CI run for this tag commit
           while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,displayTitle 2>/dev/null || echo '[]')"
-            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha) | @json' | head -1)"
+            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,headBranch,displayTitle 2>/dev/null || echo '[]')"
+            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" --arg tag "$TAG" '.[] | select(.headSha == $sha and .headBranch == $tag) | @json' | head -1)"
 
             if [ -n "$MATCHING_RUN" ] && [ "$MATCHING_RUN" != "null" ]; then
               RUN_ID="$(echo "$MATCHING_RUN" | jq -r '.databaseId')"
@@ -395,17 +397,18 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
           TAG_SHA: ${{ needs.release.outputs.tag_sha }}
+          TAG: ${{ needs.release.outputs.tag }}
         run: |
           MAX_WAIT=7200  # 2 hours
           ELAPSED=0
           POLL_INTERVAL=30
           RUN_ID=""
 
-          echo "Finding CI run for commit $TAG_SHA"
+          echo "Finding tag-triggered CI run for commit $TAG_SHA (tag $TAG)"
 
           while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,displayTitle 2>/dev/null || echo '[]')"
-            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha) | @json' | head -1)"
+            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,headBranch,displayTitle 2>/dev/null || echo '[]')"
+            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" --arg tag "$TAG" '.[] | select(.headSha == $sha and .headBranch == $tag) | @json' | head -1)"
 
             if [ -n "$MATCHING_RUN" ] && [ "$MATCHING_RUN" != "null" ]; then
               RUN_ID="$(echo "$MATCHING_RUN" | jq -r '.databaseId')"
