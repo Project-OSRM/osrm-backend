@@ -59,15 +59,25 @@ WORKDIR /src
 #   - /vcpkg/buildtrees           : partial builds (helps when a single port fails)
 COPY vcpkg.json vcpkg-configuration.json ./
 COPY vcpkg-overlay-ports/ ./vcpkg-overlay-ports/
+# TARGETARCH is auto-populated by BuildKit (amd64, arm64).  Map it to the
+# matching vcpkg triplet so native ARM64 builds don't fail with a hardcoded
+# x64-linux triplet (see docker/build-push-action platforms: linux/arm64).
+ARG TARGETARCH
 RUN --mount=type=cache,target=/root/.cache/vcpkg/archives,sharing=locked \
     --mount=type=cache,target=/vcpkg/downloads,sharing=locked \
     --mount=type=cache,target=/vcpkg/buildtrees,sharing=locked \
     export VCPKG_DEFAULT_BINARY_CACHE=/root/.cache/vcpkg/archives && \
     mkdir -p build/vcpkg_installed "$VCPKG_DEFAULT_BINARY_CACHE" && \
+    case "${TARGETARCH}" in \
+        amd64) VCPKG_TRIPLET=x64-linux ;; \
+        arm64) VCPKG_TRIPLET=arm64-linux ;; \
+        *) echo "Unsupported TARGETARCH: ${TARGETARCH}" >&2; exit 1 ;; \
+    esac && \
+    echo "Using vcpkg triplet: ${VCPKG_TRIPLET}" && \
     ${VCPKG_ROOT}/vcpkg install \
         --x-manifest-root=/src \
         --x-install-root=/src/build/vcpkg_installed \
-        --triplet=x64-linux \
+        --triplet=${VCPKG_TRIPLET} \
         --no-print-usage \
         --clean-buildtrees-after-build \
         --clean-packages-after-build
