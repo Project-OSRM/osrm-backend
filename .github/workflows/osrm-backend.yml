@@ -286,9 +286,7 @@ jobs:
     # within this matrix. Windows wheels are built by the separate
     # vcpkg-windows-release-bindings job.
     # Full CI coverage (compiler variants, sanitizers, etc.) runs on branch pushes.
-    if: |
-      github.repository == 'Project-OSRM/osrm-backend' &&
-      (matrix.build_bindings == true || !startsWith(github.ref, 'refs/tags/v'))
+    if: github.repository == 'Project-OSRM/osrm-backend' && (matrix.build_bindings == true || !startsWith(github.ref, 'refs/tags/v'))
     strategy:
       matrix:
         include:
