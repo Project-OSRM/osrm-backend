@@ -281,12 +281,9 @@ jobs:
 
   build-matrix:
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
-    # Skip non-binding matrix entries for tag pushes (releases).
-    # Only binding builds (Linux + macOS) are needed to produce wheels
-    # within this matrix. Windows wheels are built by the separate
-    # vcpkg-windows-release-bindings job.
-    # Full CI coverage (compiler variants, sanitizers, etc.) runs on branch pushes.
-    if: github.repository == 'Project-OSRM/osrm-backend' && (matrix.build_bindings == true || !startsWith(github.ref, 'refs/tags/v'))
+    # Only build-matrix entries with build_bindings: true on tag pushes.
+    # On PRs, branch pushes, and manual dispatches, run every entry.
+    if: github.repository == 'Project-OSRM/osrm-backend' && (matrix.build_bindings == true || github.event_name != 'push' || startsWith(github.ref, 'refs/heads/'))
     strategy:
       matrix:
         include:
