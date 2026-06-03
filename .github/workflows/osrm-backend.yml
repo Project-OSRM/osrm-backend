@@ -30,6 +30,10 @@ concurrency:
   # The release workflow pushes a commit to master and then tags it; both events
   # trigger this workflow. Using the SHA means the second push (tag) cancels the
   # first (branch) and runs once — with GITHUB_REF set to the tag, so PUBLISH=On.
+  #
+  # Trade-off: each commit to master now gets its own group (unlike grouping by
+  # ref where all master pushes share one group). This is intentional — fast
+  # successive merges should each get independent CI coverage.
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
   cancel-in-progress: true
 
@@ -278,7 +282,9 @@ jobs:
   build-matrix:
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     # Skip non-binding matrix entries for tag pushes (releases).
-    # Only binding builds (Linux + macOS) are needed to produce wheels.
+    # Only binding builds (Linux + macOS) are needed to produce wheels
+    # within this matrix. Windows wheels are built by the separate
+    # vcpkg-windows-release-bindings job.
     # Full CI coverage (compiler variants, sanitizers, etc.) runs on branch pushes.
     if: |
       github.repository == 'Project-OSRM/osrm-backend' &&
