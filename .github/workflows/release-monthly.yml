@@ -32,7 +32,7 @@ jobs:
     outputs:
       tag: ${{ steps.version.outputs.tag }}
       version: ${{ steps.version.outputs.version }}
-      run_id: ${{ steps.wait_ci.outputs.run_id }}
+      tag_sha: ${{ steps.tag_sha.outputs.sha }}
     steps:
       - uses: actions/checkout@v6
         with:
@@ -174,62 +174,17 @@ jobs:
           draft: false
           prerelease: false
 
-      - name: Wait for CI to complete
-        id: wait_ci
-        env:
-          GH_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
+      - name: Capture tag SHA
+        id: tag_sha
         run: |
-          # Wait for tag CI to complete before publishing npm package
-          # The osrm-backend.yml workflow is triggered by the tag push
-          # and uploads prebuilt binaries to the release assets
-          TAG="${{ steps.version.outputs.tag }}"
-          TAG_SHA="$(git rev-list -n 1 "$TAG")"
-          
-          echo "Waiting for CI workflow to complete for tag $TAG (commit $TAG_SHA)"
-          
-          MAX_WAIT=3600  # 1 hour
-          ELAPSED=0
-          POLL_INTERVAL=10
-          
-          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
-            # Query runs for the osrm-backend.yml workflow for this tag's commit
-            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,displayTitle 2>/dev/null || echo '[]')"
-            
-            # Find run matching this tag's commit SHA
-            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha) | @json' | head -1)"
-            
-            if [ -n "$MATCHING_RUN" ] && [ "$MATCHING_RUN" != "null" ]; then
-              STATUS="$(echo "$MATCHING_RUN" | jq -r '.status')"
-              CONCLUSION="$(echo "$MATCHING_RUN" | jq -r '.conclusion // empty')"
-              RUN_ID="$(echo "$MATCHING_RUN" | jq -r '.databaseId')"
-              
-              echo "Found matching CI run $RUN_ID: status=$STATUS conclusion=$CONCLUSION"
-              
-              if [ "$STATUS" = "completed" ]; then
-                if [ "$CONCLUSION" = "success" ]; then
-                  echo "✓ CI workflow completed successfully, proceeding with npm publish"
-                  echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
-                  exit 0
-                else
-                  echo "✗ CI workflow completed with conclusion=$CONCLUSION (expected success)"
-                  exit 1
-                fi
-              else
-                echo "CI workflow still running (status=$STATUS), waiting..."
-              fi
-            else
-              echo "No matching CI run found yet, waiting for workflow to start..."
-            fi
-            
-            sleep "$POLL_INTERVAL"
-            ELAPSED=$((ELAPSED + POLL_INTERVAL))
-          done
-          
-          echo "✗ Timed out waiting for CI workflow to complete for tag $TAG"
-          exit 1
+          echo "sha=$(git rev-list -n 1 "${{ steps.version.outputs.tag }}")" >> "$GITHUB_OUTPUT"
 
 
-  publish:
+  publish-npm:
+    # Publishes the JS wrapper to npm. Must wait for CI binding jobs to
+    # upload the native Node binaries (.tar.gz) to the GitHub Release
+    # first — otherwise `npm install` gets 404s downloading them.
+    # Independent from publish-pypi-* so it can be re-triggered alone.
     needs: release
     runs-on: ubuntu-latest
     permissions:
@@ -248,16 +203,170 @@ jobs:
       - name: Install dependencies (skip native build scripts)
         run: npm ci --ignore-scripts
 
+      - name: Wait for CI binding jobs (Node binaries)
+        id: wait-ci
+        env:
+          GH_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
+          TAG_SHA: ${{ needs.release.outputs.tag_sha }}
+        run: |
+          MAX_WAIT=3600  # 1 hour
+          ELAPSED=0
+          POLL_INTERVAL=10
+          RUN_ID=""
+
+          echo "Finding CI run for commit $TAG_SHA"
+
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,displayTitle 2>/dev/null || echo '[]')"
+            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha) | @json' | head -1)"
+
+            if [ -n "$MATCHING_RUN" ] && [ "$MATCHING_RUN" != "null" ]; then
+              RUN_ID="$(echo "$MATCHING_RUN" | jq -r '.databaseId')"
+              echo "Found CI run $RUN_ID"
+              break
+            fi
+
+            echo "Waiting for CI workflow to start..."
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::Timed out waiting for CI workflow to start"
+            exit 1
+          fi
+
+          # Poll for Linux + Windows binding jobs (they upload Node binaries)
+          echo "Polling for binding jobs (Linux + Windows) in run $RUN_ID..."
+          ELAPSED=0
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            JOBS_JSON="$(gh run view "$RUN_ID" --json jobs 2>/dev/null || echo '{"jobs":[]}')"
+
+            BINDING_STATUS="$(echo "$JOBS_JSON" | jq -r '
+              [.jobs[] | select(.name | test("vcpkg-linux-release-bindings|vcpkg-windows-release-bindings"))]
+              | if length < 2 then "waiting"
+                elif all(.status == "completed" and .conclusion == "success") then "done"
+                elif any(.status == "completed" and .conclusion != "success" and .conclusion != null) then "failed"
+                else "running"
+                end
+            ')"
+
+            echo "Binding jobs: $BINDING_STATUS (elapsed=${ELAPSED}s)"
+
+            if [ "$BINDING_STATUS" = "done" ]; then
+              echo "✓ Binding jobs completed — Node binaries uploaded"
+              break
+            elif [ "$BINDING_STATUS" = "failed" ]; then
+              echo "::error::A required binding job failed — Node binaries not uploaded"
+              echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name | test("vcpkg-linux-release-bindings|vcpkg-windows-release-bindings")) | "  \(.name): \(.status)/\(.conclusion // "null")"'
+              exit 1
+            fi
+
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          if [ "$BINDING_STATUS" != "done" ]; then
+            echo "::error::Timed out waiting for binding jobs"
+            exit 1
+          fi
+
       - name: Publish to npm
         run: npm publish
 
-      - name: Download wheels from CI run
+  publish-pypi-linux-windows:
+    # Waits for Linux + Windows binding CI jobs (the ones that produce
+    # wheels), downloads their artifacts, and publishes to PyPI.
+    # Independent from publish-npm and publish-pypi-macos so a failure
+    # here can be re-triggered without restarting everything.
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Wait for Linux + Windows binding CI jobs
+        id: wait
+        env:
+          GH_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
+          TAG_SHA: ${{ needs.release.outputs.tag_sha }}
+        run: |
+          MAX_WAIT=3600  # 1 hour
+          ELAPSED=0
+          POLL_INTERVAL=10
+          RUN_ID=""
+
+          echo "Finding CI run for commit $TAG_SHA"
+
+          # Find the CI run for this tag commit
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,displayTitle 2>/dev/null || echo '[]')"
+            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha) | @json' | head -1)"
+
+            if [ -n "$MATCHING_RUN" ] && [ "$MATCHING_RUN" != "null" ]; then
+              RUN_ID="$(echo "$MATCHING_RUN" | jq -r '.databaseId')"
+              echo "Found CI run $RUN_ID"
+              break
+            fi
+
+            echo "Waiting for CI workflow to start..."
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          if [ -z "$RUN_ID" ]; then
+            echo "::error::Timed out waiting for CI workflow to start"
+            exit 1
+          fi
+
+          # Poll for Linux + Windows binding jobs to complete
+          echo "Polling for Linux + Windows binding jobs in run $RUN_ID..."
+          ELAPSED=0
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            JOBS_JSON="$(gh run view "$RUN_ID" --json jobs 2>/dev/null || echo '{"jobs":[]}')"
+
+            BINDING_STATUS="$(echo "$JOBS_JSON" | jq -r '
+              [.jobs[] | select(.name | test("vcpkg-linux-release-bindings|vcpkg-windows-release-bindings"))]
+              | if length < 2 then "waiting"
+                elif all(.status == "completed" and .conclusion == "success") then "done"
+                elif any(.status == "completed" and .conclusion != "success" and .conclusion != null) then "failed"
+                else "running"
+                end
+            ')"
+
+            echo "Binding jobs: $BINDING_STATUS (elapsed=${ELAPSED}s)"
+
+            if [ "$BINDING_STATUS" = "done" ]; then
+              echo "✓ Linux + Windows binding jobs completed successfully"
+              break
+            elif [ "$BINDING_STATUS" = "failed" ]; then
+              echo "::error::A required binding job failed"
+              echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name | test("vcpkg-linux-release-bindings|vcpkg-windows-release-bindings")) | "  \(.name): \(.status)/\(.conclusion // "null")"'
+              exit 1
+            fi
+
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          if [ "$BINDING_STATUS" != "done" ]; then
+            echo "::error::Timed out waiting for binding jobs"
+            exit 1
+          fi
+
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download Linux + Windows wheels
         uses: actions/download-artifact@v8
         with:
           pattern: wheels-*
           path: dist
           merge-multiple: true
-          run-id: ${{ needs.release.outputs.run_id }}
+          run-id: ${{ steps.wait.outputs.run_id }}
           github-token: ${{ github.token }}
 
       - name: Publish to PyPI
@@ -265,5 +374,109 @@ jobs:
         with:
           skip-existing: true
           verbose: true
-          # repository-url: https://test.pypi.org/legacy/
+
+  publish-pypi-macos:
+    # MacOS binding builds are slow (1h+). This job runs independently
+    # so the release can complete with Linux + Windows wheels while
+    # macOS wheels follow when ready. If it fails, re-trigger just this
+    # job — no need for a point release.
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+      contents: read
+    steps:
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+
+      - name: Wait for macOS binding CI jobs
+        id: wait-macos
+        env:
+          GH_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
+          TAG_SHA: ${{ needs.release.outputs.tag_sha }}
+        run: |
+          MAX_WAIT=7200  # 2 hours
+          ELAPSED=0
+          POLL_INTERVAL=30
+          RUN_ID=""
+
+          echo "Finding CI run for commit $TAG_SHA"
+
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            RUN_JSON="$(gh run list --workflow=osrm-backend.yml --limit 50 --json databaseId,status,conclusion,headSha,displayTitle 2>/dev/null || echo '[]')"
+            MATCHING_RUN="$(echo "$RUN_JSON" | jq -r --arg sha "$TAG_SHA" '.[] | select(.headSha == $sha) | @json' | head -1)"
+
+            if [ -n "$MATCHING_RUN" ] && [ "$MATCHING_RUN" != "null" ]; then
+              RUN_ID="$(echo "$MATCHING_RUN" | jq -r '.databaseId')"
+              echo "Found CI run $RUN_ID"
+              break
+            fi
+
+            echo "Waiting for CI workflow to start..."
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          if [ -z "$RUN_ID" ]; then
+            echo "::warning::Timed out waiting for CI workflow — skipping macOS wheels"
+            echo "SKIP_MACOS=true" >> "$GITHUB_ENV"
+            exit 0
+          fi
+
+          echo "Polling for macOS binding jobs in run $RUN_ID..."
+          ELAPSED=0
+          while [ "$ELAPSED" -lt "$MAX_WAIT" ]; do
+            JOBS_JSON="$(gh run view "$RUN_ID" --json jobs 2>/dev/null || echo '{"jobs":[]}')"
+
+            MACOS_STATUS="$(echo "$JOBS_JSON" | jq -r '
+              [.jobs[] | select(.name | test("vcpkg-macos-.*-bindings"))]
+              | if length < 2 then "waiting"
+                elif all(.status == "completed" and .conclusion == "success") then "done"
+                elif any(.status == "completed" and .conclusion != "success" and .conclusion != null) then "failed"
+                else "running"
+                end
+            ')"
+
+            echo "macOS binding jobs: $MACOS_STATUS (elapsed=${ELAPSED}s)"
+
+            if [ "$MACOS_STATUS" = "done" ]; then
+              echo "✓ macOS binding jobs completed successfully"
+              break
+            elif [ "$MACOS_STATUS" = "failed" ]; then
+              echo "::warning::A macOS binding job failed — skipping macOS wheels"
+              echo "$JOBS_JSON" | jq -r '.jobs[] | select(.name | test("vcpkg-macos-.*-bindings")) | "  \(.name): \(.status)/\(.conclusion // "null")"'
+              echo "SKIP_MACOS=true" >> "$GITHUB_ENV"
+              break
+            fi
+
+            sleep "$POLL_INTERVAL"
+            ELAPSED=$((ELAPSED + POLL_INTERVAL))
+          done
+
+          if [ "$ELAPSED" -ge "$MAX_WAIT" ] && [ "$MACOS_STATUS" != "done" ]; then
+            echo "::warning::Timed out waiting for macOS binding jobs — skipping macOS wheels"
+            echo "SKIP_MACOS=true" >> "$GITHUB_ENV"
+          fi
+
+          echo "run_id=$RUN_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Download macOS wheels
+        if: env.SKIP_MACOS != 'true'
+        uses: actions/download-artifact@v8
+        with:
+          pattern: wheels-vcpkg-macos-*
+          path: dist
+          merge-multiple: true
+          run-id: ${{ steps.wait-macos.outputs.run_id }}
+          github-token: ${{ github.token }}
+        continue-on-error: true
+
+      - name: Publish macOS wheels to PyPI
+        if: env.SKIP_MACOS != 'true'
+        uses: pypa/gh-action-pypi-publish@v1.14.0
+        with:
+          skip-existing: true
+          verbose: true
+        continue-on-error: true
 
