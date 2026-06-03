@@ -187,7 +187,7 @@ jobs:
           
           echo "Waiting for CI workflow to complete for tag $TAG (commit $TAG_SHA)"
           
-          MAX_WAIT=3600  # 1 hour
+          MAX_WAIT=10800  # 3 hours
           ELAPSED=0
           POLL_INTERVAL=10
           
