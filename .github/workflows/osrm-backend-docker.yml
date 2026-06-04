@@ -34,7 +34,10 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
           tags: |
+            type=raw,value=latest,suffix=-amd64-${{ matrix.docker-base-image }}
             type=semver,pattern=v{{version}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
             type=semver,pattern={{version}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
             type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
@@ -132,7 +135,10 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
           tags: |
+            type=raw,value=latest,suffix=-arm64-${{ matrix.docker-base-image }}
             type=semver,pattern=v{{version}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
             type=semver,pattern={{version}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
             type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
@@ -260,7 +266,11 @@ jobs:
             MAJOR_MINOR="${VERSION%.*}"
             TAGS+=("$VERSION" "$MAJOR_MINOR")
           fi
-          
+
+          # Always include latest so the multi-arch manifest serves as the
+          # default image for docker pull without an explicit version tag.
+          TAGS+=("latest")
+
           # Deduplicate tags while preserving order
           MANIFEST_TAGS=()
           declare -A SEEN_TAGS=()
@@ -275,8 +285,21 @@ jobs:
 
           for IMAGE_SUFFIX in "" "-debug" "-assertions"; do
             for TAG in "${MANIFEST_TAGS[@]}"; do
+              # The "latest" tag only applies to the base image, not to
+              # -debug or -assertions variant suffixes.
+              if [ "$TAG" = "latest" ] && [ -n "$IMAGE_SUFFIX" ]; then
+                continue
+              fi
               docker buildx imagetools create -t "$REGISTRY:${TAG}${IMAGE_SUFFIX}-${{ matrix.docker-base-image }}" \
                 "$REGISTRY:${TAG}${IMAGE_SUFFIX}-amd64-${{ matrix.docker-base-image }}" \
                 "$REGISTRY:${TAG}${IMAGE_SUFFIX}-arm64-${{ matrix.docker-base-image }}"
+
+              # Additionally create a bare "latest" multi-arch manifest (no
+              # -debian suffix) so that "docker pull …:latest" works as expected.
+              if [ "$TAG" = "latest" ] && [ -z "$IMAGE_SUFFIX" ]; then
+                docker buildx imagetools create -t "$REGISTRY:latest" \
+                  "$REGISTRY:latest-amd64-${{ matrix.docker-base-image }}" \
+                  "$REGISTRY:latest-arm64-${{ matrix.docker-base-image }}"
+              fi
             done
           done
