@@ -490,9 +490,9 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
-          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
           restore-keys: |
-            vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-
+            vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
