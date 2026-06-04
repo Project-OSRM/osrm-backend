@@ -92,6 +92,26 @@ npx cucumber-js -p home -p ch -p datastore
 npx cucumber-js -p home -p mld -p mmap
 ```
 
+**IMPORTANT: Profile changes MUST follow this checklist:**
+
+1. **Cucumber tests**: Every change to a profile (`.lua` files in `profiles/`) must be accompanied by a corresponding cucumber test in `features/` that validates the new or changed behavior.
+   - Run the relevant cucumber tests before committing profile changes:
+     ```bash
+     OSRM_BUILD_DIR=build npx cucumber-js -p home -p mld -p mmap features/<profile>/<feature>.feature
+     ```
+     The test cache is keyed by a content hash of all profiles, binaries, and the feature file, so profile changes automatically invalidate the cache. Old cache directories can optionally be cleaned up with `rm -rf test/cache`.
+   - Run the whole `.feature` file (not just the new scenario) to verify no regressions.
+   - Use the existing test patterns: `routability should be` tables where any column header starting with `forw`, `backw`, or `bothw` (including `*_rate` variants) is an expectation column (not an OSM tag). Headers matching `node/<tag>` apply to node tags. All other columns become OSM way tags.
+   - Do NOT add `@todo` to new scenarios — verify the expected behavior matches actual routing output.
+
+2. **taginfo.json**: If modifying tag handling (adding, removing, or changing how OSM tags are parsed), update `taginfo.json` with any new OSM tags that are now recognized or any tags whose semantics have changed.
+
+3. **OSM Wiki adherence**: Verify that the behavior matches [OSM tagging conventions](https://wiki.openstreetmap.org/wiki/Key:access):
+   - Mode-specific tags (e.g. `bicycle=yes`) override vehicle-level restrictions (e.g. `vehicle=no`)
+   - Directional suffixes (`:forward`/`:backward`) scope a tag to a specific travel direction
+   - The access tag hierarchy is: mode-specific > vehicle-level > general access
+   - When in doubt, consult the relevant OSM wiki pages for the tags being changed
+
 
 ## Python Bindings
 
