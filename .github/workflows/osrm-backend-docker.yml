@@ -86,6 +86,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metadebug.outputs.tags  }}
           labels: ${{ steps.metadebug.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -97,6 +98,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metaassertions.outputs.tags  }}
           labels: ${{ steps.metaassertions.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -108,6 +110,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.meta.outputs.tags  }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -181,6 +184,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metadebug.outputs.tags  }}
           labels: ${{ steps.metadebug.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -192,6 +196,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metaassertions.outputs.tags  }}
           labels: ${{ steps.metaassertions.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -203,6 +208,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.meta.outputs.tags  }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}
 

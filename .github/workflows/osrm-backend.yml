@@ -212,13 +212,13 @@ jobs:
         npm run docs && ./scripts/error_on_dirty.sh "Run 'npm run docs' locally and commit the changes."
         npm audit --production
 
-  docker-image-matrix:
+  docker-build-extract-test:
     strategy:
       matrix:
         docker-base-image: ['alpine']
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     if: github.repository == 'Project-OSRM/osrm-backend'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     continue-on-error: false
     steps:
       - name: Check out the repo
@@ -738,7 +738,7 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, vcpkg-windows-release-bindings, docker-image-matrix]
+    needs: [build-matrix, vcpkg-windows-release-bindings, docker-build-extract-test]
     if: github.repository == 'Project-OSRM/osrm-backend'
     steps:
       - name: Fail if any dependency failed
