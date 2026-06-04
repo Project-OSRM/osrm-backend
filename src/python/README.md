@@ -50,15 +50,6 @@ sudo dnf install -y \
     tbb-devel libxml2-devel libzip-devel
 ```
 
-**Alpine**
-
-```
-apk add --no-cache \
-    cmake clang make git pkgconf \
-    boost-dev bzip2-dev lua5.4-dev \
-    onetbb-dev libxml2-dev libzip-dev expat-dev
-```
-
 **macOS (Homebrew)**
 
 ```
