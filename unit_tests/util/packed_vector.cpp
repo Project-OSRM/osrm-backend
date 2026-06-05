@@ -4,8 +4,8 @@
 #include "extractor/packed_osm_ids.hpp"
 #include "util/exception.hpp"
 
-#include "common/range_tools.hpp"
 #include "../common/random_seed.hpp"
+#include "common/range_tools.hpp"
 
 #include <algorithm>
 #include <boost/test/unit_test.hpp>
