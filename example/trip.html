@@ -235,14 +235,16 @@
     function encodeShareHash() {
       if (state.points.length === 0) {
         if (history.replaceState) {
-          history.replaceState(null, '', window.location.pathname);
+          history.replaceState(null, '', window.location.pathname + window.location.search);
         }
         return;
       }
       const encoded = state.points.map((p) => `${p.lng.toFixed(6)},${p.lat.toFixed(6)}`).join(';');
       const server = getServerUrl();
       const hash = `#points=${encoded}&server=${encodeURIComponent(server)}`;
-      history.replaceState(null, '', hash);
+      if (history.replaceState) {
+        history.replaceState(null, '', hash);
+      }
     }
 
     function decodeShareHash() {
@@ -260,10 +262,10 @@
         const parts = pair.split(',');
         return { lng: Number.parseFloat(parts[0]), lat: Number.parseFloat(parts[1]) };
       });
-      if (parsed.some((p) => Number.isNaN(p.lng) || Number.isNaN(p.lat))) {
+      if (parsed.some((p) => !Number.isFinite(p.lng) || !Number.isFinite(p.lat))) {
         return null;
       }
-      return { points: parsed, server: serverParam ? decodeURIComponent(serverParam) : null };
+      return { points: parsed, server: serverParam || null };
     }
 
     function setStatus(message) {
@@ -613,11 +615,20 @@
       scheduleTrip();
     });
 
+    function isValidServerUrl(raw) {
+      try {
+        const url = new URL(raw);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }
+
     function restoreFromHash() {
       const shared = decodeShareHash();
 
-      // Hash overrides the HTML default
-      if (shared && shared.server) {
+      // Hash overrides the HTML default (only if valid)
+      if (shared && shared.server && isValidServerUrl(shared.server)) {
         elements.serverUrl.value = shared.server;
       }
 
@@ -639,7 +650,6 @@
         state.points.push(point);
         createMarker(point);
       }
-      syncUI();
       fitToPoints();
 
       if (state.points.length >= 3) {
