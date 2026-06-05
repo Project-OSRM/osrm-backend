@@ -1,6 +1,8 @@
 #include "util/static_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include "../common/random_seed.hpp"
+
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
@@ -26,14 +28,12 @@ static_assert(traits::HasDataMember<TestInputEdge>, "TestInputEdge needs to have
 
 constexpr unsigned TEST_NUM_NODES = 100;
 constexpr unsigned TEST_NUM_EDGES = 500;
-// Chosen by a fair W20 dice roll (this value is completely arbitrary)
-constexpr unsigned RANDOM_SEED = 15;
 
 template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomArrayEntryFixture
 {
     RandomArrayEntryFixture()
     {
-        std::mt19937 g(RANDOM_SEED);
+        std::mt19937 g(osrm::test::getTestRandomSeed());
 
         std::uniform_int_distribution<> edge_udist(0, NUM_EDGES - 1);
         std::vector<unsigned> offsets;

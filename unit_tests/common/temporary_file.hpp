@@ -1,6 +1,8 @@
 #ifndef UNIT_TESTS_TEMPORARY_FILE_HPP
 #define UNIT_TESTS_TEMPORARY_FILE_HPP
 
+#include "random_seed.hpp"
+
 #include <cstdlib>
 #include <filesystem>
 #include <random>
@@ -12,7 +14,7 @@ inline std::string random_string(std::string::size_type length)
                         "abcdefghijklmnopqrstuvwxyz"
                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    thread_local static std::mt19937 rg{std::random_device{}()};
+    thread_local static std::mt19937 rg{osrm::test::getTestRandomSeed()};
     thread_local static std::uniform_int_distribution<std::string::size_type> pick(
         0, sizeof(chrs) - 2);
 
