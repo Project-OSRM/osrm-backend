@@ -80,7 +80,7 @@ template <typename From, typename Tag> struct Alias final
     {
         return Alias{__value & static_cast<const From>(rhs_)};
     }
-    auto operator<=>(const Alias&) const = default;
+    auto operator<=>(const Alias &) const = default;
 
     inline Alias operator++()
     {
