@@ -80,12 +80,7 @@ template <typename From, typename Tag> struct Alias final
     {
         return Alias{__value & static_cast<const From>(rhs_)};
     }
-    inline bool operator<(const Alias z_) const { return __value < static_cast<const From>(z_); }
-    inline bool operator>(const Alias z_) const { return __value > static_cast<const From>(z_); }
-    inline bool operator<=(const Alias z_) const { return __value <= static_cast<const From>(z_); }
-    inline bool operator>=(const Alias z_) const { return __value >= static_cast<const From>(z_); }
-    inline bool operator==(const Alias z_) const { return __value == static_cast<const From>(z_); }
-    inline bool operator!=(const Alias z_) const { return __value != static_cast<const From>(z_); }
+    auto operator<=>(const Alias&) const = default;
 
     inline Alias operator++()
     {
