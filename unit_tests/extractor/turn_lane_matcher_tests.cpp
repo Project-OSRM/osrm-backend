@@ -139,6 +139,12 @@ BOOST_AUTO_TEST_CASE(merge_to_right_tag_maps_to_straight)
                       DirectionModifier::Straight);
 }
 
+BOOST_AUTO_TEST_CASE(unknown_tag_falls_back_to_uturn)
+{
+    // Tags not in the lookup table (e.g. 'none') fall back to DirectionModifier::UTurn
+    BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::none), DirectionModifier::UTurn);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
 
 // ============================================================================
@@ -466,22 +472,15 @@ BOOST_AUTO_TEST_CASE(prefers_entry_allowed_when_both_valid)
 
 BOOST_AUTO_TEST_CASE(prefers_better_angle_when_both_valid_and_allowed)
 {
+    // Both [1] and [2] are valid and entry-allowed for 'right'.
+    // [2] has angle 85 (deviation 5 from ideal 90) vs [1] at 110 (deviation 20).
+    // The quality tiebreaker picks the closer angle at [2].
     Intersection intersection =
         makeIntersection({{true, 0.0, {TurnType::Turn, DirectionModifier::UTurn}},
-                          {true, 95.0, {TurnType::Turn, DirectionModifier::Right}},
+                          {true, 110.0, {TurnType::Turn, DirectionModifier::Right}},
                           {true, 85.0, {TurnType::Turn, DirectionModifier::Right}}});
 
     auto it = findBestMatch(TurnLaneType::right, intersection);
-    // [2] has angle 85. Right ideal is 90. |85-90|=5 < |95-90|=5. Actually both are 5.
-    // Let's make it cleaner with different angles.
-    // Actually 85→|85-90|=5, 95→|95-90|=5. Both equal. The first min_element wins.
-    // Let's fix the test to have clearly different angles.
-    intersection = makeIntersection({{true, 0.0, {TurnType::Turn, DirectionModifier::UTurn}},
-                                     {true, 110.0, {TurnType::Turn, DirectionModifier::Right}},
-                                     {true, 85.0, {TurnType::Turn, DirectionModifier::Right}}});
-
-    it = findBestMatch(TurnLaneType::right, intersection);
-    // [2] has angle 85, dev=5. [1] has angle 110, dev=20. Should pick [2].
     BOOST_CHECK_EQUAL(std::distance(intersection.cbegin(), it), 2);
 }
 
@@ -558,7 +557,8 @@ BOOST_AUTO_TEST_CASE(valid_trivial_match_returns_true)
 
 BOOST_AUTO_TEST_CASE(invalid_match_returns_false)
 {
-    // Lane data says straight but best match for straight is at [2] where the road is Left
+    // Lane data says 'straight' but the first entry-allowed road [1] is a Right turn.
+    // isValidMatch(straight, Right) returns false, so canMatchTrivially fails early.
     Intersection intersection =
         makeIntersection({{true, 0.0, {TurnType::Turn, DirectionModifier::UTurn}},
                           {true, 90.0, {TurnType::Turn, DirectionModifier::Right}},
@@ -675,61 +675,10 @@ BOOST_AUTO_TEST_CASE(empty_lane_data_returns_unchanged)
 
 BOOST_AUTO_TEST_CASE(first_lane_uturn_entry_allowed_not_reversed)
 {
-    // First lane is uturn, entry[0] allowed, edge NOT reversed
-    // → u_turn=0, road_index=1 (but since lane_data has size 1, loop won't execute)
-    // Actually wait: lane starts at 1 (due to u-turn skip). lane_data size is 2.
-    // After matching the u-turn, lane=1. If lane_data has only the u-turn entry,
-    // we need lane_data to have 2 entries: uturn (front) + something.
-    // But from code: it checks lane_data.front().tag == uturn, then matches lane_data.back().
-    // So lane_data needs at least 2 entries.
-    // Actually let me re-read the code more carefully.
-
-    // Lines 206-232:
-    // if (!lane_data.empty() && lane_data.front().tag == TurnLaneType::uturn)
-    // {
-    //     if (intersection[0].entry_allowed)
-    //     {
-    //         ...
-    //         matchRoad(intersection[u_turn], lane_data.back());
-    //         lane = 1;
-    //     }
-    //     else return intersection;
-    // }
-    //
-    // Lines 234-246: for loop matching remaining lanes
-    //
-    // Lines 248-266: trailing u-turn handling
-
-    // So if lane_data = [uturn, straight]:
-    // - front().tag == uturn → enter the if
-    // - intersection[0].entry_allowed = true
-    // - reversed = false → u_turn = 0
-    // - intersection[0] gets Continue+UTurn
-    // - matchRoad with lane_data.back() (the straight lane data!)
-    //
-    // Wait, that doesn't make sense. Why match lane_data.back() for the u-turn?
-    // Let me re-read...
-    //
-    // Oh! I think the u-turn lane data entry has special from/to values that
-    // represent the u-turn lanes. And in the LaneDataVector, when there's a u-turn
-    // at the beginning, there might be a corresponding u-turn entry at the back too.
-    //
-    // Actually, I think the logic might be: when the front tag is uturn, the back
-    // tag is also uturn (the lane data vector has uturn at both ends to bracket the
-    // normal lanes). Or maybe the u-turn lane data is always stored at the back.
-    //
-    // Let me look at how LaneDataVector is constructed in production code.
-    // Actually this is getting too deep. Let me just write tests with the right
-    // data structure assumptions and see.
-
-    // For the test, let's use lane_data = [uturn] (single entry).
-    // front().tag == uturn, intersection[0].entry_allowed = true
-    // reversed = false → u_turn = 0
-    // matchRoad(intersection[0], lane_data.back()) → matches the only entry
-    // lane = 1
-    // Loop: road_index=1, lane=1, lane < lane_data.size() (1<1) → false
-    // Trailing check: lane(1) + 1 == 1? No. 2 != 1.
-    // Returns intersection.
+    // Front u-turn handler (lines 206-232): lane_data.front().tag == uturn AND
+    // intersection[0].entry_allowed → matches lane_data.back() to intersection[0],
+    // overwrites its instruction to Continue+UTurn, then sets lane=1 so the main
+    // loop skips the already-handled u-turn.
     Intersection intersection =
         makeIntersection({{true, 0.0, {TurnType::Turn, DirectionModifier::UTurn}},
                           {true, 180.0, {TurnType::Turn, DirectionModifier::Straight}}});
@@ -745,6 +694,8 @@ BOOST_AUTO_TEST_CASE(first_lane_uturn_entry_allowed_not_reversed)
     // intersection[0] should become Continue + UTurn
     BOOST_CHECK_EQUAL(result[0].instruction.type, TurnType::Continue);
     BOOST_CHECK_EQUAL(result[0].instruction.direction_modifier, DirectionModifier::UTurn);
+    // matchRoad was called, so lane_data_id should be assigned
+    BOOST_CHECK(result[0].lane_data_id != INVALID_LANE_DATAID);
 }
 
 BOOST_AUTO_TEST_CASE(first_lane_uturn_entry_not_allowed_returns_early)
@@ -946,8 +897,9 @@ BOOST_AUTO_TEST_CASE(trailing_uturn_reversed_last_road_not_entry_allowed_returns
 
 BOOST_AUTO_TEST_CASE(first_lane_uturn_skips_lane_zero_normal_matching_follows)
 {
-    // First lane is uturn (entry allowed, not reversed) — handled by front handler
-    // The matched lane is lane_data.back() which is the u-turn lane data itself for single entry
+    // Front handler matches u-turn lane to intersection[0] and skips lane 0.
+    // Unlike the not-reversed test above, this verifies that matchRoad() assigns a
+    // lane_data_id and that the ConcurrentFindOrAdd call populates the ID map.
     Intersection intersection =
         makeIntersection({{true, 0.0, {TurnType::Turn, DirectionModifier::UTurn}}});
 
@@ -962,6 +914,10 @@ BOOST_AUTO_TEST_CASE(first_lane_uturn_skips_lane_zero_normal_matching_follows)
     // intersection[0] → Continue+UTurn (matched by front handler)
     BOOST_CHECK_EQUAL(result[0].instruction.type, TurnType::Continue);
     BOOST_CHECK_EQUAL(result[0].instruction.direction_modifier, DirectionModifier::UTurn);
+    // matchRoad was called, so lane_data_id should be assigned
+    BOOST_CHECK(result[0].lane_data_id != INVALID_LANE_DATAID);
+    // ID map should have been populated by ConcurrentFindOrAdd
+    BOOST_CHECK_EQUAL(id_map.data.size(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(non_uturn_lanes_only_normal_matching)
