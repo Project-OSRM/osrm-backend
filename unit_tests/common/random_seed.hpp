@@ -12,9 +12,14 @@ namespace osrm::test
 inline unsigned getTestRandomSeed()
 {
     const char *env_seed = std::getenv("OSRM_TEST_SEED");
-    if (env_seed != nullptr)
+    if (env_seed != nullptr && env_seed[0] != '\0')
     {
-        return static_cast<unsigned>(std::strtoul(env_seed, nullptr, 0));
+        char *end = nullptr;
+        const auto value = std::strtoul(env_seed, &end, 0);
+        if (end != env_seed && *end == '\0')
+        {
+            return static_cast<unsigned>(value);
+        }
     }
     return 0xdeadbeef;
 }

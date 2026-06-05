@@ -41,7 +41,7 @@ using TestStaticRTree = StaticRTree<TestData,
 using MiniStaticRTree = StaticRTree<TestData, osrm::storage::Ownership::Container, 2, 128>;
 using TestDataFacade = MockDataFacade<osrm::engine::routing_algorithms::ch::Algorithm>;
 
-// Choosen by a fair W20 dice roll (this value is completely arbitrary)
+// Chosen by a fair W20 dice roll (this value is completely arbitrary)
 static const int32_t WORLD_MIN_LAT = -85 * COORDINATE_PRECISION;
 static const int32_t WORLD_MAX_LAT = 85 * COORDINATE_PRECISION;
 static const int32_t WORLD_MIN_LON = -180 * COORDINATE_PRECISION;

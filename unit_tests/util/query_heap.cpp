@@ -40,7 +40,7 @@ template <unsigned NUM_ELEM> struct RandomDataFixture
             order.push_back(i);
         }
 
-        // Choosen by a fair W20 dice roll
+        // Chosen by a fair W20 dice roll
         std::mt19937 g(osrm::test::getTestRandomSeed());
 
         std::shuffle(order.begin(), order.end(), g);
