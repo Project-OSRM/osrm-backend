@@ -183,7 +183,7 @@
 
       <div>
         <label for="server-url">osrm-routed base URL</label>
-        <input id="server-url" type="text" value="http://localhost:5000" />
+        <input id="server-url" type="text" value="https://router.project-osrm.org" />
       </div>
 
       <div class="row">
@@ -232,9 +232,40 @@
       refresh: document.getElementById('refresh'),
     };
 
-    const savedServerUrl = localStorage.getItem('osrmTripServerUrl');
-    if (savedServerUrl) {
-      elements.serverUrl.value = savedServerUrl;
+    function encodeShareHash() {
+      if (state.points.length === 0) {
+        if (history.replaceState) {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+        return;
+      }
+      const encoded = state.points.map((p) => `${p.lng.toFixed(6)},${p.lat.toFixed(6)}`).join(';');
+      const server = getServerUrl();
+      const hash = `#points=${encoded}&server=${encodeURIComponent(server)}`;
+      if (history.replaceState) {
+        history.replaceState(null, '', hash);
+      }
+    }
+
+    function decodeShareHash() {
+      const hash = window.location.hash.slice(1);
+      if (!hash) {
+        return null;
+      }
+      const params = new URLSearchParams(hash);
+      const pointsParam = params.get('points');
+      const serverParam = params.get('server');
+      if (!pointsParam) {
+        return null;
+      }
+      const parsed = pointsParam.split(';').map((pair) => {
+        const parts = pair.split(',');
+        return { lng: Number.parseFloat(parts[0]), lat: Number.parseFloat(parts[1]) };
+      });
+      if (parsed.some((p) => !Number.isFinite(p.lng) || !Number.isFinite(p.lat))) {
+        return null;
+      }
+      return { points: parsed, server: serverParam || null };
     }
 
     function setStatus(message) {
@@ -458,6 +489,7 @@
       });
 
       updateButtons();
+      encodeShareHash();
     }
 
     function addPoint(lng, lat) {
@@ -516,9 +548,7 @@
 
     function getServerUrl() {
       const raw = elements.serverUrl.value.trim();
-      const normalized = raw.endsWith('/') ? raw.slice(0, -1) : raw;
-      localStorage.setItem('osrmTripServerUrl', normalized);
-      return normalized;
+      return raw.endsWith('/') ? raw.slice(0, -1) : raw;
     }
 
     function buildTripUrl() {
@@ -582,12 +612,56 @@
     elements.clear.addEventListener('click', clearPoints);
     elements.refresh.addEventListener('click', runTrip);
     elements.serverUrl.addEventListener('change', () => {
-      localStorage.setItem('osrmTripServerUrl', getServerUrl());
       scheduleTrip();
     });
 
+    function isValidServerUrl(raw) {
+      try {
+        const url = new URL(raw);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }
+
+    function restoreFromHash() {
+      const shared = decodeShareHash();
+
+      // Hash overrides the HTML default (only if valid)
+      if (shared && shared.server && isValidServerUrl(shared.server)) {
+        elements.serverUrl.value = shared.server;
+      }
+
+      if (!shared || shared.points.length === 0) {
+        return;
+      }
+
+      // Restore points (up to the limit)
+      const toRestore = shared.points.slice(0, MAX_LOCATIONS);
+      for (const p of toRestore) {
+        const point = {
+          id: state.nextId++,
+          lng: p.lng,
+          lat: p.lat,
+          tripOrder: undefined,
+          marker: null,
+          element: null,
+        };
+        state.points.push(point);
+        createMarker(point);
+      }
+      fitToPoints();
+
+      if (state.points.length >= 3) {
+        scheduleTrip();
+      } else if (state.points.length > 0) {
+        setStatus('Add at least three points to compute a trip.');
+      }
+    }
+
     map.on('load', () => {
       ensureRouteLayer();
+      restoreFromHash();
       syncUI();
       updateButtons();
       map.on('click', (event) => {
