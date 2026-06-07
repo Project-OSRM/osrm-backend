@@ -95,8 +95,8 @@ RUN --mount=type=cache,target=/root/.ccache \
     ninja -j${NPROC} install && \
     ccache -s && \
     # Copy the TBB shared lib out of vcpkg so the runstage image can load it
-    # without bringing in the whole vcpkg tree. Boost, expat, bzip2, lua, fmt
-    # etc. all link statically under the x64-linux triplet, so only TBB needs
+    # without bringing in the whole vcpkg tree. Boost, expat, bzip2, lua, etc.
+    #all link statically under the x64-linux triplet, so only TBB needs
     # runtime shipping. In manifest mode vcpkg installs per-build under
     # build/vcpkg_installed/<triplet>/, not $VCPKG_ROOT/installed/.
     mkdir -p /opt/vcpkg-runtime-libs && \
