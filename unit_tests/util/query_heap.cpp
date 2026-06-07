@@ -1,6 +1,8 @@
 #include "util/query_heap.hpp"
 #include "util/typedefs.hpp"
 
+#include "../common/random_seed.hpp"
+
 #include <boost/test/unit_test.hpp>
 
 #include <tuple>
@@ -38,8 +40,8 @@ template <unsigned NUM_ELEM> struct RandomDataFixture
             order.push_back(i);
         }
 
-        // Choosen by a fair W20 dice roll
-        std::mt19937 g(15);
+        // Chosen by a fair W20 dice roll
+        std::mt19937 g(osrm::test::getTestRandomSeed());
 
         std::shuffle(order.begin(), order.end(), g);
     }
