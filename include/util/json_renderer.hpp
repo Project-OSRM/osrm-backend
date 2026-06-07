@@ -67,12 +67,12 @@ template <typename Out> struct Renderer
             std::trunc(number.value) == number.value)
         {
             auto int_value = static_cast<std::uint64_t>(number.value);
-            std::string formatted = compat::format("{}", int_value);
+            std::string formatted = std::format("{}", int_value);
             write(formatted.data(), formatted.size());
         }
         else
         {
-            std::string formatted = compat::format("{:.10g}", number.value);
+            std::string formatted = std::format("{:.10g}", number.value);
             write(formatted.data(), formatted.size());
         }
     }

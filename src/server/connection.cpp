@@ -100,7 +100,7 @@ void Connection::process_request()
     {
         response_.set(bhttp::field::connection, "keep-alive");
         response_.set("Keep-Alive",
-                      util::compat::format("timeout={}, max={}",
+                      std::format("timeout={}, max={}",
                                            keepalive_timeout_,
                                            KEEPALIVE_MAX_REQUESTS - processed_requests_));
     }

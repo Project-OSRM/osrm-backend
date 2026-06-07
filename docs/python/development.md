@@ -39,7 +39,7 @@ pre-commit install
 
 ## Platform-specific build requirements
 
-### Linux
+### Linux and macOS
 
 CI wheel builds run inside a custom manylinux image
 ([nilsnolde/manylinux](https://github.com/nilsnolde/manylinux), branch
@@ -63,19 +63,6 @@ git clone https://github.com/microsoft/vcpkg
 ./vcpkg/bootstrap-vcpkg.sh
 export VCPKG_ROOT=$PWD/vcpkg
 export CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-release"
-```
-
-### macOS
-
-Install OSRM's C++ dependencies via Homebrew (the same set the cibuildwheel
-macOS `before-all` uses; all ship CMake config files so the
-`find_package(... CONFIG REQUIRED)` calls in `CMakeLists.txt` resolve
-without a toolchain file):
-
-```bash
-brew install lua tbb boost@1.90 fmt rapidjson sol2 flatbuffers \
-             protozero libosmium
-brew link boost@1.90
 ```
 
 ### Windows

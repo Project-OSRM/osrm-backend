@@ -30,7 +30,7 @@ util::vector_view<T> mmapFile(const std::filesystem::path &file, MmapContainerT 
     catch (const std::exception &exc)
     {
         throw exception(
-            osrm::util::compat::format("File {} mapping failed: {}", file.string(), exc.what()) +
+            std::format("File {} mapping failed: {}", file.string(), exc.what()) +
             SOURCE_REF);
     }
 }
@@ -56,7 +56,7 @@ mmapFile(const std::filesystem::path &file, MmapContainerT &mmap_container, cons
     catch (const std::exception &exc)
     {
         throw exception(
-            osrm::util::compat::format("File {} mapping failed: {}", file.string(), exc.what()) +
+            std::format("File {} mapping failed: {}", file.string(), exc.what()) +
             SOURCE_REF);
     }
 }

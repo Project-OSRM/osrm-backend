@@ -117,7 +117,7 @@ template <int N, typename T = std::string> struct VariableGroupBlock
             const std::uint32_t data_length = *last - *std::prev(last);
             if (data_length >= 0x1000000)
                 throw util::exception(
-                    osrm::util::compat::format("too large data length {}", data_length));
+                    std::format("too large data length {}", data_length));
 
             const std::uint32_t byte_length = log256(data_length);
             refernce.descriptor = (refernce.descriptor << 2) | byte_length;
@@ -223,7 +223,7 @@ template <int N, typename T = std::string> struct FixedGroupBlock
         {
             const std::uint32_t data_length = *next - *curr;
             if (data_length > MAX_LENGTH)
-                throw util::exception(osrm::util::compat::format(
+                throw util::exception(std::format(
                     "too large data length {} > {}", data_length, MAX_LENGTH));
 
             prefix[index++] = data_length;
