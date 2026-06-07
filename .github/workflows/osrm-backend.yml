@@ -66,7 +66,7 @@ jobs:
         env:
           VCPKG_DEFAULT_TRIPLET: x64-linux
 
-  windows-release-bindings:
+  vcpkg-windows-release-bindings:
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     strategy:
       matrix:
@@ -283,7 +283,6 @@ jobs:
             CCOMPILER: clang-20
             CXXCOMPILER: clang++-20
             ENABLE_LTO: OFF
-            NODE_PACKAGE_TESTS_ONLY: ON
 
           - name: clang-19-release
             continue-on-error: false
@@ -303,28 +302,46 @@ jobs:
             CXXCOMPILER: clang++-18
             ENABLE_LTO: OFF
 
-          - name: clang-20-debug-clang-tidy
+          - name: clang-18-debug
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-20
-            CXXCOMPILER: clang++-20
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
+            ENABLE_LTO: OFF
+
+          - name: clang-18-debug-clang-tidy
+            continue-on-error: false
+            node: 24
+            runs-on: ubuntu-24.04
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             ENABLE_CLANG_TIDY: ON
             NODE_PACKAGE_TESTS_ONLY: ON
             ENABLE_LTO: OFF
 
-          - name: clang-20-debug-asan-ubsan
+          - name: clang-18-debug-asan-ubsan
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-20
-            CXXCOMPILER: clang++-20
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             ENABLE_SANITIZER: ON
             TARGET_ARCH: x86_64-asan-ubsan
             OSRM_CONNECTION_RETRIES: 10
             OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
+
+          - name: clang-17-release
+            continue-on-error: false
+            node: 24
+            runs-on: ubuntu-24.04
+            BUILD_TYPE: Release
+            CCOMPILER: clang-17
+            CXXCOMPILER: clang++-17
+            ENABLE_LTO: OFF
 
           - name: gcc-14-release
             continue-on-error: false
@@ -353,7 +370,26 @@ jobs:
             CXXCOMPILER: clang++-20
             ENABLE_COVERAGE: ON
 
-          - name: linux-arm64-release
+          - name: vcpkg-linux-release-bindings
+            build_bindings: true
+            continue-on-error: false
+            node: 24
+            runs-on: ubuntu-24.04
+            BUILD_TYPE: Release
+            CCOMPILER: clang-17
+            CXXCOMPILER: clang++-17
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: vcpkg-linux-debug
+            continue-on-error: false
+            node: 24
+            runs-on: ubuntu-24.04
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-17
+            CXXCOMPILER: clang++-17
+            NODE_PACKAGE_TESTS_ONLY: ON
+
+          - name: vcpkg-linux-arm64-release
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04-arm
@@ -362,7 +398,7 @@ jobs:
             CXXCOMPILER: clang++-18
             ENABLE_LTO: OFF
 
-          - name: macos-26-x64-release
+          - name: vcpkg-macos-26-x64-release
             continue-on-error: true
             node: 24
             runs-on: macos-26-intel # x86_64
@@ -372,7 +408,7 @@ jobs:
             ENABLE_ASSERTIONS: ON
             vcpkg_triplet: x64-osx
 
-          - name: macos-26-arm64-release
+          - name: vcpkg-macos-26-arm64-release
             continue-on-error: true
             node: 24
             runs-on: macos-26 # arm64
@@ -383,7 +419,7 @@ jobs:
             vcpkg_triplet: arm64-osx
 
           # python & nodeJS release bindings — macos-15 for broad binary compatibility
-          - name: macos-15-x64-release-bindings
+          - name: vcpkg-macos-15-x64-release-bindings
             build_bindings: true
             continue-on-error: true
             node: 24
@@ -394,7 +430,7 @@ jobs:
             ENABLE_ASSERTIONS: ON
             vcpkg_triplet: x64-osx
 
-          - name: macos-15-arm64-release-bindings
+          - name: vcpkg-macos-15-arm64-release-bindings
             build_bindings: true
             continue-on-error: true
             node: 24
@@ -702,7 +738,7 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, windows-release-bindings, docker-build-extract-test]
+    needs: [build-matrix, vcpkg-windows-release-bindings, docker-build-extract-test]
     if: github.repository == 'Project-OSRM/osrm-backend'
     steps:
       - name: Fail if any dependency failed
