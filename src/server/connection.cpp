@@ -101,8 +101,8 @@ void Connection::process_request()
         response_.set(bhttp::field::connection, "keep-alive");
         response_.set("Keep-Alive",
                       std::format("timeout={}, max={}",
-                                           keepalive_timeout_,
-                                           KEEPALIVE_MAX_REQUESTS - processed_requests_));
+                                  keepalive_timeout_,
+                                  KEEPALIVE_MAX_REQUESTS - processed_requests_));
     }
     else
     {

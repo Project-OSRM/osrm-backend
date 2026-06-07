@@ -94,8 +94,7 @@ inline bool pointInRingInclusive(const util::Coordinate &point,
         const auto prev_lon = from_alias<double>(prev->lon);
         const auto prev_lat = from_alias<double>(prev->lat);
         const bool intersects = ((current_lat > point_lat) != (prev_lat > point_lat)) &&
-                                (point_lon < (prev_lon - current_lon) *
-                                                     (point_lat - current_lat) /
+                                (point_lon < (prev_lon - current_lon) * (point_lat - current_lat) /
                                                      (prev_lat - current_lat) +
                                                  current_lon);
         if (intersects)

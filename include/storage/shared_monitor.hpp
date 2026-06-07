@@ -66,11 +66,11 @@ template <typename Data> struct SharedMonitor
             bi::offset_t size = 0;
             if (!shmem.get_size(size) || size != rounded_internal_size + sizeof(Data))
             {
-                auto message = std::format(
-                    "Wrong shared memory block '{}' size {}, expected {} bytes",
-                    (const char *)Data::name,
-                    size,
-                    rounded_internal_size + sizeof(Data));
+                auto message =
+                    std::format("Wrong shared memory block '{}' size {}, expected {} bytes",
+                                (const char *)Data::name,
+                                size,
+                                rounded_internal_size + sizeof(Data));
                 throw util::exception(message + SOURCE_REF);
             }
 
