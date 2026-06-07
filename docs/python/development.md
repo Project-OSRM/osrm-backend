@@ -41,7 +41,7 @@ pre-commit install
 
 ### Linux and macOS
 
-CI wheel builds run inside a custom manylinux image
+CI wheel builds run inside a custom manylinux image on Linux
 ([nilsnolde/manylinux](https://github.com/nilsnolde/manylinux), branch
 `osrm_python`) that ships vcpkg pre-bootstrapped at the SHA pinned in
 `vcpkg-configuration.json`, plus a pre-warmed vcpkg binary cache compiled
@@ -54,7 +54,7 @@ changes — otherwise the wheel build either misses the cache (slow) or
 fails on a missing port. The manylinux repo's `Build` workflow takes an
 `osrmRef` input for that purpose; see its README.
 
-For local source builds outside the manylinux image, install vcpkg
+For local source builds outside the manylinux image, e.g macOS, install vcpkg
 yourself, point CMake at its toolchain, and use the release-only triplet
 to match the cache:
 
