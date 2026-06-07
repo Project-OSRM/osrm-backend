@@ -320,16 +320,6 @@ find_package(Threads REQUIRED)
 # with libstdc++ from older GCC lacking std::format symbols at link time)
 include(CheckCXXSourceRuns)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
-else()
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
-  set(CMAKE_REQUIRED_LIBRARIES "stdc++")
-endif()
-
-unset(CMAKE_REQUIRED_FLAGS)
-unset(CMAKE_REQUIRED_LIBRARIES)
-
 find_package(LibArchive REQUIRED)
 
 # Header-only libraries from vcpkg. Each provides a CMake CONFIG package.
