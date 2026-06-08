@@ -6,9 +6,7 @@ namespace osrm::extractor::intersection
 {
 
 bool IntersectionViewData::CompareByAngle(const IntersectionViewData &other) const
-{
-    return angle < other.angle;
-}
+{ return angle < other.angle; }
 
 std::string toString(const IntersectionEdgeGeometry &shape)
 {

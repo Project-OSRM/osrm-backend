@@ -57,9 +57,7 @@ inline double latToY(const FloatLatitude latitude)
 template <typename T> constexpr double horner(double, T an) { return an; }
 
 template <typename T, typename... U> constexpr double horner(double x, T an, U... a)
-{
-    return horner(x, a...) * x + an;
-}
+{ return horner(x, a...) * x + an; }
 
 inline double latToYapprox(const FloatLatitude latitude)
 {
@@ -125,14 +123,10 @@ inline double degreeToPixel(FloatLatitude lat, unsigned zoom)
 }
 
 inline FloatCoordinate fromWGS84(const FloatCoordinate &wgs84_coordinate)
-{
-    return {wgs84_coordinate.lon, FloatLatitude{latToYapprox(wgs84_coordinate.lat)}};
-}
+{ return {wgs84_coordinate.lon, FloatLatitude{latToYapprox(wgs84_coordinate.lat)}}; }
 
 inline FloatCoordinate toWGS84(const FloatCoordinate &mercator_coordinate)
-{
-    return {mercator_coordinate.lon, yToLat(static_cast<double>(mercator_coordinate.lat))};
-}
+{ return {mercator_coordinate.lon, yToLat(static_cast<double>(mercator_coordinate.lat))}; }
 
 // Converts a WMS tile coordinate (z,x,y) into a wgs bounding box
 inline void xyzToWGS84(const int x,

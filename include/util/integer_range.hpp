@@ -73,13 +73,9 @@ template <typename Integer> class integer_iterator
     }
 
     friend bool operator==(const integer_iterator &a, const integer_iterator &b)
-    {
-        return a.m_value == b.m_value;
-    }
+    { return a.m_value == b.m_value; }
     friend bool operator!=(const integer_iterator &a, const integer_iterator &b)
-    {
-        return !(a == b);
-    }
+    { return !(a == b); }
 
   private:
     value_type m_value;
@@ -109,9 +105,7 @@ range<Integer>
 irange(const Integer first,
        const Integer last,
        typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr) noexcept
-{
-    return range<Integer>(first, last);
-}
+{ return range<Integer>(first, last); }
 
 } // namespace osrm::util
 

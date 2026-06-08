@@ -130,9 +130,7 @@ class ObstacleMap
     //
     // This function is thread-safe.
     void emplace(OSMNodeID osm_node_id, const Obstacle &obstacle)
-    {
-        osm_obstacles.emplace_back(SPECIAL_OSM_NODEID, osm_node_id, obstacle);
-    }
+    { osm_obstacles.emplace_back(SPECIAL_OSM_NODEID, osm_node_id, obstacle); }
 
     // Insert an obstacle using internal node ids.
     //
@@ -166,9 +164,7 @@ class ObstacleMap
     }
 
     std::vector<Obstacle> get(NodeID to) const
-    {
-        return get(SPECIAL_NODEID, to, Obstacle::Type::All);
-    }
+    { return get(SPECIAL_NODEID, to, Obstacle::Type::All); }
 
     // is there any obstacle at node 'to'?
     // inexpensive general test
@@ -182,9 +178,7 @@ class ObstacleMap
     // pass SPECIAL_NODEID as 'from' to query all obstacles at 'to'
     // 'type' can be a bitwise-or combination of Obstacle::Type
     bool any(NodeID from, NodeID to, Obstacle::Type type = Obstacle::Type::All) const
-    {
-        return any(to) && !get(from, to, type).empty();
-    }
+    { return any(to) && !get(from, to, type).empty(); }
 
     // Preprocess the obstacles
     //

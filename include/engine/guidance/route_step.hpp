@@ -191,14 +191,10 @@ inline RouteStep &RouteStep::AdaptStepSignage(const RouteStep &origin)
 inline bool RouteStep::HasLanesAtTurn() const { return NumLanesInTotal() != 0; }
 
 inline LaneID RouteStep::NumLanesInTurn() const
-{
-    return intersections.front().lanes.lanes_in_turn;
-}
+{ return intersections.front().lanes.lanes_in_turn; }
 
 inline LaneID RouteStep::NumLanesInTotal() const
-{
-    return intersections.front().lane_description.size();
-}
+{ return intersections.front().lane_description.size(); }
 
 inline LaneID RouteStep::NumLanesToTheRight() const
 {

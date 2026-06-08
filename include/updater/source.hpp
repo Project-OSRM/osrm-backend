@@ -39,13 +39,9 @@ struct Segment final
     }
 
     bool operator<(const Segment &rhs) const
-    {
-        return std::tie(from, to) < std::tie(rhs.from, rhs.to);
-    }
+    { return std::tie(from, to) < std::tie(rhs.from, rhs.to); }
     bool operator==(const Segment &rhs) const
-    {
-        return std::tie(from, to) == std::tie(rhs.from, rhs.to);
-    }
+    { return std::tie(from, to) == std::tie(rhs.from, rhs.to); }
 };
 
 struct SpeedSource final
@@ -70,13 +66,9 @@ struct Turn final
     {
     }
     bool operator<(const Turn &rhs) const
-    {
-        return std::tie(from, via, to) < std::tie(rhs.from, rhs.via, rhs.to);
-    }
+    { return std::tie(from, via, to) < std::tie(rhs.from, rhs.via, rhs.to); }
     bool operator==(const Turn &rhs) const
-    {
-        return std::tie(from, via, to) == std::tie(rhs.from, rhs.via, rhs.to);
-    }
+    { return std::tie(from, via, to) == std::tie(rhs.from, rhs.via, rhs.to); }
 };
 
 struct PenaltySource final

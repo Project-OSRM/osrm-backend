@@ -49,8 +49,8 @@ template <storage::Ownership Ownership> class StringTableImpl
   public:
     using IndexedData =
         util::detail::IndexedDataImpl<util::VariableGroupBlock<16, std::string_view>, Ownership>;
-    using ResultType = typename IndexedData::ResultType;
-    using ValueType = typename IndexedData::ValueType;
+    using ResultType = IndexedData::ResultType;
+    using ValueType = IndexedData::ValueType;
 
     StringTableImpl() {}
 

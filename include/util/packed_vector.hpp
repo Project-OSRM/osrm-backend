@@ -43,27 +43,21 @@ inline T get_lower_half_value(WordT word,
                               WordT mask,
                               std::uint8_t offset,
                               typename std::enable_if_t<std::is_integral<T>::value> * = nullptr)
-{
-    return static_cast<T>((word & mask) >> offset);
-}
+{ return static_cast<T>((word & mask) >> offset); }
 
 template <typename WordT, typename T>
 inline T get_lower_half_value(WordT word,
                               WordT mask,
                               std::uint8_t offset,
                               typename T::value_type * = nullptr)
-{
-    return T{static_cast<typename T::value_type>((word & mask) >> offset)};
-}
+{ return T{static_cast<T::value_type>((word & mask) >> offset)}; }
 
 template <typename WordT, typename T>
 inline T get_upper_half_value(WordT word,
                               WordT mask,
                               std::uint8_t offset,
                               typename std::enable_if_t<std::is_integral<T>::value> * = nullptr)
-{
-    return static_cast<T>((word & mask) << offset);
-}
+{ return static_cast<T>((word & mask) << offset); }
 
 template <typename WordT, typename T>
 inline T get_upper_half_value(WordT word,
@@ -72,7 +66,7 @@ inline T get_upper_half_value(WordT word,
                               typename T::value_type * = nullptr)
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
-    return T{static_cast<typename T::value_type>((word & mask) << offset)};
+    return T{static_cast<T::value_type>((word & mask) << offset)};
 }
 
 template <typename WordT, typename T>
@@ -103,7 +97,7 @@ inline WordT set_lower_value(
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) |
-           ((static_cast<WordT>(static_cast<typename T::value_type>(value)) << offset) & mask);
+           ((static_cast<WordT>(static_cast<T::value_type>(value)) << offset) & mask);
 }
 
 template <typename WordT, typename T>
@@ -112,7 +106,7 @@ inline WordT set_upper_value(
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) |
-           ((static_cast<WordT>(static_cast<typename T::value_type>(value)) >> offset) & mask);
+           ((static_cast<WordT>(static_cast<T::value_type>(value)) >> offset) & mask);
 }
 
 inline bool compare_and_swap(uint64_t *ptr, uint64_t old_value, uint64_t new_value)
@@ -255,9 +249,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         std::uint8_t element;
 
         bool operator==(const InternalIndex &other) const
-        {
-            return std::tie(lower_word, element) == std::tie(other.lower_word, other.element);
-        }
+        { return std::tie(lower_word, element) == std::tie(other.lower_word, other.element); }
     };
 
   public:
@@ -282,20 +274,14 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         operator T() const { return container.get_value(internal_index); }
 
         bool operator==(const internal_reference &other) const
-        {
-            return &container == &other.container && internal_index == other.internal_index;
-        }
+        { return &container == &other.container && internal_index == other.internal_index; }
 
         // FIXME: This is needed for tests on Boost ranges to correctly compare Alias values.
         template <typename F, typename U> bool operator!=(const osrm::Alias<F, U> value) const
-        {
-            return container.get_value(internal_index) != value;
-        }
+        { return container.get_value(internal_index) != value; }
 
         friend std::ostream &operator<<(std::ostream &os, const internal_reference &rhs)
-        {
-            return os << static_cast<T>(rhs);
-        }
+        { return os << static_cast<T>(rhs); }
 
       private:
         PackedVector &container;
@@ -382,9 +368,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         }
 
         difference_type operator-(const iterator_impl &other) const
-        {
-            return static_cast<difference_type>(index) - static_cast<difference_type>(other.index);
-        }
+        { return static_cast<difference_type>(index) - static_cast<difference_type>(other.index); }
 
         bool operator==(const iterator_impl &other) const { return index == other.index; }
         bool operator!=(const iterator_impl &other) const { return !(*this == other); }
@@ -410,7 +394,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
             push_back(value);
     }
 
-    PackedVector(){};
+    PackedVector() {};
     PackedVector(const PackedVector &) = default;
     PackedVector(PackedVector &&) = default;
     PackedVector &operator=(const PackedVector &) = default;
@@ -435,9 +419,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     auto operator[](const std::size_t index) const { return get_value(get_internal_index(index)); }
 
     auto operator[](const std::size_t index)
-    {
-        return internal_reference{*this, get_internal_index(index)};
-    }
+    { return internal_reference{*this, get_internal_index(index)}; }
 
     auto at(std::size_t index) const
     {
@@ -480,9 +462,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     // Since we only allow passing by value anyway this is just an alias
     template <class... Args> void emplace_back(Args... args)
-    {
-        push_back(T{std::forward<Args>(args)...});
-    }
+    { push_back(T{std::forward<Args>(args)...}); }
 
     void push_back(const T value)
     {
@@ -513,7 +493,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     std::size_t capacity() const { return (vec.capacity() / BLOCK_WORDS) * BLOCK_ELEMENTS; }
 
     template <bool enabled = (Ownership == storage::Ownership::View)>
-    void reserve(typename std::enable_if<!enabled, std::size_t>::type capacity)
+    void reserve(std::enable_if<!enabled, std::size_t>::type capacity)
     {
         auto num_blocks = (capacity + BLOCK_ELEMENTS - 1) / BLOCK_ELEMENTS;
         vec.reserve(num_blocks * BLOCK_WORDS + 1);
@@ -535,9 +515,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
   private:
     void allocate_blocks(std::size_t num_blocks)
-    {
-        vec.resize(vec.size() + num_blocks * BLOCK_WORDS);
-    }
+    { vec.resize(vec.size() + num_blocks * BLOCK_WORDS); }
 
     inline InternalIndex get_internal_index(const std::size_t index) const
     {

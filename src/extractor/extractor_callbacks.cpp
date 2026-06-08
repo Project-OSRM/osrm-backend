@@ -65,14 +65,10 @@ void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node, const Extra
 }
 
 void ExtractorCallbacks::ProcessRestriction(const InputTurnRestriction &restriction)
-{
-    external_memory.restrictions_list.push_back(restriction);
-}
+{ external_memory.restrictions_list.push_back(restriction); }
 
 void ExtractorCallbacks::ProcessManeuverOverride(const InputManeuverOverride &override)
-{
-    external_memory.external_maneuver_overrides_list.push_back(override);
-}
+{ external_memory.external_maneuver_overrides_list.push_back(override); }
 
 /**
  * Takes the geometry contained in the ```input_way``` and the tags computed

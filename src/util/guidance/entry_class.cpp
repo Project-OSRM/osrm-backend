@@ -23,13 +23,9 @@ bool EntryClass::allowsEntry(std::uint32_t index) const
 }
 
 bool EntryClass::operator==(const EntryClass &other) const
-{
-    return enabled_entries_flags == other.enabled_entries_flags;
-}
+{ return enabled_entries_flags == other.enabled_entries_flags; }
 
 bool EntryClass::operator<(const EntryClass &other) const
-{
-    return enabled_entries_flags < other.enabled_entries_flags;
-}
+{ return enabled_entries_flags < other.enabled_entries_flags; }
 
 } // namespace osrm::util::guidance

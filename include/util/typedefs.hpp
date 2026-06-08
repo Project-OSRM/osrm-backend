@@ -172,9 +172,7 @@ static constexpr auto INVALID_CELL_ID = std::numeric_limits<CellID>::max();
 struct SegmentID
 {
     SegmentID(const NodeID id_, const bool enabled_) : id{id_}, enabled{enabled_}
-    {
-        BOOST_ASSERT(!enabled || id != SPECIAL_SEGMENTID);
-    }
+    { BOOST_ASSERT(!enabled || id != SPECIAL_SEGMENTID); }
 
     NodeID id : 31;
     std::uint32_t enabled : 1;

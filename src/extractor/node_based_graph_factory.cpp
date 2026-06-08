@@ -150,9 +150,7 @@ void NodeBasedGraphFactory::CompressAnnotationData()
         }
 
         bool operator()(AnnotationID a, AnnotationID b) const
-        {
-            return annotation_data[a] < annotation_data[b];
-        }
+        { return annotation_data[a] < annotation_data[b]; }
 
       private:
         const std::vector<NodeBasedEdgeAnnotation> &annotation_data;

@@ -70,14 +70,10 @@ const char *get_value_by_key(T const &object, const char *key, D const default_v
 }
 
 template <class T> double latToDouble(T const &object)
-{
-    return static_cast<double>(util::toFloating(object.lat));
-}
+{ return static_cast<double>(util::toFloating(object.lat)); }
 
 template <class T> double lonToDouble(T const &object)
-{
-    return static_cast<double>(util::toFloating(object.lon));
-}
+{ return static_cast<double>(util::toFloating(object.lon)); }
 
 struct to_lua_object
 {
@@ -113,9 +109,7 @@ Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
     const std::string &file_name,
     const std::vector<std::filesystem::path> &location_dependent_data_paths)
     : file_name(file_name), location_dependent_data(location_dependent_data_paths)
-{
-    util::Log() << "Using script " << file_name;
-}
+{ util::Log() << "Using script " << file_name; }
 
 void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 {
@@ -1013,9 +1007,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
 }
 
 const ProfileProperties &Sol2ScriptingEnvironment::GetProfileProperties()
-{
-    return GetSol2Context().properties;
-}
+{ return GetSol2Context().properties; }
 
 LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 {

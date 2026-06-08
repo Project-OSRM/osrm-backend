@@ -24,9 +24,7 @@ Connection::Connection(tcp::socket socket,
                        short keepalive_timeout)
     : stream_(std::move(socket)), request_handler_(handler), max_header_size_(max_header_size),
       keepalive_timeout_(keepalive_timeout)
-{
-    stream_.expires_after(std::chrono::seconds(keepalive_timeout_));
-}
+{ stream_.expires_after(std::chrono::seconds(keepalive_timeout_)); }
 
 void Connection::start() { handle_read(); }
 

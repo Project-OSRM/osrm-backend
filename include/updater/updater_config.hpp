@@ -58,9 +58,7 @@ struct UpdaterConfig final : storage::IOConfig
     }
 
     void UseDefaultOutputNames(const std::filesystem::path &base)
-    {
-        IOConfig::UseDefaultOutputNames(base);
-    }
+    { IOConfig::UseDefaultOutputNames(base); }
 
     double log_edge_updates_factor = 0.0;
     std::time_t valid_now;

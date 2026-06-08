@@ -130,14 +130,10 @@ struct ViaNodePath
 
     // check if all parts of the restriction reference an actual node
     bool Valid() const
-    {
-        return from != SPECIAL_NODEID && to != SPECIAL_NODEID && via != SPECIAL_NODEID;
-    };
+    { return from != SPECIAL_NODEID && to != SPECIAL_NODEID && via != SPECIAL_NODEID; };
 
     bool operator==(const ViaNodePath &other) const
-    {
-        return std::tie(from, via, to) == std::tie(other.from, other.via, other.to);
-    }
+    { return std::tie(from, via, to) == std::tie(other.from, other.via, other.to); }
 };
 
 //
@@ -167,9 +163,7 @@ struct ViaWayPath
     };
 
     bool operator==(const ViaWayPath &other) const
-    {
-        return std::tie(from, via, to) == std::tie(other.from, other.via, other.to);
-    }
+    { return std::tie(from, via, to) == std::tie(other.from, other.via, other.to); }
 };
 
 // Wrapper for turn paths that gives more information on its type / handles the switch

@@ -24,18 +24,16 @@ namespace osrm::engine
 
 inline std::pair<bool, bool> operator&&(const std::pair<bool, bool> &a,
                                         const std::pair<bool, bool> &b)
-{
-    return {a.first && b.first, a.second && b.second};
-}
+{ return {a.first && b.first, a.second && b.second}; }
 
 // Implements complex queries on top of an RTree and builds PhantomNodes from it.
 //
 // Only holds a weak reference on the RTree and coordinates!
 template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 {
-    using EdgeData = typename RTreeT::EdgeData;
-    using CoordinateList = typename RTreeT::CoordinateList;
-    using CandidateSegment = typename RTreeT::CandidateSegment;
+    using EdgeData = RTreeT::EdgeData;
+    using CoordinateList = RTreeT::CoordinateList;
+    using CandidateSegment = RTreeT::CandidateSegment;
 
   public:
     GeospatialQuery(RTreeT &rtree_, const CoordinateList &coordinates_, DataFacadeT &datafacade_)
@@ -44,9 +42,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     }
 
     std::vector<EdgeData> Search(const util::RectangleInt2D &bbox)
-    {
-        return rtree.SearchInBox(bbox);
-    }
+    { return rtree.SearchInBox(bbox); }
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
@@ -498,9 +494,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     bool CheckSegmentDistance(const Coordinate input_coordinate,
                               const CandidateSegment &segment,
                               const double max_distance) const
-    {
-        return GetSegmentDistance(input_coordinate, segment) > max_distance;
-    }
+    { return GetSegmentDistance(input_coordinate, segment) > max_distance; }
 
     std::pair<bool, bool> CheckSegmentExclude(const CandidateSegment &segment) const
     {

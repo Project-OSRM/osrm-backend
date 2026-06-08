@@ -27,7 +27,8 @@ template <> struct type_caster<JSONValue>
     static handle from_cpp(T &&val, rv_policy policy, cleanup_list *cleanup) noexcept
     {
         return std::visit(
-            [&](auto &&v) {
+            [&](auto &&v)
+            {
                 return Caster<decltype(v)>::from_cpp(std::forward<decltype(v)>(v), policy, cleanup);
             },
             std::forward<T>(val));
@@ -37,38 +38,28 @@ template <> struct type_caster<JSONValue>
 template <> struct type_caster<json::String> : type_caster_base<json::String>
 {
     static handle from_cpp(const json::String &val, rv_policy, cleanup_list *) noexcept
-    {
-        return PyUnicode_FromStringAndSize(val.value.c_str(), val.value.size());
-    }
+    { return PyUnicode_FromStringAndSize(val.value.c_str(), val.value.size()); }
 };
 template <> struct type_caster<json::Number> : type_caster_base<json::Number>
 {
     static handle from_cpp(const json::Number &val, rv_policy, cleanup_list *) noexcept
-    {
-        return PyFloat_FromDouble((double)val.value);
-    }
+    { return PyFloat_FromDouble((double)val.value); }
 };
 
 template <> struct type_caster<json::True> : type_caster_base<json::True>
 {
     static handle from_cpp(const json::True &, rv_policy, cleanup_list *) noexcept
-    {
-        return handle(Py_True).inc_ref();
-    }
+    { return handle(Py_True).inc_ref(); }
 };
 template <> struct type_caster<json::False> : type_caster_base<json::False>
 {
     static handle from_cpp(const json::False &, rv_policy, cleanup_list *) noexcept
-    {
-        return handle(Py_False).inc_ref();
-    }
+    { return handle(Py_False).inc_ref(); }
 };
 template <> struct type_caster<json::Null> : type_caster_base<json::Null>
 {
     static handle from_cpp(const json::Null &, rv_policy, cleanup_list *) noexcept
-    {
-        return none().release();
-    }
+    { return none().release(); }
 };
 
 } // namespace nanobind::detail

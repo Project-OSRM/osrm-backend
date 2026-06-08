@@ -60,9 +60,7 @@ struct ExtractionRelation
     }
 
     void AddMember(const OsmIDTyped &member_id, const char *role)
-    {
-        members_role.emplace_back(std::make_pair(member_id.Hash(), std::string(role)));
-    }
+    { members_role.emplace_back(std::make_pair(member_id.Hash(), std::string(role))); }
 
     const char *GetRole(const OsmIDTyped &member_id) const
     {

@@ -40,9 +40,7 @@ template <typename DataT> class BitIterator
     }
 
     friend bool operator==(const BitIterator &a, const BitIterator &b)
-    {
-        return a.m_value == b.m_value;
-    }
+    { return a.m_value == b.m_value; }
     friend bool operator!=(const BitIterator &a, const BitIterator &b) { return !(a == b); }
 
   private:

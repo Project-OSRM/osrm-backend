@@ -18,9 +18,7 @@ struct RuntimeFormatString
 inline RuntimeFormatString runtime_format(std::string_view s) { return {s}; }
 
 template <typename... Args> std::string format(RuntimeFormatString fmt, Args &&...args)
-{
-    return std::vformat(fmt.str, std::make_format_args(args...));
-}
+{ return std::vformat(fmt.str, std::make_format_args(args...)); }
 } // namespace osrm::util::compat
 
 #endif // OSRM_FORMAT_HPP

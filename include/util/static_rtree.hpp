@@ -207,9 +207,7 @@ class StaticRTree
         std::uint32_t m_original_index;
 
         inline bool operator<(const WrappedInputElement &other) const
-        {
-            return m_hilbert_value < other.m_hilbert_value;
-        }
+        { return m_hilbert_value < other.m_hilbert_value; }
     };
 
     struct QueryCandidate
@@ -230,9 +228,7 @@ class StaticRTree
         }
 
         inline bool is_segment() const
-        {
-            return segment_index != std::numeric_limits<std::uint32_t>::max();
-        }
+        { return segment_index != std::numeric_limits<std::uint32_t>::max(); }
 
         inline bool operator<(const QueryCandidate &other) const
         {

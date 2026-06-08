@@ -198,16 +198,17 @@ inline bool operator&(RouteParameters::AnnotationsType lhs, RouteParameters::Ann
 inline RouteParameters::AnnotationsType operator|(RouteParameters::AnnotationsType lhs,
                                                   RouteParameters::AnnotationsType rhs)
 {
-    return (RouteParameters::AnnotationsType)(
-        static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(lhs) |
-        static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(rhs));
+    return (
+        RouteParameters::
+            AnnotationsType)(static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(
+                                 lhs) |
+                             static_cast<std::underlying_type_t<RouteParameters::AnnotationsType>>(
+                                 rhs));
 }
 
 inline RouteParameters::AnnotationsType &operator|=(RouteParameters::AnnotationsType &lhs,
                                                     RouteParameters::AnnotationsType rhs)
-{
-    return lhs = lhs | rhs;
-}
+{ return lhs = lhs | rhs; }
 } // namespace osrm::engine::api
 
 #endif

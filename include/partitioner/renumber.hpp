@@ -35,9 +35,7 @@ inline void renumber(util::StaticGraph<EdgeDataT> &graph,
 
 inline void renumber(extractor::EdgeBasedNodeDataContainer &node_data_container,
                      const std::vector<std::uint32_t> &permutation)
-{
-    node_data_container.Renumber(permutation);
-}
+{ node_data_container.Renumber(permutation); }
 
 inline void renumber(std::vector<Partition> &partitions,
                      const std::vector<std::uint32_t> &permutation)

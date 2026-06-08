@@ -78,14 +78,10 @@ struct ExtractionWay
     void SetPronunciation(const char *value) { detail::maybeSetString(pronunciation, value); }
     const char *GetPronunciation() const { return pronunciation.c_str(); }
     void SetTurnLanesForward(const char *value)
-    {
-        detail::maybeSetString(turn_lanes_forward, value);
-    }
+    { detail::maybeSetString(turn_lanes_forward, value); }
     const char *GetTurnLanesForward() const { return turn_lanes_forward.c_str(); }
     void SetTurnLanesBackward(const char *value)
-    {
-        detail::maybeSetString(turn_lanes_backward, value);
-    }
+    { detail::maybeSetString(turn_lanes_backward, value); }
     const char *GetTurnLanesBackward() const { return turn_lanes_backward.c_str(); }
 
     // markers for determining user-defined classes for each way

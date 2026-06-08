@@ -50,36 +50,22 @@ template <typename From, typename Tag> struct Alias final
     explicit operator From &() { return __value; }
     explicit operator From() const { return __value; }
     inline Alias operator+(const Alias rhs_) const
-    {
-        return Alias{__value + static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value + static_cast<const From>(rhs_)}; }
     inline Alias operator-(const Alias rhs_) const
-    {
-        return Alias{__value - static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value - static_cast<const From>(rhs_)}; }
     inline Alias operator-() const
         requires(std::is_signed_v<From> || std::is_floating_point_v<From>)
-    {
-        return Alias{-__value};
-    }
+    { return Alias{-__value}; }
     inline Alias operator*(const Alias rhs_) const
-    {
-        return Alias{__value * static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value * static_cast<const From>(rhs_)}; }
     inline Alias operator*(const double rhs_) const { return Alias{__value * rhs_}; }
     inline Alias operator/(const Alias rhs_) const
-    {
-        return Alias{__value / static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value / static_cast<const From>(rhs_)}; }
     inline Alias operator/(const double rhs_) const { return Alias{__value / rhs_}; }
     inline Alias operator|(const Alias rhs_) const
-    {
-        return Alias{__value | static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value | static_cast<const From>(rhs_)}; }
     inline Alias operator&(const Alias rhs_) const
-    {
-        return Alias{__value & static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value & static_cast<const From>(rhs_)}; }
     auto operator<=>(const Alias &) const = default;
 
     inline Alias operator++()
@@ -131,8 +117,7 @@ template <typename ToAlias, typename FromAlias> inline ToAlias alias_cast(const 
                   "Alias From needs to be based on an arithmetic type");
     static_assert(std::is_arithmetic<typename ToAlias::value_type>::value,
                   "Alias Other needs to be based on an arithmetic type");
-    return {static_cast<typename ToAlias::value_type>(
-        static_cast<const typename FromAlias::value_type>(from))};
+    return {static_cast<ToAlias::value_type>(static_cast<const FromAlias::value_type>(from))};
 }
 
 template <typename ToNumeric, typename FromAlias> inline ToNumeric from_alias(const FromAlias &from)
@@ -140,7 +125,7 @@ template <typename ToNumeric, typename FromAlias> inline ToNumeric from_alias(co
     static_assert(std::is_arithmetic<typename FromAlias::value_type>::value,
                   "Alias From needs to be based on an arithmetic type");
     static_assert(std::is_arithmetic<ToNumeric>::value, "Numeric needs to be an arithmetic type");
-    return {static_cast<ToNumeric>(static_cast<const typename FromAlias::value_type>(from))};
+    return {static_cast<ToNumeric>(static_cast<const FromAlias::value_type>(from))};
 }
 
 template <typename ToAlias,
@@ -151,7 +136,7 @@ inline ToAlias to_alias(const FromNumeric &from)
     static_assert(std::is_arithmetic<FromNumeric>::value, "Numeric needs to be an arithmetic type");
     static_assert(std::is_arithmetic<typename ToAlias::value_type>::value,
                   "Alias needs to be based on an arithmetic type");
-    return {static_cast<typename ToAlias::value_type>(from)};
+    return {static_cast<ToAlias::value_type>(from)};
 }
 
 // Sometimes metrics are stored either as bitfields or the alias itself.
@@ -161,9 +146,7 @@ template <typename ToAlias> inline ToAlias to_alias(const ToAlias &from) { retur
 
 template <typename From, typename Tag>
 inline std::ostream &operator<<(std::ostream &stream, const Alias<From, Tag> &inst)
-{
-    return stream << inst.__value;
-}
+{ return stream << inst.__value; }
 } // namespace osrm
 
 namespace std
@@ -173,9 +156,7 @@ template <typename From, typename Tag> struct hash<osrm::Alias<From, Tag>>
     using argument_type = osrm::Alias<From, Tag>;
     using result_type = std::size_t;
     result_type operator()(argument_type const &s) const
-    {
-        return std::hash<From>()(static_cast<const From>(s));
-    }
+    { return std::hash<From>()(static_cast<const From>(s)); }
 };
 } // namespace std
 

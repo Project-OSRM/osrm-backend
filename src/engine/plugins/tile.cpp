@@ -315,14 +315,10 @@ class SpeedLayerFeatureBuilder : public vtzero::linestring_feature_builder
   public:
     SpeedLayerFeatureBuilder(SpeedLayer &layer, uint64_t id)
         : vtzero::linestring_feature_builder(layer), m_layer(layer)
-    {
-        set_id(id);
-    }
+    { set_id(id); }
 
     void set_speed(unsigned int value)
-    {
-        add_property(m_layer.key_speed, m_layer.uint_index(std::min(value, 127u)));
-    }
+    { add_property(m_layer.key_speed, m_layer.uint_index(std::min(value, 127u))); }
 
     void set_is_small(bool value) { add_property(m_layer.key_is_small, m_layer.bool_index(value)); }
 
@@ -335,9 +331,7 @@ class SpeedLayerFeatureBuilder : public vtzero::linestring_feature_builder
     void set_weight(double value) { add_property(m_layer.key_weight, m_layer.double_index(value)); }
 
     void set_duration(double value)
-    {
-        add_property(m_layer.key_duration, m_layer.double_index(value));
-    }
+    { add_property(m_layer.key_duration, m_layer.double_index(value)); }
 
     void set_name(const std::string_view value)
     {
@@ -349,9 +343,7 @@ class SpeedLayerFeatureBuilder : public vtzero::linestring_feature_builder
     void set_rate(double value) { add_property(m_layer.key_rate, m_layer.double_index(value)); }
 
     void set_is_startpoint(bool value)
-    {
-        add_property(m_layer.key_is_startpoint, m_layer.bool_index(value));
-    }
+    { add_property(m_layer.key_is_startpoint, m_layer.bool_index(value)); }
 
 }; // class SpeedLayerFeatureBuilder
 
@@ -390,19 +382,13 @@ class TurnsLayerFeatureBuilder : public vtzero::point_feature_builder
   public:
     TurnsLayerFeatureBuilder(TurnsLayer &layer, uint64_t id)
         : vtzero::point_feature_builder(layer), m_layer(layer)
-    {
-        set_id(id);
-    }
+    { set_id(id); }
 
     void set_bearing_in(int value)
-    {
-        add_property(m_layer.key_bearing_in, m_layer.int_index(value));
-    }
+    { add_property(m_layer.key_bearing_in, m_layer.int_index(value)); }
 
     void set_turn_angle(int value)
-    {
-        add_property(m_layer.key_turn_angle, m_layer.int_index(value));
-    }
+    { add_property(m_layer.key_turn_angle, m_layer.int_index(value)); }
 
     void set_cost(float value) { add_property(m_layer.key_cost, m_layer.float_index(value)); }
 

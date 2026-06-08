@@ -98,9 +98,7 @@ struct StorageConfig final : IOConfig
     StorageConfig(const std::filesystem::path &base,
                   const std::vector<storage::FeatureDataset> &disabled_feature_datasets_ = {})
         : StorageConfig(disabled_feature_datasets_)
-    {
-        IOConfig::UseDefaultOutputNames(base);
-    }
+    { IOConfig::UseDefaultOutputNames(base); }
 
     StorageConfig(const std::vector<storage::FeatureDataset> &disabled_feature_datasets_ = {})
         : IOConfig(

@@ -88,13 +88,9 @@ void test_table_three_coords_one_source_one_dest_matrix(bool use_json_only_api)
     }
 }
 BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_old_api)
-{
-    test_table_three_coords_one_source_one_dest_matrix(true);
-}
+{ test_table_three_coords_one_source_one_dest_matrix(true); }
 BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_new_api)
-{
-    test_table_three_coords_one_source_one_dest_matrix(false);
-}
+{ test_table_three_coords_one_source_one_dest_matrix(false); }
 
 void test_table_three_coords_one_source_one_dest_matrix_no_waypoints(bool use_json_only_api)
 {
@@ -145,13 +141,9 @@ void test_table_three_coords_one_source_one_dest_matrix_no_waypoints(bool use_js
     BOOST_CHECK(!json_result.values.contains("sources"));
 }
 BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_no_waypoints_old_api)
-{
-    test_table_three_coords_one_source_one_dest_matrix_no_waypoints(true);
-}
+{ test_table_three_coords_one_source_one_dest_matrix_no_waypoints(true); }
 BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_one_dest_matrix_no_waypoints_new_api)
-{
-    test_table_three_coords_one_source_one_dest_matrix_no_waypoints(false);
-}
+{ test_table_three_coords_one_source_one_dest_matrix_no_waypoints(false); }
 
 void test_table_three_coords_one_source_matrix(bool use_json_only_api)
 {
@@ -201,13 +193,9 @@ void test_table_three_coords_one_source_matrix(bool use_json_only_api)
     }
 }
 BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix_old_api)
-{
-    test_table_three_coords_one_source_matrix(true);
-}
+{ test_table_three_coords_one_source_matrix(true); }
 BOOST_AUTO_TEST_CASE(test_table_three_coords_one_source_matrix_new_api)
-{
-    test_table_three_coords_one_source_matrix(false);
-}
+{ test_table_three_coords_one_source_matrix(false); }
 
 void test_table_three_coordinates_matrix(bool use_json_only_api)
 {
@@ -252,13 +240,9 @@ void test_table_three_coordinates_matrix(bool use_json_only_api)
     }
 }
 BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix_old_api)
-{
-    test_table_three_coordinates_matrix(true);
-}
+{ test_table_three_coordinates_matrix(true); }
 BOOST_AUTO_TEST_CASE(test_table_three_coordinates_matrix_new_api)
-{
-    test_table_three_coordinates_matrix(false);
-}
+{ test_table_three_coordinates_matrix(false); }
 
 // See https://github.com/Project-OSRM/osrm-backend/pull/3992
 void test_table_no_segment_for_some_coordinates(bool use_json_only_api)
@@ -284,13 +268,9 @@ void test_table_no_segment_for_some_coordinates(bool use_json_only_api)
     BOOST_CHECK_EQUAL(message, "Could not find a matching segment for coordinate 0");
 }
 BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates_old_api)
-{
-    test_table_no_segment_for_some_coordinates(true);
-}
+{ test_table_no_segment_for_some_coordinates(true); }
 BOOST_AUTO_TEST_CASE(test_table_no_segment_for_some_coordinates_new_api)
-{
-    test_table_no_segment_for_some_coordinates(false);
-}
+{ test_table_no_segment_for_some_coordinates(false); }
 
 BOOST_AUTO_TEST_CASE(test_table_serialiaze_fb)
 {

@@ -64,9 +64,7 @@ std::size_t loadGraph(const std::string &path,
 struct FeatureWriter
 {
     FeatureWriter(std::ostream &out_) : out(out_)
-    {
-        out << "{\"type\":\"FeatureCollection\",\"features\":[";
-    }
+    { out << "{\"type\":\"FeatureCollection\",\"features\":["; }
 
     void AddLine(const util::Coordinate from,
                  const util::Coordinate to,

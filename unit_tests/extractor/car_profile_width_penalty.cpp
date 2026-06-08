@@ -59,9 +59,7 @@ process_way(std::initializer_list<std::pair<const char *, const char *>> tags)
 }
 
 double forward_rate_for_width(const char *width)
-{
-    return process_way({{"highway", "primary"}, {"width", width}}).forward_rate;
-}
+{ return process_way({{"highway", "primary"}, {"width", width}}).forward_rate; }
 
 } // namespace
 

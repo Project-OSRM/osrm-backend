@@ -71,9 +71,7 @@ class StatisticsHandler final : public IntersectionHandler
     }
 
     bool canProcess(const NodeID, const EdgeID, const Intersection &) const override final
-    {
-        return true;
-    }
+    { return true; }
 
     Intersection
     operator()(const NodeID, const EdgeID, Intersection intersection) const override final

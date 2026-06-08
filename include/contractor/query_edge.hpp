@@ -62,9 +62,7 @@ struct QueryEdge
     }
 
     bool operator<(const QueryEdge &rhs) const
-    {
-        return std::tie(source, target) < std::tie(rhs.source, rhs.target);
-    }
+    { return std::tie(source, target) < std::tie(rhs.source, rhs.target); }
 
     bool operator==(const QueryEdge &right) const
     {

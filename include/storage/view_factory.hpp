@@ -41,9 +41,7 @@ namespace osrm::storage
 
 template <typename T>
 util::vector_view<T> make_vector_view(const SharedDataIndex &index, const std::string &name)
-{
-    return util::vector_view<T>(index.GetBlockPtr<T>(name), index.GetBlockEntries(name));
-}
+{ return util::vector_view<T>(index.GetBlockPtr<T>(name), index.GetBlockEntries(name)); }
 
 template <>
 inline util::vector_view<bool> make_vector_view(const SharedDataIndex &index,
@@ -77,9 +75,7 @@ inline auto make_string_table_view(const SharedDataIndex &index, const std::stri
 }
 
 inline auto make_lane_data_view(const SharedDataIndex &index, const std::string &name)
-{
-    return make_vector_view<util::guidance::LaneTupleIdPair>(index, name + "/data");
-}
+{ return make_vector_view<util::guidance::LaneTupleIdPair>(index, name + "/data"); }
 
 inline auto make_turn_lane_description_views(const SharedDataIndex &index, const std::string &name)
 {
@@ -162,9 +158,7 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
 }
 
 inline auto make_coordinates_view(const SharedDataIndex &index, const std::string &name)
-{
-    return make_vector_view<util::Coordinate>(index, name);
-}
+{ return make_vector_view<util::Coordinate>(index, name); }
 
 inline auto make_osm_ids_view(const SharedDataIndex &index, const std::string &name)
 {
@@ -179,14 +173,10 @@ inline auto make_nbn_data_view(const SharedDataIndex &index, const std::string &
 }
 
 inline auto make_turn_weight_view(const SharedDataIndex &index, const std::string &name)
-{
-    return make_vector_view<TurnPenalty>(index, name + "/weight");
-}
+{ return make_vector_view<TurnPenalty>(index, name + "/weight"); }
 
 inline auto make_turn_duration_view(const SharedDataIndex &index, const std::string &name)
-{
-    return make_vector_view<TurnPenalty>(index, name + "/duration");
-}
+{ return make_vector_view<TurnPenalty>(index, name + "/duration"); }
 
 inline auto make_search_tree_view(const SharedDataIndex &index, const std::string &name)
 {
@@ -228,9 +218,7 @@ inline auto make_intersection_bearings_view(const SharedDataIndex &index, const 
 }
 
 inline auto make_entry_classes_view(const SharedDataIndex &index, const std::string &name)
-{
-    return make_vector_view<util::guidance::EntryClass>(index, name);
-}
+{ return make_vector_view<util::guidance::EntryClass>(index, name); }
 
 inline auto make_contracted_metric_view(const SharedDataIndex &index, const std::string &name)
 {
@@ -260,9 +248,7 @@ inline auto make_partition_view(const SharedDataIndex &index, const std::string 
 }
 
 inline auto make_timestamp_view(const SharedDataIndex &index, const std::string &name)
-{
-    return std::string_view(index.GetBlockPtr<char>(name), index.GetBlockEntries(name));
-}
+{ return std::string_view(index.GetBlockPtr<char>(name), index.GetBlockEntries(name)); }
 
 inline auto make_cell_storage_view(const SharedDataIndex &index, const std::string &name)
 {

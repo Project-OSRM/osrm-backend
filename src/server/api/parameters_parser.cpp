@@ -75,9 +75,7 @@ std::optional<engine::api::NearestParameters> parseParameters(std::string::itera
 template <>
 std::optional<engine::api::TripParameters> parseParameters(std::string::iterator &iter,
                                                            const std::string::iterator end)
-{
-    return detail::parseParameters<engine::api::TripParameters>(iter, end, trip_grammar::root_rule);
-}
+{ return detail::parseParameters<engine::api::TripParameters>(iter, end, trip_grammar::root_rule); }
 
 template <>
 std::optional<engine::api::MatchParameters> parseParameters(std::string::iterator &iter,

@@ -42,9 +42,7 @@ BOOST_AUTO_TEST_SUITE(tile)
 using variant_type = std::variant<std::string, float, double, int64_t, uint64_t, bool>;
 
 std::string to_string(const protozero::data_view &view)
-{
-    return std::string{view.data(), view.size()};
-}
+{ return std::string{view.data(), view.size()}; }
 
 void validate_feature_layer(vtzero::layer layer)
 {
@@ -329,13 +327,9 @@ void test_tile_turns_ch(osrm::EngineConfig::Algorithm algorithm, bool use_string
     test_tile_turns(osrm, use_string_only_api);
 }
 BOOST_AUTO_TEST_CASE(test_tile_turns_ch_old_api)
-{
-    test_tile_turns_ch(osrm::EngineConfig::Algorithm::CH, true);
-}
+{ test_tile_turns_ch(osrm::EngineConfig::Algorithm::CH, true); }
 BOOST_AUTO_TEST_CASE(test_tile_turns_ch_new_api)
-{
-    test_tile_turns_ch(osrm::EngineConfig::Algorithm::CH, false);
-}
+{ test_tile_turns_ch(osrm::EngineConfig::Algorithm::CH, false); }
 
 void test_tile_turns_mld(bool use_string_only_api)
 {
@@ -406,13 +400,9 @@ void test_tile_speeds_ch(osrm::EngineConfig::Algorithm algorithm, bool use_strin
     test_tile_speeds(osrm, use_string_only_api);
 }
 BOOST_AUTO_TEST_CASE(test_tile_speeds_ch_old_api)
-{
-    test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CH, true);
-}
+{ test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CH, true); }
 BOOST_AUTO_TEST_CASE(test_tile_speeds_ch_new_api)
-{
-    test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CH, false);
-}
+{ test_tile_speeds_ch(osrm::EngineConfig::Algorithm::CH, false); }
 
 void test_tile_speeds_mld(bool use_string_only_api)
 {
@@ -467,13 +457,9 @@ void test_tile_nodes_ch(osrm::EngineConfig::Algorithm algorithm, bool use_string
     test_tile_nodes(osrm, use_string_only_api);
 }
 BOOST_AUTO_TEST_CASE(test_tile_node_ch_old_api)
-{
-    test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CH, true);
-}
+{ test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CH, true); }
 BOOST_AUTO_TEST_CASE(test_tile_node_ch_new_api)
-{
-    test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CH, false);
-}
+{ test_tile_nodes_ch(osrm::EngineConfig::Algorithm::CH, false); }
 
 void test_tile_nodes_mld(bool use_string_only_api)
 {

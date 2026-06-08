@@ -17,8 +17,8 @@ namespace osrm::util
 template <typename T> class DistTableWrapper
 {
   public:
-    using Iterator = typename std::vector<T>::iterator;
-    using ConstIterator = typename std::vector<T>::const_iterator;
+    using Iterator = std::vector<T>::iterator;
+    using ConstIterator = std::vector<T>::const_iterator;
 
     DistTableWrapper(std::vector<T> table, std::size_t number_of_nodes)
         : table_(std::move(table)), number_of_nodes_(number_of_nodes)
@@ -65,9 +65,7 @@ template <typename T> class DistTableWrapper
     Iterator end() { return std::end(table_); }
 
     NodeID GetIndexOfMaxValue() const
-    {
-        return std::distance(table_.begin(), std::max_element(table_.begin(), table_.end()));
-    }
+    { return std::distance(table_.begin(), std::max_element(table_.begin(), table_.end())); }
 
     std::vector<T> GetTable() const { return table_; }
 

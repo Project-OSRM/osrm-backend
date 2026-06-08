@@ -130,13 +130,9 @@ void test_route_same_coordinates_fixture(bool use_json_only_api)
     CHECK_EQUAL_JSON(reference, json_result);
 }
 BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture_old_api)
-{
-    test_route_same_coordinates_fixture(true);
-}
+{ test_route_same_coordinates_fixture(true); }
 BOOST_AUTO_TEST_CASE(test_route_same_coordinates_fixture_new_api)
-{
-    test_route_same_coordinates_fixture(false);
-}
+{ test_route_same_coordinates_fixture(false); }
 
 void test_route_same_coordinates(bool use_json_only_api)
 {
@@ -343,13 +339,9 @@ void test_route_same_coordinates_no_waypoints(bool use_json_only_api)
     }
 }
 BOOST_AUTO_TEST_CASE(test_route_same_coordinates_no_waypoints_old_api)
-{
-    test_route_same_coordinates_no_waypoints(true);
-}
+{ test_route_same_coordinates_no_waypoints(true); }
 BOOST_AUTO_TEST_CASE(test_route_same_coordinates_no_waypoints_new_api)
-{
-    test_route_same_coordinates_no_waypoints(false);
-}
+{ test_route_same_coordinates_no_waypoints(false); }
 
 void test_route_response_for_locations_in_small_component(bool use_json_only_api)
 {
@@ -386,13 +378,9 @@ void test_route_response_for_locations_in_small_component(bool use_json_only_api
     }
 }
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component_old_api)
-{
-    test_route_response_for_locations_in_small_component(true);
-}
+{ test_route_response_for_locations_in_small_component(true); }
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_small_component_new_api)
-{
-    test_route_response_for_locations_in_small_component(false);
-}
+{ test_route_response_for_locations_in_small_component(false); }
 
 void test_route_response_for_locations_in_big_component(bool use_json_only_api)
 {
@@ -429,13 +417,9 @@ void test_route_response_for_locations_in_big_component(bool use_json_only_api)
     }
 }
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component_old_api)
-{
-    test_route_response_for_locations_in_big_component(true);
-}
+{ test_route_response_for_locations_in_big_component(true); }
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_in_big_component_new_api)
-{
-    test_route_response_for_locations_in_big_component(false);
-}
+{ test_route_response_for_locations_in_big_component(false); }
 
 void test_route_response_for_locations_across_components(bool use_json_only_api)
 {
@@ -474,13 +458,9 @@ void test_route_response_for_locations_across_components(bool use_json_only_api)
     }
 }
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components_old_api)
-{
-    test_route_response_for_locations_across_components(true);
-}
+{ test_route_response_for_locations_across_components(true); }
 BOOST_AUTO_TEST_CASE(test_route_response_for_locations_across_components_new_api)
-{
-    test_route_response_for_locations_across_components(false);
-}
+{ test_route_response_for_locations_across_components(false); }
 
 void test_route_user_disables_generating_hints(bool use_json_only_api)
 {
@@ -502,13 +482,9 @@ void test_route_user_disables_generating_hints(bool use_json_only_api)
         BOOST_CHECK_EQUAL(std::get<json::Object>(waypoint).values.count("hint"), 0);
 }
 BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints_old_api)
-{
-    test_route_user_disables_generating_hints(true);
-}
+{ test_route_user_disables_generating_hints(true); }
 BOOST_AUTO_TEST_CASE(test_route_user_disables_generating_hints_new_api)
-{
-    test_route_user_disables_generating_hints(false);
-}
+{ test_route_user_disables_generating_hints(false); }
 
 void speed_annotation_matches_duration_and_distance(bool use_json_only_api)
 {
@@ -553,13 +529,9 @@ void speed_annotation_matches_duration_and_distance(bool use_json_only_api)
     }
 }
 BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance_old_api)
-{
-    speed_annotation_matches_duration_and_distance(true);
-}
+{ speed_annotation_matches_duration_and_distance(true); }
 BOOST_AUTO_TEST_CASE(speed_annotation_matches_duration_and_distance_new_api)
-{
-    speed_annotation_matches_duration_and_distance(false);
-}
+{ speed_annotation_matches_duration_and_distance(false); }
 
 void test_manual_setting_of_annotations_property(bool use_json_only_api)
 {
@@ -592,13 +564,9 @@ void test_manual_setting_of_annotations_property(bool use_json_only_api)
     BOOST_CHECK_EQUAL(annotations.size(), 7);
 }
 BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property_old_api)
-{
-    test_manual_setting_of_annotations_property(true);
-}
+{ test_manual_setting_of_annotations_property(true); }
 BOOST_AUTO_TEST_CASE(test_manual_setting_of_annotations_property_new_api)
-{
-    test_manual_setting_of_annotations_property(false);
-}
+{ test_manual_setting_of_annotations_property(false); }
 
 BOOST_AUTO_TEST_CASE(test_route_serialize_fb)
 {
@@ -868,13 +836,9 @@ void test_route_json_overview_by_legs(bool use_json_only_api)
     }
 }
 BOOST_AUTO_TEST_CASE(test_route_json_overview_by_legs_old_api)
-{
-    test_route_json_overview_by_legs(true);
-}
+{ test_route_json_overview_by_legs(true); }
 BOOST_AUTO_TEST_CASE(test_route_json_overview_by_legs_new_api)
-{
-    test_route_json_overview_by_legs(false);
-}
+{ test_route_json_overview_by_legs(false); }
 
 BOOST_AUTO_TEST_CASE(test_route_json_overview_full_no_leg_geometry)
 {

@@ -97,13 +97,9 @@ ConnectedRoad &TurnHandler::Fork::getMiddle() const
     return *(begin + 1);
 }
 std::size_t TurnHandler::Fork::getRightIndex() const
-{
-    return std::distance(intersection_base, begin);
-}
+{ return std::distance(intersection_base, begin); }
 std::size_t TurnHandler::Fork::getLeftIndex() const
-{
-    return std::distance(intersection_base, end) - 1;
-}
+{ return std::distance(intersection_base, end) - 1; }
 
 TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
                          const extractor::EdgeBasedNodeDataContainer &node_data_container,
@@ -127,9 +123,7 @@ TurnHandler::TurnHandler(const util::NodeBasedDynamicGraph &node_based_graph,
 }
 
 bool TurnHandler::canProcess(const NodeID, const EdgeID, const Intersection &) const
-{
-    return true;
-}
+{ return true; }
 
 // Handles and processes possible turns
 // Input parameters describe an intersection as described in
@@ -225,12 +219,11 @@ bool TurnHandler::isObviousOfTwo(const EdgeID via_edge,
 
 bool TurnHandler::hasObvious(const EdgeID &via_edge, const Fork &fork) const
 {
-    auto obvious_road = std::adjacent_find(fork.begin,
-                                           fork.end,
-                                           [&, this](const auto &a, const auto &b) {
-                                               return this->isObviousOfTwo(via_edge, a, b) ||
-                                                      this->isObviousOfTwo(via_edge, b, a);
-                                           });
+    auto obvious_road = std::adjacent_find(
+        fork.begin,
+        fork.end,
+        [&, this](const auto &a, const auto &b)
+        { return this->isObviousOfTwo(via_edge, a, b) || this->isObviousOfTwo(via_edge, b, a); });
     // return whether an obvious road was found
     return obvious_road != fork.end;
 }

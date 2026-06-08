@@ -134,7 +134,7 @@ struct Comparator
 
     template <typename T1,
               typename T2,
-              typename = typename std::enable_if<!std::is_same<T1, T2>::value>::type>
+              typename = std::enable_if<!std::is_same<T1, T2>::value>::type>
     bool operator()(const T1 &, const T2 &)
     {
         reason = lhs_path + " and " + rhs_path + " have different types";
@@ -148,9 +148,7 @@ struct Comparator
 };
 
 inline bool compare(const Value &reference, const Value &result, std::string &reason)
-{
-    return std::visit(Comparator(reason, "reference", "result"), reference, result);
-}
+{ return std::visit(Comparator(reason, "reference", "result"), reference, result); }
 } // namespace osrm::util::json
 
 #endif

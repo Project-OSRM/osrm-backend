@@ -22,13 +22,9 @@ SuffixTable::SuffixTable(ScriptingEnvironment &scripting_environment)
 }
 
 bool SuffixTable::isSuffix(const std::string &possible_suffix) const
-{
-    return isSuffix(std::string_view{possible_suffix});
-}
+{ return isSuffix(std::string_view{possible_suffix}); }
 
 bool SuffixTable::isSuffix(std::string_view possible_suffix) const
-{
-    return suffix_set.contains(possible_suffix);
-}
+{ return suffix_set.contains(possible_suffix); }
 
 } // namespace osrm::extractor

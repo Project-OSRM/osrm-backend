@@ -161,15 +161,11 @@ template <typename Self> struct EnableIntersectionOps
 
     // Returns the right-most road at this intersection.
     const auto &getRightmostRoad() const
-    {
-        return self()->size() > 1 ? self()->operator[](1) : self()->getUTurnRoad();
-    }
+    { return self()->size() > 1 ? self()->operator[](1) : self()->getUTurnRoad(); }
 
     // Returns the left-most road at this intersection.
     const auto &getLeftmostRoad() const
-    {
-        return self()->size() > 1 ? self()->back() : self()->getUTurnRoad();
-    }
+    { return self()->size() > 1 ? self()->back() : self()->getUTurnRoad(); }
 
     // Can this be skipped over?
     auto isObstacle() const { return self()->size() == 2; }

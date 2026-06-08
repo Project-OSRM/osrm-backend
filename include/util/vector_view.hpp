@@ -73,9 +73,7 @@ template <typename DataT> class VectorViewIterator
     reference operator*() const { return *m_value; }
 
     friend difference_type operator-(const VectorViewIterator &a, const VectorViewIterator &b)
-    {
-        return a.m_value - b.m_value;
-    }
+    { return a.m_value - b.m_value; }
 
     friend VectorViewIterator operator+(VectorViewIterator it, difference_type n)
     {
@@ -216,14 +214,10 @@ template <> class vector_view<bool>
         operator bool() const { return (*m_ptr) & mask; }
 
         bool operator==(const reference &other) const
-        {
-            return other.m_ptr == m_ptr && other.mask == mask;
-        }
+        { return other.m_ptr == m_ptr && other.mask == mask; }
 
         friend std::ostream &operator<<(std::ostream &os, const reference &rhs)
-        {
-            return os << static_cast<bool>(rhs);
-        }
+        { return os << static_cast<bool>(rhs); }
 
         Word *m_ptr;
         const Word mask;
@@ -296,15 +290,14 @@ template <typename DataT> void swap(vector_view<DataT> &lhs, vector_view<DataT> 
 }
 
 template <typename DataT, storage::Ownership Ownership>
-using InternalOrExternalVector =
-    typename std::conditional<Ownership == storage::Ownership::External,
-                              std::vector<DataT>,
-                              std::vector<DataT>>::type;
+using InternalOrExternalVector = std::conditional<Ownership == storage::Ownership::External,
+                                                  std::vector<DataT>,
+                                                  std::vector<DataT>>::type;
 
 template <typename DataT, storage::Ownership Ownership>
-using ViewOrVector = typename std::conditional<Ownership == storage::Ownership::View,
-                                               vector_view<DataT>,
-                                               InternalOrExternalVector<DataT, Ownership>>::type;
+using ViewOrVector = std::conditional<Ownership == storage::Ownership::View,
+                                      vector_view<DataT>,
+                                      InternalOrExternalVector<DataT, Ownership>>::type;
 
 // We can use this for compile time assertions
 template <typename ValueT, typename VectorT>

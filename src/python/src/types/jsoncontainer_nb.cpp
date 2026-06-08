@@ -29,7 +29,8 @@ void init_JSONContainer(nb::module_ &m)
              { return obj.values.count(key) > 0; })
         .def(
             "__iter__",
-            [m](const json::Object &obj) {
+            [m](const json::Object &obj)
+            {
                 return nb::make_key_iterator(
                     m, "key_iterator", obj.values.begin(), obj.values.end());
             },

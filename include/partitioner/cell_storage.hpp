@@ -103,9 +103,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
             explicit ColumnIterator(ValuePtrT begin, std::size_t row_length)
                 : current(begin), stride(row_length)
-            {
-                BOOST_ASSERT(begin != nullptr);
-            }
+            { BOOST_ASSERT(begin != nullptr); }
 
             ColumnIterator &operator+=(difference_type n)
             {
@@ -145,18 +143,12 @@ template <storage::Ownership Ownership> class CellStorageImpl
             reference operator*() const { return *current; }
 
             friend difference_type operator-(const ColumnIterator &a, const ColumnIterator &b)
-            {
-                return (a.current - b.current) / static_cast<std::intptr_t>(a.stride);
-            }
+            { return (a.current - b.current) / static_cast<std::intptr_t>(a.stride); }
 
             friend bool operator==(const ColumnIterator &a, const ColumnIterator &b)
-            {
-                return a.current == b.current;
-            }
+            { return a.current == b.current; }
             friend bool operator!=(const ColumnIterator &a, const ColumnIterator &b)
-            {
-                return !(a == b);
-            }
+            { return !(a == b); }
 
           private:
             ValuePtrT current;
@@ -204,9 +196,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
         auto GetOutDistance(NodeID node) const { return GetOutRange(distances, node); }
 
         auto GetSourceNodes() const
-        {
-            return std::ranges::subrange(source_boundary, source_boundary + num_source_nodes);
-        }
+        { return std::ranges::subrange(source_boundary, source_boundary + num_source_nodes); }
 
         auto GetDestinationNodes() const
         {

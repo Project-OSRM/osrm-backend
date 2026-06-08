@@ -37,30 +37,22 @@ struct ProfileProperties
     double GetUturnPenalty() const { return u_turn_penalty / 10.; }
 
     void SetUturnPenalty(const double u_turn_penalty_)
-    {
-        u_turn_penalty = boost::numeric_cast<int>(u_turn_penalty_ * 10.);
-    }
+    { u_turn_penalty = boost::numeric_cast<int>(u_turn_penalty_ * 10.); }
 
     double GetTrafficSignalPenalty() const { return traffic_signal_penalty / 10.; }
 
     void SetTrafficSignalPenalty(const double traffic_signal_penalty_)
-    {
-        traffic_signal_penalty = boost::numeric_cast<int>(traffic_signal_penalty_ * 10.);
-    }
+    { traffic_signal_penalty = boost::numeric_cast<int>(traffic_signal_penalty_ * 10.); }
 
     double GetMaxSpeedForMapMatching() const { return max_speed_for_map_matching; }
 
     void SetMaxSpeedForMapMatching(const double max_speed_for_map_matching_)
-    {
-        max_speed_for_map_matching = max_speed_for_map_matching_;
-    }
+    { max_speed_for_map_matching = max_speed_for_map_matching_; }
 
     double GetMaxCollapseDistance() const { return max_collapse_distance; }
 
     void SetMaxCollapseDistance(const double max_collapse_distance_)
-    {
-        max_collapse_distance = max_collapse_distance_;
-    }
+    { max_collapse_distance = max_collapse_distance_; }
 
     void SetWeightName(const std::string &name)
     {
@@ -82,9 +74,7 @@ struct ProfileProperties
 
     // Mark this combination of classes as excludable
     void SetExcludableClasses(std::size_t index, ClassData classes)
-    {
-        excludable_classes[index] = classes;
-    }
+    { excludable_classes[index] = classes; }
 
     // Check if this classes are excludable
     std::optional<std::size_t> ClassesAreExcludable(ClassData classes) const
@@ -118,9 +108,7 @@ struct ProfileProperties
     double GetWeightMultiplier() const { return std::pow(10., weight_precision); }
 
     double GetMaxTurnWeight() const
-    {
-        return from_alias<double>(MAXIMAL_TURN_PENALTY) / GetWeightMultiplier();
-    }
+    { return from_alias<double>(MAXIMAL_TURN_PENALTY) / GetWeightMultiplier(); }
 
     //! penalty to cross a traffic light in deci-seconds
     std::int32_t traffic_signal_penalty;

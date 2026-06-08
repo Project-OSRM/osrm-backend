@@ -41,10 +41,9 @@ BOOST_AUTO_TEST_CASE(rw_short)
 BOOST_AUTO_TEST_CASE(rw_bool)
 {
     std::size_t num_elements = 1000;
-    auto data = std::make_unique<typename vector_view<bool>::Word[]>(
-        (num_elements + sizeof(typename vector_view<bool>::Word) - 1) /
-        sizeof(typename vector_view<bool>::Word));
-    util::vector_view<bool> view(reinterpret_cast<typename vector_view<bool>::Word *>(data.get()),
+    auto data = std::make_unique<vector_view<bool>::Word[]>(
+        (num_elements + sizeof(vector_view<bool>::Word) - 1) / sizeof(vector_view<bool>::Word));
+    util::vector_view<bool> view(reinterpret_cast<vector_view<bool>::Word *>(data.get()),
                                  num_elements);
     std::vector<bool> reference;
 

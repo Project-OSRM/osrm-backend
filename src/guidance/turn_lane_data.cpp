@@ -152,8 +152,6 @@ LaneDataVector::const_iterator findTag(const TurnLaneType::Mask tag, const LaneD
 }
 
 bool hasTag(const TurnLaneType::Mask tag, const LaneDataVector &data)
-{
-    return findTag(tag, data) != data.cend();
-}
+{ return findTag(tag, data) != data.cend(); }
 
 } // namespace osrm::guidance::lanes

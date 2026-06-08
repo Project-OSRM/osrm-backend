@@ -71,9 +71,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
         const std::string &metric_name,
         std::size_t exclude_index)
         : allocator(std::move(allocator_))
-    {
-        InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index);
-    }
+    { InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index); }
 
     void InitializeInternalPointers(const storage::SharedDataIndex &index,
                                     const std::string &metric_name,
@@ -89,37 +87,25 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
     unsigned GetNumberOfEdges() const override final { return m_query_graph.GetNumberOfEdges(); }
 
     unsigned GetOutDegree(const NodeID edge_based_node_id) const override final
-    {
-        return m_query_graph.GetOutDegree(edge_based_node_id);
-    }
+    { return m_query_graph.GetOutDegree(edge_based_node_id); }
 
     NodeID GetTarget(const EdgeID edge_based_edge_id) const override final
-    {
-        return m_query_graph.GetTarget(edge_based_edge_id);
-    }
+    { return m_query_graph.GetTarget(edge_based_edge_id); }
 
     const EdgeData &GetEdgeData(const EdgeID edge_based_edge_id) const override final
-    {
-        return m_query_graph.GetEdgeData(edge_based_edge_id);
-    }
+    { return m_query_graph.GetEdgeData(edge_based_edge_id); }
 
     EdgeRange GetAdjacentEdgeRange(const NodeID edge_based_node_id) const override final
-    {
-        return m_query_graph.GetAdjacentEdgeRange(edge_based_node_id);
-    }
+    { return m_query_graph.GetAdjacentEdgeRange(edge_based_node_id); }
 
     // searches for a specific edge
     EdgeID FindEdge(const NodeID edge_based_node_from,
                     const NodeID edge_based_node_to) const override final
-    {
-        return m_query_graph.FindEdge(edge_based_node_from, edge_based_node_to);
-    }
+    { return m_query_graph.FindEdge(edge_based_node_from, edge_based_node_to); }
 
     EdgeID FindEdgeInEitherDirection(const NodeID edge_based_node_from,
                                      const NodeID edge_based_node_to) const override final
-    {
-        return m_query_graph.FindEdgeInEitherDirection(edge_based_node_from, edge_based_node_to);
-    }
+    { return m_query_graph.FindEdgeInEitherDirection(edge_based_node_from, edge_based_node_to); }
 
     EdgeID FindEdgeIndicateIfReverse(const NodeID edge_based_node_from,
                                      const NodeID edge_based_node_to,
@@ -133,9 +119,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
     FindSmallestEdge(const NodeID edge_based_node_from,
                      const NodeID edge_based_node_to,
                      const std::function<bool(const EdgeData &)> &filter) const override final
-    {
-        return m_query_graph.FindSmallestEdge(edge_based_node_from, edge_based_node_to, filter);
-    }
+    { return m_query_graph.FindSmallestEdge(edge_based_node_from, edge_based_node_to, filter); }
 };
 
 /**
@@ -274,68 +258,46 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                                            const std::string &metric_name,
                                            const std::size_t exclude_index)
         : allocator(std::move(allocator_))
-    {
-        InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index);
-    }
+    { InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index); }
 
     // node and edge information access
     util::Coordinate GetCoordinateOfNode(const NodeID node_based_node_id) const override final
-    {
-        return m_coordinate_list[node_based_node_id];
-    }
+    { return m_coordinate_list[node_based_node_id]; }
 
     OSMNodeID GetOSMNodeIDOfNode(const NodeID node_based_node_id) const override final
-    {
-        return m_osmnodeid_list[node_based_node_id];
-    }
+    { return m_osmnodeid_list[node_based_node_id]; }
 
     NodeForwardRange GetUncompressedForwardGeometry(const PackedGeometryID id) const override final
-    {
-        return segment_data.GetForwardGeometry(id);
-    }
+    { return segment_data.GetForwardGeometry(id); }
 
     NodeReverseRange GetUncompressedReverseGeometry(const PackedGeometryID id) const override final
-    {
-        return segment_data.GetReverseGeometry(id);
-    }
+    { return segment_data.GetReverseGeometry(id); }
 
     DurationForwardRange
     GetUncompressedForwardDurations(const PackedGeometryID id) const override final
-    {
-        return segment_data.GetForwardDurations(id);
-    }
+    { return segment_data.GetForwardDurations(id); }
 
     DurationReverseRange
     GetUncompressedReverseDurations(const PackedGeometryID id) const override final
-    {
-        return segment_data.GetReverseDurations(id);
-    }
+    { return segment_data.GetReverseDurations(id); }
 
     WeightForwardRange GetUncompressedForwardWeights(const PackedGeometryID id) const override final
-    {
-        return segment_data.GetForwardWeights(id);
-    }
+    { return segment_data.GetForwardWeights(id); }
 
     WeightReverseRange GetUncompressedReverseWeights(const PackedGeometryID id) const override final
-    {
-        return segment_data.GetReverseWeights(id);
-    }
+    { return segment_data.GetReverseWeights(id); }
 
     // Returns the data source ids that were used to supply the edge
     // weights.
     DatasourceForwardRange
     GetUncompressedForwardDatasources(const PackedGeometryID id) const override final
-    {
-        return segment_data.GetForwardDatasources(id);
-    }
+    { return segment_data.GetForwardDatasources(id); }
 
     // Returns the data source ids that were used to supply the edge
     // weights.
     DatasourceReverseRange
     GetUncompressedReverseDatasources(const PackedGeometryID id) const override final
-    {
-        return segment_data.GetReverseDatasources(id);
-    }
+    { return segment_data.GetReverseDatasources(id); }
 
     TurnPenalty GetWeightPenaltyForEdgeID(const EdgeID edge_based_edge_id) const override final
     {
@@ -407,34 +369,22 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::uint32_t GetCheckSum() const override final { return m_check_sum; }
 
     std::string GetTimestamp() const override final
-    {
-        return std::string(m_data_timestamp.begin(), m_data_timestamp.end());
-    }
+    { return std::string(m_data_timestamp.begin(), m_data_timestamp.end()); }
 
     GeometryID GetGeometryIndex(const NodeID edge_based_node_id) const override final
-    {
-        return edge_based_node_data.GetGeometryID(edge_based_node_id);
-    }
+    { return edge_based_node_data.GetGeometryID(edge_based_node_id); }
 
     ComponentID GetComponentID(const NodeID edge_based_node_id) const override final
-    {
-        return edge_based_node_data.GetComponentID(edge_based_node_id);
-    }
+    { return edge_based_node_data.GetComponentID(edge_based_node_id); }
 
     extractor::TravelMode GetTravelMode(const NodeID edge_based_node_id) const override final
-    {
-        return edge_based_node_data.GetTravelMode(edge_based_node_id);
-    }
+    { return edge_based_node_data.GetTravelMode(edge_based_node_id); }
 
     extractor::ClassData GetClassData(const NodeID edge_based_node_id) const override final
-    {
-        return edge_based_node_data.GetClassData(edge_based_node_id);
-    }
+    { return edge_based_node_data.GetClassData(edge_based_node_id); }
 
     bool ExcludeNode(const NodeID edge_based_node_id) const override final
-    {
-        return (edge_based_node_data.GetClassData(edge_based_node_id) & exclude_mask) > 0;
-    }
+    { return (edge_based_node_data.GetClassData(edge_based_node_id) & exclude_mask) > 0; }
 
     std::vector<std::string> GetClasses(const extractor::ClassData class_data) const override final
     {
@@ -450,9 +400,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     }
 
     StringViewID GetNameIndex(const NodeID edge_based_node_id) const override final
-    {
-        return edge_based_node_data.GetNameID(edge_based_node_id);
-    }
+    { return edge_based_node_data.GetNameID(edge_based_node_id); }
 
     std::string_view GetNameForID(const StringViewID id) const override final
     {
@@ -485,36 +433,24 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     }
 
     std::string_view GetDatasourceName(const DatasourceID id) const override final
-    {
-        return m_datasources->GetSourceName(id);
-    }
+    { return m_datasources->GetSourceName(id); }
 
     bool GetContinueStraightDefault() const override final
-    {
-        return m_profile_properties->continue_straight_at_waypoint;
-    }
+    { return m_profile_properties->continue_straight_at_waypoint; }
 
     double GetMapMatchingMaxSpeed() const override final
-    {
-        return m_profile_properties->max_speed_for_map_matching;
-    }
+    { return m_profile_properties->max_speed_for_map_matching; }
 
     double GetMaxCollapseDistance() const override final
-    {
-        return m_profile_properties->GetMaxCollapseDistance();
-    }
+    { return m_profile_properties->GetMaxCollapseDistance(); }
 
     const char *GetWeightName() const override final { return m_profile_properties->weight_name; }
 
     unsigned GetWeightPrecision() const override final
-    {
-        return m_profile_properties->weight_precision;
-    }
+    { return m_profile_properties->weight_precision; }
 
     double GetWeightMultiplier() const override final
-    {
-        return m_profile_properties->GetWeightMultiplier();
-    }
+    { return m_profile_properties->GetWeightMultiplier(); }
 
     util::guidance::BearingClass
     GetBearingClass(const NodeID node_based_node_id) const override final
@@ -583,9 +519,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     }
 
     bool IsSegregated(const NodeID edge_based_node_id) const override final
-    {
-        return edge_based_node_data.IsSegregated(edge_based_node_id);
-    }
+    { return edge_based_node_data.IsSegregated(edge_based_node_id); }
 
     std::vector<extractor::ManeuverOverride>
     GetOverridesThatStartAt(const NodeID edge_based_node_id) const override final
@@ -596,13 +530,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         struct Comp
         {
             bool operator()(const extractor::StorageManeuverOverride &s, NodeID i) const
-            {
-                return s.start_node < i;
-            }
+            { return s.start_node < i; }
             bool operator()(NodeID i, const extractor::StorageManeuverOverride &s) const
-            {
-                return i < s.start_node;
-            }
+            { return i < s.start_node; }
         };
 
         auto found_range = std::equal_range(
@@ -676,14 +606,10 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
         const std::string &metric_name,
         const std::size_t exclude_index)
         : allocator(std::move(allocator_))
-    {
-        InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index);
-    }
+    { InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index); }
 
     const partitioner::MultiLevelPartitionView &GetMultiLevelPartition() const override
-    {
-        return mld_partition;
-    }
+    { return mld_partition; }
 
     const partitioner::CellStorageView &GetCellStorage() const override { return mld_cell_storage; }
 
@@ -697,62 +623,40 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
     unsigned GetNumberOfEdges() const override final { return query_graph.GetNumberOfEdges(); }
 
     unsigned GetOutDegree(const NodeID edge_based_node_id) const override final
-    {
-        return query_graph.GetOutDegree(edge_based_node_id);
-    }
+    { return query_graph.GetOutDegree(edge_based_node_id); }
 
     EdgeRange GetAdjacentEdgeRange(const NodeID edge_based_node_id) const override final
-    {
-        return query_graph.GetAdjacentEdgeRange(edge_based_node_id);
-    }
+    { return query_graph.GetAdjacentEdgeRange(edge_based_node_id); }
 
     EdgeWeight GetNodeWeight(const NodeID edge_based_node_id) const override final
-    {
-        return query_graph.GetNodeWeight(edge_based_node_id);
-    }
+    { return query_graph.GetNodeWeight(edge_based_node_id); }
 
     EdgeDuration GetNodeDuration(const NodeID edge_based_node_id) const override final
-    {
-        return query_graph.GetNodeDuration(edge_based_node_id);
-    }
+    { return query_graph.GetNodeDuration(edge_based_node_id); }
 
     EdgeDistance GetNodeDistance(const NodeID edge_based_node_id) const override final
-    {
-        return query_graph.GetNodeDistance(edge_based_node_id);
-    }
+    { return query_graph.GetNodeDistance(edge_based_node_id); }
 
     bool IsForwardEdge(const NodeID edge_based_node_id) const override final
-    {
-        return query_graph.IsForwardEdge(edge_based_node_id);
-    }
+    { return query_graph.IsForwardEdge(edge_based_node_id); }
 
     bool IsBackwardEdge(const NodeID edge_based_node_id) const override final
-    {
-        return query_graph.IsBackwardEdge(edge_based_node_id);
-    }
+    { return query_graph.IsBackwardEdge(edge_based_node_id); }
 
     NodeID GetTarget(const EdgeID edge_based_edge_id) const override final
-    {
-        return query_graph.GetTarget(edge_based_edge_id);
-    }
+    { return query_graph.GetTarget(edge_based_edge_id); }
 
     const EdgeData &GetEdgeData(const EdgeID edge_based_edge_id) const override final
-    {
-        return query_graph.GetEdgeData(edge_based_edge_id);
-    }
+    { return query_graph.GetEdgeData(edge_based_edge_id); }
 
     EdgeRange GetBorderEdgeRange(const LevelID level,
                                  const NodeID edge_based_node_id) const override final
-    {
-        return query_graph.GetBorderEdgeRange(level, edge_based_node_id);
-    }
+    { return query_graph.GetBorderEdgeRange(level, edge_based_node_id); }
 
     // searches for a specific edge
     EdgeID FindEdge(const NodeID edge_based_node_from,
                     const NodeID edge_based_node_to) const override final
-    {
-        return query_graph.FindEdge(edge_based_node_from, edge_based_node_to);
-    }
+    { return query_graph.FindEdge(edge_based_node_from, edge_based_node_to); }
 };
 
 template <>

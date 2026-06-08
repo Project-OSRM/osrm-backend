@@ -47,27 +47,19 @@ template <typename T, char... Fmt> struct no_trailing_dot_policy : x3::real_poli
     }
 
     template <typename Iterator> static bool parse_exp(Iterator &, const Iterator &)
-    {
-        return false;
-    }
+    { return false; }
 
     template <typename Iterator, typename Attribute>
     static bool parse_exp_n(Iterator &, const Iterator &, Attribute &)
-    {
-        return false;
-    }
+    { return false; }
 
     template <typename Iterator, typename Attribute>
     static bool parse_nan(Iterator &, const Iterator &, Attribute &)
-    {
-        return false;
-    }
+    { return false; }
 
     template <typename Iterator, typename Attribute>
     static bool parse_inf(Iterator &, const Iterator &, Attribute &)
-    {
-        return false;
-    }
+    { return false; }
 };
 
 namespace base_grammar
@@ -167,59 +159,58 @@ inline const auto query_rule = x3::rule<struct base_query_tag>{"base_query"} =
 inline const auto format_rule = x3::rule<struct base_format_tag>{"base_format"} =
     -format_type[([](auto &ctx) { x3::get<params_tag>(ctx).get().format = x3::_attr(ctx); })];
 
-inline const auto radiuses_rule = x3::lit("radiuses=") >
-                                  (-radius_value)[(
-                                      [](auto &ctx)
-                                      {
-                                          auto &params = x3::get<params_tag>(ctx).get();
-                                          auto &opt = x3::_attr(ctx);
-                                          params.radiuses.push_back(opt ? std::make_optional(*opt)
-                                                                        : std::nullopt);
-                                      })] %
-                                      ';';
+inline const auto radiuses_rule =
+    x3::lit("radiuses=") >
+    (-radius_value)[(
+        [](auto &ctx)
+        {
+            auto &params = x3::get<params_tag>(ctx).get();
+            auto &opt = x3::_attr(ctx);
+            params.radiuses.push_back(opt ? std::make_optional(*opt) : std::nullopt);
+        })] %
+        ';';
 
-inline const auto
-    hints_rule = x3::lit("hints=") >
-                 (*hint_string)[(
-                     [](auto &ctx)
-                     {
-                         auto &params = x3::get<params_tag>(ctx).get();
-                         auto &hint_strings = x3::_attr(ctx);
-                         if (!hint_strings.empty())
-                         {
-                             std::vector<engine::SegmentHint> location_hints(hint_strings.size());
-                             std::transform(hint_strings.begin(),
-                                            hint_strings.end(),
-                                            location_hints.begin(),
-                                            [](const auto &hs)
-                                            { return engine::SegmentHint::FromBase64(hs); });
-                             params.hints.push_back(engine::Hint{std::move(location_hints)});
-                         }
-                         else
-                         {
-                             params.hints.emplace_back(std::nullopt);
-                         }
-                     })] %
-                     ';';
+inline const auto hints_rule =
+    x3::lit("hints=") >
+    (*hint_string)[(
+        [](auto &ctx)
+        {
+            auto &params = x3::get<params_tag>(ctx).get();
+            auto &hint_strings = x3::_attr(ctx);
+            if (!hint_strings.empty())
+            {
+                std::vector<engine::SegmentHint> location_hints(hint_strings.size());
+                std::transform(hint_strings.begin(),
+                               hint_strings.end(),
+                               location_hints.begin(),
+                               [](const auto &hs) { return engine::SegmentHint::FromBase64(hs); });
+                params.hints.push_back(engine::Hint{std::move(location_hints)});
+            }
+            else
+            {
+                params.hints.emplace_back(std::nullopt);
+            }
+        })] %
+        ';';
 
-inline const auto bearings_rule = x3::lit("bearings=") >
-                                  (-(x3::short_ > ',' > x3::short_))[(
-                                      [](auto &ctx)
-                                      {
-                                          auto &params = x3::get<params_tag>(ctx).get();
-                                          auto &opt = x3::_attr(ctx);
-                                          if (opt)
-                                          {
-                                              params.bearings.push_back(
-                                                  engine::Bearing{boost::fusion::at_c<0>(*opt),
-                                                                  boost::fusion::at_c<1>(*opt)});
-                                          }
-                                          else
-                                          {
-                                              params.bearings.push_back(std::nullopt);
-                                          }
-                                      })] %
-                                      ';';
+inline const auto bearings_rule =
+    x3::lit("bearings=") >
+    (-(x3::short_ > ',' > x3::short_))[(
+        [](auto &ctx)
+        {
+            auto &params = x3::get<params_tag>(ctx).get();
+            auto &opt = x3::_attr(ctx);
+            if (opt)
+            {
+                params.bearings.push_back(
+                    engine::Bearing{boost::fusion::at_c<0>(*opt), boost::fusion::at_c<1>(*opt)});
+            }
+            else
+            {
+                params.bearings.push_back(std::nullopt);
+            }
+        })] %
+        ';';
 
 inline const auto generate_hints_rule =
     x3::lit("generate_hints=") >
@@ -229,16 +220,16 @@ inline const auto skip_waypoints_rule =
     x3::lit("skip_waypoints=") >
     x3::bool_[([](auto &ctx) { x3::get<params_tag>(ctx).get().skip_waypoints = x3::_attr(ctx); })];
 
-inline const auto approach_rule = x3::lit("approaches=") >
-                                  (-approach_type)[(
-                                      [](auto &ctx)
-                                      {
-                                          auto &params = x3::get<params_tag>(ctx).get();
-                                          auto &opt = x3::_attr(ctx);
-                                          params.approaches.push_back(opt ? std::make_optional(*opt)
-                                                                          : std::nullopt);
-                                      })] %
-                                      ';';
+inline const auto approach_rule =
+    x3::lit("approaches=") >
+    (-approach_type)[(
+        [](auto &ctx)
+        {
+            auto &params = x3::get<params_tag>(ctx).get();
+            auto &opt = x3::_attr(ctx);
+            params.approaches.push_back(opt ? std::make_optional(*opt) : std::nullopt);
+        })] %
+        ';';
 
 inline const auto snapping_rule =
     x3::lit("snapping=") >

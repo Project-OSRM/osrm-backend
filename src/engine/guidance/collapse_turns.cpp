@@ -148,9 +148,7 @@ void NoModificationStrategy::operator()(RouteStep &, const RouteStep &) const
 // transfer turn type from a different turn
 void TransferTurnTypeStrategy::operator()(RouteStep &step_at_turn_location,
                                           const RouteStep &transfer_from_step) const
-{
-    step_at_turn_location.maneuver = transfer_from_step.maneuver;
-}
+{ step_at_turn_location.maneuver = transfer_from_step.maneuver; }
 
 AdjustToCombinedTurnAngleStrategy::AdjustToCombinedTurnAngleStrategy(
     const double max_collapse_distance_)
@@ -412,9 +410,7 @@ SetFixedInstructionStrategy::SetFixedInstructionStrategy(const TurnInstruction i
 
 void SetFixedInstructionStrategy::operator()(RouteStep &step_at_turn_location,
                                              const RouteStep &) const
-{
-    step_at_turn_location.maneuver.instruction = instruction;
-}
+{ step_at_turn_location.maneuver.instruction = instruction; }
 
 void TransferSignageStrategy::operator()(RouteStep &step_at_turn_location,
                                          const RouteStep &transfer_from_step) const

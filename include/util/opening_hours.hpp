@@ -123,9 +123,7 @@ struct OpeningHours
 
         bool IsValid() const { return year > 0 || month != 0 || day != 0; }
         bool operator==(const Monthday &rhs) const
-        {
-            return std::tie(year, month, day) == std::tie(rhs.year, rhs.month, rhs.day);
-        }
+        { return std::tie(year, month, day) == std::tie(rhs.year, rhs.month, rhs.day); }
     };
 
     struct MonthdayRange

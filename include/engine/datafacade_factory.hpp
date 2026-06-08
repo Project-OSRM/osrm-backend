@@ -29,14 +29,10 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
     template <typename AllocatorT>
     DataFacadeFactory(const std::shared_ptr<AllocatorT> &allocator)
         : DataFacadeFactory(std::move(allocator), has_exclude_flags)
-    {
-        BOOST_ASSERT_MSG(facades.size() >= 1, "At least one datafacade is needed");
-    }
+    { BOOST_ASSERT_MSG(facades.size() >= 1, "At least one datafacade is needed"); }
 
     template <typename ParameterT> std::shared_ptr<const Facade> Get(const ParameterT &params) const
-    {
-        return Get(params, has_exclude_flags);
-    }
+    { return Get(params, has_exclude_flags); }
 
   private:
     // Algorithm with exclude flags
@@ -92,9 +88,7 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
     }
 
     std::shared_ptr<const Facade> Get(const api::TileParameters &, std::false_type) const
-    {
-        return facades[0];
-    }
+    { return facades[0]; }
 
     // Default for non-exclude flags: return only facade
     std::shared_ptr<const Facade> Get(const api::BaseParameters &params, std::false_type) const
@@ -109,9 +103,7 @@ template <template <typename A> class FacadeT, typename AlgorithmT> class DataFa
 
     // TileParameters don't drive from BaseParameters and generally don't have use for exclude flags
     std::shared_ptr<const Facade> Get(const api::TileParameters &, std::true_type) const
-    {
-        return facades[0];
-    }
+    { return facades[0]; }
 
     // Selection logic for finding the corresponding datafacade for the given parameters
     std::shared_ptr<const Facade> Get(const api::BaseParameters &params, std::true_type) const

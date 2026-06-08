@@ -19,9 +19,7 @@ template <typename RestrictionFilter> class NodeRestrictionMap
 
     // Find all restrictions applicable to (from,via,*) turns
     auto Restrictions(NodeID from, NodeID via) const
-    {
-        return getRange(from, via) | std::views::filter(index_filter);
-    };
+    { return getRange(from, via) | std::views::filter(index_filter); };
 
     // Find all restrictions applicable to (from,via,to) turns
     auto Restrictions(NodeID from, NodeID via, NodeID to) const
@@ -49,17 +47,13 @@ template <typename RestrictionFilter> class NodeRestrictionMap
 struct ConditionalOnly
 {
     bool operator()(const TurnRestriction *restriction) const
-    {
-        return !restriction->IsUnconditional();
-    };
+    { return !restriction->IsUnconditional(); };
 };
 
 struct UnconditionalOnly
 {
     bool operator()(const TurnRestriction *restriction) const
-    {
-        return restriction->IsUnconditional();
-    };
+    { return restriction->IsUnconditional(); };
 };
 
 using RestrictionMap = NodeRestrictionMap<UnconditionalOnly>;

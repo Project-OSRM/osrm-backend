@@ -31,18 +31,14 @@ struct CmpEdgeByOSMStartID
 {
     using value_type = oe::InternalExtractorEdge;
     bool operator()(const value_type &lhs, const value_type &rhs) const
-    {
-        return lhs.result.osm_source_id < rhs.result.osm_source_id;
-    }
+    { return lhs.result.osm_source_id < rhs.result.osm_source_id; }
 };
 
 struct CmpEdgeByOSMTargetID
 {
     using value_type = oe::InternalExtractorEdge;
     bool operator()(const value_type &lhs, const value_type &rhs) const
-    {
-        return lhs.result.osm_target_id < rhs.result.osm_target_id;
-    }
+    { return lhs.result.osm_target_id < rhs.result.osm_target_id; }
 };
 
 struct CmpEdgeByInternalSourceTargetAndName

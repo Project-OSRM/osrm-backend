@@ -19,14 +19,10 @@ namespace
 {
 
 inline bool isMotorwayClass(EdgeID eid, const util::NodeBasedDynamicGraph &node_based_graph)
-{
-    return node_based_graph.GetEdgeData(eid).flags.road_classification.IsMotorwayClass();
-}
+{ return node_based_graph.GetEdgeData(eid).flags.road_classification.IsMotorwayClass(); }
 inline extractor::RoadClassification roadClass(const ConnectedRoad &road,
                                                const util::NodeBasedDynamicGraph &graph)
-{
-    return graph.GetEdgeData(road.eid).flags.road_classification;
-}
+{ return graph.GetEdgeData(road.eid).flags.road_classification; }
 
 inline bool isRampClass(EdgeID eid,
                         const util::NodeBasedDynamicGraph &node_based_graph,

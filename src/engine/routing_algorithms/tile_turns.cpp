@@ -254,9 +254,7 @@ std::vector<TurnData> getTileTurns(const DataFacade<mld::Algorithm> &facade,
         const DataFacade<mld::Algorithm> &facade;
 
         EdgeID operator()(const NodeID approach_node, const NodeID exit_node) const
-        {
-            return facade.FindEdge(approach_node, exit_node);
-        }
+        { return facade.FindEdge(approach_node, exit_node); }
     };
 
     EdgeFinderMLD edge_finder(facade);

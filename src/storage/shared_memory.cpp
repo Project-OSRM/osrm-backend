@@ -24,9 +24,7 @@ struct OSRMLockFile
     }
     const std::filesystem::path to_path() { return lock_file; }
     operator const std::filesystem::path::value_type *() const noexcept
-    {
-        return lock_file.c_str();
-    }
+    { return lock_file.c_str(); }
 
   private:
     std::filesystem::path lock_file;

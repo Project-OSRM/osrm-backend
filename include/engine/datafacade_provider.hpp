@@ -28,7 +28,7 @@ template <typename AlgorithmT, template <typename A> class FacadeT>
 class ExternalProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
 {
   public:
-    using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
+    using Facade = DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
     ExternalProvider(const storage::StorageConfig &config)
         : facade_factory(std::make_shared<datafacade::MMapMemoryAllocator>(config))
@@ -36,13 +36,9 @@ class ExternalProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
     }
 
     std::shared_ptr<const Facade> Get(const api::TileParameters &params) const override final
-    {
-        return facade_factory.Get(params);
-    }
+    { return facade_factory.Get(params); }
     std::shared_ptr<const Facade> Get(const api::BaseParameters &params) const override final
-    {
-        return facade_factory.Get(params);
-    }
+    { return facade_factory.Get(params); }
 
   private:
     DataFacadeFactory<FacadeT, AlgorithmT> facade_factory;
@@ -52,7 +48,7 @@ template <typename AlgorithmT, template <typename A> class FacadeT>
 class ImmutableProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
 {
   public:
-    using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
+    using Facade = DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
     ImmutableProvider(const storage::StorageConfig &config)
         : facade_factory(std::make_shared<datafacade::ProcessMemoryAllocator>(config))
@@ -60,13 +56,9 @@ class ImmutableProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
     }
 
     std::shared_ptr<const Facade> Get(const api::TileParameters &params) const override final
-    {
-        return facade_factory.Get(params);
-    }
+    { return facade_factory.Get(params); }
     std::shared_ptr<const Facade> Get(const api::BaseParameters &params) const override final
-    {
-        return facade_factory.Get(params);
-    }
+    { return facade_factory.Get(params); }
 
   private:
     DataFacadeFactory<FacadeT, AlgorithmT> facade_factory;
@@ -78,18 +70,14 @@ class WatchingProvider : public DataFacadeProvider<AlgorithmT, FacadeT>
     DataWatchdog<AlgorithmT, FacadeT> watchdog;
 
   public:
-    using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
+    using Facade = DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
     WatchingProvider(const std::string &dataset_name) : watchdog(dataset_name) {}
 
     std::shared_ptr<const Facade> Get(const api::TileParameters &params) const override final
-    {
-        return watchdog.Get(params);
-    }
+    { return watchdog.Get(params); }
     std::shared_ptr<const Facade> Get(const api::BaseParameters &params) const override final
-    {
-        return watchdog.Get(params);
-    }
+    { return watchdog.Get(params); }
 };
 } // namespace detail
 

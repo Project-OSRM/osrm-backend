@@ -30,9 +30,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
 inline auto contractGraph(ContractorGraph &graph,
                           std::vector<EdgeWeight> node_weights,
                           double core_factor = 1.0)
-{
-    return contractGraph(graph, {}, {}, std::move(node_weights), core_factor);
-}
+{ return contractGraph(graph, {}, {}, std::move(node_weights), core_factor); }
 
 // Overload no contracted nodes
 inline auto contractGraph(ContractorGraph &graph,
