@@ -135,7 +135,7 @@ sudo cmake --install build
 ```
 
 The first configure will build every dependency (boost, tbb, expat, bzip2,
-lua, fmt, libosmium, …) from source. Subsequent configures reuse vcpkg's
+lua, libosmium, …) from source. Subsequent configures reuse vcpkg's
 binary cache.
 
 ### Request Against the Demo Server

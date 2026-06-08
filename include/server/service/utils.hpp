@@ -1,5 +1,7 @@
 #include "util/format.hpp"
 
+#include <format>
+
 namespace osrm::server::service
 {
 
