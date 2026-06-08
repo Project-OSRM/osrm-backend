@@ -68,18 +68,26 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     ComponentID GetComponentID(const NodeID node_id) const { return nodes[node_id].component_id; }
 
     TravelMode GetTravelMode(const NodeID node_id) const
-    { return annotation_data[nodes[node_id].annotation_id].travel_mode; }
+    {
+        return annotation_data[nodes[node_id].annotation_id].travel_mode;
+    }
 
     bool IsLeftHandDriving(const NodeID node_id) const
-    { return annotation_data[nodes[node_id].annotation_id].is_left_hand_driving; }
+    {
+        return annotation_data[nodes[node_id].annotation_id].is_left_hand_driving;
+    }
 
     bool IsSegregated(const NodeID node_id) const { return nodes[node_id].segregated; }
 
     StringViewID GetNameID(const NodeID node_id) const
-    { return annotation_data[nodes[node_id].annotation_id].string_view_id; }
+    {
+        return annotation_data[nodes[node_id].annotation_id].string_view_id;
+    }
 
     ClassData GetClassData(const NodeID node_id) const
-    { return annotation_data[nodes[node_id].annotation_id].classes; }
+    {
+        return annotation_data[nodes[node_id].annotation_id].classes;
+    }
 
     friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
                                                const std::string &name,
@@ -91,7 +99,9 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
 
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     void Renumber(const std::vector<std::uint32_t> &permutation)
-    { util::inplacePermutation(nodes.begin(), nodes.end(), permutation); }
+    {
+        util::inplacePermutation(nodes.begin(), nodes.end(), permutation);
+    }
 
     NodeID NumberOfNodes() const { return nodes.size(); }
 
@@ -102,7 +112,9 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     EdgeBasedNode const &GetNode(const NodeID node_id) const { return nodes[node_id]; }
 
     NodeBasedEdgeAnnotation const &GetAnnotation(const AnnotationID annotation) const
-    { return annotation_data[annotation]; }
+    {
+        return annotation_data[annotation];
+    }
 
   private:
     Vector<EdgeBasedNode> nodes;

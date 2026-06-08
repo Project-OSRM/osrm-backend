@@ -78,7 +78,9 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     MultiLevelPartitionImpl(const std::vector<std::vector<CellID>> &partitions,
                             const std::vector<std::uint32_t> &lidx_to_num_cells)
         : level_data(MakeLevelData(lidx_to_num_cells))
-    { InitializePartitionIDs(partitions); }
+    {
+        InitializePartitionIDs(partitions);
+    }
 
     template <typename = std::enable_if<Ownership == storage::Ownership::View>>
     MultiLevelPartitionImpl(LevelDataPtr level_data,
@@ -116,7 +118,9 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     std::uint8_t GetNumberOfLevels() const { return level_data->num_level; }
 
     std::uint32_t GetNumberOfCells(LevelID level) const
-    { return GetCell(level, GetSentinelNode()); }
+    {
+        return GetCell(level, GetSentinelNode());
+    }
 
     // Returns the lowest cell id (at `level - 1`) of all children `cell` at `level`
     CellID BeginChildren(LevelID level, CellID cell) const

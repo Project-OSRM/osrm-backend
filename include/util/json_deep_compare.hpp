@@ -148,7 +148,9 @@ struct Comparator
 };
 
 inline bool compare(const Value &reference, const Value &result, std::string &reason)
-{ return std::visit(Comparator(reason, "reference", "result"), reference, result); }
+{
+    return std::visit(Comparator(reason, "reference", "result"), reference, result);
+}
 } // namespace osrm::util::json
 
 #endif

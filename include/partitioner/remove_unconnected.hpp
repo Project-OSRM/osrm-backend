@@ -62,8 +62,7 @@ std::size_t removeUnconnectedBoundaryNodes(const GraphT &edge_based_graph,
                     auto new_end =
                         std::remove_if(witnesses.begin(),
                                        witnesses.end(),
-                                       [&](const auto &witness)
-                                       {
+                                       [&](const auto &witness) {
                                            return partitions[level_index + 1][node] !=
                                                   partitions[level_index + 1][witness.id];
                                        });
@@ -90,11 +89,12 @@ std::size_t removeUnconnectedBoundaryNodes(const GraphT &edge_based_graph,
                     }
                 }
 
-                auto best_witness = std::min_element(
-                    witnesses.begin(),
-                    witnesses.end(),
-                    [](const auto &lhs, const auto &rhs)
-                    { return lhs.induced_border_edges < rhs.induced_border_edges; });
+                auto best_witness =
+                    std::min_element(witnesses.begin(),
+                                     witnesses.end(),
+                                     [](const auto &lhs, const auto &rhs) {
+                                         return lhs.induced_border_edges < rhs.induced_border_edges;
+                                     });
                 BOOST_ASSERT(best_witness != witnesses.end());
 
                 // assign `node` to same subcells as `best_witness`

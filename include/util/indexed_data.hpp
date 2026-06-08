@@ -367,7 +367,9 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
     template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
     std::enable_if<!std::is_same<T, std::string_view>::value, T>::type adapt(const Iter first,
                                                                              const Iter last) const
-    { return ResultType(first, last); }
+    {
+        return ResultType(first, last);
+    }
 
     template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
     std::enable_if<std::is_same<T, std::string_view>::value, T>::type adapt(const Iter first,

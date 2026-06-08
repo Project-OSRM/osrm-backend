@@ -70,7 +70,9 @@ struct ExtractorConfig final : storage::IOConfig
     }
 
     void UseDefaultOutputNames(const std::filesystem::path &base)
-    { IOConfig::UseDefaultOutputNames(base); }
+    {
+        IOConfig::UseDefaultOutputNames(base);
+    }
 
     std::filesystem::path input_path;
     std::filesystem::path profile_path;

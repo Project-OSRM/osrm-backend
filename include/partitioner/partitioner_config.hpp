@@ -27,7 +27,9 @@ struct PartitionerConfig final : storage::IOConfig
     }
 
     void UseDefaultOutputNames(const std::filesystem::path &base)
-    { IOConfig::UseDefaultOutputNames(base); }
+    {
+        IOConfig::UseDefaultOutputNames(base);
+    }
 
     unsigned requested_num_threads;
 

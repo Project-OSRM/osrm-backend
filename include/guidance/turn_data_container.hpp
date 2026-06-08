@@ -73,7 +73,9 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
     bool HasLaneData(const EdgeID id) const { return INVALID_LANE_DATAID != lane_data_ids[id]; }
 
     guidance::TurnInstruction GetTurnInstruction(const EdgeID id) const
-    { return turn_instructions[id]; }
+    {
+        return turn_instructions[id];
+    }
 
     // Used by EdgeBasedGraphFactory to fill data structure
     template <typename = std::enable_if<Ownership == storage::Ownership::Container>>

@@ -73,10 +73,14 @@ template <> struct SortableEdgeWithData<void>
     }
 
     bool operator<(const SortableEdgeWithData &right) const
-    { return std::tie(source, target) < std::tie(right.source, right.target); }
+    {
+        return std::tie(source, target) < std::tie(right.source, right.target);
+    }
 
     bool operator==(const SortableEdgeWithData &right) const
-    { return std::tie(source, target) == std::tie(right.source, right.target); }
+    {
+        return std::tie(source, target) == std::tie(right.source, right.target);
+    }
 };
 
 template <typename EdgeDataT> struct SortableEdgeWithData : SortableEdgeWithData<void>
@@ -118,7 +122,9 @@ class StaticGraph
     using EdgeArrayEntry = static_graph_details::EdgeArrayEntry<EdgeDataT>;
 
     EdgeRange GetAdjacentEdgeRange(const NodeID node) const
-    { return irange(BeginEdges(node), EndEdges(node)); }
+    {
+        return irange(BeginEdges(node), EndEdges(node));
+    }
 
     StaticGraph() {}
 
@@ -148,17 +154,23 @@ class StaticGraph
     unsigned GetOutDegree(const NodeIterator n) const { return EndEdges(n) - BeginEdges(n); }
 
     inline NodeIterator GetTarget(const EdgeIterator e) const
-    { return NodeIterator(edge_array[e].target); }
+    {
+        return NodeIterator(edge_array[e].target);
+    }
 
     auto &GetEdgeData(const EdgeIterator e) { return edge_array[e].data; }
 
     const auto &GetEdgeData(const EdgeIterator e) const { return edge_array[e].data; }
 
     EdgeIterator BeginEdges(const NodeIterator n) const
-    { return EdgeIterator(node_array.at(n).first_edge); }
+    {
+        return EdgeIterator(node_array.at(n).first_edge);
+    }
 
     EdgeIterator EndEdges(const NodeIterator n) const
-    { return EdgeIterator(node_array.at(n + 1).first_edge); }
+    {
+        return EdgeIterator(node_array.at(n + 1).first_edge);
+    }
 
     // searches for a specific edge
     EdgeIterator FindEdge(const NodeIterator from, const NodeIterator to) const

@@ -160,5 +160,7 @@ Log::~Log()
 
 UnbufferedLog::UnbufferedLog(LogLevel level_)
     : Log(level_, (level_ == logWARNING || level_ == logERROR) ? std::cerr : std::cout)
-{ stream.flags(std::ios_base::unitbuf); }
+{
+    stream.flags(std::ios_base::unitbuf);
+}
 } // namespace osrm::util

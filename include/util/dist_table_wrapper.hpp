@@ -65,7 +65,9 @@ template <typename T> class DistTableWrapper
     Iterator end() { return std::end(table_); }
 
     NodeID GetIndexOfMaxValue() const
-    { return std::distance(table_.begin(), std::max_element(table_.begin(), table_.end())); }
+    {
+        return std::distance(table_.begin(), std::max_element(table_.begin(), table_.end()));
+    }
 
     std::vector<T> GetTable() const { return table_; }
 

@@ -49,12 +49,16 @@ SegmentHint SegmentHint::FromBase64(const std::string &base64Hint)
 }
 
 bool operator==(const SegmentHint &lhs, const SegmentHint &rhs)
-{ return std::tie(lhs.phantom, lhs.data_checksum) == std::tie(rhs.phantom, rhs.data_checksum); }
+{
+    return std::tie(lhs.phantom, lhs.data_checksum) == std::tie(rhs.phantom, rhs.data_checksum);
+}
 
 bool operator!=(const SegmentHint &lhs, const SegmentHint &rhs) { return !(lhs == rhs); }
 
 std::ostream &operator<<(std::ostream &out, const SegmentHint &hint)
-{ return out << hint.ToBase64(); }
+{
+    return out << hint.ToBase64();
+}
 
 std::string Hint::ToBase64() const
 {

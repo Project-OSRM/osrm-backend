@@ -61,7 +61,9 @@ Status OSRM::Route(const engine::api::RouteParameters &params, json::Object &jso
 }
 
 Status OSRM::Route(const RouteParameters &params, engine::api::ResultT &result) const
-{ return engine_->Route(params, result); }
+{
+    return engine_->Route(params, result);
+}
 
 Status OSRM::Table(const engine::api::TableParameters &params, json::Object &json_result) const
 {
@@ -72,7 +74,9 @@ Status OSRM::Table(const engine::api::TableParameters &params, json::Object &jso
 }
 
 Status OSRM::Table(const TableParameters &params, engine::api::ResultT &result) const
-{ return engine_->Table(params, result); }
+{
+    return engine_->Table(params, result);
+}
 
 Status OSRM::Nearest(const engine::api::NearestParameters &params, json::Object &json_result) const
 {
@@ -83,7 +87,9 @@ Status OSRM::Nearest(const engine::api::NearestParameters &params, json::Object 
 }
 
 Status OSRM::Nearest(const NearestParameters &params, engine::api::ResultT &result) const
-{ return engine_->Nearest(params, result); }
+{
+    return engine_->Nearest(params, result);
+}
 
 Status OSRM::Trip(const engine::api::TripParameters &params, json::Object &json_result) const
 {
@@ -95,7 +101,9 @@ Status OSRM::Trip(const engine::api::TripParameters &params, json::Object &json_
 
 engine::Status OSRM::Trip(const engine::api::TripParameters &params,
                           engine::api::ResultT &result) const
-{ return engine_->Trip(params, result); }
+{
+    return engine_->Trip(params, result);
+}
 
 Status OSRM::Match(const engine::api::MatchParameters &params, json::Object &json_result) const
 {
@@ -106,7 +114,9 @@ Status OSRM::Match(const engine::api::MatchParameters &params, json::Object &jso
 }
 
 Status OSRM::Match(const MatchParameters &params, engine::api::ResultT &result) const
-{ return engine_->Match(params, result); }
+{
+    return engine_->Match(params, result);
+}
 
 Status OSRM::Tile(const engine::api::TileParameters &params, std::string &str_result) const
 {
@@ -117,6 +127,8 @@ Status OSRM::Tile(const engine::api::TileParameters &params, std::string &str_re
 }
 
 Status OSRM::Tile(const engine::api::TileParameters &params, engine::api::ResultT &result) const
-{ return engine_->Tile(params, result); }
+{
+    return engine_->Tile(params, result);
+}
 
 } // namespace osrm

@@ -141,12 +141,16 @@ class FileReader
     }
 
     template <typename T> void ReadInto(std::vector<T> &target)
-    { ReadInto(target.data(), target.size()); }
+    {
+        ReadInto(target.data(), target.size());
+    }
 
     template <typename T> void ReadInto(T &target) { ReadInto(&target, 1); }
 
     template <typename T> void Skip(const std::size_t element_count)
-    { boost::iostreams::seek(input_stream, element_count * sizeof(T), BOOST_IOS::cur); }
+    {
+        boost::iostreams::seek(input_stream, element_count * sizeof(T), BOOST_IOS::cur);
+    }
 
     /*******************************************/
 
@@ -248,7 +252,9 @@ class FileWriter
     }
 
     template <typename T> void WriteFrom(const std::vector<T> &src)
-    { WriteFrom(src.data(), src.size()); }
+    {
+        WriteFrom(src.data(), src.size());
+    }
 
     template <typename T> void WriteFrom(const T &src) { WriteFrom(&src, 1); }
 
@@ -261,7 +267,9 @@ class FileWriter
     }
 
     template <typename T> void Skip(const std::size_t element_count)
-    { boost::iostreams::seek(output_stream, element_count * sizeof(T), BOOST_IOS::cur); }
+    {
+        boost::iostreams::seek(output_stream, element_count * sizeof(T), BOOST_IOS::cur);
+    }
 
     void SkipToBeginning()
     {

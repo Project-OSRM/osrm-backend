@@ -133,8 +133,7 @@ void init_TableParameters(nb::module_ &m)
             "Instantiates a FallbackCoordinateType based on provided String value.")
         .def(
             "__repr__",
-            [](TableParameters::FallbackCoordinateType type)
-            {
+            [](TableParameters::FallbackCoordinateType type) {
                 return osrm_nb_util::enum_to_str(type, "TableFallbackCoordinateType", fallback_map);
             },
             "Return a String based on FallbackCoordinateType value.");
