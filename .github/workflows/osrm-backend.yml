@@ -161,7 +161,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run CIBuildWheel
         if: github.event_name != 'pull_request'
-        uses: pypa/cibuildwheel@v3.4.1
+        uses: pypa/cibuildwheel@v4.1.0
         with:
           output-dir: dist
         # The wheel-build CMAKE_ARGS (vcpkg toolchain + triplet) and the
@@ -618,7 +618,7 @@ jobs:
 
       - name: Upload coverage to codecov.io
         if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
-        uses: codecov/codecov-action@v6
+        uses: codecov/codecov-action@v7
         with:
           files: coverage.lcov.filtered
           fail_ci_if_error: false
@@ -700,7 +700,7 @@ jobs:
         run: echo "path=$(ls dist/*.tar.gz | head -n1)" >> "$GITHUB_OUTPUT"
 
       - name: Run cibuildwheel
-        uses: pypa/cibuildwheel@v3.4.1
+        uses: pypa/cibuildwheel@v4.1.0
         if: ${{ env.BUILD_BINDINGS }}
         with:
           # for linux build the wheel from the sdist
