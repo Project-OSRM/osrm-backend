@@ -61,7 +61,7 @@
     {
       "name": "ci-windows",
       "inherits": "release",
-      "generator": "Visual Studio 17 2022",
+      "generator": "Visual Studio 18 2026",
       "cacheVariables": { "VCPKG_TARGET_TRIPLET": "x64-windows-static-md" }
     }
   ],
