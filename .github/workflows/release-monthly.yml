@@ -34,6 +34,14 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       run_id: ${{ steps.wait_ci.outputs.run_id }}
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - uses: actions/checkout@v6
         with:
           token: ${{ secrets.BACKEND_RELEASE_TOKEN }}
@@ -236,6 +244,14 @@ jobs:
       id-token: write
       contents: read
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - uses: actions/checkout@v6
         with:
           ref: ${{ needs.release.outputs.tag }}
@@ -266,4 +282,3 @@ jobs:
           skip-existing: true
           verbose: true
           # repository-url: https://test.pypi.org/legacy/
-

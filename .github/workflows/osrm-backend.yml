@@ -34,6 +34,14 @@ jobs:
     if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-24.04
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - uses: actions/checkout@v6
       - uses: dorny/paths-filter@v4
         id: dep_changes
@@ -77,6 +85,14 @@ jobs:
     env:
       BUILD_TYPE: Release
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - uses: actions/checkout@v6
       - name: Move temp directory to D drive
         shell: pwsh
@@ -180,6 +196,14 @@ jobs:
     if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-slim
     steps:
+    - name: Configure DNS servers
+      if: runner.os == 'Linux'
+      run: |
+        sudo rm -f /etc/resolv.conf
+        {
+          echo "nameserver 1.1.1.1"
+          echo "nameserver 8.8.8.8"
+        } | sudo tee /etc/resolv.conf > /dev/null
     - uses: actions/checkout@v6
     - name: Use Node.js
       uses: actions/setup-node@v6
@@ -221,6 +245,14 @@ jobs:
     runs-on: ubuntu-latest
     continue-on-error: false
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Check out the repo
         uses: actions/checkout@v6
       - name: Enable osm.pbf cache
@@ -462,6 +494,14 @@ jobs:
       ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
       BUILD_BINDINGS: ${{ matrix.build_bindings }}
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - uses: actions/checkout@v6
         with:
           fetch-tags: true
@@ -741,6 +781,14 @@ jobs:
     needs: [build-matrix, vcpkg-windows-release-bindings, docker-build-extract-test]
     if: github.repository == 'Project-OSRM/osrm-backend'
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Fail if any dependency failed
         if: ${{ contains(needs.*.result, 'failure') }}
         run: exit 1

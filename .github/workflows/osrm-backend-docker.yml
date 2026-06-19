@@ -21,6 +21,14 @@ jobs:
         docker-base-image: ["debian"]
     runs-on: ubuntu-latest
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Check out the repo
         uses: actions/checkout@v6
         with:
@@ -122,6 +130,14 @@ jobs:
     strategy: *docker-base-image-matrix
     runs-on: ubuntu-24.04-arm
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Check out the repo
         uses: actions/checkout@v6
         with:
@@ -224,6 +240,14 @@ jobs:
     strategy: *docker-base-image-matrix
     runs-on: ubuntu-latest
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
