@@ -14,14 +14,6 @@ jobs:
     runs-on: ubuntu-slim
 
     steps:
-      - name: Configure DNS servers
-        if: runner.os == 'Linux'
-        run: |
-          sudo rm -f /etc/resolv.conf
-          {
-            echo "nameserver 1.1.1.1"
-            echo "nameserver 8.8.8.8"
-          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Validate pull request title
         env:
           PR_TITLE: ${{ github.event.pull_request.title }}

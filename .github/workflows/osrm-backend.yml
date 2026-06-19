@@ -196,14 +196,6 @@ jobs:
     if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-slim
     steps:
-    - name: Configure DNS servers
-      if: runner.os == 'Linux'
-      run: |
-        sudo rm -f /etc/resolv.conf
-        {
-          echo "nameserver 1.1.1.1"
-          echo "nameserver 8.8.8.8"
-        } | sudo tee /etc/resolv.conf > /dev/null
     - uses: actions/checkout@v6
     - name: Use Node.js
       uses: actions/setup-node@v6
