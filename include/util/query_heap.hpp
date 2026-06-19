@@ -141,7 +141,7 @@ class QueryHeap
         }
     };
     using HeapContainer = DAryHeap<HeapData, 4>;
-    using HeapHandle = typename HeapContainer::HeapHandle;
+    using HeapHandle = HeapContainer::HeapHandle;
 
   public:
     using WeightType = Weight;

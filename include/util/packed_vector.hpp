@@ -53,7 +53,7 @@ inline T get_lower_half_value(WordT word,
                               std::uint8_t offset,
                               typename T::value_type * = nullptr)
 {
-    return T{static_cast<typename T::value_type>((word & mask) >> offset)};
+    return T{static_cast<T::value_type>((word & mask) >> offset)};
 }
 
 template <typename WordT, typename T>
@@ -72,7 +72,7 @@ inline T get_upper_half_value(WordT word,
                               typename T::value_type * = nullptr)
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
-    return T{static_cast<typename T::value_type>((word & mask) << offset)};
+    return T{static_cast<T::value_type>((word & mask) << offset)};
 }
 
 template <typename WordT, typename T>
@@ -103,7 +103,7 @@ inline WordT set_lower_value(
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) |
-           ((static_cast<WordT>(static_cast<typename T::value_type>(value)) << offset) & mask);
+           ((static_cast<WordT>(static_cast<T::value_type>(value)) << offset) & mask);
 }
 
 template <typename WordT, typename T>
@@ -112,7 +112,7 @@ inline WordT set_upper_value(
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) |
-           ((static_cast<WordT>(static_cast<typename T::value_type>(value)) >> offset) & mask);
+           ((static_cast<WordT>(static_cast<T::value_type>(value)) >> offset) & mask);
 }
 
 inline bool compare_and_swap(uint64_t *ptr, uint64_t old_value, uint64_t new_value)
@@ -513,7 +513,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     std::size_t capacity() const { return (vec.capacity() / BLOCK_WORDS) * BLOCK_ELEMENTS; }
 
     template <bool enabled = (Ownership == storage::Ownership::View)>
-    void reserve(typename std::enable_if<!enabled, std::size_t>::type capacity)
+    void reserve(std::enable_if<!enabled, std::size_t>::type capacity)
     {
         auto num_blocks = (capacity + BLOCK_ELEMENTS - 1) / BLOCK_ELEMENTS;
         vec.reserve(num_blocks * BLOCK_WORDS + 1);

@@ -12,7 +12,7 @@ namespace osrm::engine::guidance
 {
 
 using RouteSteps = std::vector<RouteStep>;
-using RouteStepIterator = typename RouteSteps::iterator;
+using RouteStepIterator = RouteSteps::iterator;
 const constexpr std::size_t MIN_END_OF_ROAD_INTERSECTIONS = std::size_t{2};
 const constexpr double MAX_COLLAPSE_DISTANCE = 30.0;
 // a bit larger than 100 to avoid oscillation in tests

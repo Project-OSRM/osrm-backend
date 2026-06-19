@@ -296,15 +296,14 @@ template <typename DataT> void swap(vector_view<DataT> &lhs, vector_view<DataT> 
 }
 
 template <typename DataT, storage::Ownership Ownership>
-using InternalOrExternalVector =
-    typename std::conditional<Ownership == storage::Ownership::External,
-                              std::vector<DataT>,
-                              std::vector<DataT>>::type;
+using InternalOrExternalVector = std::conditional<Ownership == storage::Ownership::External,
+                                                  std::vector<DataT>,
+                                                  std::vector<DataT>>::type;
 
 template <typename DataT, storage::Ownership Ownership>
-using ViewOrVector = typename std::conditional<Ownership == storage::Ownership::View,
-                                               vector_view<DataT>,
-                                               InternalOrExternalVector<DataT, Ownership>>::type;
+using ViewOrVector = std::conditional<Ownership == storage::Ownership::View,
+                                      vector_view<DataT>,
+                                      InternalOrExternalVector<DataT, Ownership>>::type;
 
 // We can use this for compile time assertions
 template <typename ValueT, typename VectorT>
