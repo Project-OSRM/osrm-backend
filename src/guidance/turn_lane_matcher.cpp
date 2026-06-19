@@ -105,8 +105,8 @@ double getMatchingQuality(const TurnLaneType::Mask tag, const ConnectedRoad &roa
 // (or follow a 180 degree turn angle between in/out segments.) The following function tries to find
 // the best possible match for every tag in a given intersection, considering a few corner cases
 // introduced to OSRM handling u-turns
-typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask tag,
-                                                    const Intersection &intersection)
+Intersection::const_iterator findBestMatch(const TurnLaneType::Mask tag,
+                                           const Intersection &intersection)
 {
     return std::min_element(intersection.begin(),
                             intersection.end(),
@@ -131,8 +131,8 @@ typename Intersection::const_iterator findBestMatch(const TurnLaneType::Mask tag
 // by default in OSRM. Therefor we cannot check whether a turn is allowed, since it could be
 // possible that it is forbidden. In addition, the best u-turn angle does not necessarily represent
 // the u-turn, since it could be a sharp-left turn instead on a road with a middle island.
-typename Intersection::const_iterator findBestMatchForReverse(const TurnLaneType::Mask neighbor_tag,
-                                                              const Intersection &intersection)
+Intersection::const_iterator findBestMatchForReverse(const TurnLaneType::Mask neighbor_tag,
+                                                     const Intersection &intersection)
 {
     const auto neighbor_itr = findBestMatch(neighbor_tag, intersection);
     if (neighbor_itr + 1 == intersection.cend())

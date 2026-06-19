@@ -35,7 +35,7 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
                       const EdgeWeight weight,
                       const EdgeDuration duration,
                       const EdgeDistance distance,
-                      typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
+                      SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
                       LevelID level)
 {
     for (const auto edge : facade.GetBorderEdgeRange(level, node))
@@ -91,7 +91,7 @@ template <bool DIRECTION, typename... Args>
 void relaxOutgoingEdges(
     const DataFacade<mld::Algorithm> &facade,
     const typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap::HeapNode &heapNode,
-    typename SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
+    SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
     const Args &...args)
 {
     BOOST_ASSERT(!facade.ExcludeNode(heapNode.node));
@@ -406,7 +406,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         const unsigned row_idx,
                         const unsigned number_of_sources,
                         const unsigned number_of_targets,
-                        typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
+                        SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
                         const std::vector<NodeBucket> &search_space_with_buckets,
                         std::vector<EdgeWeight> &weights_table,
                         std::vector<EdgeDuration> &durations_table,
@@ -465,7 +465,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
 template <bool DIRECTION>
 void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          const unsigned column_idx,
-                         typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
+                         SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
                          std::vector<NodeBucket> &search_space_with_buckets,
                          const PhantomNodeCandidates &candidates)
 {

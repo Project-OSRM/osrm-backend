@@ -67,15 +67,15 @@ class IntersectionHandler
 
     template <typename IntersectionType>
     inline bool IsDistinctNarrowTurn(const EdgeID via_edge,
-                                     const typename IntersectionType::const_iterator candidate,
+                                     const IntersectionType::const_iterator candidate,
                                      const IntersectionType &intersection) const;
     template <typename IntersectionType>
     inline bool IsDistinctWideTurn(const EdgeID via_edge,
-                                   const typename IntersectionType::const_iterator candidate,
+                                   const IntersectionType::const_iterator candidate,
                                    const IntersectionType &intersection) const;
     template <typename IntersectionType>
     inline bool IsDistinctTurn(const EdgeID via_edge,
-                               const typename IntersectionType::const_iterator candidate,
+                               const IntersectionType::const_iterator candidate,
                                const IntersectionType &intersection) const;
 
     // Find the most obvious turn to follow. The function returns an index into the intersection
@@ -173,7 +173,7 @@ inline bool roadHasLowerClass(const util::NodeBasedEdgeData &from_data,
 template <typename IntersectionType> // works with Intersection and IntersectionView
 inline bool
 IntersectionHandler::IsDistinctNarrowTurn(const EdgeID via_edge,
-                                          const typename IntersectionType::const_iterator candidate,
+                                          const IntersectionType::const_iterator candidate,
                                           const IntersectionType &intersection) const
 {
     const auto &via_edge_data = node_based_graph.GetEdgeData(via_edge);
@@ -394,7 +394,7 @@ IntersectionHandler::IsDistinctNarrowTurn(const EdgeID via_edge,
 template <typename IntersectionType>
 inline bool
 IntersectionHandler::IsDistinctWideTurn(const EdgeID via_edge,
-                                        const typename IntersectionType::const_iterator candidate,
+                                        const IntersectionType::const_iterator candidate,
                                         const IntersectionType &intersection) const
 {
     const auto &via_edge_data = node_based_graph.GetEdgeData(via_edge);
@@ -468,10 +468,9 @@ IntersectionHandler::IsDistinctWideTurn(const EdgeID via_edge,
 }
 
 template <typename IntersectionType>
-inline bool
-IntersectionHandler::IsDistinctTurn(const EdgeID via_edge,
-                                    const typename IntersectionType::const_iterator candidate,
-                                    const IntersectionType &intersection) const
+inline bool IntersectionHandler::IsDistinctTurn(const EdgeID via_edge,
+                                                const IntersectionType::const_iterator candidate,
+                                                const IntersectionType &intersection) const
 {
     auto const candidate_deviation = util::angularDeviation(candidate->angle, STRAIGHT_ANGLE);
 

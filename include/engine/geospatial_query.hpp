@@ -33,9 +33,9 @@ inline std::pair<bool, bool> operator&&(const std::pair<bool, bool> &a,
 // Only holds a weak reference on the RTree and coordinates!
 template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 {
-    using EdgeData = typename RTreeT::EdgeData;
-    using CoordinateList = typename RTreeT::CoordinateList;
-    using CandidateSegment = typename RTreeT::CandidateSegment;
+    using EdgeData = RTreeT::EdgeData;
+    using CoordinateList = RTreeT::CoordinateList;
+    using CandidateSegment = RTreeT::CandidateSegment;
 
   public:
     GeospatialQuery(RTreeT &rtree_, const CoordinateList &coordinates_, DataFacadeT &datafacade_)

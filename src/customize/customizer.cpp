@@ -88,8 +88,9 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
 
     auto directed = partitioner::splitBidirectionalEdges(edge_based_edge_list);
 
-    auto tidied = partitioner::prepareEdgesForUsageInGraph<
-        typename partitioner::MultiLevelEdgeBasedGraph::InputEdge>(std::move(directed));
+    auto tidied =
+        partitioner::prepareEdgesForUsageInGraph<partitioner::MultiLevelEdgeBasedGraph::InputEdge>(
+            std::move(directed));
 
     auto edge_based_graph = partitioner::MultiLevelEdgeBasedGraph(mlp, num_nodes, tidied);
 

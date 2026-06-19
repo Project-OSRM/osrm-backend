@@ -44,9 +44,9 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
     template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
 
   public:
-    using NodeArrayEntry = typename SuperT::NodeArrayEntry;
-    using EdgeArrayEntry = typename SuperT::EdgeArrayEntry;
-    using EdgeOffset = typename SuperT::EdgeOffset;
+    using NodeArrayEntry = SuperT::NodeArrayEntry;
+    using EdgeArrayEntry = SuperT::EdgeArrayEntry;
+    using EdgeOffset = SuperT::EdgeOffset;
 
     MultiLevelGraph() = default;
     MultiLevelGraph(MultiLevelGraph &&) = default;

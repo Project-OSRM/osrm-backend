@@ -55,6 +55,14 @@ jobs:
           - { os: windows-2025,    triplet: x64-windows-static-md }
     runs-on: ${{ matrix.os }}
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - uses: actions/checkout@v6
       - name: Move temp directory to D drive
         if: runner.os == 'Windows'

@@ -131,8 +131,7 @@ template <typename ToAlias, typename FromAlias> inline ToAlias alias_cast(const 
                   "Alias From needs to be based on an arithmetic type");
     static_assert(std::is_arithmetic<typename ToAlias::value_type>::value,
                   "Alias Other needs to be based on an arithmetic type");
-    return {static_cast<typename ToAlias::value_type>(
-        static_cast<const typename FromAlias::value_type>(from))};
+    return {static_cast<ToAlias::value_type>(static_cast<const FromAlias::value_type>(from))};
 }
 
 template <typename ToNumeric, typename FromAlias> inline ToNumeric from_alias(const FromAlias &from)
@@ -140,7 +139,7 @@ template <typename ToNumeric, typename FromAlias> inline ToNumeric from_alias(co
     static_assert(std::is_arithmetic<typename FromAlias::value_type>::value,
                   "Alias From needs to be based on an arithmetic type");
     static_assert(std::is_arithmetic<ToNumeric>::value, "Numeric needs to be an arithmetic type");
-    return {static_cast<ToNumeric>(static_cast<const typename FromAlias::value_type>(from))};
+    return {static_cast<ToNumeric>(static_cast<const FromAlias::value_type>(from))};
 }
 
 template <typename ToAlias,
@@ -151,7 +150,7 @@ inline ToAlias to_alias(const FromNumeric &from)
     static_assert(std::is_arithmetic<FromNumeric>::value, "Numeric needs to be an arithmetic type");
     static_assert(std::is_arithmetic<typename ToAlias::value_type>::value,
                   "Alias needs to be based on an arithmetic type");
-    return {static_cast<typename ToAlias::value_type>(from)};
+    return {static_cast<ToAlias::value_type>(from)};
 }
 
 // Sometimes metrics are stored either as bitfields or the alias itself.
