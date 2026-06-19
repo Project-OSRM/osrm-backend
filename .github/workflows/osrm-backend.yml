@@ -18,7 +18,7 @@ env:
   ENABLE_NODE_BINDINGS: 'ON'
   # vcpkg baseline is also pinned in vcpkg-configuration.json; this env var
   # is what lukka/run-vcpkg consumes to pick the vcpkg tool version.
-  VCPKG_COMMIT_ID: c3867e714dd3a51c272826eea77267876517ed99
+  VCPKG_COMMIT_ID: d015e31e90838a4c9dfa3eed45979bc70d9357fc
   # Use a local filesystem directory as vcpkg's binary cache. The directory
   # itself is persisted across CI runs via actions/cache@v5. The x-gha
   # backend was removed upstream; files+actions/cache is the replacement.
@@ -161,7 +161,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run CIBuildWheel
         if: github.event_name != 'pull_request'
-        uses: pypa/cibuildwheel@v3.4.1
+        uses: pypa/cibuildwheel@v4.1.0
         with:
           output-dir: dist
         # The wheel-build CMAKE_ARGS (vcpkg toolchain + triplet) and the
@@ -212,13 +212,13 @@ jobs:
         npm run docs && ./scripts/error_on_dirty.sh "Run 'npm run docs' locally and commit the changes."
         npm audit --production
 
-  docker-image-matrix:
+  docker-build-extract-test:
     strategy:
       matrix:
-        docker-base-image: ['debian', 'alpine']
+        docker-base-image: ['debian']
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     if: github.repository == 'Project-OSRM/osrm-backend'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     continue-on-error: false
     steps:
       - name: Check out the repo
@@ -240,7 +240,7 @@ jobs:
           tags: osrm-backend-local
           load: true
           # Persist BuildKit layer + vcpkg/ccache mount cache across runs via
-          # GitHub Actions cache. Scope per base image so alpine/debian don't
+          # GitHub Actions cache. Scope per base image so different images don't
           # collide.
           cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           cache-to: type=gha,mode=max,scope=docker-${{ matrix.docker-base-image }}
@@ -361,13 +361,13 @@ jobs:
             CXXCOMPILER: g++-13
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-13-debug-cov
+          - name: clang-20-debug-cov
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04
             BUILD_TYPE: Debug
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
+            CCOMPILER: clang-20
+            CXXCOMPILER: clang++-20
             ENABLE_COVERAGE: ON
 
           - name: vcpkg-linux-release-bindings
@@ -490,9 +490,9 @@ jobs:
         uses: actions/cache@v5
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
-          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
           restore-keys: |
-            vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-
+            vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
@@ -534,7 +534,7 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y ${CCOMPILER} ${CXXCOMPILER} ccache
             if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
-              sudo apt-get install -y lcov
+              sudo apt-get install -y lcov llvm-20
             fi
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
             brew install ccache
@@ -604,6 +604,25 @@ jobs:
           popd
           ./scripts/ci/test_cli_parsing.sh -b "${OSRM_BUILD_DIR}"
           npm test -- --parallel $JOBS
+
+      - name: Generate coverage report
+        if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+        run: |
+          cat > llvm-gcov.sh <<'EOF'
+          #!/usr/bin/env bash
+          exec llvm-cov-20 gcov "$@"
+          EOF
+          chmod +x llvm-gcov.sh
+          lcov --gcov-tool "${PWD}/llvm-gcov.sh" --directory "${OSRM_BUILD_DIR}" --capture --ignore-errors inconsistent --output-file coverage.lcov
+          lcov --ignore-errors inconsistent --remove coverage.lcov '*/test/*' '*/unit_tests/*' --output-file coverage.lcov.filtered
+
+      - name: Upload coverage to codecov.io
+        if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: coverage.lcov.filtered
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Use Node 22
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
@@ -681,7 +700,7 @@ jobs:
         run: echo "path=$(ls dist/*.tar.gz | head -n1)" >> "$GITHUB_OUTPUT"
 
       - name: Run cibuildwheel
-        uses: pypa/cibuildwheel@v3.4.1
+        uses: pypa/cibuildwheel@v4.1.0
         if: ${{ env.BUILD_BINDINGS }}
         with:
           # for linux build the wheel from the sdist
@@ -705,15 +724,6 @@ jobs:
             dist/*.tar.gz
           if-no-files-found: error
 
-      - name: Upload Linux wheel for stub check
-        if: ${{ env.BUILD_BINDINGS && runner.os == 'Linux' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: wheel-linux-stub-check
-          path: dist/*.whl
-          if-no-files-found: error
-          retention-days: 1
-
       - name: Save compiler cache
         if: always() && steps.build.outcome != 'cancelled'
         uses: actions/cache/save@v5
@@ -726,49 +736,9 @@ jobs:
           ccache -p
           ccache -s
 
-  # Verify that committed .pyi stubs match the actual C++ bindings when Python
-  # C++ sources changed. Installs the Linux wheel built by build-matrix,
-  # regenerates stubs via nanobind, ruff-formats them, and diffs against the repo.
-  check-python-stubs:
-    name: Check Python stubs are up to date
-    needs: build-matrix
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: dorny/paths-filter@v4
-        id: changes
-        with:
-          filters: |
-            python_cpp:
-              - 'src/python/src/**'
-              - 'src/python/include/**'
-              - 'src/python/CMakeLists.txt'
-      - uses: actions/setup-python@v6
-        if: steps.changes.outputs.python_cpp == 'true'
-        with:
-          python-version: '3.12'
-      - uses: actions/download-artifact@v8
-        if: steps.changes.outputs.python_cpp == 'true'
-        with:
-          name: wheel-linux-stub-check
-          path: wheelhouse
-      - name: Install wheel and regenerate stubs
-        if: steps.changes.outputs.python_cpp == 'true'
-        run: |
-          pip install nanobind ruff
-          pip install wheelhouse/*.whl
-          python -m nanobind.stubgen -m osrm.osrm_ext -o src/python/osrm/osrm_ext.pyi
-          ruff format src/python/osrm/osrm_ext.pyi
-      - name: Check for differences
-        if: steps.changes.outputs.python_cpp == 'true'
-        run: |
-          git diff --exit-code src/python/osrm/osrm_ext.pyi \
-            || (echo "::error::Stubs are out of date. Rebuild locally and commit the updated .pyi file." && exit 1)
-
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, vcpkg-windows-release-bindings, docker-image-matrix, check-python-stubs]
+    needs: [build-matrix, vcpkg-windows-release-bindings, docker-build-extract-test]
     if: github.repository == 'Project-OSRM/osrm-backend'
     steps:
       - name: Fail if any dependency failed

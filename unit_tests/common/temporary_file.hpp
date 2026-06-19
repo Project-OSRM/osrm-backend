@@ -1,6 +1,8 @@
 #ifndef UNIT_TESTS_TEMPORARY_FILE_HPP
 #define UNIT_TESTS_TEMPORARY_FILE_HPP
 
+#include "random_seed.hpp"
+
 #include <cstdlib>
 #include <filesystem>
 #include <random>
@@ -12,7 +14,12 @@ inline std::string random_string(std::string::size_type length)
                         "abcdefghijklmnopqrstuvwxyz"
                         "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    thread_local static std::mt19937 rg{std::random_device{}()};
+    // Mix in the address of a local static as a per-process salt (ASLR)
+    // to avoid filename collisions when tests run in parallel, while
+    // preserving deterministic sequences within a single process.
+    thread_local static std::mt19937 rg{
+        osrm::test::getTestRandomSeed() ^
+        static_cast<unsigned>(reinterpret_cast<std::uintptr_t>(&chrs))};
     thread_local static std::uniform_int_distribution<std::string::size_type> pick(
         0, sizeof(chrs) - 2);
 

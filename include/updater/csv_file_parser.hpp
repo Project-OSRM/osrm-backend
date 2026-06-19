@@ -127,11 +127,11 @@ template <typename Key, typename Value> struct CSVFilesParser
                 while (begin_of_line >= mmap.begin() && *begin_of_line != '\n')
                     --begin_of_line;
                 auto line_number = std::count(mmap.begin(), first, '\n') + 1;
-                const auto message = osrm::util::compat::format(
-                    "CSV file {} malformed on line {}:\n {}\n",
-                    filename,
-                    std::to_string(line_number),
-                    std::string(begin_of_line + 1, std::find(first, last, '\n')));
+                const auto message =
+                    std::format("CSV file {} malformed on line {}:\n {}\n",
+                                filename,
+                                std::to_string(line_number),
+                                std::string(begin_of_line + 1, std::find(first, last, '\n')));
                 throw util::exception(message + SOURCE_REF);
             }
 
@@ -141,7 +141,7 @@ template <typename Key, typename Value> struct CSVFilesParser
         }
         catch (const boost::exception &e)
         {
-            const auto message = osrm::util::compat::format(
+            const auto message = std::format(
                 "exception in loading {}:\n {}", filename, boost::diagnostic_information(e));
             throw util::exception(message + SOURCE_REF);
         }

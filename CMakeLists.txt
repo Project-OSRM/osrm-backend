@@ -252,8 +252,14 @@ if (ENABLE_COVERAGE)
     message(ERROR "ENABLE_COVERAGE=ON only makes sense with a Debug build")
   endif()
   message(STATUS "Enabling coverage")
-  set(MAYBE_COVERAGE_LIBRARIES "-lgcov")
-  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -O0 -ftest-coverage -fprofile-arcs")
+  if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+    set(MAYBE_COVERAGE_LIBRARIES "-lgcov")
+  endif()
+  set(COVERAGE_FLAGS "-O0 --coverage")
+  set(CMAKE_C_FLAGS_DEBUG "${CMAKE_C_FLAGS_DEBUG} ${COVERAGE_FLAGS}")
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} ${COVERAGE_FLAGS}")
+  set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} --coverage")
+  set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} --coverage")
 endif()
 
 
@@ -290,7 +296,6 @@ elseif(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
   # using Visual Studio C++
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /bigobj") # avoid compiler error C1128 from scripting_environment_lua.cpp
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /DWIN32_LEAN_AND_MEAN") # avoid compiler error C2011 from dual #include of winsock.h and winsock2.h
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /utf-8") # support Unicode in fmt library
   add_dependency_defines(-DBOOST_LIB_DIAGNOSTIC)
   add_dependency_defines(-D_CRT_SECURE_NO_WARNINGS)
   add_dependency_defines(-DNOMINMAX) # avoid min and max macros that can break compilation
@@ -315,45 +320,9 @@ find_package(Threads REQUIRED)
 # with libstdc++ from older GCC lacking std::format symbols at link time)
 include(CheckCXXSourceRuns)
 
-if(CMAKE_CXX_COMPILER_ID MATCHES "MSVC")
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} /std:c++20")
-else()
-  set(CMAKE_REQUIRED_FLAGS "${CMAKE_CXX_FLAGS} -std=c++20")
-  set(CMAKE_REQUIRED_LIBRARIES "stdc++")
-endif()
-
-check_cxx_source_runs("
-  #include <chrono>
-  #include <format>
-  #include <numbers>
-  #include <string>
-  int main() {
-    // Test basic formatting
-    std::string s1 = std::format(\"{:.10g}\", std::numbers::pi);
-    // Test chrono formatting
-    auto now = std::chrono::system_clock::now();
-    auto secs = std::chrono::floor<std::chrono::seconds>(now);
-    std::string s2 = std::format(\"{:%FT%T}\", secs);
-    return (s1.empty() || s2.empty()) ? 1 : 0;
-  }
-" OSRM_HAS_STD_FORMAT)
-
-unset(CMAKE_REQUIRED_FLAGS)
-unset(CMAKE_REQUIRED_LIBRARIES)
-
-if(OSRM_HAS_STD_FORMAT)
-  add_definitions(-DOSRM_HAS_STD_FORMAT)
-endif()
-
 find_package(LibArchive REQUIRED)
 
 # Header-only libraries from vcpkg. Each provides a CMake CONFIG package.
-find_package(fmt CONFIG REQUIRED)
-# fmt is consumed header-only so OSRM targets don't need to link libfmt.
-# Without this, LTO builds emit undefined references to fmt::v12::vformat,
-# fmt::v12::report_error, etc. because the templates pull in out-of-line
-# symbols that only exist in the compiled fmt::fmt library.
-add_compile_definitions(FMT_HEADER_ONLY)
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 find_package(flatbuffers CONFIG REQUIRED)
@@ -402,7 +371,6 @@ include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
 # DOES apply retroactively to earlier targets. Consumers (unit tests, etc.)
 # inherit the same search paths via the directory.
 set(_osrm_vcpkg_header_targets
-    fmt::fmt-header-only fmt::fmt
     sol2::sol2
     rapidjson RapidJSON::RapidJSON
     flatbuffers::flatbuffers)

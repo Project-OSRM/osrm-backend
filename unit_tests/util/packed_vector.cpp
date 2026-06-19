@@ -4,6 +4,7 @@
 #include "extractor/packed_osm_ids.hpp"
 #include "util/exception.hpp"
 
+#include "../common/random_seed.hpp"
 #include "common/range_tools.hpp"
 
 #include <algorithm>
@@ -26,8 +27,7 @@ BOOST_AUTO_TEST_CASE(insert_and_retrieve_packed_test)
     const constexpr std::size_t num_test_cases = 399;
     const constexpr std::uint64_t max_id = (1ULL << 33) - 1;
 
-    std::mt19937 rng;
-    rng.seed(1337);
+    std::mt19937 rng(osrm::test::getTestRandomSeed());
     std::uniform_int_distribution<std::uint64_t> dist(0, max_id);
 
     for (std::size_t i = 0; i < num_test_cases; i++)

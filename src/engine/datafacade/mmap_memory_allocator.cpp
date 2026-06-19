@@ -29,10 +29,6 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
         // stated that the data is at offset 0, which is where the string starts
         // at it's own memory address.
         // The syntax &(rtree_filename[0]) gets the memory address of the first char.
-        // We can't use the convenient `.data()` or `.c_str()` methods, because
-        // prior to C++17 (which we're not using), those return a `const char *`,
-        // which isn't compatible with the `char *` that AllocatedRegion expects
-        // for it's memory_ptr
         allocated_regions.push_back({rtree_filename.data(), std::move(fake_layout)});
     }
 
