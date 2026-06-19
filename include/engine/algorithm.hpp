@@ -56,6 +56,17 @@ template <typename AlgorithmT> struct HasExcludeFlags final : std::false_type
 {
 };
 
+// Trait to mark supported routing algorithms
+template <typename AlgorithmT> struct IsRoutingAlgorithm final : std::false_type
+{
+};
+template <> struct IsRoutingAlgorithm<ch::Algorithm> final : std::true_type
+{
+};
+template <> struct IsRoutingAlgorithm<mld::Algorithm> final : std::true_type
+{
+};
+
 // Algorithms supported by Contraction Hierarchies
 template <> struct HasAlternativePathSearch<ch::Algorithm> final : std::true_type
 {

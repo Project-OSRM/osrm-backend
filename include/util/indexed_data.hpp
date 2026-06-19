@@ -7,10 +7,11 @@
 #include "util/format.hpp"
 #include "util/vector_view.hpp"
 
+#include "util/iterator_adapters.hpp"
 #include <boost/assert.hpp>
-#include <boost/iterator/function_output_iterator.hpp>
 
 #include <array>
+#include <functional>
 #include <iterator>
 #include <limits>
 #include <string>
@@ -115,8 +116,7 @@ template <int N, typename T = std::string> struct VariableGroupBlock
         {
             const std::uint32_t data_length = *last - *std::prev(last);
             if (data_length >= 0x1000000)
-                throw util::exception(
-                    osrm::util::compat::format("too large data length {}", data_length));
+                throw util::exception(std::format("too large data length {}", data_length));
 
             const std::uint32_t byte_length = log256(data_length);
             refernce.descriptor = (refernce.descriptor << 2) | byte_length;
@@ -222,8 +222,8 @@ template <int N, typename T = std::string> struct FixedGroupBlock
         {
             const std::uint32_t data_length = *next - *curr;
             if (data_length > MAX_LENGTH)
-                throw util::exception(osrm::util::compat::format(
-                    "too large data length {} > {}", data_length, MAX_LENGTH));
+                throw util::exception(
+                    std::format("too large data length {} > {}", data_length, MAX_LENGTH));
 
             prefix[index++] = data_length;
         }
@@ -321,7 +321,7 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
             { values_byte_iter = std::copy_n(&data, sizeof(ValueType), values_byte_iter); };
             std::copy(data + *curr,
                       data + *next,
-                      boost::make_function_output_iterator(std::cref(to_bytes)));
+                      osrm::util::make_function_output_iterator(std::cref(to_bytes)));
         }
     }
 
@@ -360,8 +360,9 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
 
   private:
     template <typename Iter, typename T>
-    using IsValueIterator =
-        std::enable_if_t<std::is_same<T, typename std::iterator_traits<Iter>::value_type>::value>;
+    using IsValueIterator = std::enable_if_t<
+        std::is_same<T,
+                     std::remove_const_t<typename std::iterator_traits<Iter>::value_type>>::value>;
 
     template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
     typename std::enable_if<!std::is_same<T, std::string_view>::value, T>::type

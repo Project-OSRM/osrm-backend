@@ -88,7 +88,7 @@ class BasePlugin
         };
         void operator()(std::string &str_result)
         {
-            str_result = osrm::util::compat::format("code={} message={}", code, message);
+            str_result = std::format("code={} message={}", code, message);
         };
     };
 

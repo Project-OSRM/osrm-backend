@@ -15,29 +15,37 @@ using Locations = std::vector<Location>;
 
 inline Locations get_split_trace_locations()
 {
-    return {{Longitude{7.420202}, Latitude{43.732274}},
-            {Longitude{7.422369}, Latitude{43.732282}},
-            {Longitude{7.421511}, Latitude{43.734181}},
-            {Longitude{7.421489}, Latitude{43.736553}}};
+    using osrm::operator""_lat;
+    using osrm::operator""_lon;
+    return {{7.420202_lon, 43.732274_lat},
+            {7.422369_lon, 43.732282_lat},
+            {7.421511_lon, 43.734181_lat},
+            {7.421489_lon, 43.736553_lat}};
 }
 
 inline Location get_dummy_location()
 {
-    return {osrm::util::FloatLongitude{7.437069}, osrm::util::FloatLatitude{43.749249}};
+    using osrm::operator""_lat;
+    using osrm::operator""_lon;
+    return {7.437069_lon, 43.749249_lat};
 }
 
 inline Locations get_locations_in_small_component()
 {
-    return {{Longitude{7.438023}, Latitude{43.746465}},
-            {Longitude{7.439263}, Latitude{43.746543}},
-            {Longitude{7.438190}, Latitude{43.747560}}};
+    using osrm::operator""_lat;
+    using osrm::operator""_lon;
+    return {{7.438023_lon, 43.746465_lat},
+            {7.439263_lon, 43.746543_lat},
+            {7.438190_lon, 43.747560_lat}};
 }
 
 inline Locations get_locations_in_big_component()
 {
-    return {{Longitude{7.415800}, Latitude{43.734132}},
-            {Longitude{7.417710}, Latitude{43.736721}},
-            {Longitude{7.421315}, Latitude{43.738814}}};
+    using osrm::operator""_lat;
+    using osrm::operator""_lon;
+    return {{7.415800_lon, 43.734132_lat},
+            {7.417710_lon, 43.736721_lat},
+            {7.421315_lon, 43.738814_lat}};
 }
 
 #endif

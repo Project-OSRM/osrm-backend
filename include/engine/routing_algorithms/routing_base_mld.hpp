@@ -589,29 +589,67 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
 
             LevelID sublevel = level - 1;
 
-            // Here heaps can be reused, let's go deeper!
-            forward_heap.Clear();
-            reverse_heap.Clear();
-            forward_heap.Insert(source, {0}, {source});
-            reverse_heap.Insert(target, {0}, {target});
+            constexpr bool has_cache = requires { engine_working_data.unpacking_cache; };
 
-            auto unpacked_subpath = search(engine_working_data,
-                                           facade,
-                                           forward_heap,
-                                           reverse_heap,
-                                           force_step_nodes,
-                                           INVALID_EDGE_WEIGHT,
-                                           sublevel,
-                                           parent_cell_id);
-            BOOST_ASSERT(!unpacked_subpath.edges.empty());
-            BOOST_ASSERT(unpacked_subpath.nodes.size() > 1);
-            BOOST_ASSERT(unpacked_subpath.nodes.front() == source);
-            BOOST_ASSERT(unpacked_subpath.nodes.back() == target);
-            unpacked_nodes.insert(unpacked_nodes.end(),
-                                  std::next(unpacked_subpath.nodes.begin()),
-                                  unpacked_subpath.nodes.end());
-            unpacked_edges.insert(
-                unpacked_edges.end(), unpacked_subpath.edges.begin(), unpacked_subpath.edges.end());
+            bool cache_hit = false;
+            if constexpr (has_cache)
+            {
+                if (engine_working_data.unpacking_cache)
+                {
+                    MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
+                    auto &cache = *engine_working_data.unpacking_cache;
+                    if (auto *cached = cache.get(cache_key))
+                    {
+                        BOOST_ASSERT(cached->nodes.size() > 1);
+                        BOOST_ASSERT(cached->nodes.front() == source);
+                        BOOST_ASSERT(cached->nodes.back() == target);
+                        unpacked_nodes.insert(unpacked_nodes.end(),
+                                              std::next(cached->nodes.begin()),
+                                              cached->nodes.end());
+                        unpacked_edges.insert(
+                            unpacked_edges.end(), cached->edges.begin(), cached->edges.end());
+                        cache_hit = true;
+                    }
+                }
+            }
+
+            if (!cache_hit)
+            {
+                forward_heap.Clear();
+                reverse_heap.Clear();
+                forward_heap.Insert(source, {0}, {source});
+                reverse_heap.Insert(target, {0}, {target});
+
+                auto unpacked_subpath = search(engine_working_data,
+                                               facade,
+                                               forward_heap,
+                                               reverse_heap,
+                                               force_step_nodes,
+                                               INVALID_EDGE_WEIGHT,
+                                               sublevel,
+                                               parent_cell_id);
+                BOOST_ASSERT(!unpacked_subpath.edges.empty());
+                BOOST_ASSERT(unpacked_subpath.nodes.size() > 1);
+                BOOST_ASSERT(unpacked_subpath.nodes.front() == source);
+                BOOST_ASSERT(unpacked_subpath.nodes.back() == target);
+                unpacked_nodes.insert(unpacked_nodes.end(),
+                                      std::next(unpacked_subpath.nodes.begin()),
+                                      unpacked_subpath.nodes.end());
+                unpacked_edges.insert(unpacked_edges.end(),
+                                      unpacked_subpath.edges.begin(),
+                                      unpacked_subpath.edges.end());
+
+                if constexpr (has_cache)
+                {
+                    if (engine_working_data.unpacking_cache)
+                    {
+                        MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
+                        engine_working_data.unpacking_cache->insert(
+                            cache_key,
+                            {std::move(unpacked_subpath.nodes), std::move(unpacked_subpath.edges)});
+                    }
+                }
+            }
         }
     }
 

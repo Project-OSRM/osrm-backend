@@ -57,6 +57,11 @@ template <typename From, typename Tag> struct Alias final
     {
         return Alias{__value - static_cast<const From>(rhs_)};
     }
+    inline Alias operator-() const
+        requires(std::is_signed_v<From> || std::is_floating_point_v<From>)
+    {
+        return Alias{-__value};
+    }
     inline Alias operator*(const Alias rhs_) const
     {
         return Alias{__value * static_cast<const From>(rhs_)};
@@ -75,12 +80,7 @@ template <typename From, typename Tag> struct Alias final
     {
         return Alias{__value & static_cast<const From>(rhs_)};
     }
-    inline bool operator<(const Alias z_) const { return __value < static_cast<const From>(z_); }
-    inline bool operator>(const Alias z_) const { return __value > static_cast<const From>(z_); }
-    inline bool operator<=(const Alias z_) const { return __value <= static_cast<const From>(z_); }
-    inline bool operator>=(const Alias z_) const { return __value >= static_cast<const From>(z_); }
-    inline bool operator==(const Alias z_) const { return __value == static_cast<const From>(z_); }
-    inline bool operator!=(const Alias z_) const { return __value != static_cast<const From>(z_); }
+    auto operator<=>(const Alias &) const = default;
 
     inline Alias operator++()
     {

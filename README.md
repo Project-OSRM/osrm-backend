@@ -62,7 +62,7 @@ If you want to use the CH pipeline instead replace `osrm-partition` and `osrm-cu
 
 ### Using Docker
 
-We base our Docker images ([backend](https://github.com/Project-OSRM/osrm-backend/pkgs/container/osrm-backend), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Debian and make sure they are as lightweight as possible. Older backend versions can be found on [Docker Hub](https://hub.docker.com/r/osrm/osrm-backend/).
+We base our Docker images ([backend](https://github.com/Project-OSRM/osrm-backend/pkgs/container/osrm-backend), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Debian Linux and make sure they are as lightweight as possible. Older backend versions can be found on [Docker Hub](https://hub.docker.com/r/osrm/osrm-backend/).
 
 Download OpenStreetMap extracts for example from [Geofabrik](http://download.geofabrik.de/)
 
@@ -135,7 +135,7 @@ sudo cmake --install build
 ```
 
 The first configure will build every dependency (boost, tbb, expat, bzip2,
-lua, fmt, libosmium, …) from source. Subsequent configures reuse vcpkg's
+lua, libosmium, …) from source. Subsequent configures reuse vcpkg's
 binary cache.
 
 ### Request Against the Demo Server
@@ -186,6 +186,24 @@ npm install @project-osrm/osrm --save
 For usage details have a look [these API docs](docs/nodejs/api.md).
 
 An exemplary implementation by a 3rd party with Docker and Node.js can be found [here](https://github.com/door2door-io/osrm-express-server-demo).
+
+### Using the Python Bindings
+
+The Python bindings provide read-only access to the routing engine via [nanobind](https://github.com/wjakob/nanobind).
+
+You can install the Python bindings from PyPI via
+
+    pip install osrm-bindings
+
+We distribute `abi3` wheels for CPython 3.12+ on Linux (x86_64), macOS (arm64, x86_64) and Windows (x86_64). On other platforms `pip` will fall back to building from source, which requires CPython 3.10+ and the OSRM build dependencies.
+
+To build from source from this repository:
+
+    pip install .
+
+#### Package docs
+
+For usage details and examples have a look at [the Python bindings README](src/python/README.md).
 
 ## References in publications
 
