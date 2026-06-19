@@ -31,6 +31,7 @@
 #include <limits>
 #include <queue>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace osrm::util
@@ -214,6 +215,11 @@ class StaticRTree
 
     struct QueryCandidate
     {
+        auto orderingKey() const
+        {
+            return std::tuple{squared_min_dist, tree_index.level, tree_index.offset, segment_index};
+        }
+
         QueryCandidate(std::uint64_t squared_min_dist, TreeIndex tree_index)
             : squared_min_dist(squared_min_dist), tree_index(tree_index),
               segment_index(std::numeric_limits<std::uint32_t>::max())
@@ -238,7 +244,7 @@ class StaticRTree
         {
             // Attn: this is reversed order. std::priority_queue is a
             // max pq (biggest item at the front)!
-            return other.squared_min_dist < squared_min_dist;
+            return (orderingKey() <=> other.orderingKey()) > 0;
         }
 
         std::uint64_t squared_min_dist;
