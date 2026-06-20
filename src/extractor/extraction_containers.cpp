@@ -710,8 +710,12 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             auto &edge = edge_iterator->result;
             edge.weight = std::max<EdgeWeight>(
                 {1}, to_alias<EdgeWeight>(std::round(segment.weight * weight_multiplier)));
-            edge.duration = std::max<EdgeDuration>(
-                {1}, to_alias<EdgeDuration>(std::round(segment.duration * 10.)));
+            // compute rounded duration in deciseconds explicitly so we can log/debug differences
+            {
+                const auto rounded_ds = static_cast<long>(
+                    std::floor(static_cast<long double>(segment.duration) * 10.0L + 0.5L));
+                edge.duration = std::max<EdgeDuration>({1}, to_alias<EdgeDuration>(rounded_ds));
+            }
             edge.distance = to_alias<EdgeDistance>(accurate_distance);
 
             // assign new node id

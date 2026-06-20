@@ -14,6 +14,7 @@ export default {
       // don't fail if bearings input and extected string is empty and actual result is undefined
       if (want === '' && (got === '' || got === undefined)) return true;
 
+
       const matchPercent = want.match(/(.*)\s+~(.+)%$/),
         matchAbs = want.match(/(.*)\s+\+-(.+)$/),
         matchRe = want.match(/^\/(.*)\/$/),

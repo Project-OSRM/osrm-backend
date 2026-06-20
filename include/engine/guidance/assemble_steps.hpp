@@ -133,25 +133,28 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                 const auto travel_mode = facade.GetTravelMode(path_point.from_edge_based_node);
                 BOOST_ASSERT(travel_mode > 0);
 
-                steps.push_back(RouteStep{path_point.from_edge_based_node,
-                                          step_name_id,
-                                          is_segregated,
-                                          std::string(name),
-                                          std::string(ref),
-                                          std::string(pronunciation),
-                                          std::string(destinations),
-                                          std::string(exits),
-                                          NO_ROTARY_NAME,
-                                          NO_ROTARY_NAME,
-                                          from_alias<double>(segment_duration) / 10.,
-                                          distance,
-                                          from_alias<double>(segment_weight) / weight_multiplier,
-                                          travel_mode,
-                                          maneuver,
-                                          leg_geometry.FrontIndex(segment_index),
-                                          leg_geometry.BackIndex(segment_index) + 1,
-                                          {intersection},
-                                          is_left_hand_driving});
+                {
+                    const double step_seconds = from_alias<double>(segment_duration) / 10.;
+                    steps.push_back(RouteStep{path_point.from_edge_based_node,
+                                              step_name_id,
+                                              is_segregated,
+                                              std::string(name),
+                                              std::string(ref),
+                                              std::string(pronunciation),
+                                              std::string(destinations),
+                                              std::string(exits),
+                                              NO_ROTARY_NAME,
+                                              NO_ROTARY_NAME,
+                                              step_seconds,
+                                              distance,
+                                              from_alias<double>(segment_weight) / weight_multiplier,
+                                              travel_mode,
+                                              maneuver,
+                                              leg_geometry.FrontIndex(segment_index),
+                                              leg_geometry.BackIndex(segment_index) + 1,
+                                              {intersection},
+                                              is_left_hand_driving});
+                }
 
                 if (leg_data_index + 1 < leg_data.size())
                 {
@@ -235,25 +238,28 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         // intersections contain the classes of exiting road
         intersection.classes = facade.GetClasses(facade.GetClassData(target_node_id));
         BOOST_ASSERT(duration >= EdgeDuration{0});
-        steps.push_back(RouteStep{leg_data[leg_data.size() - 1].from_edge_based_node,
-                                  step_name_id,
-                                  is_segregated,
-                                  std::string(facade.GetNameForID(step_name_id)),
-                                  std::string(facade.GetRefForID(step_name_id)),
-                                  std::string(facade.GetPronunciationForID(step_name_id)),
-                                  std::string(facade.GetDestinationsForID(step_name_id)),
-                                  std::string(facade.GetExitsForID(step_name_id)),
-                                  NO_ROTARY_NAME,
-                                  NO_ROTARY_NAME,
-                                  from_alias<double>(duration) / 10.,
-                                  distance,
-                                  from_alias<double>(weight) / weight_multiplier,
-                                  target_mode,
-                                  maneuver,
-                                  leg_geometry.FrontIndex(segment_index),
-                                  leg_geometry.BackIndex(segment_index) + 1,
-                                  {intersection},
-                                  facade.IsLeftHandDriving(target_node_id)});
+        {
+            const double step_seconds = from_alias<double>(duration) / 10.;
+            steps.push_back(RouteStep{leg_data[leg_data.size() - 1].from_edge_based_node,
+                                      step_name_id,
+                                      is_segregated,
+                                      std::string(facade.GetNameForID(step_name_id)),
+                                      std::string(facade.GetRefForID(step_name_id)),
+                                      std::string(facade.GetPronunciationForID(step_name_id)),
+                                      std::string(facade.GetDestinationsForID(step_name_id)),
+                                      std::string(facade.GetExitsForID(step_name_id)),
+                                      NO_ROTARY_NAME,
+                                      NO_ROTARY_NAME,
+                                      step_seconds,
+                                      distance,
+                                      from_alias<double>(weight) / weight_multiplier,
+                                      target_mode,
+                                      maneuver,
+                                      leg_geometry.FrontIndex(segment_index),
+                                      leg_geometry.BackIndex(segment_index) + 1,
+                                      {intersection},
+                                      facade.IsLeftHandDriving(target_node_id)});
+        }
     }
     // In this case the source + target are on the same edge segment
     else
