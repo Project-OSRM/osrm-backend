@@ -42,7 +42,7 @@ jobs:
             echo "nameserver 1.1.1.1"
             echo "nameserver 8.8.8.8"
           } | sudo tee /etc/resolv.conf > /dev/null
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.BACKEND_RELEASE_TOKEN }}
           ref: ${{ inputs.branch || 'master' }}
@@ -252,7 +252,7 @@ jobs:
             echo "nameserver 1.1.1.1"
             echo "nameserver 8.8.8.8"
           } | sudo tee /etc/resolv.conf > /dev/null
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.release.outputs.tag }}
 
