@@ -135,25 +135,26 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
 
                 {
                     const double step_seconds = from_alias<double>(segment_duration) / 10.;
-                    steps.push_back(RouteStep{path_point.from_edge_based_node,
-                                              step_name_id,
-                                              is_segregated,
-                                              std::string(name),
-                                              std::string(ref),
-                                              std::string(pronunciation),
-                                              std::string(destinations),
-                                              std::string(exits),
-                                              NO_ROTARY_NAME,
-                                              NO_ROTARY_NAME,
-                                              step_seconds,
-                                              distance,
-                                              from_alias<double>(segment_weight) / weight_multiplier,
-                                              travel_mode,
-                                              maneuver,
-                                              leg_geometry.FrontIndex(segment_index),
-                                              leg_geometry.BackIndex(segment_index) + 1,
-                                              {intersection},
-                                              is_left_hand_driving});
+                    steps.push_back(
+                        RouteStep{path_point.from_edge_based_node,
+                                  step_name_id,
+                                  is_segregated,
+                                  std::string(name),
+                                  std::string(ref),
+                                  std::string(pronunciation),
+                                  std::string(destinations),
+                                  std::string(exits),
+                                  NO_ROTARY_NAME,
+                                  NO_ROTARY_NAME,
+                                  step_seconds,
+                                  distance,
+                                  from_alias<double>(segment_weight) / weight_multiplier,
+                                  travel_mode,
+                                  maneuver,
+                                  leg_geometry.FrontIndex(segment_index),
+                                  leg_geometry.BackIndex(segment_index) + 1,
+                                  {intersection},
+                                  is_left_hand_driving});
                 }
 
                 if (leg_data_index + 1 < leg_data.size())
