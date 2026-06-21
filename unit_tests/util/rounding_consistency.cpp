@@ -67,13 +67,12 @@ BOOST_AUTO_TEST_CASE(round_deciseconds_deterministic)
 
     for (const auto &tc : test_cases)
     {
-        const auto result =
-            static_cast<std::int32_t>(std::round(tc.seconds * 10.0));
+        const auto result = static_cast<std::int32_t>(std::round(tc.seconds * 10.0));
 
         BOOST_CHECK_MESSAGE(result == tc.expected_deciseconds,
-                            "Rounding mismatch for " << tc.seconds << "s: std::round("
-                                                      << tc.seconds << " * 10.0) = " << result
-                                                      << ", expected " << tc.expected_deciseconds);
+                            "Rounding mismatch for " << tc.seconds << "s: std::round(" << tc.seconds
+                                                     << " * 10.0) = " << result << ", expected "
+                                                     << tc.expected_deciseconds);
     }
 }
 
@@ -84,7 +83,16 @@ BOOST_AUTO_TEST_CASE(round_deciseconds_consistent_with_repeated_calls)
     // but we verify it for the specific values used in the project.
 
     const double test_values[] = {
-        1.45, 1.55, 1.65, 1.35, 1.25, 1.5026, 3.60139, 2.49601, 0.9999, 12345.678901234,
+        1.45,
+        1.55,
+        1.65,
+        1.35,
+        1.25,
+        1.5026,
+        3.60139,
+        2.49601,
+        0.9999,
+        12345.678901234,
     };
 
     for (const auto d : test_values)
@@ -95,8 +103,8 @@ BOOST_AUTO_TEST_CASE(round_deciseconds_consistent_with_repeated_calls)
             const auto again = static_cast<std::int32_t>(std::round(d * 10.0));
             BOOST_CHECK_MESSAGE(first == again,
                                 "Non-deterministic rounding for " << d << ": first=" << first
-                                                                  << ", attempt " << i
-                                                                  << "=" << again);
+                                                                  << ", attempt " << i << "="
+                                                                  << again);
         }
     }
 }
@@ -118,8 +126,7 @@ BOOST_AUTO_TEST_CASE(round_deciseconds_stable_around_boundaries)
 
     for (const auto seconds : boundary_seconds)
     {
-        const auto result =
-            static_cast<std::int32_t>(std::round(seconds * 10.0));
+        const auto result = static_cast<std::int32_t>(std::round(seconds * 10.0));
 
         // Every rounding result must be within ±1 decisecond of the "naive"
         // integer conversion. This catches catastrophic errors.
