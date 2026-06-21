@@ -11,6 +11,7 @@
 #include <boost/assert.hpp>
 
 #include <array>
+#include <concepts>
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -359,24 +360,20 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
                                                       const IndexedDataImpl &index_data);
 
   private:
-    template <typename Iter, typename T>
-    using IsValueIterator = std::enable_if_t<
-        std::is_same<T,
-                     std::remove_const_t<typename std::iterator_traits<Iter>::value_type>>::value>;
-
-    template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
-    std::enable_if<!std::is_same<T, std::string_view>::value, T>::type adapt(const Iter first,
-                                                                             const Iter last) const
+    template <typename T = ResultType, typename Iter>
+        requires std::same_as<std::remove_const_t<typename std::iterator_traits<Iter>::value_type>,
+                              ValueType>
+    T adapt(const Iter first, const Iter last) const
     {
-        return ResultType(first, last);
-    }
-
-    template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
-    std::enable_if<std::is_same<T, std::string_view>::value, T>::type adapt(const Iter first,
-                                                                            const Iter last) const
-    {
-        auto diff = std::distance(first, last);
-        return diff == 0 ? ResultType() : ResultType(&*first, diff);
+        if constexpr (std::is_same_v<T, std::string_view>)
+        {
+            auto diff = std::distance(first, last);
+            return diff == 0 ? ResultType() : ResultType(&*first, diff);
+        }
+        else
+        {
+            return ResultType(first, last);
+        }
     }
 
     template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
