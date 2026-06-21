@@ -30,7 +30,7 @@ jobs:
             echo "nameserver 8.8.8.8"
           } | sudo tee /etc/resolv.conf > /dev/null
       - name: Check out the repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.ref }}
 
@@ -139,7 +139,7 @@ jobs:
             echo "nameserver 8.8.8.8"
           } | sudo tee /etc/resolv.conf > /dev/null
       - name: Check out the repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.ref }}
 
