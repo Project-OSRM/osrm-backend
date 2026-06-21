@@ -15,6 +15,7 @@
 #include "util/json_container.hpp"
 
 #include <algorithm>
+#include <format>
 #include <iterator>
 #include <string>
 #include <vector>
