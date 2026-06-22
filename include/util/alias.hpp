@@ -142,9 +142,8 @@ template <typename ToNumeric, typename FromAlias> inline ToNumeric from_alias(co
     return {static_cast<ToNumeric>(static_cast<const FromAlias::value_type>(from))};
 }
 
-template <typename ToAlias,
-          typename FromNumeric,
-          typename = std::enable_if_t<!std::is_same<ToAlias, FromNumeric>::value>>
+template <typename ToAlias, typename FromNumeric>
+    requires(!std::is_same_v<ToAlias, FromNumeric>)
 inline ToAlias to_alias(const FromNumeric &from)
 {
     static_assert(std::is_arithmetic<FromNumeric>::value, "Numeric needs to be an arithmetic type");
