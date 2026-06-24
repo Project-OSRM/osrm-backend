@@ -62,6 +62,10 @@ class BaseDataFacade
     using DatasourceForwardRange = std::span<const DatasourceID>;
     using DatasourceReverseRange = std::ranges::reverse_view<DatasourceForwardRange>;
 
+    using WayIDForwardRange =
+        std::ranges::subrange<extractor::SegmentDataView::SegmentWayIDVector::const_iterator>;
+    using WayIDReverseRange = std::ranges::reverse_view<WayIDForwardRange>;
+
     BaseDataFacade() {}
     virtual ~BaseDataFacade() {}
 
@@ -73,6 +77,8 @@ class BaseDataFacade
     virtual util::Coordinate GetCoordinateOfNode(const NodeID node_based_node_id) const = 0;
 
     virtual OSMNodeID GetOSMNodeIDOfNode(const NodeID node_based_node_id) const = 0;
+
+    virtual OSMWayID GetOSMWayID(const NodeID edge_based_node_id) const = 0;
 
     virtual GeometryID GetGeometryIndex(const NodeID edge_based_node_id) const = 0;
 
@@ -103,6 +109,10 @@ class BaseDataFacade
     GetUncompressedForwardDatasources(const PackedGeometryID id) const = 0;
     virtual DatasourceReverseRange
     GetUncompressedReverseDatasources(const PackedGeometryID id) const = 0;
+
+    virtual WayIDForwardRange GetUncompressedForwardWayIDs(const PackedGeometryID id) const = 0;
+    virtual WayIDReverseRange GetUncompressedReverseWayIDs(const PackedGeometryID id) const = 0;
+    virtual bool HasRouteWayIDs() const { return true; }
 
     // Gets the name of a datasource
     virtual std::string_view GetDatasourceName(const DatasourceID id) const = 0;

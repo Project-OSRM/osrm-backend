@@ -70,6 +70,7 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
  * @param {Boolean} [options.mmap_memory] Map on-disk files to virtual memory addresses (mmap), rather than loading into RAM.
  * @param {String} [options.path] The path to the `.osrm` files. This is mutually exclusive with setting {options.shared_memory} to true.
  * @param {Array}  [options.disable_feature_dataset] Disables a feature dataset from being loaded into memory if not needed. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`.
+ * @param {Array}  [options.enable_feature_dataset] Enables a feature dataset that is skipped by default. Options: `ROUTE_WAY_IDS`.
  * @param {Number} [options.max_locations_trip] Max. locations supported in trip query (default: unlimited).
  * @param {Number} [options.max_locations_viaroute] Max. locations supported in viaroute query (default: unlimited).
  * @param {Number} [options.max_locations_distance_table] Max. locations supported in distance table query (default: unlimited).
@@ -283,7 +284,7 @@ inline void asyncForTiles(const Napi::CallbackInfo &info,
  * @param {Number} [options.alternatives=0] Search for up to this many alternative routes.
  * *Please note that even if alternative routes are requested, a result cannot be guaranteed.*
  * @param {Boolean} [options.steps=false] Return route steps for each route leg.
- * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
+ * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed`, `way_ids` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be displayed on, or not at all (`false`). If you want the overview for each leg, you can use `by_legs`.
  * @param {Boolean} [options.continue_straight] Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
@@ -474,7 +475,7 @@ Napi::Value Engine::tile(const Napi::CallbackInfo &info)
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
  * @param {Boolean} [options.generate_hints=true] Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Boolean} [options.steps=false] Return route steps for each route.
- * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
+ * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed`, `way_ids` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`).
  * @param {Array<Number>} [options.timestamps] Timestamp of the input location (integers, UNIX-like timestamp).
@@ -553,7 +554,7 @@ Napi::Value Engine::match(const Napi::CallbackInfo &info)
  * @param {Array} [options.hints] Hints for the coordinate snapping. Array of base64 encoded strings.
  * @param {Boolean} [options.generate_hints=true] Whether or not adds a Hint to the response which can be used in subsequent requests.
  * @param {Boolean} [options.steps=false] Return route steps for each route.
- * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all.
+ * @param {Array|Boolean} [options.annotations=false] An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed`, `way_ids` or boolean for enabling/disabling all.
  * @param {String} [options.geometries=polyline] Returned route geometry format (influences overview and per step). Can also be `geojson`.
  * @param {String} [options.overview=simplified] Add overview geometry either `full`, `simplified`, `false` or `by_legs`.
  * @param {Function} callback

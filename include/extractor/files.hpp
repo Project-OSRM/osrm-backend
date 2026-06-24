@@ -186,7 +186,9 @@ inline void writeDatasources(const std::filesystem::path &path, Datasources &sou
 
 // reads .osrm.geometry
 template <typename SegmentDataT>
-void readSegmentData(const std::filesystem::path &path, SegmentDataT &segment_data)
+void readSegmentData(const std::filesystem::path &path,
+                     SegmentDataT &segment_data,
+                     const bool read_way_ids = true)
 {
     static_assert(std::is_same<SegmentDataContainer, SegmentDataT>::value ||
                       std::is_same<SegmentDataView, SegmentDataT>::value,
@@ -194,7 +196,7 @@ void readSegmentData(const std::filesystem::path &path, SegmentDataT &segment_da
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
-    serialization::read(reader, "/common/segment_data", segment_data);
+    serialization::read(reader, "/common/segment_data", segment_data, read_way_ids);
 }
 
 // writes .osrm.geometry

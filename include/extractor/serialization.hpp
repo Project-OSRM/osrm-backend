@@ -74,7 +74,8 @@ inline void write(storage::tar::FileWriter &writer, const std::string &name, Dat
 template <storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
-                 detail::SegmentDataContainerImpl<Ownership> &segment_data)
+                 detail::SegmentDataContainerImpl<Ownership> &segment_data,
+                 const bool read_way_ids)
 {
     storage::serialization::read(reader, name + "/index", segment_data.index);
     storage::serialization::read(reader, name + "/nodes", segment_data.nodes);
@@ -86,6 +87,11 @@ inline void read(storage::tar::FileReader &reader,
         reader, name + "/forward_data_sources", segment_data.fwd_datasources);
     storage::serialization::read(
         reader, name + "/reverse_data_sources", segment_data.rev_datasources);
+    if (read_way_ids)
+    {
+        storage::serialization::read(reader, name + "/forward_way_ids", segment_data.fwd_way_ids);
+        storage::serialization::read(reader, name + "/reverse_way_ids", segment_data.rev_way_ids);
+    }
 }
 
 template <storage::Ownership Ownership>
@@ -103,6 +109,8 @@ inline void write(storage::tar::FileWriter &writer,
         writer, name + "/forward_data_sources", segment_data.fwd_datasources);
     storage::serialization::write(
         writer, name + "/reverse_data_sources", segment_data.rev_datasources);
+    storage::serialization::write(writer, name + "/forward_way_ids", segment_data.fwd_way_ids);
+    storage::serialization::write(writer, name + "/reverse_way_ids", segment_data.rev_way_ids);
 }
 
 template <storage::Ownership Ownership>

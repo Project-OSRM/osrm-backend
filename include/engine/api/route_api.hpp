@@ -30,6 +30,7 @@
 #include <bitset>
 #include <iterator>
 #include <map>
+#include <type_traits>
 #include <vector>
 
 namespace osrm::engine::api
@@ -382,6 +383,7 @@ class RouteAPI : public BaseAPI
             {
                 requested_annotations = RouteParameters::AnnotationsType::All;
             }
+            requested_annotations = GetAvailableAnnotations(requested_annotations);
 
             flatbuffers::Offset<fbresult::Annotation> annotation_buffer;
             if (requested_annotations != RouteParameters::AnnotationsType::None)
@@ -522,6 +524,19 @@ class RouteAPI : public BaseAPI
                                                    [](const guidance::LegGeometry::Annotation &anno)
                                                    { return anno.datasource; });
         }
+
+        flatbuffers::Offset<flatbuffers::Vector<uint64_t>> way_ids;
+        if (requested_annotations & RouteParameters::AnnotationsType::WayIds)
+        {
+            if (!facade.HasRouteWayIDs())
+            {
+                throw util::DisabledDatasetException("RouteWayIds");
+            }
+            way_ids = GetAnnotations<uint64_t>(fb_result,
+                                               leg_geometry,
+                                               [](const guidance::LegGeometry::Annotation &anno)
+                                               { return static_cast<std::uint64_t>(anno.way_id); });
+        }
         std::vector<uint64_t> nodes;
         if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
         {
@@ -561,8 +576,23 @@ class RouteAPI : public BaseAPI
         {
             annotation.add_metadata(metadata_buffer);
         }
+        annotation.add_way_ids(way_ids);
 
         return annotation.Finish();
+    }
+
+    RouteParameters::AnnotationsType
+    GetAvailableAnnotations(const RouteParameters::AnnotationsType requested_annotations) const
+    {
+        if (requested_annotations == RouteParameters::AnnotationsType::All &&
+            !facade.HasRouteWayIDs())
+        {
+            using AnnotationType = std::underlying_type_t<RouteParameters::AnnotationsType>;
+            return static_cast<RouteParameters::AnnotationsType>(
+                static_cast<AnnotationType>(requested_annotations) &
+                ~static_cast<AnnotationType>(RouteParameters::AnnotationsType::WayIds));
+        }
+        return requested_annotations;
     }
 
     template <typename Builder> class GeometryVisitor
@@ -808,6 +838,7 @@ class RouteAPI : public BaseAPI
         {
             requested_annotations = RouteParameters::AnnotationsType::All;
         }
+        requested_annotations = GetAvailableAnnotations(requested_annotations);
 
         if (requested_annotations != RouteParameters::AnnotationsType::None)
         {
@@ -871,6 +902,18 @@ class RouteAPI : public BaseAPI
                         GetAnnotations(leg_geometry,
                                        [](const guidance::LegGeometry::Annotation &anno)
                                        { return anno.datasource; }));
+                }
+                if (requested_annotations & RouteParameters::AnnotationsType::WayIds)
+                {
+                    if (!facade.HasRouteWayIDs())
+                    {
+                        throw util::DisabledDatasetException("RouteWayIds");
+                    }
+                    annotation.values.emplace(
+                        "way_ids",
+                        GetAnnotations(leg_geometry,
+                                       [](const guidance::LegGeometry::Annotation &anno)
+                                       { return static_cast<std::uint64_t>(anno.way_id); }));
                 }
                 if (requested_annotations & RouteParameters::AnnotationsType::Nodes)
                 {

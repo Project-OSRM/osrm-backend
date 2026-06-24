@@ -45,7 +45,7 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
             boost::iostreams::mapped_file_source mapped_memory_file;
             auto data = util::mmapFile<char>(file.second, mapped_memory_file).data();
             mapped_memory_files.push_back(std::move(mapped_memory_file));
-            storage::populateLayoutFromFile(file.second, *layout);
+            storage::populateLayoutFromFile(file.second, *layout, config.disabled_feature_datasets);
             allocated_regions.push_back({const_cast<char *>(data), std::move(layout)});
         }
     }

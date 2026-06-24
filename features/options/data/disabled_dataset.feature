@@ -139,3 +139,58 @@ Feature: disable-feature-dataset command line options
           | trace | code |
           | abc   | Ok   |
 
+    Scenario: way ids disabled by default error
+        Given the query options
+          | overview    | false   |
+          | annotations | way_ids |
+          | steps       | false   |
+
+        When I route I should get
+            | from | to | code             |
+            | a    | c  | DisabledDataset |
+
+        When I plan a trip I should get
+            | waypoints | code            |
+            | a,b,c     | DisabledDataset |
+
+        When I match I should get
+          | trace | code            |
+          | abc   | DisabledDataset |
+
+    Scenario: way ids disabled by default success
+        Given the query options
+          | overview    | false    |
+          | annotations | duration |
+          | steps       | false    |
+
+        When I route I should get
+            | from | to | code |
+            | a    | c  | Ok   |
+
+        When I plan a trip I should get
+            | waypoints | code |
+            | a,b,c     | Ok   |
+
+        When I match I should get
+          | trace | code |
+          | abc   | Ok   |
+
+    Scenario: enable-feature-dataset - way ids enabled success
+        Given the data load extra arguments "--enable-feature-dataset ROUTE_WAY_IDS"
+
+        And the query options
+          | overview    | false   |
+          | annotations | way_ids |
+          | steps       | false   |
+
+        When I route I should get
+            | from | to | code |
+            | a    | c  | Ok   |
+
+        When I plan a trip I should get
+            | waypoints | code |
+            | a,b,c     | Ok   |
+
+        When I match I should get
+          | trace | code |
+          | abc   | Ok   |

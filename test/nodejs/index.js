@@ -191,3 +191,22 @@ test('constructor: ok on multiple overlapping disable_feature_dataset options', 
   });
   assert.ok(osrm);
 });
+
+test('constructor: throws on invalid enable_feature_dataset option', (assert) => {
+  assert.plan(1);
+  assert.throws(() => {
+    new OSRM({
+      path: monaco_path,
+      enable_feature_dataset: ['ROUTE_GEOMETRY'],
+    });
+  }, /enable_feature_dataset array can include 'ROUTE_WAY_IDS'/);
+});
+
+test('constructor: ok on valid enable_feature_dataset option', (assert) => {
+  assert.plan(1);
+  const osrm = new OSRM({
+    path: monaco_path,
+    enable_feature_dataset: ['ROUTE_WAY_IDS'],
+  });
+  assert.ok(osrm);
+});

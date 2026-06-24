@@ -35,6 +35,7 @@ static const std::string DATASET_TURN_LANE_DATA = "NameLaneData";
 static const std::string DATASET_STRING_DATA = "StringData";
 static const std::string DATASET_INTERSECTION_BEARINGS = "IntersectionBearings";
 static const std::string DATASET_ENTRY_CLASS = "EntryClass";
+static const std::string DATASET_ROUTE_WAY_IDS = "RouteWayIds";
 
 /**
  * Macro is not ideal. But without it we either have to:
@@ -166,6 +167,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::vector_view<TurnPenalty> m_turn_weight_penalties;
     util::vector_view<TurnPenalty> m_turn_duration_penalties;
     extractor::SegmentDataView segment_data;
+    bool has_way_ids = false;
     extractor::EdgeBasedNodeDataView edge_based_node_data;
     std::optional<osrm::guidance::TurnDataView> turn_data;
 
@@ -253,6 +255,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         m_turn_duration_penalties = make_turn_duration_view(index, "/common/turn_penalty");
 
         segment_data = make_segment_data_view(index, "/common/segment_data");
+        has_way_ids = index.HasBlock("/common/segment_data/forward_way_ids") &&
+                      index.HasBlock("/common/segment_data/reverse_way_ids");
 
         m_datasources = index.GetBlockPtr<extractor::Datasources>("/common/data_sources_names");
 
@@ -287,6 +291,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     OSMNodeID GetOSMNodeIDOfNode(const NodeID node_based_node_id) const override final
     {
         return m_osmnodeid_list[node_based_node_id];
+    }
+
+    OSMWayID GetOSMWayID(const NodeID edge_based_node_id) const override final
+    {
+        return edge_based_node_data.GetWayID(edge_based_node_id);
     }
 
     NodeForwardRange GetUncompressedForwardGeometry(const PackedGeometryID id) const override final
@@ -336,6 +345,20 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         return segment_data.GetReverseDatasources(id);
     }
+
+    WayIDForwardRange GetUncompressedForwardWayIDs(const PackedGeometryID id) const override final
+    {
+        CHECK_DATASET_DISABLED(has_way_ids, DATASET_ROUTE_WAY_IDS);
+        return segment_data.GetForwardWayIDs(id);
+    }
+
+    WayIDReverseRange GetUncompressedReverseWayIDs(const PackedGeometryID id) const override final
+    {
+        CHECK_DATASET_DISABLED(has_way_ids, DATASET_ROUTE_WAY_IDS);
+        return segment_data.GetReverseWayIDs(id);
+    }
+
+    bool HasRouteWayIDs() const override final { return has_way_ids; }
 
     TurnPenalty GetWeightPenaltyForEdgeID(const EdgeID edge_based_edge_id) const override final
     {

@@ -42,7 +42,7 @@ void init_RouteParameters(nb::module_ &m)
                 steps (bool): Return route steps for each route leg. (default False)\n\
                 number_of_alternatives (int): Search for n alternative routes. (default 0)\n\
                 annotations (list of 'none' | 'duration' |  'nodes' | 'distance' | 'weight' | 'datasources' \
-                    | 'speed' | 'all'): Returns additional metadata for each coordinate along the route geometry. (default [])\n\
+                    | 'speed' | 'way_ids' | 'all'): Returns additional metadata for each coordinate along the route geometry. (default [])\n\
                 geometries (string 'polyline' | 'polyline6' | 'geojson'): Returned route geometry format - influences overview and per step. (default "
              ")\n\
                 overview (string 'simplified' | 'full' | 'false'): Add overview geometry either full, simplified. (default '')\n\

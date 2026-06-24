@@ -32,6 +32,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
         return {util::FixedLongitude{0}, util::FixedLatitude{0}};
     }
     OSMNodeID GetOSMNodeIDOfNode(const NodeID /* id */) const override { return OSMNodeID{0}; }
+    OSMWayID GetOSMWayID(const NodeID /* id */) const override { return SPECIAL_OSM_WAYID; }
     bool EdgeIsCompressed(const EdgeID /* id */) const { return false; }
     GeometryID GetGeometryIndex(const NodeID /* id */) const override
     {
@@ -89,6 +90,16 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     DatasourceReverseRange GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
     {
         return DatasourceReverseRange(DatasourceForwardRange());
+    }
+    WayIDForwardRange GetUncompressedForwardWayIDs(const EdgeID /*id*/) const override
+    {
+        static OSMWayID data[] = {OSMWayID{1}, OSMWayID{2}, OSMWayID{3}};
+        static const extractor::SegmentDataView::SegmentWayIDVector way_ids(data, 3);
+        return WayIDForwardRange(way_ids.cbegin(), way_ids.cend());
+    }
+    WayIDReverseRange GetUncompressedReverseWayIDs(const EdgeID id) const override
+    {
+        return WayIDReverseRange(GetUncompressedForwardWayIDs(id));
     }
 
     std::string_view GetDatasourceName(const DatasourceID) const override final { return {}; }

@@ -229,9 +229,9 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
             }
             else
             {
-                ThrowError(
-                    args.Env(),
-                    "disable_feature_dataset array can include 'ROUTE_GEOMETRY', 'ROUTE_STEPS'.");
+                ThrowError(args.Env(),
+                           "disable_feature_dataset array can include 'ROUTE_GEOMETRY', "
+                           "'ROUTE_STEPS'.");
                 return engine_config_ptr();
             }
         }
@@ -244,10 +244,44 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
         return engine_config_ptr();
     }
 
+    auto enable_feature_dataset = params.Get("enable_feature_dataset");
+    if (enable_feature_dataset.IsArray())
+    {
+        Napi::Array datasets = enable_feature_dataset.As<Napi::Array>();
+        for (uint32_t i = 0; i < datasets.Length(); ++i)
+        {
+            Napi::Value dataset = datasets.Get(i);
+            if (!dataset.IsString())
+            {
+                ThrowError(args.Env(), "enable_feature_dataset list option must be a string");
+                return engine_config_ptr();
+            }
+            auto dataset_str = dataset.ToString().Utf8Value();
+            if (dataset_str == "ROUTE_WAY_IDS")
+            {
+                engine_config->enable_feature_dataset.push_back(
+                    osrm::storage::FeatureDataset::ROUTE_WAY_IDS);
+            }
+            else
+            {
+                ThrowError(args.Env(), "enable_feature_dataset array can include 'ROUTE_WAY_IDS'.");
+                return engine_config_ptr();
+            }
+        }
+    }
+    else if (!enable_feature_dataset.IsUndefined())
+    {
+        ThrowError(args.Env(),
+                   "enable_feature_dataset option must be an array and can include the string "
+                   "value 'ROUTE_WAY_IDS'.");
+        return engine_config_ptr();
+    }
+
     if (!path.IsUndefined())
     {
         engine_config->storage_config = osrm::StorageConfig(path.ToString().Utf8Value(),
-                                                            engine_config->disable_feature_dataset);
+                                                            engine_config->disable_feature_dataset,
+                                                            engine_config->enable_feature_dataset);
 
         engine_config->use_shared_memory = false;
     }
@@ -933,6 +967,11 @@ inline bool parseCommonParameters(const Napi::Object &obj, ParamType &params)
                 {
                     params->annotations_type =
                         params->annotations_type | osrm::RouteParameters::AnnotationsType::Speed;
+                }
+                else if (annotations_str == "way_ids")
+                {
+                    params->annotations_type =
+                        params->annotations_type | osrm::RouteParameters::AnnotationsType::WayIds;
                 }
                 else
                 {

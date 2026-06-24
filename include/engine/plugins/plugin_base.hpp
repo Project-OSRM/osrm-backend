@@ -71,7 +71,9 @@ class BasePlugin
         std::string message;
 
         ErrorRenderer(std::string code, std::string message)
-            : code(std::move(code)), message(std::move(message)){};
+            : code(std::move(code)), message(std::move(message))
+        {
+        }
 
         void operator()(util::json::Object &json_result)
         {

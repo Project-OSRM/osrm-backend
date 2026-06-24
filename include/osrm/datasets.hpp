@@ -8,6 +8,7 @@ enum class FeatureDataset
 {
     ROUTE_STEPS,
     ROUTE_GEOMETRY,
+    ROUTE_WAY_IDS,
 };
 
 } // namespace osrm::storage

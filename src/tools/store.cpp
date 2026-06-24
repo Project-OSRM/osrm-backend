@@ -104,7 +104,8 @@ bool generateDataStoreOptions(const int argc,
                               bool &list_datasets,
                               bool &list_blocks,
                               bool &only_metric,
-                              std::vector<storage::FeatureDataset> &disable_feature_dataset)
+                              std::vector<storage::FeatureDataset> &disable_feature_dataset,
+                              std::vector<storage::FeatureDataset> &enable_feature_dataset)
 {
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -133,9 +134,14 @@ bool generateDataStoreOptions(const int argc,
         ("disable-feature-dataset",
          boost::program_options::value<std::vector<storage::FeatureDataset>>(
              &disable_feature_dataset)
-             ->multitoken(),
+             ->composing(),
          "Disables a feature dataset from being loaded into memory if not needed. Options: "
          "ROUTE_STEPS, ROUTE_GEOMETRY") //
+        ("enable-feature-dataset",
+         boost::program_options::value<std::vector<storage::FeatureDataset>>(
+             &enable_feature_dataset)
+             ->composing(),
+         "Enables a feature dataset that is skipped by default. Options: ROUTE_WAY_IDS") //
         ("list",
          boost::program_options::value<bool>(&list_datasets)
              ->default_value(false)
@@ -258,6 +264,7 @@ try
     bool list_blocks = false;
     bool only_metric = false;
     std::vector<storage::FeatureDataset> disable_feature_dataset;
+    std::vector<storage::FeatureDataset> enable_feature_dataset;
     if (!generateDataStoreOptions(argc,
                                   argv,
                                   verbosity,
@@ -267,7 +274,8 @@ try
                                   list_datasets,
                                   list_blocks,
                                   only_metric,
-                                  disable_feature_dataset))
+                                  disable_feature_dataset,
+                                  enable_feature_dataset))
     {
         return EXIT_SUCCESS;
     }
@@ -280,7 +288,7 @@ try
         return EXIT_SUCCESS;
     }
 
-    storage::StorageConfig config(base_path, disable_feature_dataset);
+    storage::StorageConfig config(base_path, disable_feature_dataset, enable_feature_dataset);
     if (!config.IsValid())
     {
         util::Log(logERROR) << "Config contains invalid file paths. Exiting!";

@@ -33,6 +33,7 @@ var osrm = new OSRM('network.osrm');
     *   `options.mmap_memory` **[Boolean][4]?** Map on-disk files to virtual memory addresses (mmap), rather than loading into RAM.
     *   `options.path` **[String][3]?** The path to the `.osrm` files. This is mutually exclusive with setting {options.shared\_memory} to true.
     *   `options.disable_feature_dataset` **[Array][5]?** Disables a feature dataset from being loaded into memory if not needed. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`.
+    *   `options.enable_feature_dataset` **[Array][5]?** Enables a feature dataset that is skipped by default. Options: `ROUTE_WAY_IDS`.
     *   `options.max_locations_trip` **[Number][6]?** Max. locations supported in trip query (default: unlimited).
     *   `options.max_locations_viaroute` **[Number][6]?** Max. locations supported in viaroute query (default: unlimited).
     *   `options.max_locations_distance_table` **[Number][6]?** Max. locations supported in distance table query (default: unlimited).
@@ -61,7 +62,7 @@ Returns the fastest route between two or more coordinates while visiting the way
     *   `options.alternatives` **[Number][6]** Search for up to this many alternative routes.
         *Please note that even if alternative routes are requested, a result cannot be guaranteed.* (optional, default `0`)
     *   `options.steps` **[Boolean][4]** Return route steps for each route leg. (optional, default `false`)
-    *   `options.annotations` **([Array][5] | [Boolean][4])** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
+    *   `options.annotations` **([Array][5] | [Boolean][4])** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed`, `way_ids` or boolean for enabling/disabling all. (optional, default `false`)
     *   `options.geometries` **[String][3]** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
     *   `options.overview` **[String][3]** Add overview geometry either `full`, `simplified` according to highest zoom level it could be displayed on, or not at all (`false`). If you want the overview for each leg, you can use `by_legs`. (optional, default `simplified`)
     *   `options.continue_straight` **[Boolean][4]?** Forces the route to keep going straight at waypoints and don't do a uturn even if it would be faster. Default value depends on the profile.
@@ -227,7 +228,7 @@ if they can not be matched successfully.
     *   `options.hints` **[Array][5]?** Hints for the coordinate snapping. Array of base64 encoded strings.
     *   `options.generate_hints` **[Boolean][4]** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     *   `options.steps` **[Boolean][4]** Return route steps for each route. (optional, default `false`)
-    *   `options.annotations` **([Array][5] | [Boolean][4])** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
+    *   `options.annotations` **([Array][5] | [Boolean][4])** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed`, `way_ids` or boolean for enabling/disabling all. (optional, default `false`)
     *   `options.geometries` **[String][3]** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
     *   `options.overview` **[String][3]** Add overview geometry either `full`, `simplified` according to highest zoom level it could be display on, or not at all (`false`). (optional, default `simplified`)
     *   `options.timestamps` **[Array][5]<[Number][6]>?** Timestamp of the input location (integers, UNIX-like timestamp).
@@ -298,7 +299,7 @@ Right now, the following combinations are possible:
     *   `options.hints` **[Array][5]?** Hints for the coordinate snapping. Array of base64 encoded strings.
     *   `options.generate_hints` **[Boolean][4]** Whether or not adds a Hint to the response which can be used in subsequent requests. (optional, default `true`)
     *   `options.steps` **[Boolean][4]** Return route steps for each route. (optional, default `false`)
-    *   `options.annotations` **([Array][5] | [Boolean][4])** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed` or boolean for enabling/disabling all. (optional, default `false`)
+    *   `options.annotations` **([Array][5] | [Boolean][4])** An array with strings of `duration`, `nodes`, `distance`, `weight`, `datasources`, `speed`, `way_ids` or boolean for enabling/disabling all. (optional, default `false`)
     *   `options.geometries` **[String][3]** Returned route geometry format (influences overview and per step). Can also be `geojson`. (optional, default `polyline`)
     *   `options.overview` **[String][3]** Add overview geometry either `full`, `simplified`, `false` or `by_legs`. (optional, default `simplified`)
     *   `options.roundtrip` **[Boolean][4]** Return route is a roundtrip. (optional, default `true`)

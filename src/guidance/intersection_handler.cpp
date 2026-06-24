@@ -36,7 +36,7 @@ inline bool requiresAnnouncement(const util::NodeBasedDynamicGraph &node_based_g
 
     const auto &annotation_from = node_data_container.GetAnnotation(from_edge.annotation_data);
     const auto &annotation_to = node_data_container.GetAnnotation(to_edge.annotation_data);
-    return !annotation_from.CanCombineWith(annotation_to);
+    return !annotation_from.CanCombineForGuidance(annotation_to);
 }
 } // namespace detail
 
