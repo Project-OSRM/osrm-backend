@@ -109,7 +109,7 @@ We support the following images in the Container Registry:
 ### Building from Source
 
 Dependencies are managed with [vcpkg](https://vcpkg.io/) in manifest mode.
-The required tooling on Linux is minimal — only a C++20 compiler, CMake ≥ 3.25,
+The required tooling on Linux is minimal — only a C++20 compiler, CMake ≥ 3.29,
 Ninja, and a handful of autotools packages that some vcpkg ports need to
 bootstrap themselves:
 
