@@ -307,7 +307,7 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
             CXXCOMPILER: g++-14
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized -Wno-format'
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
