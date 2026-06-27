@@ -19,6 +19,10 @@
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
+#include <cfloat>
+#include <cmath>
+#include <cstdio>
+
 #include <tbb/parallel_sort.h>
 
 #include <limits>
@@ -560,6 +564,40 @@ void ExtractionContainers::PrepareNodes()
 
 void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environment)
 {
+    // DEBUG: one-time dump of floating-point environment
+    {
+        static bool fp_dumped = false;
+        if (!fp_dumped)
+        {
+            fp_dumped = true;
+            std::fprintf(stderr,
+                         "FP_ENV_DEBUG FLT_EVAL_METHOD=%d DBL_MANT_DIG=%d "
+                         "LDBL_MANT_DIG=%d sizeof(double)=%zu sizeof(long double)=%zu\n",
+                         FLT_EVAL_METHOD,
+                         DBL_MANT_DIG,
+                         LDBL_MANT_DIG,
+                         sizeof(double),
+                         sizeof(long double));
+            std::fprintf(stderr,
+                         "FP_ENV_DEBUG __GNUC__=%d __GNUC_MINOR__=%d "
+                         "__clang_major__=%d __cplusplus=%ld\n",
+#ifdef __GNUC__
+                         __GNUC__,
+                         __GNUC_MINOR__,
+#else
+                         0, 0,
+#endif
+#ifdef __clang_major__
+                         __clang_major__,
+#else
+                         0,
+#endif
+                         (long)__cplusplus);
+#ifdef __FP_FAST_FMA
+            std::fprintf(stderr, "FP_ENV_DEBUG __FP_FAST_FMA=%d\n", __FP_FAST_FMA);
+#endif
+        }
+    }
     // Sort edges by start.
     {
         util::UnbufferedLog log;
@@ -713,6 +751,27 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             edge.duration = std::max<EdgeDuration>(
                 {1}, to_alias<EdgeDuration>(std::round(segment.duration * 10.)));
             edge.distance = to_alias<EdgeDistance>(accurate_distance);
+
+            // DEBUG: log per-edge duration/weight computation details
+            std::fprintf(
+                stderr,
+                "EXTRACT_DEBUG dist=%.12f dur_pre_lua=%.12f weight_pre_lua=%.12f "
+                "dur_post_lua=%.12f weight_post_lua=%.12f "
+                "dur_ds_raw=%.20g weight_raw=%.20g "
+                "edge_dur=%d edge_weight=%d speed_dur_val=%.12f speed_weight_val=%.12f\n",
+                distance,
+                duration,
+                weight,
+                segment.duration,
+                segment.weight,
+                segment.duration * 10.0,
+                segment.weight * weight_multiplier,
+                static_cast<int>(edge.duration),
+                static_cast<int>(edge.weight),
+                edge_iterator->duration_data(distance + 1.0) == duration
+                    ? -1.0
+                    : distance / duration, // approximate speed used
+                weight_multiplier);
 
             // assign new node id
             const auto node_id = mapExternalToInternalNodeID(

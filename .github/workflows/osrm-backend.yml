@@ -299,75 +299,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - name: clang-20-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-26.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-20
-            CXXCOMPILER: clang++-20
-            ENABLE_LTO: ON
-
-          - name: clang-20-debug
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-26.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-20
-            CXXCOMPILER: clang++-20
-            ENABLE_ASSERTIONS: ON
-            ENABLE_LTO: OFF
-
-          - name: clang-19-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-26.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-19
-            CXXCOMPILER: clang++-19
-            ENABLE_LTO: OFF
-
-          - name: clang-18-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-26.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_LTO: OFF
-
-          - name: clang-20-debug-clang-tidy
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-26.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-20
-            CXXCOMPILER: clang++-20
-            ENABLE_CLANG_TIDY: ON
-            NODE_PACKAGE_TESTS_ONLY: ON
-            ENABLE_LTO: OFF
-
-          - name: clang-20-debug-asan-ubsan
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-26.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-20
-            CXXCOMPILER: clang++-20
-            ENABLE_SANITIZER: ON
-            TARGET_ARCH: x86_64-asan-ubsan
-            OSRM_CONNECTION_RETRIES: 10
-            OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
-
-          - name: clang-20-debug-cov
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-26.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-20
-            CXXCOMPILER: clang++-20
-            ENABLE_COVERAGE: ON
-
+          # DEBUG: temporarily only running gcc-14-release for decisecond rounding investigation
           - name: gcc-14-release
             continue-on-error: false
             node: 24
@@ -376,73 +308,6 @@ jobs:
             CCOMPILER: gcc-14
             CXXCOMPILER: g++-14
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
-
-          - name: gcc-15-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-26.04
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-15
-            CXXCOMPILER: g++-15
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
-
-          - name: linux-release-bindings
-            build_bindings: true
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-26.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            NODE_PACKAGE_TESTS_ONLY: ON
-
-          - name: linux-arm64-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04-arm
-            BUILD_TYPE: Release
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_LTO: OFF
-
-          - name: macos-26-x64-release
-            continue-on-error: true
-            node: 24
-            runs-on: macos-26-intel # x86_64
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            vcpkg_triplet: x64-osx
-
-          - name: macos-26-arm64-release
-            continue-on-error: true
-            node: 24
-            runs-on: macos-26 # arm64
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            vcpkg_triplet: arm64-osx
-
-          # python & nodeJS release bindings — macos-15 for broad binary compatibility
-          - name: macos-15-x64-release-bindings
-            build_bindings: true
-            continue-on-error: true
-            node: 24
-            runs-on: macos-15-intel # x86_64
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            vcpkg_triplet: x64-osx
-
-          - name: macos-15-arm64-release-bindings
-            build_bindings: true
-            continue-on-error: true
-            node: 24
-            runs-on: macos-15 # arm64
-            BUILD_TYPE: Release
-            CCOMPILER: clang
-            CXXCOMPILER: clang++
-            vcpkg_triplet: arm64-osx
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
@@ -614,7 +479,10 @@ jobs:
           fi
           popd
           ./scripts/ci/test_cli_parsing.sh -b "${OSRM_BUILD_DIR}"
-          npm test -- --parallel $JOBS
+          # DEBUG: only run the single failing trip scenario with MLD+mmap
+          set -x
+          npx cucumber-js -p home -p mld -p mmap features/testbot/trip.feature:316
+          { set +x; } 2>/dev/null
 
       - name: Generate coverage report
         if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
