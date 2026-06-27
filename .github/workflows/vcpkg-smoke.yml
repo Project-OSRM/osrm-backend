@@ -73,7 +73,7 @@ jobs:
           'TEMP=D:\Temp' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Enable vcpkg binary cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
           key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.triplet }}-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
