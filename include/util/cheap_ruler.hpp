@@ -56,8 +56,10 @@ class CheapRuler
             if (ruler_debug_count < 10)
             {
                 ruler_debug_count++;
+                if (ruler_debug_count == 1)
+                    std::fprintf(stderr, "--- CHEAPRULER_DEBUG (first 10) ---\n");
                 std::fprintf(stderr,
-                             "CHEAPRULER_DEBUG #%d lat=%.12f mul=%.20g coslat=%.20g w2=%.20g "
+                             "RULER #%d lat=%.12f mul=%.20g coslat=%.20g w2=%.20g "
                              "w=%.20g kx=%.20g ky=%.20g E2=%.20g RAD=%.20g RE=%.20g FE=%.20g\n",
                              ruler_debug_count,
                              latitude,
@@ -71,6 +73,8 @@ class CheapRuler
                              RAD,
                              RE,
                              FE);
+                if (ruler_debug_count == 10)
+                    std::fprintf(stderr, "--- CHEAPRULER_DEBUG_END ---\n");
             }
         }
     }

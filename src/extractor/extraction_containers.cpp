@@ -571,7 +571,9 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         {
             fp_dumped = true;
             std::fprintf(stderr,
-                         "FP_ENV_DEBUG FLT_EVAL_METHOD=%d DBL_MANT_DIG=%d "
+                         "========== DECISECOND_DEBUG_START ==========\n");
+            std::fprintf(stderr,
+                         "FP_ENV FLT_EVAL_METHOD=%d DBL_MANT_DIG=%d "
                          "LDBL_MANT_DIG=%d sizeof(double)=%zu sizeof(long double)=%zu\n",
                          FLT_EVAL_METHOD,
                          DBL_MANT_DIG,
@@ -579,14 +581,13 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
                          sizeof(double),
                          sizeof(long double));
             std::fprintf(stderr,
-                         "FP_ENV_DEBUG __GNUC__=%d __GNUC_MINOR__=%d "
+                         "FP_ENV __GNUC__=%d __GNUC_MINOR__=%d "
                          "__clang_major__=%d __cplusplus=%ld\n",
 #ifdef __GNUC__
                          __GNUC__,
                          __GNUC_MINOR__,
 #else
-                         0,
-                         0,
+                         0, 0,
 #endif
 #ifdef __clang_major__
                          __clang_major__,
@@ -595,7 +596,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
 #endif
                          (long)__cplusplus);
 #ifdef __FP_FAST_FMA
-            std::fprintf(stderr, "FP_ENV_DEBUG __FP_FAST_FMA=%d\n", __FP_FAST_FMA);
+            std::fprintf(stderr, "FP_ENV __FP_FAST_FMA=%d\n", __FP_FAST_FMA);
 #endif
         }
     }
@@ -760,7 +761,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
                 {
                     edge_debug_count++;
                     std::fprintf(stderr,
-                                 "EXTRACT_DEBUG #%d dist=%.12f dur_pre=%.12f wt_pre=%.12f "
+                                 "EDGE_DEBUG #%d dist=%.12f dur_pre=%.12f wt_pre=%.12f "
                                  "dur_post=%.12f wt_post=%.12f dur_ds=%.20g wt_raw=%.20g "
                                  "edge_dur=%d edge_wt=%d\n",
                                  edge_debug_count,
@@ -773,6 +774,9 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
                                  segment.weight * weight_multiplier,
                                  static_cast<int>(edge.duration),
                                  static_cast<int>(edge.weight));
+                    if (edge_debug_count == 50)
+                        std::fprintf(stderr,
+                                     "========== DECISECOND_DEBUG_END ==========\n");
                 }
             }
 
