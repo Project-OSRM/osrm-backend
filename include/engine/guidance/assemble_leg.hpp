@@ -201,12 +201,12 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
         if (leg_debug_count < 20)
         {
             leg_debug_count++;
-            std::fprintf(stderr, "LEG_DEBUG #%d route_data=%zu dur_sum=%.20g wt_sum=%.20g "
+            std::fprintf(stderr, "LEG_DEBUG #%d route_data=%zu dur_sum=%d wt_sum=%d "
                          "target_dur=%d target_wt=%d final_dur_sec=%.20g\n",
                          leg_debug_count, route_data.size(), duration, weight,
                          static_cast<int>(target_duration),
                          static_cast<int>(target_weight),
-                         (duration + from_alias<double>(target_duration)) / 10.);
+                         (duration + static_cast<int>(target_duration)) / 10.);
             for (size_t i = 0; i < std::min(route_data.size(), size_t(10)); ++i)
                 std::fprintf(stderr, "LEG_DEBUG #%d   seg[%zu] dur_until_turn=%d wt_until_turn=%d\n",
                              leg_debug_count, i,
