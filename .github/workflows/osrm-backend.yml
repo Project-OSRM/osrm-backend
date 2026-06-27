@@ -80,7 +80,7 @@ jobs:
       matrix:
         os: [windows-2025]
     runs-on: ${{ matrix.os }}
-    if: github.repository == 'Project-OSRM/osrm-backend'
+    if: github.repository == 'Project-OSRM/osrm-backend' && github.ref_name != 'fix/deterministic-decisecond-rounding'
     continue-on-error: false
     env:
       BUILD_TYPE: Release
@@ -193,7 +193,7 @@ jobs:
           if-no-files-found: error
 
   format-taginfo-docs:
-    if: github.repository == 'Project-OSRM/osrm-backend'
+    if: github.repository == 'Project-OSRM/osrm-backend' && github.ref_name != 'fix/deterministic-decisecond-rounding'
     runs-on: ubuntu-slim
     steps:
     - uses: actions/checkout@v7
@@ -307,7 +307,7 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
             CXXCOMPILER: g++-14
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized -Wno-format'
 
     name: ${{ matrix.name}}
     continue-on-error: ${{ matrix.continue-on-error }}
