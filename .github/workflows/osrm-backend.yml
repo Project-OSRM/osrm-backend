@@ -294,7 +294,7 @@ jobs:
           docker stop osrm-container
 
   build-matrix:
-    needs: [format-taginfo-docs, vcpkg-smoke-prereq]
+    # DEBUG: removed smoke/format deps for decisecond investigation
     if: github.repository == 'Project-OSRM/osrm-backend'
     strategy:
       matrix:
