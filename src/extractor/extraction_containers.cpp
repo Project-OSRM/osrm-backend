@@ -570,8 +570,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         if (!fp_dumped)
         {
             fp_dumped = true;
-            std::fprintf(stderr,
-                         "========== DECISECOND_DEBUG_START ==========\n");
+            std::fprintf(stderr, "========== DECISECOND_DEBUG_START ==========\n");
             std::fprintf(stderr,
                          "FP_ENV FLT_EVAL_METHOD=%d DBL_MANT_DIG=%d "
                          "LDBL_MANT_DIG=%d sizeof(double)=%zu sizeof(long double)=%zu\n",
@@ -587,7 +586,8 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
                          __GNUC__,
                          __GNUC_MINOR__,
 #else
-                         0, 0,
+                         0,
+                         0,
 #endif
 #ifdef __clang_major__
                          __clang_major__,
@@ -775,8 +775,7 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
                                  static_cast<int>(edge.duration),
                                  static_cast<int>(edge.weight));
                     if (edge_debug_count == 50)
-                        std::fprintf(stderr,
-                                     "========== DECISECOND_DEBUG_END ==========\n");
+                        std::fprintf(stderr, "========== DECISECOND_DEBUG_END ==========\n");
                 }
             }
 
