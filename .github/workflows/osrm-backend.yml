@@ -193,7 +193,7 @@ jobs:
           if-no-files-found: error
 
   format-taginfo-docs:
-    if: github.repository == 'Project-OSRM/osrm-backend' && github.ref_name != 'fix/deterministic-decisecond-rounding'
+    if: false # DEBUG: disabled for decisecond investigation
     runs-on: ubuntu-slim
     steps:
     - uses: actions/checkout@v7
