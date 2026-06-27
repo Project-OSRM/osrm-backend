@@ -54,7 +54,17 @@ class CheapRuler
         std::fprintf(stderr,
                      "CHEAPRULER_DEBUG lat=%.12f mul=%.20g coslat=%.20g w2=%.20g w=%.20g "
                      "kx=%.20g ky=%.20g E2=%.20g RAD=%.20g RE=%.20g FE=%.20g\n",
-                     latitude, mul, coslat, w2, w, kx, ky, E2, RAD, RE, FE);
+                     latitude,
+                     mul,
+                     coslat,
+                     w2,
+                     w,
+                     kx,
+                     ky,
+                     E2,
+                     RAD,
+                     RE,
+                     FE);
     }
 
     double squareDistance(point a, point b) const
