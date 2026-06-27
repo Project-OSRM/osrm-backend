@@ -753,25 +753,28 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
                 {1}, to_alias<EdgeDuration>(std::round(segment.duration * 10.)));
             edge.distance = to_alias<EdgeDistance>(accurate_distance);
 
-            // DEBUG: log per-edge duration/weight computation details
-            std::fprintf(stderr,
-                         "EXTRACT_DEBUG dist=%.12f dur_pre_lua=%.12f weight_pre_lua=%.12f "
-                         "dur_post_lua=%.12f weight_post_lua=%.12f "
-                         "dur_ds_raw=%.20g weight_raw=%.20g "
-                         "edge_dur=%d edge_weight=%d speed_dur_val=%.12f speed_weight_val=%.12f\n",
-                         distance,
-                         duration,
-                         weight,
-                         segment.duration,
-                         segment.weight,
-                         segment.duration * 10.0,
-                         segment.weight * weight_multiplier,
-                         static_cast<int>(edge.duration),
-                         static_cast<int>(edge.weight),
-                         edge_iterator->duration_data(distance + 1.0) == duration
-                             ? -1.0
-                             : distance / duration, // approximate speed used
-                         weight_multiplier);
+            // DEBUG: log per-edge duration/weight for first 50 edges only
+            {
+                static int edge_debug_count = 0;
+                if (edge_debug_count < 50)
+                {
+                    edge_debug_count++;
+                    std::fprintf(stderr,
+                                 "EXTRACT_DEBUG #%d dist=%.12f dur_pre=%.12f wt_pre=%.12f "
+                                 "dur_post=%.12f wt_post=%.12f dur_ds=%.20g wt_raw=%.20g "
+                                 "edge_dur=%d edge_wt=%d\n",
+                                 edge_debug_count,
+                                 distance,
+                                 duration,
+                                 weight,
+                                 segment.duration,
+                                 segment.weight,
+                                 segment.duration * 10.0,
+                                 segment.weight * weight_multiplier,
+                                 static_cast<int>(edge.duration),
+                                 static_cast<int>(edge.weight));
+                }
+            }
 
             // assign new node id
             const auto node_id = mapExternalToInternalNodeID(
