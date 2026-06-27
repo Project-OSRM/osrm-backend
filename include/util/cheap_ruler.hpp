@@ -50,21 +50,29 @@ class CheapRuler
         kx = mul * w * coslat;        // based on normal radius of curvature
         ky = mul * w * w2 * (1 - E2); // based on meridonal radius of curvature
 
-        // DEBUG: dump cheap ruler construction details to stderr
-        std::fprintf(stderr,
-                     "CHEAPRULER_DEBUG lat=%.12f mul=%.20g coslat=%.20g w2=%.20g w=%.20g "
-                     "kx=%.20g ky=%.20g E2=%.20g RAD=%.20g RE=%.20g FE=%.20g\n",
-                     latitude,
-                     mul,
-                     coslat,
-                     w2,
-                     w,
-                     kx,
-                     ky,
-                     E2,
-                     RAD,
-                     RE,
-                     FE);
+        // DEBUG: dump cheap ruler construction details for first 10 bins only
+        {
+            static int ruler_debug_count = 0;
+            if (ruler_debug_count < 10)
+            {
+                ruler_debug_count++;
+                std::fprintf(stderr,
+                             "CHEAPRULER_DEBUG #%d lat=%.12f mul=%.20g coslat=%.20g w2=%.20g "
+                             "w=%.20g kx=%.20g ky=%.20g E2=%.20g RAD=%.20g RE=%.20g FE=%.20g\n",
+                             ruler_debug_count,
+                             latitude,
+                             mul,
+                             coslat,
+                             w2,
+                             w,
+                             kx,
+                             ky,
+                             E2,
+                             RAD,
+                             RE,
+                             FE);
+            }
+        }
     }
 
     double squareDistance(point a, point b) const

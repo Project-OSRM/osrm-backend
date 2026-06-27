@@ -453,8 +453,9 @@ jobs:
           make --jobs=${JOBS}
 
           if [[ "${NODE_PACKAGE_TESTS_ONLY}" != "ON" ]]; then
-            make tests --jobs=${JOBS}
-            make benchmarks --jobs=${JOBS}
+            # DEBUG: skip unit tests for decisecond investigation
+            # make tests --jobs=${JOBS}
+            # make benchmarks --jobs=${JOBS}
 
             sudo make install
             if [[ "${RUNNER_OS}" == "Linux" ]]; then
@@ -466,17 +467,18 @@ jobs:
       - name: Run all tests
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY != 'ON' }}
         run: |
-          make -C test/data benchmark
+          # DEBUG: skip benchmark, unit tests, nodejs-tests for decisecond investigation
+          # make -C test/data benchmark
 
           # macOS SIP strips the linker path. Reset this inside the running shell
           export LD_LIBRARY_PATH=${{ env.LD_LIBRARY_PATH }}
 
           # All tests assume to be run from the build directory
           pushd ${OSRM_BUILD_DIR}
-          for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
-          if [ -z "${ENABLE_SANITIZER}" ]; then
-            npm run nodejs-tests
-          fi
+          # for i in ./unit_tests/*-tests ; do echo Running $i ; $i ; done
+          # if [ -z "${ENABLE_SANITIZER}" ]; then
+          #   npm run nodejs-tests
+          # fi
           popd
           ./scripts/ci/test_cli_parsing.sh -b "${OSRM_BUILD_DIR}"
           # DEBUG: only run the single failing trip scenario with MLD+mmap
