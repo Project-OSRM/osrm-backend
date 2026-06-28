@@ -13,6 +13,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 
 #include <algorithm>
 #include <array>
@@ -195,23 +196,36 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
                                   [](const double sum, const PathData &data)
                                   { return sum + from_alias<double>(data.weight_until_turn); });
 
-    // DEBUG: log leg assembly duration details
+    // DEBUG: log leg assembly duration details to a file + stderr
     {
         static int leg_debug_count = 0;
         if (leg_debug_count < 20)
         {
             leg_debug_count++;
+            // Write to a fixed file that survives routed being a daemon
+            auto dbg = fopen("/tmp/osrm_leg_debug.txt", "a");
+            if (dbg)
+            {
+                std::fprintf(dbg, "LEG_DEBUG #%d route_data=%zu dur_sum=%d wt_sum=%d "
+                             "target_dur=%d target_wt=%d final_dur_sec=%.20g\n",
+                             leg_debug_count, route_data.size(), duration, weight,
+                             static_cast<int>(target_duration),
+                             static_cast<int>(target_weight),
+                             (duration + static_cast<int>(target_duration)) / 10.);
+                for (size_t i = 0; i < std::min(route_data.size(), size_t(10)); ++i)
+                    std::fprintf(dbg, "LEG_DEBUG #%d   seg[%zu] dur_until_turn=%d wt_until_turn=%d\n",
+                                 leg_debug_count, i,
+                                 static_cast<int>(route_data[i].duration_until_turn),
+                                 static_cast<int>(route_data[i].weight_until_turn));
+                std::fclose(dbg);
+            }
+            // Also write to stderr as fallback
             std::fprintf(stderr, "LEG_DEBUG #%d route_data=%zu dur_sum=%d wt_sum=%d "
                          "target_dur=%d target_wt=%d final_dur_sec=%.20g\n",
                          leg_debug_count, route_data.size(), duration, weight,
                          static_cast<int>(target_duration),
                          static_cast<int>(target_weight),
                          (duration + static_cast<int>(target_duration)) / 10.);
-            for (size_t i = 0; i < std::min(route_data.size(), size_t(10)); ++i)
-                std::fprintf(stderr, "LEG_DEBUG #%d   seg[%zu] dur_until_turn=%d wt_until_turn=%d\n",
-                             leg_debug_count, i,
-                             static_cast<int>(route_data[i].duration_until_turn),
-                             static_cast<int>(route_data[i].weight_until_turn));
         }
     }
 
