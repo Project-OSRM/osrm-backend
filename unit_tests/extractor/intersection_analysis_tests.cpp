@@ -26,6 +26,7 @@ BOOST_AUTO_TEST_CASE(simple_intersection_connectivity)
     test::MockScriptingEnvironment scripting_environment;
     std::vector<UnresolvedManeuverOverride> maneuver_overrides;
     scripting_environment.m_obstacle_map.emplace(SPECIAL_NODEID, 6, {Obstacle::Type::Barrier});
+    scripting_environment.m_obstacle_map.sort();
 
     TurnLanesIndexedArray turn_lanes_data{{0, 0, 3},
                                           {TurnLaneType::uturn | TurnLaneType::left,
@@ -255,6 +256,8 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
     scripting_environment.m_obstacle_map.emplace(SPECIAL_NODEID, 1, {Obstacle::Type::Barrier});
     scripting_environment.m_obstacle_map.emplace(
         SPECIAL_NODEID, 2, {Obstacle::Type::TrafficSignals});
+
+    scripting_environment.m_obstacle_map.sort();
 
     TurnLanesIndexedArray turn_lanes_data;
 

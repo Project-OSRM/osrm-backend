@@ -6,6 +6,7 @@
 #include "util/timezones.hpp"
 #include "util/version.hpp"
 
+#include "util/program_options_path.hpp"
 #include <boost/program_options.hpp>
 #include <boost/program_options/errors.hpp>
 

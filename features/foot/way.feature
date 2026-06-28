@@ -31,10 +31,11 @@ Feature: Foot - Accessability of different way types
             | cycleway       |      |
             | bridleway      |      |
 
-    Scenario: Foot - Basic access
+    Scenario: Foot - Leisure track handling
         Then routability should be
             | highway | leisure  | forw |
-            | (nil)   | track    |   x  |
+            | (nil)   | track    |      |
+            | footway | (nil)    | x    |
 
     Scenario: Foot - Proposed ways: unbuilt proposed highways are ignored, real highways with proposed upgrade tags are routed
         Then routability should be

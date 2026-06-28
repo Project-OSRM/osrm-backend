@@ -10,4 +10,3 @@
 DOCKER_BUILD="docker build --build-arg BUILD_CONCURRENCY=${CONCURRENCY} --build-arg DOCKER_TAG=${DOCKER_TAG:?unset} -t ${IMAGE_NAME:?unset} -f"
 
 $DOCKER_BUILD Dockerfile ..
-$DOCKER_BUILD Dockerfile-alpine ..

@@ -3,6 +3,7 @@
 
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/node_data_container.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/serialization.hpp"
@@ -453,11 +454,12 @@ void readRawNBGraph(const std::filesystem::path &path,
     {
         coordinates[index].lon = current_node.lon;
         coordinates[index].lat = current_node.lat;
+        checkPackedOSMNodeIdFits(current_node.node_id);
         osm_node_ids.push_back(current_node.node_id);
         index++;
     };
     reader.ReadStreaming<extractor::QueryNode>("/extractor/nodes",
-                                               boost::make_function_output_iterator(decode));
+                                               osrm::util::make_function_output_iterator(decode));
 
     storage::serialization::read(reader, "/extractor/edges", edge_list);
 }

@@ -110,7 +110,7 @@ var Annotation = class _Annotation {
   }
   nodes(index) {
     const offset = this.bb.__offset(this.bb_pos, 10);
-    return offset ? this.bb.readUint32(this.bb.__vector(this.bb_pos + offset) + index * 4) : 0;
+    return offset ? this.bb.readUint64(this.bb.__vector(this.bb_pos + offset) + index * 8) : BigInt(0);
   }
   nodesLength() {
     const offset = this.bb.__offset(this.bb_pos, 10);
@@ -118,7 +118,7 @@ var Annotation = class _Annotation {
   }
   nodesArray() {
     const offset = this.bb.__offset(this.bb_pos, 10);
-    return offset ? new Uint32Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
+    return offset ? new BigUint64Array(this.bb.bytes().buffer, this.bb.bytes().byteOffset + this.bb.__vector(this.bb_pos + offset), this.bb.__vector_len(this.bb_pos + offset)) : null;
   }
   weight(index) {
     const offset = this.bb.__offset(this.bb_pos, 12);
@@ -194,14 +194,14 @@ var Annotation = class _Annotation {
     builder.addFieldOffset(3, nodesOffset, 0);
   }
   static createNodesVector(builder, data) {
-    builder.startVector(4, data.length, 4);
+    builder.startVector(8, data.length, 8);
     for (let i = data.length - 1; i >= 0; i--) {
-      builder.addInt32(data[i]);
+      builder.addInt64(BigInt(data[i]));
     }
     return builder.endVector();
   }
   static startNodesVector(builder, numElems) {
-    builder.startVector(4, numElems, 4);
+    builder.startVector(8, numElems, 8);
   }
   static addWeight(builder, weightOffset) {
     builder.addFieldOffset(4, weightOffset, 0);

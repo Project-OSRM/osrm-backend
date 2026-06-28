@@ -14,41 +14,27 @@ namespace osrm::server::api
 
 namespace detail
 {
-template <typename T>
-using is_grammar_t =
-    std::integral_constant<bool,
-                           std::is_same<RouteParametersGrammar<>, T>::value ||
-                               std::is_same<TableParametersGrammar<>, T>::value ||
-                               std::is_same<NearestParametersGrammar<>, T>::value ||
-                               std::is_same<TripParametersGrammar<>, T>::value ||
-                               std::is_same<MatchParametersGrammar<>, T>::value ||
-                               std::is_same<TileParametersGrammar<>, T>::value>;
 
-template <typename ParameterT,
-          typename GrammarT,
-          typename std::enable_if<detail::is_parameter_t<ParameterT>::value, int>::type = 0,
-          typename std::enable_if<detail::is_grammar_t<GrammarT>::value, int>::type = 0>
+namespace x3 = boost::spirit::x3;
+
+template <typename ParameterT, typename Grammar>
 std::optional<ParameterT> parseParameters(std::string::iterator &iter,
-                                          const std::string::iterator end)
+                                          const std::string::iterator end,
+                                          const Grammar &grammar)
 {
-    using It = std::decay<decltype(iter)>::type;
-
-    static const GrammarT grammar;
-
     try
     {
         ParameterT parameters;
-        const auto ok =
-            boost::spirit::qi::parse(iter, end, grammar(boost::phoenix::ref(parameters)));
+        const auto ok = x3::parse(iter, end, x3::with<params_tag>(std::ref(parameters))[grammar]);
 
         if (ok && iter == end)
             return parameters;
     }
-    catch (const qi::expectation_failure<It> &failure)
+    catch (const x3::expectation_failure<std::string::iterator> &failure)
     {
         // The grammar above using expectation parsers ">" does not automatically increment the
         // iterator to the failing position. Extract the position from the exception ourselves.
-        iter = failure.first;
+        iter = failure.where();
     }
     catch (const boost::numeric::bad_numeric_cast &)
     {
@@ -59,52 +45,67 @@ std::optional<ParameterT> parseParameters(std::string::iterator &iter,
 
     return std::nullopt;
 }
+
 } // namespace detail
 
 template <>
 std::optional<engine::api::RouteParameters> parseParameters(std::string::iterator &iter,
                                                             const std::string::iterator end)
 {
-    return detail::parseParameters<engine::api::RouteParameters, RouteParametersGrammar<>>(iter,
-                                                                                           end);
+    return detail::parseParameters<engine::api::RouteParameters>(
+        iter, end, route_grammar::root_rule);
 }
 
 template <>
 std::optional<engine::api::TableParameters> parseParameters(std::string::iterator &iter,
                                                             const std::string::iterator end)
 {
-    return detail::parseParameters<engine::api::TableParameters, TableParametersGrammar<>>(iter,
-                                                                                           end);
+    return detail::parseParameters<engine::api::TableParameters>(
+        iter, end, table_grammar::root_rule);
 }
 
 template <>
 std::optional<engine::api::NearestParameters> parseParameters(std::string::iterator &iter,
                                                               const std::string::iterator end)
 {
-    return detail::parseParameters<engine::api::NearestParameters, NearestParametersGrammar<>>(iter,
-                                                                                               end);
+    return detail::parseParameters<engine::api::NearestParameters>(
+        iter, end, nearest_grammar::root_rule);
 }
 
 template <>
 std::optional<engine::api::TripParameters> parseParameters(std::string::iterator &iter,
                                                            const std::string::iterator end)
 {
-    return detail::parseParameters<engine::api::TripParameters, TripParametersGrammar<>>(iter, end);
+    return detail::parseParameters<engine::api::TripParameters>(iter, end, trip_grammar::root_rule);
 }
 
 template <>
 std::optional<engine::api::MatchParameters> parseParameters(std::string::iterator &iter,
                                                             const std::string::iterator end)
 {
-    return detail::parseParameters<engine::api::MatchParameters, MatchParametersGrammar<>>(iter,
-                                                                                           end);
+    return detail::parseParameters<engine::api::MatchParameters>(
+        iter, end, match_grammar::root_rule);
 }
 
 template <>
 std::optional<engine::api::TileParameters> parseParameters(std::string::iterator &iter,
                                                            const std::string::iterator end)
 {
-    return detail::parseParameters<engine::api::TileParameters, TileParametersGrammar<>>(iter, end);
+    namespace x3 = boost::spirit::x3;
+    try
+    {
+        engine::api::TileParameters parameters;
+        const auto ok = x3::parse(iter, end, tile_rule, parameters);
+
+        if (ok && iter == end)
+            return parameters;
+    }
+    catch (const x3::expectation_failure<std::string::iterator> &failure)
+    {
+        iter = failure.where();
+    }
+
+    return std::nullopt;
 }
 
 } // namespace osrm::server::api

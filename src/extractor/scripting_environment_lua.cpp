@@ -79,11 +79,11 @@ template <class T> double lonToDouble(T const &object)
     return static_cast<double>(util::toFloating(object.lon));
 }
 
-struct to_lua_object : public boost::static_visitor<sol::object>
+struct to_lua_object
 {
     to_lua_object(sol::state &state) : state(state) {}
     template <typename T> auto operator()(T &v) const { return sol::make_object(state, v); }
-    auto operator()(boost::blank &) const { return sol::lua_nil; }
+    auto operator()(std::monostate) const { return sol::make_object(state, sol::lua_nil); }
     sol::state &state;
 };
 } // namespace
@@ -267,7 +267,7 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         }
 
         auto value = context.location_dependent_data.FindByKey(context.last_location_indexes, key);
-        return boost::apply_visitor(to_lua_object(context.state), value);
+        return std::visit(to_lua_object(context.state), value);
     };
 
     context.state.new_usertype<osmium::Way>(

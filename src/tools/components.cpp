@@ -10,7 +10,7 @@
 #include "util/tarjan_scc.hpp"
 #include "util/typedefs.hpp"
 
-#include <boost/iterator/function_output_iterator.hpp>
+#include "util/iterator_adapters.hpp"
 
 #include <tbb/parallel_sort.h>
 

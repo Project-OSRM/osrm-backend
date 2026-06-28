@@ -25,6 +25,9 @@ bool TurnLaneData::operator<(const TurnLaneData &other) const
     if (to > other.to)
         return false;
 
+    if (tag == other.tag)
+        return false;
+
     // the suppress-assignment flag is ignored, since it does not influence the order
     const constexpr TurnLaneType::Mask tag_by_modifier[] = {TurnLaneType::sharp_right,
                                                             TurnLaneType::right,

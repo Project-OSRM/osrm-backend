@@ -1,0 +1,673 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OSRM Trip Demo</title>
+  <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@5.4.0/dist/maplibre-gl.css" />
+  <script src="https://unpkg.com/maplibre-gl@5.4.0/dist/maplibre-gl.js"></script>
+  <style>
+    :root {
+      color-scheme: light;
+      --panel-bg: #111827;
+      --panel-fg: #f9fafb;
+      --panel-muted: #9ca3af;
+      --accent: #3b82f6;
+      --danger: #ef4444;
+      --border: rgba(255, 255, 255, 0.12);
+    }
+    html, body {
+      margin: 0;
+      width: 100%;
+      height: 100%;
+      font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    body {
+      overflow: hidden;
+      background: #0f172a;
+    }
+    .app {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 340px;
+      width: 100vw;
+      height: 100vh;
+    }
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+    .panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      color: var(--panel-fg);
+      background: linear-gradient(180deg, #111827, #0b1220);
+      border-left: 1px solid var(--border);
+      box-sizing: border-box;
+      overflow: auto;
+    }
+    h1 {
+      margin: 0;
+      font-size: 18px;
+    }
+    p {
+      margin: 0;
+      color: var(--panel-muted);
+      line-height: 1.4;
+      font-size: 14px;
+    }
+    label {
+      display: block;
+      font-size: 13px;
+      color: var(--panel-muted);
+      margin-bottom: 4px;
+    }
+    input {
+      width: 100%;
+      box-sizing: border-box;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 10px 12px;
+      color: var(--panel-fg);
+      background: rgba(255, 255, 255, 0.05);
+      outline: none;
+    }
+    input:focus {
+      border-color: var(--accent);
+    }
+    .row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+    }
+    button {
+      border: 0;
+      border-radius: 8px;
+      padding: 10px 12px;
+      background: var(--accent);
+      color: white;
+      cursor: pointer;
+      font-weight: 600;
+    }
+    button.secondary {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    button.danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #fecaca;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    #status {
+      font-size: 13px;
+      color: var(--panel-muted);
+      min-height: 1.2em;
+    }
+    #points {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .point {
+      display: grid;
+      grid-template-columns: auto 1fr auto;
+      gap: 8px;
+      align-items: center;
+      padding: 10px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .point .index {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      background: rgba(59, 130, 246, 0.2);
+      color: #bfdbfe;
+      font-weight: 700;
+      font-size: 13px;
+    }
+    .point .meta {
+      font-size: 12px;
+      line-height: 1.35;
+      color: var(--panel-muted);
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    .point .meta strong {
+      display: block;
+      color: var(--panel-fg);
+      font-size: 13px;
+    }
+    .marker {
+      width: 30px;
+      height: 30px;
+      border-radius: 50%;
+      background: var(--accent);
+      border: 2px solid white;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+      display: grid;
+      place-items: center;
+      color: white;
+      font-size: 12px;
+      font-weight: 700;
+      user-select: none;
+    }
+    .marker[data-route-order] {
+      background: #22c55e;
+    }
+    .note {
+      padding: 10px 12px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: var(--panel-muted);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <div id="map"></div>
+    <aside class="panel">
+      <div>
+        <h1>OSRM Trip Demo</h1>
+        <p>Click the map to add points, drag markers to move them, and click a marker or its delete button to remove it.</p>
+      </div>
+
+      <div>
+        <label for="server-url">osrm-routed base URL</label>
+        <input id="server-url" type="text" value="https://router.project-osrm.org" />
+      </div>
+
+      <div class="row">
+        <button id="clear" class="secondary" type="button">Clear all</button>
+        <button id="refresh" type="button">Recompute trip</button>
+      </div>
+
+      <div class="note">
+        Max 25 locations. This page calls the Trip HTTP API directly on <code>osrm-routed</code>.
+        If the API is on another origin, enable CORS on <code>osrm-routed</code> or proxy it from
+        the same origin as this page.
+      </div>
+
+      <div id="status">Add at least three points to compute a trip.</div>
+      <div id="points"></div>
+    </aside>
+  </div>
+
+  <script>
+    const MAX_LOCATIONS = 25;
+    const DEFAULT_STYLE = 'https://pnorman.github.io/tilekiln-shortbread-demo/colorful.json';
+    const DEFAULT_CENTER = [8.682127, 50.110924];
+
+    const map = new maplibregl.Map({
+      container: 'map',
+      style: DEFAULT_STYLE,
+      center: DEFAULT_CENTER,
+      zoom: 13,
+    });
+    map.addControl(new maplibregl.NavigationControl(), 'top-left');
+
+    const state = {
+      points: [],
+      nextId: 1,
+      tripDebounce: null,
+      tripRequestId: 0,
+      routeLoaded: false,
+      routeData: null,
+    };
+
+    const elements = {
+      serverUrl: document.getElementById('server-url'),
+      status: document.getElementById('status'),
+      points: document.getElementById('points'),
+      clear: document.getElementById('clear'),
+      refresh: document.getElementById('refresh'),
+    };
+
+    function encodeShareHash() {
+      if (state.points.length === 0) {
+        if (history.replaceState) {
+          history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+        return;
+      }
+      const encoded = state.points.map((p) => `${p.lng.toFixed(6)},${p.lat.toFixed(6)}`).join(';');
+      const server = getServerUrl();
+      const hash = `#points=${encoded}&server=${encodeURIComponent(server)}`;
+      if (history.replaceState) {
+        history.replaceState(null, '', hash);
+      }
+    }
+
+    function decodeShareHash() {
+      const hash = window.location.hash.slice(1);
+      if (!hash) {
+        return null;
+      }
+      const params = new URLSearchParams(hash);
+      const pointsParam = params.get('points');
+      const serverParam = params.get('server');
+      if (!pointsParam) {
+        return null;
+      }
+      const parsed = pointsParam.split(';').map((pair) => {
+        const parts = pair.split(',');
+        return { lng: Number.parseFloat(parts[0]), lat: Number.parseFloat(parts[1]) };
+      });
+      if (parsed.some((p) => !Number.isFinite(p.lng) || !Number.isFinite(p.lat))) {
+        return null;
+      }
+      return { points: parsed, server: serverParam || null };
+    }
+
+    function setStatus(message) {
+      elements.status.textContent = message;
+    }
+
+    function updateButtons() {
+      elements.clear.disabled = state.points.length === 0;
+      elements.refresh.disabled = state.points.length < 3;
+    }
+
+    function pointLabel(point, index) {
+      const routeOrder = typeof point.tripOrder === 'number' ? `Trip #${point.tripOrder + 1}` : 'Waiting for trip';
+      return {
+        title: `Point ${index + 1}`,
+        coords: `${point.lng.toFixed(6)}, ${point.lat.toFixed(6)}`,
+        extra: routeOrder,
+      };
+    }
+
+    function createMarker(point) {
+      const el = document.createElement('div');
+      el.className = 'marker';
+      el.textContent = String(state.points.length + 1);
+      el.title = 'Drag to move. Click to delete.';
+
+      const marker = new maplibregl.Marker({ element: el, draggable: true })
+        .setLngLat([point.lng, point.lat])
+        .addTo(map);
+
+      marker.getElement().addEventListener('click', (event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        removePoint(point.id);
+      });
+
+      marker.on('dragend', () => {
+        const lngLat = marker.getLngLat();
+        point.lng = lngLat.lng;
+        point.lat = lngLat.lat;
+        point.tripOrder = undefined;
+        syncUI();
+        scheduleTrip();
+      });
+
+      point.marker = marker;
+      point.element = el;
+    }
+
+    function clearRoute() {
+      state.routeData = null;
+      if (map.isStyleLoaded() && map.getSource('trip-route')) {
+        map.getSource('trip-route').setData({
+          type: 'FeatureCollection',
+          features: [],
+        });
+      }
+      state.points.forEach((point) => {
+        point.tripOrder = undefined;
+      });
+    }
+
+    function ensureRouteLayer() {
+      if (state.routeLoaded) {
+        return;
+      }
+      if (!map.getSource('trip-route')) {
+        map.addSource('trip-route', {
+          type: 'geojson',
+          data: {
+            type: 'FeatureCollection',
+            features: [],
+          },
+        });
+      }
+      if (!map.getLayer('trip-route-line')) {
+        map.addLayer({
+          id: 'trip-route-line',
+          type: 'line',
+          source: 'trip-route',
+          paint: {
+            'line-color': '#f97316',
+            'line-width': 4,
+            'line-opacity': 0.9,
+          },
+        });
+      }
+      state.routeLoaded = true;
+    }
+
+    function setRouteGeometry(geometries) {
+      if (!map.getSource('trip-route')) {
+        return;
+      }
+      const features = geometries
+        .filter((geometry) => geometry)
+        .map((geometry) => ({
+          type: 'Feature',
+          properties: {},
+          geometry,
+        }));
+      state.routeData = features;
+      map.getSource('trip-route').setData({
+        type: 'FeatureCollection',
+        features,
+      });
+    }
+
+    function geometryBounds(geometry) {
+      let minLng = Number.POSITIVE_INFINITY;
+      let minLat = Number.POSITIVE_INFINITY;
+      let maxLng = Number.NEGATIVE_INFINITY;
+      let maxLat = Number.NEGATIVE_INFINITY;
+
+      const visit = (coordinates) => {
+        for (const coordinate of coordinates) {
+          if (Array.isArray(coordinate[0])) {
+            visit(coordinate);
+          } else {
+            const [lng, lat] = coordinate;
+            minLng = Math.min(minLng, lng);
+            minLat = Math.min(minLat, lat);
+            maxLng = Math.max(maxLng, lng);
+            maxLat = Math.max(maxLat, lat);
+          }
+        }
+      };
+
+      visit(geometry.coordinates);
+      if (!Number.isFinite(minLng)) {
+        return null;
+      }
+      return new maplibregl.LngLatBounds([minLng, minLat], [maxLng, maxLat]);
+    }
+
+    function routeBounds() {
+      if (!state.routeData || state.routeData.length === 0) {
+        return null;
+      }
+
+      let bounds = null;
+      for (const feature of state.routeData) {
+        const featureBounds = geometryBounds(feature.geometry);
+        if (!featureBounds) {
+          continue;
+        }
+        if (!bounds) {
+          bounds = featureBounds;
+        } else {
+          bounds.extend(featureBounds.getSouthWest());
+          bounds.extend(featureBounds.getNorthEast());
+        }
+      }
+      return bounds;
+    }
+
+    function routeFitsViewport() {
+      const bounds = routeBounds();
+      if (!bounds) {
+        return true;
+      }
+      return map.getBounds().contains(bounds.getSouthWest()) &&
+             map.getBounds().contains(bounds.getNorthEast());
+    }
+
+    function fitRouteIfNeeded() {
+      const bounds = routeBounds();
+      if (!bounds || routeFitsViewport()) {
+        return;
+      }
+      map.fitBounds(bounds, { padding: 72, duration: 300, maxZoom: 16 });
+    }
+
+    function fitToPoints() {
+      if (state.points.length === 0) {
+        map.flyTo({ center: DEFAULT_CENTER, zoom: 12.5 });
+        return;
+      }
+      if (state.points.length === 1) {
+        map.flyTo({ center: [state.points[0].lng, state.points[0].lat], zoom: 13.5 });
+        return;
+      }
+      const bounds = new maplibregl.LngLatBounds();
+      for (const point of state.points) {
+        bounds.extend([point.lng, point.lat]);
+      }
+      map.fitBounds(bounds, { padding: 72, duration: 300, maxZoom: 16 });
+    }
+
+    function syncUI() {
+      elements.points.innerHTML = '';
+      state.points.forEach((point, index) => {
+        const labels = pointLabel(point, index);
+        point.element.textContent = String(typeof point.tripOrder === 'number' ? point.tripOrder + 1 : index + 1);
+        if (typeof point.tripOrder === 'number') {
+          point.element.setAttribute('data-route-order', String(point.tripOrder + 1));
+        } else {
+          point.element.removeAttribute('data-route-order');
+        }
+        point.marker.setLngLat([point.lng, point.lat]);
+
+        const row = document.createElement('div');
+        row.className = 'point';
+
+        const indexEl = document.createElement('div');
+        indexEl.className = 'index';
+        indexEl.textContent = String(index + 1);
+
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = `<strong>${labels.title}</strong>${labels.coords}<br>${labels.extra}`;
+
+        const remove = document.createElement('button');
+        remove.className = 'danger';
+        remove.type = 'button';
+        remove.textContent = 'Delete';
+        remove.addEventListener('click', () => removePoint(point.id));
+
+        row.append(indexEl, meta, remove);
+        elements.points.append(row);
+      });
+
+      updateButtons();
+      encodeShareHash();
+    }
+
+    function addPoint(lng, lat) {
+      if (state.points.length >= MAX_LOCATIONS) {
+        setStatus(`Reached the limit of ${MAX_LOCATIONS} locations.`);
+        return;
+      }
+
+      const point = {
+        id: state.nextId++,
+        lng,
+        lat,
+        tripOrder: undefined,
+        marker: null,
+        element: null,
+      };
+      state.points.push(point);
+      createMarker(point);
+      syncUI();
+      scheduleTrip();
+    }
+
+    function removePoint(id) {
+      const index = state.points.findIndex((point) => point.id === id);
+      if (index === -1) {
+        return;
+      }
+
+      const [point] = state.points.splice(index, 1);
+      point.marker.remove();
+      syncUI();
+
+      if (state.points.length < 3) {
+        clearRoute();
+        setStatus('Add at least three points to compute a trip.');
+        return;
+      }
+
+      scheduleTrip();
+    }
+
+    function clearPoints() {
+      while (state.points.length > 0) {
+        const point = state.points.pop();
+        point.marker.remove();
+      }
+      clearRoute();
+      syncUI();
+      setStatus('Add at least three points to compute a trip.');
+    }
+
+    function scheduleTrip() {
+      clearTimeout(state.tripDebounce);
+      state.tripDebounce = setTimeout(runTrip, 200);
+    }
+
+    function getServerUrl() {
+      const raw = elements.serverUrl.value.trim();
+      return raw.endsWith('/') ? raw.slice(0, -1) : raw;
+    }
+
+    function buildTripUrl() {
+      const server = getServerUrl();
+      const coordinates = state.points.map((point) => `${point.lng},${point.lat}`).join(';');
+      const url = new URL(`/trip/v1/driving/${coordinates}`, server);
+      url.searchParams.set('roundtrip', 'true');
+      url.searchParams.set('geometries', 'geojson');
+      url.searchParams.set('overview', 'full');
+      url.searchParams.set('steps', 'false');
+      return url;
+    }
+
+    async function runTrip() {
+      if (state.points.length < 3) {
+        clearRoute();
+        setStatus('Add at least three points to compute a trip.');
+        return;
+      }
+
+      const requestId = ++state.tripRequestId;
+      const url = buildTripUrl();
+      setStatus(`Requesting trip from ${url.origin} ...`);
+
+      try {
+        const response = await fetch(url, { headers: { Accept: 'application/json' } });
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}`);
+        }
+        const result = await response.json();
+        if (requestId !== state.tripRequestId) {
+          return;
+        }
+        if (result.code !== 'Ok') {
+          throw new Error(result.message || result.code || 'Trip request failed');
+        }
+
+        ensureRouteLayer();
+        const trips = Array.isArray(result.trips) ? result.trips : [];
+        setRouteGeometry(trips.map((trip) => trip.geometry));
+
+        const waypoints = Array.isArray(result.waypoints) ? result.waypoints : [];
+        state.points.forEach((point) => {
+          point.tripOrder = undefined;
+        });
+        waypoints.forEach((waypoint, index) => {
+          if (state.points[index]) {
+            state.points[index].tripOrder = waypoint.waypoint_index;
+          }
+        });
+
+        syncUI();
+        fitRouteIfNeeded();
+        setStatus(`Trip computed for ${state.points.length} locations.`);
+      } catch (error) {
+        clearRoute();
+        setStatus(`Trip error: ${error.message}`);
+      }
+    }
+
+    elements.clear.addEventListener('click', clearPoints);
+    elements.refresh.addEventListener('click', runTrip);
+    elements.serverUrl.addEventListener('change', () => {
+      scheduleTrip();
+    });
+
+    function isValidServerUrl(raw) {
+      try {
+        const url = new URL(raw);
+        return url.protocol === 'http:' || url.protocol === 'https:';
+      } catch {
+        return false;
+      }
+    }
+
+    function restoreFromHash() {
+      const shared = decodeShareHash();
+
+      // Hash overrides the HTML default (only if valid)
+      if (shared && shared.server && isValidServerUrl(shared.server)) {
+        elements.serverUrl.value = shared.server;
+      }
+
+      if (!shared || shared.points.length === 0) {
+        return;
+      }
+
+      // Restore points (up to the limit)
+      const toRestore = shared.points.slice(0, MAX_LOCATIONS);
+      for (const p of toRestore) {
+        const point = {
+          id: state.nextId++,
+          lng: p.lng,
+          lat: p.lat,
+          tripOrder: undefined,
+          marker: null,
+          element: null,
+        };
+        state.points.push(point);
+        createMarker(point);
+      }
+      fitToPoints();
+
+      if (state.points.length >= 3) {
+        scheduleTrip();
+      } else if (state.points.length > 0) {
+        setStatus('Add at least three points to compute a trip.');
+      }
+    }
+
+    map.on('load', () => {
+      ensureRouteLayer();
+      restoreFromHash();
+      syncUI();
+      updateButtons();
+      map.on('click', (event) => {
+        addPoint(event.lngLat.lng, event.lngLat.lat);
+      });
+    });
+  </script>
+</body>
+</html>

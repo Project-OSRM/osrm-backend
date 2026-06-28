@@ -8,16 +8,13 @@
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar_fwd.hpp"
 
-#include <boost/iterator/iterator_facade.hpp>
-#include <boost/iterator/reverse_iterator.hpp>
-
 #include <array>
+#include <atomic>
 #include <cmath>
-
-#if defined(_MSC_VER)
-// for `InterlockedCompareExchange64`
-#include <windows.h>
-#endif
+#include <concepts>
+#include <iterator>
+#include <limits>
+#include <tuple>
 
 namespace osrm::util
 {
@@ -43,93 +40,73 @@ namespace detail
 {
 
 template <typename WordT, typename T>
-inline T get_lower_half_value(WordT word,
-                              WordT mask,
-                              std::uint8_t offset,
-                              typename std::enable_if_t<std::is_integral<T>::value> * = nullptr)
+inline T get_lower_half_value(WordT word, WordT mask, std::uint8_t offset)
+    requires std::integral<T>
 {
     return static_cast<T>((word & mask) >> offset);
 }
 
 template <typename WordT, typename T>
-inline T get_lower_half_value(WordT word,
-                              WordT mask,
-                              std::uint8_t offset,
-                              typename T::value_type * = nullptr)
+inline T get_lower_half_value(WordT word, WordT mask, std::uint8_t offset)
+    requires(!std::integral<T>)
 {
-    return T{static_cast<typename T::value_type>((word & mask) >> offset)};
+    return T{static_cast<T::value_type>((word & mask) >> offset)};
 }
 
 template <typename WordT, typename T>
-inline T get_upper_half_value(WordT word,
-                              WordT mask,
-                              std::uint8_t offset,
-                              typename std::enable_if_t<std::is_integral<T>::value> * = nullptr)
+inline T get_upper_half_value(WordT word, WordT mask, std::uint8_t offset)
+    requires std::integral<T>
 {
     return static_cast<T>((word & mask) << offset);
 }
 
 template <typename WordT, typename T>
-inline T get_upper_half_value(WordT word,
-                              WordT mask,
-                              std::uint8_t offset,
-                              typename T::value_type * = nullptr)
+inline T get_upper_half_value(WordT word, WordT mask, std::uint8_t offset)
+    requires(!std::integral<T>)
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
-    return T{static_cast<typename T::value_type>((word & mask) << offset)};
+    return T{static_cast<T::value_type>((word & mask) << offset)};
 }
 
 template <typename WordT, typename T>
-inline WordT set_lower_value(WordT word,
-                             WordT mask,
-                             std::uint8_t offset,
-                             T value,
-                             typename std::enable_if_t<std::is_integral<T>::value> * = nullptr)
+inline WordT set_lower_value(WordT word, WordT mask, std::uint8_t offset, T value)
+    requires std::integral<T>
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) | ((static_cast<WordT>(value) << offset) & mask);
 }
 
 template <typename WordT, typename T>
-inline WordT set_upper_value(WordT word,
-                             WordT mask,
-                             std::uint8_t offset,
-                             T value,
-                             typename std::enable_if_t<std::is_integral<T>::value> * = nullptr)
+inline WordT set_upper_value(WordT word, WordT mask, std::uint8_t offset, T value)
+    requires std::integral<T>
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) | ((static_cast<WordT>(value) >> offset) & mask);
 }
 
 template <typename WordT, typename T>
-inline WordT set_lower_value(
-    WordT word, WordT mask, std::uint8_t offset, T value, typename T::value_type * = nullptr)
+inline WordT set_lower_value(WordT word, WordT mask, std::uint8_t offset, T value)
+    requires(!std::integral<T>)
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) |
-           ((static_cast<WordT>(static_cast<typename T::value_type>(value)) << offset) & mask);
+           ((static_cast<WordT>(static_cast<T::value_type>(value)) << offset) & mask);
 }
 
 template <typename WordT, typename T>
-inline WordT set_upper_value(
-    WordT word, WordT mask, std::uint8_t offset, T value, typename T::value_type * = nullptr)
+inline WordT set_upper_value(WordT word, WordT mask, std::uint8_t offset, T value)
+    requires(!std::integral<T>)
 {
     static_assert(std::is_unsigned<WordT>::value, "Only unsigned word types supported for now.");
     return (word & ~mask) |
-           ((static_cast<WordT>(static_cast<typename T::value_type>(value)) >> offset) & mask);
+           ((static_cast<WordT>(static_cast<T::value_type>(value)) >> offset) & mask);
 }
 
 inline bool compare_and_swap(uint64_t *ptr, uint64_t old_value, uint64_t new_value)
 {
-#if defined(_MSC_VER)
-    return InterlockedCompareExchange64(reinterpret_cast<LONG64 *>(ptr),
-                                        static_cast<LONG64>(new_value),
-                                        static_cast<LONG64>(old_value)) == old_value;
-#elif defined(__GNUC__)
-    return __sync_bool_compare_and_swap(ptr, old_value, new_value);
-#else
-#error "Unsupported compiler";
-#endif
+    // Use std::atomic_ref for lock-free atomic compare-and-swap
+    std::atomic_ref<uint64_t> atomic_ref(*ptr);
+    return atomic_ref.compare_exchange_strong(old_value, new_value, std::memory_order_seq_cst);
 }
 
 template <typename T, std::size_t Bits, storage::Ownership Ownership> class PackedVector
@@ -314,54 +291,104 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     template <typename DataT, typename ContainerT, typename ReferenceT = internal_reference>
     class iterator_impl
-        : public boost::iterator_facade<iterator_impl<DataT, ContainerT, ReferenceT>,
-                                        DataT,
-                                        boost::random_access_traversal_tag,
-                                        ReferenceT>
     {
-        using base_t = boost::iterator_facade<iterator_impl<DataT, ContainerT, ReferenceT>,
-                                              DataT,
-                                              boost::random_access_traversal_tag,
-                                              ReferenceT>;
-
       public:
-        using value_type = typename base_t::value_type;
-        using difference_type = typename base_t::difference_type;
-        using reference = typename base_t::reference;
+        using value_type = DataT;
+        using difference_type = std::ptrdiff_t;
+        using reference = ReferenceT;
         using iterator_category = std::random_access_iterator_tag;
+        using iterator_concept = std::random_access_iterator_tag;
 
         explicit iterator_impl()
             : container(nullptr), index(std::numeric_limits<std::size_t>::max())
         {
         }
-        explicit iterator_impl(ContainerT *container, const std::size_t index)
-            : container(container), index(index)
+        explicit iterator_impl(ContainerT *container_, const std::size_t index_)
+            : container(container_), index(index_)
         {
         }
 
-        ReferenceT operator[](difference_type n) const { return container->operator[](index + n); }
+        reference operator*() const { return (*container)[index]; }
+        reference operator[](difference_type n) const { return (*container)[index + n]; }
 
-      private:
-        void increment() { ++index; }
-        void decrement() { --index; }
-        void advance(difference_type offset) { index += offset; }
-        bool equal(const iterator_impl &other) const { return index == other.index; }
-        auto dereference() const { return (*container)[index]; }
-        difference_type distance_to(const iterator_impl &other) const
+        iterator_impl &operator++()
         {
-            return other.index - index;
+            ++index;
+            return *this;
         }
+
+        iterator_impl operator++(int)
+        {
+            auto tmp = *this;
+            ++*this;
+            return tmp;
+        }
+
+        iterator_impl &operator--()
+        {
+            --index;
+            return *this;
+        }
+
+        iterator_impl operator--(int)
+        {
+            auto tmp = *this;
+            --*this;
+            return tmp;
+        }
+
+        iterator_impl &operator+=(difference_type offset)
+        {
+            index += offset;
+            return *this;
+        }
+
+        iterator_impl &operator-=(difference_type offset)
+        {
+            index -= offset;
+            return *this;
+        }
+
+        friend iterator_impl operator+(iterator_impl it, difference_type n)
+        {
+            it += n;
+            return it;
+        }
+
+        friend iterator_impl operator+(difference_type n, const iterator_impl &it)
+        {
+            iterator_impl tmp = it;
+            tmp += n;
+            return tmp;
+        }
+
+        friend iterator_impl operator-(iterator_impl it, difference_type n)
+        {
+            it -= n;
+            return it;
+        }
+
+        difference_type operator-(const iterator_impl &other) const
+        {
+            return static_cast<difference_type>(index) - static_cast<difference_type>(other.index);
+        }
+
+        bool operator==(const iterator_impl &other) const { return index == other.index; }
+        bool operator!=(const iterator_impl &other) const { return !(*this == other); }
+
+        bool operator<(const iterator_impl &other) const { return index < other.index; }
+        bool operator>(const iterator_impl &other) const { return other < *this; }
+        bool operator<=(const iterator_impl &other) const { return !(other < *this); }
+        bool operator>=(const iterator_impl &other) const { return !(*this < other); }
 
       private:
         ContainerT *container;
         std::size_t index;
-
-        friend class ::boost::iterator_core_access;
     };
 
     using iterator = iterator_impl<T, PackedVector>;
     using const_iterator = iterator_impl<const T, const PackedVector, T>;
-    using reverse_iterator = boost::reverse_iterator<iterator>;
+    using reverse_iterator = std::reverse_iterator<iterator>;
 
     PackedVector(std::initializer_list<T> list)
     {
@@ -472,8 +499,8 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
     std::size_t capacity() const { return (vec.capacity() / BLOCK_WORDS) * BLOCK_ELEMENTS; }
 
-    template <bool enabled = (Ownership == storage::Ownership::View)>
-    void reserve(typename std::enable_if<!enabled, std::size_t>::type capacity)
+    void reserve(std::size_t capacity)
+        requires(Ownership != storage::Ownership::View)
     {
         auto num_blocks = (capacity + BLOCK_ELEMENTS - 1) / BLOCK_ELEMENTS;
         vec.reserve(num_blocks * BLOCK_WORDS + 1);

@@ -1,6 +1,6 @@
 ## Open Source Routing Machine
 
-[![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) [![Discord](https://img.shields.io/discord/1034487840219860992)](https://discord.gg/es9CdcCXcb)
+[![osrm-backend CI](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml/badge.svg)](https://github.com/Project-OSRM/osrm-backend/actions/workflows/osrm-backend.yml) [![Discord](https://img.shields.io/discord/1034487840219860992)](https://discord.gg/CpWzBC9G7Z)
 
 High performance routing engine written in C++ designed to run on OpenStreetMap data.
 
@@ -33,7 +33,7 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 
 ## Contact
 
-- Discord: [join](https://discord.gg/es9CdcCXcb)
+- Discord: [join](https://discord.gg/CpWzBC9G7Z)
 - BlueSky: [profile](https://bsky.app/profile/osrm.bsky.social)
 
 ## Support the Project
@@ -62,7 +62,7 @@ If you want to use the CH pipeline instead replace `osrm-partition` and `osrm-cu
 
 ### Using Docker
 
-We base our Docker images ([backend](https://github.com/Project-OSRM/osrm-backend/pkgs/container/osrm-backend), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Debian and make sure they are as lightweight as possible. Older backend versions can be found on [Docker Hub](https://hub.docker.com/r/osrm/osrm-backend/).
+We base our Docker images ([backend](https://github.com/Project-OSRM/osrm-backend/pkgs/container/osrm-backend), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Debian Linux and make sure they are as lightweight as possible. Older backend versions can be found on [Docker Hub](https://hub.docker.com/r/osrm/osrm-backend/).
 
 Download OpenStreetMap extracts for example from [Geofabrik](http://download.geofabrik.de/)
 
@@ -108,26 +108,35 @@ We support the following images in the Container Registry:
 
 ### Building from Source
 
-The following targets Ubuntu 22.04.
-For instructions how to build on different distributions, macOS or Windows see our [Wiki](https://github.com/Project-OSRM/osrm-backend/wiki).
-
-Install dependencies
-
-```bash
-sudo apt install build-essential git cmake pkg-config \
-libbz2-dev libxml2-dev libzip-dev libboost-all-dev \
-lua5.2 liblua5.2-dev libtbb-dev
-```
-
-Compile and install OSRM binaries
+Dependencies are managed with [vcpkg](https://vcpkg.io/) in manifest mode.
+The required tooling on Linux is minimal — only a C++20 compiler, CMake ≥ 3.29,
+Ninja, and a handful of autotools packages that some vcpkg ports need to
+bootstrap themselves:
 
 ```bash
-mkdir -p build
-cd build
-cmake ..
-cmake --build .
-sudo cmake --build . --target install
+sudo apt install build-essential git cmake ninja-build pkg-config \
+  autoconf automake libtool curl zip unzip tar
 ```
+
+Bootstrap vcpkg once (anywhere on your machine) and point `VCPKG_ROOT` at it:
+
+```bash
+git clone https://github.com/microsoft/vcpkg.git ~/vcpkg
+~/vcpkg/bootstrap-vcpkg.sh
+export VCPKG_ROOT=~/vcpkg
+```
+
+Compile and install OSRM binaries:
+
+```bash
+cmake --preset ci-linux
+cmake --build --preset ci-linux
+sudo cmake --install build
+```
+
+The first configure will build every dependency (boost, tbb, expat, bzip2,
+lua, libosmium, …) from source. Subsequent configures reuse vcpkg's
+binary cache.
 
 ### Request Against the Demo Server
 
@@ -177,6 +186,24 @@ npm install @project-osrm/osrm --save
 For usage details have a look [these API docs](docs/nodejs/api.md).
 
 An exemplary implementation by a 3rd party with Docker and Node.js can be found [here](https://github.com/door2door-io/osrm-express-server-demo).
+
+### Using the Python Bindings
+
+The Python bindings provide read-only access to the routing engine via [nanobind](https://github.com/wjakob/nanobind).
+
+You can install the Python bindings from PyPI via
+
+    pip install osrm-bindings
+
+We distribute `abi3` wheels for CPython 3.12+ on Linux (x86_64), macOS (arm64, x86_64) and Windows (x86_64). On other platforms `pip` will fall back to building from source, which requires CPython 3.10+ and the OSRM build dependencies.
+
+To build from source from this repository:
+
+    pip install .
+
+#### Package docs
+
+For usage details and examples have a look at [the Python bindings README](src/python/README.md).
 
 ## References in publications
 

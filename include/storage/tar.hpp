@@ -7,67 +7,48 @@
 #include "util/integer_range.hpp"
 #include "util/version.hpp"
 
+#include <archive.h>
+#include <archive_entry.h>
+
+#include <cstdint>
+#include <cstdio>
 #include <cstring>
 #include <filesystem>
 #include <string>
-
-extern "C"
-{
-#include "microtar.h"
-}
+#include <unordered_map>
+#include <vector>
 
 namespace osrm::storage::tar
 {
 namespace detail
 {
-inline void
-checkMTarError(int error_code, const std::filesystem::path &filepath, const std::string &name)
+inline int fseek64(std::FILE *file, std::int64_t offset, int origin)
 {
-    switch (error_code)
-    {
-    case MTAR_ESUCCESS:
+#ifdef _WIN32
+    return _fseeki64(file, offset, origin);
+#else
+    return fseeko(file, offset, origin);
+#endif
+}
+
+inline void checkArchiveError(struct archive *a,
+                              int ret,
+                              const std::filesystem::path &filepath,
+                              const std::string &name)
+{
+    if (ret == ARCHIVE_OK || ret == ARCHIVE_WARN)
         return;
-    case MTAR_EFAILURE:
-        throw util::RuntimeError(
-            filepath.string() + " : " + name, ErrorCode::FileIOError, SOURCE_REF);
-    case MTAR_EOPENFAIL:
-        throw util::RuntimeError(filepath.string() + " : " + name,
-                                 ErrorCode::FileOpenError,
-                                 SOURCE_REF,
-                                 std::strerror(errno));
-    case MTAR_EREADFAIL:
-        throw util::RuntimeError(filepath.string() + " : " + name,
-                                 ErrorCode::FileReadError,
-                                 SOURCE_REF,
-                                 std::strerror(errno));
-    case MTAR_EWRITEFAIL:
-        throw util::RuntimeError(filepath.string() + " : " + name,
-                                 ErrorCode::FileWriteError,
-                                 SOURCE_REF,
-                                 std::strerror(errno));
-    case MTAR_ESEEKFAIL:
-        throw util::RuntimeError(filepath.string() + " : " + name,
-                                 ErrorCode::FileIOError,
-                                 SOURCE_REF,
-                                 std::strerror(errno));
-    case MTAR_EBADCHKSUM:
-        throw util::RuntimeError(filepath.string() + " : " + name,
-                                 ErrorCode::FileIOError,
-                                 SOURCE_REF,
-                                 std::strerror(errno));
-    case MTAR_ENULLRECORD:
-        throw util::RuntimeError(filepath.string() + " : " + name,
-                                 ErrorCode::UnexpectedEndOfFile,
-                                 SOURCE_REF,
-                                 std::strerror(errno));
-    case MTAR_ENOTFOUND:
-        throw util::RuntimeError(filepath.string() + " : " + name,
-                                 ErrorCode::FileIOError,
-                                 SOURCE_REF,
-                                 std::strerror(errno));
-    default:
-        throw util::exception(filepath.string() + " : " + name + ":" + mtar_strerror(error_code));
-    }
+
+    const char *err = archive_error_string(a);
+    std::string msg = filepath.string() + " : " + name;
+    if (err)
+        msg += " : " + std::string(err);
+
+    int eno = archive_errno(a);
+    if (eno == ENOENT || eno == 0)
+        throw util::RuntimeError(msg, ErrorCode::FileIOError, SOURCE_REF);
+    else
+        throw util::RuntimeError(msg, ErrorCode::FileIOError, SOURCE_REF, std::strerror(eno));
 }
 } // namespace detail
 
@@ -82,8 +63,14 @@ class FileReader
 
     FileReader(const std::filesystem::path &path, FingerprintFlag flag) : path(path)
     {
-        auto ret = mtar_open(&handle, path.string().c_str(), "r");
-        detail::checkMTarError(ret, path, "");
+        file = std::fopen(path.string().c_str(), "rb");
+        if (!file)
+        {
+            throw util::RuntimeError(
+                path.string(), ErrorCode::FileOpenError, SOURCE_REF, std::strerror(errno));
+        }
+
+        BuildIndex();
 
         if (flag == VerifyFingerprint)
         {
@@ -91,7 +78,14 @@ class FileReader
         }
     }
 
-    ~FileReader() { mtar_close(&handle); }
+    ~FileReader()
+    {
+        if (file)
+            std::fclose(file);
+    }
+
+    FileReader(const FileReader &) = delete;
+    FileReader &operator=(const FileReader &) = delete;
 
     std::uint64_t ReadElementCount64(const std::string &name)
     {
@@ -107,26 +101,44 @@ class FileReader
 
     template <typename T, typename OutIter> void ReadStreaming(const std::string &name, OutIter out)
     {
-        mtar_header_t header;
-        auto ret = mtar_find(&handle, name.c_str(), &header);
-        detail::checkMTarError(ret, path, name);
+        auto it = index.find(name);
+        if (it == index.end())
+        {
+            throw util::RuntimeError(path.string() + " : " + name,
+                                     ErrorCode::FileIOError,
+                                     SOURCE_REF,
+                                     "entry not found");
+        }
 
-        auto number_of_elements = header.size / sizeof(T);
+        const auto &entry = it->second;
+        auto number_of_elements = entry.size / sizeof(T);
         auto expected_size = sizeof(T) * number_of_elements;
-        if (header.size != expected_size)
+        if (entry.size != expected_size)
         {
             throw util::RuntimeError(name + ": Datatype size does not match file size.",
                                      ErrorCode::UnexpectedEndOfFile,
                                      SOURCE_REF);
         }
 
-        T tmp;
-        for (auto index : util::irange<std::size_t>(0, number_of_elements))
+        if (detail::fseek64(file, static_cast<std::int64_t>(entry.offset), SEEK_SET) != 0)
         {
-            (void)index;
-            ret = mtar_read_data(&handle, reinterpret_cast<char *>(&tmp), sizeof(T));
-            detail::checkMTarError(ret, path, name);
+            throw util::RuntimeError(path.string() + " : " + name,
+                                     ErrorCode::FileIOError,
+                                     SOURCE_REF,
+                                     std::strerror(errno));
+        }
 
+        T tmp;
+        for (auto idx : util::irange<std::size_t>(0, number_of_elements))
+        {
+            (void)idx;
+            if (std::fread(&tmp, sizeof(T), 1, file) != 1)
+            {
+                throw util::RuntimeError(path.string() + " : " + name,
+                                         ErrorCode::FileReadError,
+                                         SOURCE_REF,
+                                         std::strerror(errno));
+            }
             *out++ = tmp;
         }
     }
@@ -134,20 +146,39 @@ class FileReader
     template <typename T>
     void ReadInto(const std::string &name, T *data, const std::size_t number_of_elements)
     {
-        mtar_header_t header;
-        auto ret = mtar_find(&handle, name.c_str(), &header);
-        detail::checkMTarError(ret, path, name);
+        auto it = index.find(name);
+        if (it == index.end())
+        {
+            throw util::RuntimeError(path.string() + " : " + name,
+                                     ErrorCode::FileIOError,
+                                     SOURCE_REF,
+                                     "entry not found");
+        }
 
+        const auto &entry = it->second;
         auto expected_size = sizeof(T) * number_of_elements;
-        if (header.size != expected_size)
+        if (entry.size != expected_size)
         {
             throw util::RuntimeError(name + ": Datatype size does not match file size.",
                                      ErrorCode::UnexpectedEndOfFile,
                                      SOURCE_REF);
         }
 
-        ret = mtar_read_data(&handle, reinterpret_cast<char *>(data), header.size);
-        detail::checkMTarError(ret, path, name);
+        if (detail::fseek64(file, static_cast<std::int64_t>(entry.offset), SEEK_SET) != 0)
+        {
+            throw util::RuntimeError(path.string() + " : " + name,
+                                     ErrorCode::FileIOError,
+                                     SOURCE_REF,
+                                     std::strerror(errno));
+        }
+
+        if (std::fread(reinterpret_cast<char *>(data), 1, entry.size, file) != entry.size)
+        {
+            throw util::RuntimeError(path.string() + " : " + name,
+                                     ErrorCode::FileReadError,
+                                     SOURCE_REF,
+                                     std::strerror(errno));
+        }
     }
 
     struct FileEntry
@@ -159,27 +190,84 @@ class FileReader
 
     template <typename OutIter> void List(OutIter out)
     {
-        mtar_header_t header;
-        while (mtar_read_header(&handle, &header) != MTAR_ENULLRECORD)
+        for (const auto &entry : entries)
         {
-            if (header.type == MTAR_TREG)
-            {
-                int ret = mtar_read_data(&handle, nullptr, 0);
-                detail::checkMTarError(ret, path, header.name);
-
-                auto offset = handle.pos;
-                // seek back to the header
-                handle.remaining_data = 0;
-                ret = mtar_seek(&handle, handle.last_header);
-                detail::checkMTarError(ret, path, header.name);
-
-                *out++ = FileEntry{header.name, header.size, offset};
-            }
-            mtar_next(&handle);
+            *out++ = entry;
         }
     }
 
   private:
+    void BuildIndex()
+    {
+        struct archive *a = archive_read_new();
+        archive_read_support_format_tar(a);
+        archive_read_support_format_gnutar(a);
+
+        int ret = archive_read_open_filename(a, path.string().c_str(), 10240);
+        if (ret != ARCHIVE_OK)
+        {
+            const char *err = archive_error_string(a);
+            std::string errmsg = err ? err : "unknown error";
+            archive_read_free(a);
+            throw util::RuntimeError(
+                path.string(), ErrorCode::FileOpenError, SOURCE_REF, errmsg.c_str());
+        }
+
+        struct archive_entry *ae;
+
+        // Collect header positions for all entries in order.
+        // archive_read_header_position returns the position of the first header
+        // block for an entry. For pax entries with extended attributes (e.g. entries
+        // > 8GB), this points to the pax extension header, not the actual file header,
+        // so the naive "header_position + 512" calculation is wrong for such entries.
+        //
+        // Instead, we compute data offsets from consecutive header positions:
+        // each entry's padded data ends exactly where the next entry's header begins.
+        //   data_offset[i] = header_position[i+1] - ceil_to_512(size[i])
+        struct RawEntry
+        {
+            std::string name;
+            std::size_t size;
+            std::int64_t header_pos;
+            bool is_regular;
+        };
+        std::vector<RawEntry> all_entries;
+
+        while (archive_read_next_header(a, &ae) == ARCHIVE_OK)
+        {
+            std::int64_t pos = archive_read_header_position(a);
+            bool is_reg = (archive_entry_filetype(ae) == AE_IFREG);
+            std::string name;
+            std::size_t size = 0;
+            if (is_reg)
+            {
+                name = archive_entry_pathname(ae);
+                size = static_cast<std::size_t>(archive_entry_size(ae));
+            }
+            all_entries.push_back({std::move(name), size, pos, is_reg});
+            archive_read_data_skip(a);
+        }
+
+        // After ARCHIVE_EOF, header_position points to the end-of-archive marker
+        auto end_of_archive_pos = archive_read_header_position(a);
+
+        archive_read_free(a);
+
+        for (std::size_t i = 0; i < all_entries.size(); ++i)
+        {
+            if (!all_entries[i].is_regular)
+                continue;
+
+            auto padded_size = ((all_entries[i].size + 511) / 512) * 512;
+            std::int64_t next_pos =
+                (i + 1 < all_entries.size()) ? all_entries[i + 1].header_pos : end_of_archive_pos;
+            std::size_t data_offset = static_cast<std::size_t>(next_pos) - padded_size;
+
+            index[all_entries[i].name] = IndexEntry{data_offset, all_entries[i].size};
+            entries.push_back(FileEntry{all_entries[i].name, all_entries[i].size, data_offset});
+        }
+    }
+
     bool ReadAndCheckFingerprint()
     {
         util::FingerPrint loaded_fingerprint;
@@ -206,8 +294,16 @@ class FileReader
         return true;
     }
 
+    struct IndexEntry
+    {
+        std::size_t offset;
+        std::size_t size;
+    };
+
     std::filesystem::path path;
-    mtar_t handle;
+    std::FILE *file = nullptr;
+    std::unordered_map<std::string, IndexEntry> index;
+    std::vector<FileEntry> entries;
 };
 
 class FileWriter
@@ -221,8 +317,19 @@ class FileWriter
 
     FileWriter(const std::filesystem::path &path, FingerprintFlag flag) : path(path)
     {
-        auto ret = mtar_open(&handle, path.string().c_str(), "w");
-        detail::checkMTarError(ret, path, "");
+        a = archive_write_new();
+        int ret = archive_write_set_format_pax_restricted(a);
+        detail::checkArchiveError(a, ret, path, "set format pax restricted");
+        ret = archive_write_open_filename(a, path.string().c_str());
+        if (ret != ARCHIVE_OK)
+        {
+            const char *err = archive_error_string(a);
+            std::string errmsg = err ? err : "unknown error";
+            archive_write_free(a);
+            a = nullptr;
+            throw util::RuntimeError(
+                path.string(), ErrorCode::FileOpenError, SOURCE_REF, errmsg.c_str());
+        }
 
         if (flag == GenerateFingerprint)
         {
@@ -232,9 +339,15 @@ class FileWriter
 
     ~FileWriter()
     {
-        mtar_finalize(&handle);
-        mtar_close(&handle);
+        if (a)
+        {
+            archive_write_close(a);
+            archive_write_free(a);
+        }
     }
+
+    FileWriter(const FileWriter &) = delete;
+    FileWriter &operator=(const FileWriter &) = delete;
 
     void WriteElementCount64(const std::string &name, const std::uint64_t count)
     {
@@ -251,41 +364,26 @@ class FileWriter
     {
         auto number_of_bytes = number_of_elements * sizeof(T);
 
-        auto ret = mtar_write_file_header(&handle, name.c_str(), number_of_bytes);
-        detail::checkMTarError(ret, path, name);
+        struct archive_entry *ae = archive_entry_new();
+        archive_entry_set_pathname(ae, name.c_str());
+        archive_entry_set_size(ae, static_cast<la_int64_t>(number_of_bytes));
+        archive_entry_set_filetype(ae, AE_IFREG);
+        archive_entry_set_perm(ae, 0644);
 
-        for (auto index : util::irange<std::size_t>(0, number_of_elements))
+        int ret = archive_write_header(a, ae);
+        archive_entry_free(ae);
+        detail::checkArchiveError(a, ret, path, name);
+
+        for (auto idx : util::irange<std::size_t>(0, number_of_elements))
         {
-            (void)index;
+            (void)idx;
             T tmp = *iter++;
-            ret = mtar_write_data(&handle, &tmp, sizeof(T));
-            detail::checkMTarError(ret, path, name);
+            auto written = archive_write_data(a, &tmp, sizeof(T));
+            if (written < 0 || static_cast<std::size_t>(written) != sizeof(T))
+            {
+                detail::checkArchiveError(a, ARCHIVE_FATAL, path, name);
+            }
         }
-    }
-
-    // Continue writing an existing file, overwrites all data after the file!
-    template <typename T>
-    void ContinueFrom(const std::string &name, const T *data, const std::size_t number_of_elements)
-    {
-        auto number_of_bytes = number_of_elements * sizeof(T);
-
-        mtar_header_t header;
-        auto ret = mtar_find(&handle, name.c_str(), &header);
-        detail::checkMTarError(ret, path, name);
-
-        // update header to reflect increased tar size
-        auto old_size = header.size;
-        header.size += number_of_bytes;
-        ret = mtar_write_header(&handle, &header);
-        detail::checkMTarError(ret, path, name);
-
-        // now seek to the end of the old record
-        handle.remaining_data = number_of_bytes;
-        ret = mtar_seek(&handle, handle.pos + old_size);
-        detail::checkMTarError(ret, path, name);
-
-        ret = mtar_write_data(&handle, data, number_of_bytes);
-        detail::checkMTarError(ret, path, name);
     }
 
     template <typename T>
@@ -293,11 +391,29 @@ class FileWriter
     {
         auto number_of_bytes = number_of_elements * sizeof(T);
 
-        auto ret = mtar_write_file_header(&handle, name.c_str(), number_of_bytes);
-        detail::checkMTarError(ret, path, name);
+        struct archive_entry *ae = archive_entry_new();
+        archive_entry_set_pathname(ae, name.c_str());
+        archive_entry_set_size(ae, static_cast<la_int64_t>(number_of_bytes));
+        archive_entry_set_filetype(ae, AE_IFREG);
+        archive_entry_set_perm(ae, 0644);
 
-        ret = mtar_write_data(&handle, reinterpret_cast<const char *>(data), number_of_bytes);
-        detail::checkMTarError(ret, path, name);
+        int ret = archive_write_header(a, ae);
+        archive_entry_free(ae);
+        detail::checkArchiveError(a, ret, path, name);
+
+        const char *data_ptr = reinterpret_cast<const char *>(data);
+        std::size_t remaining = number_of_bytes;
+        while (remaining > 0)
+        {
+            const auto written = archive_write_data(a, data_ptr, remaining);
+            if (written <= 0 || static_cast<std::size_t>(written) > remaining)
+            {
+                detail::checkArchiveError(a, ARCHIVE_FATAL, path, name);
+            }
+
+            data_ptr += written;
+            remaining -= static_cast<std::size_t>(written);
+        }
     }
 
   private:
@@ -308,7 +424,7 @@ class FileWriter
     }
 
     std::filesystem::path path;
-    mtar_t handle;
+    struct archive *a = nullptr;
 };
 } // namespace osrm::storage::tar
 

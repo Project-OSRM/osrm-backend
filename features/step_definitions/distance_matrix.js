@@ -33,58 +33,23 @@ const DISTANCES_NO_ROUTE = 3.40282e38; // MAX_FLOAT (meters)
 const FORMAT_JSON = 'json';
 const FORMAT_FB = 'flatbuffers';
 
-When(durationsRegex, function (table, callback) {
-  tableParse.call(
-    this,
-    table,
-    DURATIONS_NO_ROUTE,
-    'durations',
-    FORMAT_JSON,
-    callback
-  );
+When(durationsRegex, async function (table) {
+  await tableParse.call(this, table, DURATIONS_NO_ROUTE, 'durations', FORMAT_JSON);
 });
-When(durationsCodeOnlyRegex, function (table, callback) {
-  tableCodeOnlyParse.call(this, table, 'durations', FORMAT_JSON, callback);
+When(durationsCodeOnlyRegex, async function (table) {
+  await tableCodeOnlyParse.call(this, table, 'durations', FORMAT_JSON);
 });
-When(distancesRegex, function (table, callback) {
-  tableParse.call(
-    this,
-    table,
-    DISTANCES_NO_ROUTE,
-    'distances',
-    FORMAT_JSON,
-    callback
-  );
+When(distancesRegex, async function (table) {
+  await tableParse.call(this, table, DISTANCES_NO_ROUTE, 'distances', FORMAT_JSON);
 });
-When(estimatesRegex, function (table, callback) {
-  tableParse.call(
-    this,
-    table,
-    DISTANCES_NO_ROUTE,
-    'fallback_speed_cells',
-    FORMAT_JSON,
-    callback
-  );
+When(estimatesRegex, async function (table) {
+  await tableParse.call(this, table, DISTANCES_NO_ROUTE, 'fallback_speed_cells', FORMAT_JSON);
 });
-When(durationsRegexFb, function (table, callback) {
-  tableParse.call(
-    this,
-    table,
-    DURATIONS_NO_ROUTE,
-    'durations',
-    FORMAT_FB,
-    callback
-  );
+When(durationsRegexFb, async function (table) {
+  await tableParse.call(this, table, DURATIONS_NO_ROUTE, 'durations', FORMAT_FB);
 });
-When(distancesRegexFb, function (table, callback) {
-  tableParse.call(
-    this,
-    table,
-    DISTANCES_NO_ROUTE,
-    'distances',
-    FORMAT_FB,
-    callback
-  );
+When(distancesRegexFb, async function (table) {
+  await tableParse.call(this, table, DISTANCES_NO_ROUTE, 'distances', FORMAT_FB);
 });
 
 const durationsParse = function (v) {
@@ -97,7 +62,7 @@ const estimatesParse = function (v) {
   return isNaN(parseFloat(v));
 };
 
-function tableCodeOnlyParse(table, annotation, format, callback) {
+async function tableCodeOnlyParse(table, annotation, format) {
   const params = this.queryParams;
   params.annotations =
     ['durations', 'fallback_speed_cells'].indexOf(annotation) !== -1
@@ -107,11 +72,11 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
 
   let got;
 
-  this.reprocessAndLoadData((e) => {
-    if (e) return callback(e);
-    const testRow = function (row, ri, cb) {
+  await this.reprocessAndLoadData();
+  const testRow = function (row, ri) {
+    return new Promise((resolve, reject) => {
       const afterRequest = function (err, res, body) {
-        if (err) return cb(err);
+        if (err) return reject(err);
 
         for (const k in row) {
           const match = k.match(/param:(.*)/);
@@ -132,7 +97,7 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
           got.code = json.code;
         }
 
-        cb(null, got);
+        resolve(got);
       }.bind(this);
 
       const params = this.queryParams,
@@ -150,15 +115,15 @@ function tableCodeOnlyParse(table, annotation, format, callback) {
 
         this.requestTable(waypoints, params, afterRequest);
       } else {
-        throw new Error('*** no waypoints');
+        reject(new Error('*** no waypoints'));
       }
-    }.bind(this);
+    });
+  }.bind(this);
 
-    this.processRowsAndDiff(table, testRow, callback);
-  });
+  await this.processRowsAndDiff(table, testRow);
 }
 
-function tableParse(table, noRoute, annotation, format, callback) {
+async function tableParse(table, noRoute, annotation, format) {
   const parse =
     annotation == 'distances'
       ? distancesParse
@@ -206,81 +171,83 @@ function tableParse(table, noRoute, annotation, format, callback) {
     });
   }
 
-  this.reprocessAndLoadData((e) => {
-    if (e) return callback(e);
-    // compute matrix
+  await this.reprocessAndLoadData();
+  // compute matrix
 
+  const { response, body } = await new Promise((resolve, reject) => {
     this.requestTable(waypoints, params, (err, response, body) => {
-      if (err) return callback(err);
-      if (!body.length) return callback(new Error('Invalid response body'));
-
-      let result = [];
-      if (format === 'json') {
-        const json = JSON.parse(body);
-
-        if (annotation === 'fallback_speed_cells') {
-          result = table.raw().map((row) => row.map(() => ''));
-          json[annotation].forEach((pair) => {
-            result[pair[0] + 1][pair[1] + 1] = 'Y';
-          });
-          result = result.slice(1).map((row) => {
-            const hashes = {};
-            row.slice(1).forEach((v, i) => {
-              hashes[tableRows[0][i + 1]] = v;
-            });
-            return hashes;
-          });
-        } else {
-          result = json[annotation].map((row) => {
-            const hashes = {};
-            row.forEach((v, i) => {
-              hashes[tableRows[0][i + 1]] = parse(v) ? '' : v;
-            });
-            return hashes;
-          });
-        }
-      } else {
-        //flatbuffers
-        const bytes = new Uint8Array(body.length);
-        for (let indx = 0; indx < body.length; ++indx) {
-          bytes[indx] = body.charCodeAt(indx);
-        }
-        const buf = new flatbuffers.ByteBuffer(bytes);
-        const fb = FBResult.getRootAsFBResult(buf);
-
-        let matrix;
-        if (annotation === 'durations') {
-          matrix = fb.table().durationsArray();
-        }
-        if (annotation === 'distances') {
-          matrix = fb.table().distancesArray();
-        }
-        const cols = fb.table().cols();
-        const rows = fb.table().rows();
-        for (let r = 0; r < rows; ++r) {
-          result[r] = {};
-          for (let c = 0; c < cols; ++c) {
-            result[r][tableRows[0][c + 1]] = matrix[r * cols + c];
-          }
-        }
-      }
-
-      const testRow = function (row, ri, cb) {
-        for (const k in result[ri]) {
-          if (this.FuzzyMatch.match(result[ri][k], row[k])) {
-            result[ri][k] = row[k];
-          } else if (row[k] === '' && result[ri][k] === noRoute) {
-            result[ri][k] = '';
-          } else {
-            result[ri][k] = result[ri][k].toString();
-          }
-        }
-
-        result[ri][''] = row[''];
-        cb(null, result[ri]);
-      }.bind(this);
-
-      this.processRowsAndDiff(table, testRow, callback);
+      if (err) return reject(err);
+      resolve({ response, body });
     });
   });
+
+  if (!body.length) throw new Error('Invalid response body');
+
+  let result = [];
+  if (format === 'json') {
+    const json = JSON.parse(body);
+
+    if (annotation === 'fallback_speed_cells') {
+      result = table.raw().map((row) => row.map(() => ''));
+      json[annotation].forEach((pair) => {
+        result[pair[0] + 1][pair[1] + 1] = 'Y';
+      });
+      result = result.slice(1).map((row) => {
+        const hashes = {};
+        row.slice(1).forEach((v, i) => {
+          hashes[tableRows[0][i + 1]] = v;
+        });
+        return hashes;
+      });
+    } else {
+      result = json[annotation].map((row) => {
+        const hashes = {};
+        row.forEach((v, i) => {
+          hashes[tableRows[0][i + 1]] = parse(v) ? '' : v;
+        });
+        return hashes;
+      });
+    }
+  } else {
+    //flatbuffers
+    const bytes = new Uint8Array(body.length);
+    for (let indx = 0; indx < body.length; ++indx) {
+      bytes[indx] = body.charCodeAt(indx);
+    }
+    const buf = new flatbuffers.ByteBuffer(bytes);
+    const fb = FBResult.getRootAsFBResult(buf);
+
+    let matrix;
+    if (annotation === 'durations') {
+      matrix = fb.table().durationsArray();
+    }
+    if (annotation === 'distances') {
+      matrix = fb.table().distancesArray();
+    }
+    const cols = fb.table().cols();
+    const rows = fb.table().rows();
+    for (let r = 0; r < rows; ++r) {
+      result[r] = {};
+      for (let c = 0; c < cols; ++c) {
+        result[r][tableRows[0][c + 1]] = matrix[r * cols + c];
+      }
+    }
+  }
+
+  const testRow = function (row, ri) {
+    for (const k in result[ri]) {
+      if (this.FuzzyMatch.match(result[ri][k], row[k])) {
+        result[ri][k] = row[k];
+      } else if (row[k] === '' && result[ri][k] === noRoute) {
+        result[ri][k] = '';
+      } else {
+        result[ri][k] = result[ri][k].toString();
+      }
+    }
+
+    result[ri][''] = row[''];
+    return result[ri];
+  }.bind(this);
+
+  await this.processRowsAndDiff(table, testRow);
 }

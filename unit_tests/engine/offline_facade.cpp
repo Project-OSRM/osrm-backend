@@ -15,6 +15,15 @@ struct Algorithm final
 };
 } // namespace routing_algorithms::offline
 
+// Mark offline::Algorithm as a supported routing algorithm so it satisfies the RoutingAlgorithm
+// concept
+namespace routing_algorithms
+{
+template <> struct IsRoutingAlgorithm<offline::Algorithm> final : std::true_type
+{
+};
+} // namespace routing_algorithms
+
 // Define engine data for offline data facade
 template <> struct SearchEngineData<routing_algorithms::offline::Algorithm>
 {
@@ -335,8 +344,8 @@ namespace routing_algorithms::offline
 template <typename PhantomT>
 inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                   typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    EdgeWeight &weight,
                    std::vector<NodeID> &packed_leg,
                    const std::vector<NodeID> &loop_nodes,

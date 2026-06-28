@@ -10,6 +10,7 @@
 #include <filesystem>
 #include <string>
 #include <unordered_map>
+#include <variant>
 
 namespace osrm::extractor
 {
@@ -27,7 +28,7 @@ struct LocationDependentData
     using rtree_t = boost::geometry::index::rtree<std::pair<box_t, polygon_position_t>,
                                                   boost::geometry::index::rstar<8>>;
 
-    using property_t = boost::variant<boost::blank, double, std::string, bool>;
+    using property_t = std::variant<std::monostate, double, std::string, bool>;
     using properties_t = std::unordered_map<std::string, property_t>;
 
     LocationDependentData(const std::vector<std::filesystem::path> &file_paths);

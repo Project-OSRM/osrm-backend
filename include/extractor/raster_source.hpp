@@ -7,9 +7,6 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/algorithm/string/trim.hpp>
 #include <boost/assert.hpp>
-#include <boost/foreach.hpp>
-#include <boost/spirit/include/qi.hpp>
-#include <boost/spirit/include/qi_int.hpp>
 
 #include <storage/io.hpp>
 

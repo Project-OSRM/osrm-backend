@@ -1,6 +1,10 @@
 #include "util/packed_vector.hpp"
 #include "util/typedefs.hpp"
 
+#include "extractor/packed_osm_ids.hpp"
+#include "util/exception.hpp"
+
+#include "../common/random_seed.hpp"
 #include "common/range_tools.hpp"
 
 #include <algorithm>
@@ -23,8 +27,7 @@ BOOST_AUTO_TEST_CASE(insert_and_retrieve_packed_test)
     const constexpr std::size_t num_test_cases = 399;
     const constexpr std::uint64_t max_id = (1ULL << 33) - 1;
 
-    std::mt19937 rng;
-    rng.seed(1337);
+    std::mt19937 rng(osrm::test::getTestRandomSeed());
     std::uniform_int_distribution<std::uint64_t> dist(0, max_id);
 
     for (std::size_t i = 0; i < num_test_cases; i++)
@@ -200,6 +203,51 @@ BOOST_AUTO_TEST_CASE(packed_vector_33bit_continious)
         vector.push_back(i);
         BOOST_CHECK_EQUAL(vector.back(), i);
     }
+}
+
+// Regression test for https://github.com/Project-OSRM/osrm-backend/issues/7069
+// OSM node IDs above 2^34 must round-trip through PackedOSMIDs without
+// truncation. The previous 34-bit packing silently masked these values.
+BOOST_AUTO_TEST_CASE(packed_osm_ids_above_2pow34_roundtrip)
+{
+    osrm::extractor::PackedOSMIDs ids;
+
+    const std::vector<std::uint64_t> inputs = {
+        0ull,
+        1ull,
+        (1ull << 33),                                // 2^33
+        (1ull << 34),                                // 2^34, the old truncation boundary
+        (1ull << 34) + 1,                            // just above 2^34
+        20'000'000'000ull,                           // realistic projected OSM node ID
+        (1ull << 35),                                // 2^35
+        osrm::extractor::MAX_PACKED_OSM_NODE_ID - 1, // just below the new limit
+        osrm::extractor::MAX_PACKED_OSM_NODE_ID,     // exactly at the new limit
+    };
+
+    for (auto raw : inputs)
+    {
+        ids.push_back(OSMNodeID{raw});
+    }
+
+    for (std::size_t i = 0; i < inputs.size(); ++i)
+    {
+        const OSMNodeID id_val = ids[i];
+        BOOST_CHECK_EQUAL(static_cast<std::uint64_t>(id_val), inputs[i]);
+    }
+}
+
+// Verify that the overflow guard fires for IDs above the packed-storage limit
+// instead of silently masking them on push_back.
+BOOST_AUTO_TEST_CASE(packed_osm_ids_overflow_guard_throws)
+{
+    const OSMNodeID just_above_limit{osrm::extractor::MAX_PACKED_OSM_NODE_ID + 1};
+    BOOST_CHECK_THROW(osrm::extractor::checkPackedOSMNodeIdFits(just_above_limit),
+                      osrm::util::exception);
+
+    // Sanity: values at and below the limit must not throw.
+    BOOST_CHECK_NO_THROW(osrm::extractor::checkPackedOSMNodeIdFits(
+        OSMNodeID{osrm::extractor::MAX_PACKED_OSM_NODE_ID}));
+    BOOST_CHECK_NO_THROW(osrm::extractor::checkPackedOSMNodeIdFits(OSMNodeID{1ull << 34}));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

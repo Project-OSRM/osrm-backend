@@ -134,7 +134,7 @@ struct Comparator
 
     template <typename T1,
               typename T2,
-              typename = typename std::enable_if<!std::is_same<T1, T2>::value>::type>
+              typename = std::enable_if<!std::is_same<T1, T2>::value>::type>
     bool operator()(const T1 &, const T2 &)
     {
         reason = lhs_path + " and " + rhs_path + " have different types";
