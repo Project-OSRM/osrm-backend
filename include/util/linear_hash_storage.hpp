@@ -101,7 +101,11 @@ class LinearHashStorage
         ++current_timestamp;
         if (std::numeric_limits<unsigned>::max() == current_timestamp)
         {
-            cells.clear();
+            // Reset all cells to default state and restart timestamp.
+            // Using cells.assign() instead of cells.clear() keeps the vector sized
+            // so subsequent operator[] never accesses an empty vector.
+            cells.assign(cells.size(), HashCell{});
+            current_timestamp = 0;
         }
     }
 };
