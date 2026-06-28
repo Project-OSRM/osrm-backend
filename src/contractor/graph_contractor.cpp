@@ -519,7 +519,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
                                 double core_factor)
 {
     /** A heap kept in thread-local storage to avoid multiple recreations of it. */
-    ContractorHeap heap_exemplar(8000);
+    ContractorHeap heap_exemplar(HASH_MAP_CAPACITY);
     ThreadData thread_data(heap_exemplar);
     /** Nodes still waiting for contraction. Not all of them will be contracted though. */
     tbb::concurrent_vector<NodeID> remaining_nodes;
