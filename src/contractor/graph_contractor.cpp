@@ -564,7 +564,10 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     TIMER_STOP(init_priorities);
 
     auto number_of_core_nodes = std::max<std::size_t>(0, (1 - core_factor) * number_of_nodes);
-    auto number_of_nodes_to_contract = remaining_nodes.size() - number_of_core_nodes;
+    auto number_of_nodes_to_contract =
+        remaining_nodes.size() > number_of_core_nodes
+            ? remaining_nodes.size() - number_of_core_nodes
+            : std::size_t{0};
     util::Log() << "will contract " << number_of_nodes_to_contract << " ("
                 << (number_of_nodes_to_contract / (float)number_of_nodes * 100.) << "%) nodes...";
     util::Log() << "will leave " << number_of_core_nodes << " core nodes ("
