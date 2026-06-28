@@ -56,7 +56,7 @@ jobs:
               - '.github/workflows/vcpkg-smoke.yml'
       - name: Enable vcpkg binary cache
         if: steps.dep_changes.outputs.deps == 'true'
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
           key: vcpkg-${{ runner.os }}-${{ runner.arch }}-x64-linux-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
@@ -107,7 +107,7 @@ jobs:
       - run: node --version
       - run: npm --version
       - name: Enable vcpkg binary cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
           key: vcpkg-${{ runner.os }}-${{ runner.arch }}-x64-windows-static-md-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
@@ -202,7 +202,7 @@ jobs:
       with:
         node-version: latest
     - name: Enable Node.js cache
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -248,7 +248,7 @@ jobs:
       - name: Check out the repo
         uses: actions/checkout@v7
       - name: Enable osm.pbf cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: berlin-latest.osm.pbf
           key: v1-berlin-osm-pbf
@@ -504,7 +504,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Enable Node.js cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
@@ -512,14 +512,14 @@ jobs:
             ${{ runner.os }}-node-
       - name: Restore compiler cache
         id: ccache-restore
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: ~/.ccache
           key: ccache-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.name }}-
       - name: Enable vcpkg binary cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
           key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
@@ -533,7 +533,7 @@ jobs:
           # otherwise pick up overlay port manifests in vcpkg-overlay-ports/.
           vcpkgJsonGlob: 'vcpkg.json'
       - name: Enable test cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{github.workspace}}/test/cache
           key: v4-test-${{ matrix.name }}-${{ github.sha }}
@@ -758,7 +758,7 @@ jobs:
 
       - name: Save compiler cache
         if: always() && steps.build.outcome != 'cancelled'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: ~/.ccache
           key: ccache-${{ matrix.name }}-${{ github.sha }}
