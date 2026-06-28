@@ -75,6 +75,7 @@ export default class Route {
     if (bearings.length) {
       params.bearings = bearings
         .map((b) => {
+          if (b === '*') return '';
           const bs = b.split(',');
           if (bs.length === 2) return b;
           else return (b += ',10');

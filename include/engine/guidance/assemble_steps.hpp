@@ -15,6 +15,7 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_lanes.hpp"
+#include "util/log.hpp"
 #include "util/typedefs.hpp"
 
 #include <cstddef>
@@ -153,6 +154,11 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
                                           {intersection},
                                           is_left_hand_driving});
 
+#ifndef NDEBUG
+                util::Log(logDEBUG) << "pushing RouteStep of duration "
+                                    << from_alias<double>(segment_duration) / 10.;
+#endif
+
                 if (leg_data_index + 1 < leg_data.size())
                 {
                     step_name_id =
@@ -272,6 +278,13 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
         // u-------------v
         // |   |---------| source_weight
         // |         |---| target_weight
+
+#ifndef NDEBUG
+        if (source_weight > target_weight)
+            util::Log(logDEBUG) << "error: source_weight = " << source_weight
+                                << " target_weight = " << target_weight;
+#endif
+
         BOOST_ASSERT(target_weight >= source_weight);
         const EdgeWeight weight = target_weight - source_weight;
 

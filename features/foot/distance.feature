@@ -32,4 +32,8 @@ Feature: Foot - Use distance weight
         When I route I should get
             | from | to | route   | weight | time | distance |
             | a    | b  | abc,abc |    200 | 144s | 200m +-1 |
+            | b    | c  | abc,abc |    200 | 144s | 200m +-1 |
             | a    | c  | abc,abc |    400 | 288s | 400m +-1 |
+            | b    | a  | abc,abc |    200 | 144s | 200m +-1 |
+            | c    | b  | abc,abc |    200 | 144s | 200m +-1 |
+            | c    | a  | abc,abc |    400 | 288s | 400m +-1 |
