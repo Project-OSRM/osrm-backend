@@ -74,18 +74,18 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     // cell_sizes is index by level (starting at 0, the base graph).
     // However level 0 always needs to have cell size 1, since it is the
     // basegraph.
-    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     MultiLevelPartitionImpl(const std::vector<std::vector<CellID>> &partitions,
                             const std::vector<std::uint32_t> &lidx_to_num_cells)
+        requires(Ownership == storage::Ownership::Container)
         : level_data(MakeLevelData(lidx_to_num_cells))
     {
         InitializePartitionIDs(partitions);
     }
 
-    template <typename = std::enable_if<Ownership == storage::Ownership::View>>
     MultiLevelPartitionImpl(LevelDataPtr level_data,
                             Vector<PartitionID> partition_,
                             Vector<CellID> cell_to_children_)
+        requires(Ownership == storage::Ownership::View)
         : level_data(std::move(level_data)), partition(std::move(partition_)),
           cell_to_children(std::move(cell_to_children_))
     {
