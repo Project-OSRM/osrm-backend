@@ -32,7 +32,7 @@ concurrency:
 jobs:
   vcpkg-smoke-prereq:
     if: github.repository == 'Project-OSRM/osrm-backend'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Configure DNS servers
         if: runner.os == 'Linux'
@@ -74,7 +74,7 @@ jobs:
         env:
           VCPKG_DEFAULT_TRIPLET: x64-linux
 
-  vcpkg-windows-release-bindings:
+  windows-release-bindings:
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     strategy:
       matrix:
@@ -302,16 +302,26 @@ jobs:
           - name: clang-20-release
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Release
             CCOMPILER: clang-20
             CXXCOMPILER: clang++-20
+            ENABLE_LTO: ON
+
+          - name: clang-20-debug
+            continue-on-error: false
+            node: 24
+            runs-on: ubuntu-26.04
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-20
+            CXXCOMPILER: clang++-20
+            ENABLE_ASSERTIONS: ON
             ENABLE_LTO: OFF
 
           - name: clang-19-release
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Release
             CCOMPILER: clang-19
             CXXCOMPILER: clang++-19
@@ -320,100 +330,73 @@ jobs:
           - name: clang-18-release
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
             ENABLE_LTO: OFF
 
-          - name: clang-18-debug
+          - name: clang-20-debug-clang-tidy
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_LTO: OFF
-
-          - name: clang-18-debug-clang-tidy
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
+            CCOMPILER: clang-20
+            CXXCOMPILER: clang++-20
             ENABLE_CLANG_TIDY: ON
             NODE_PACKAGE_TESTS_ONLY: ON
             ENABLE_LTO: OFF
 
-          - name: clang-18-debug-asan-ubsan
+          - name: clang-20-debug-asan-ubsan
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
+            CCOMPILER: clang-20
+            CXXCOMPILER: clang++-20
             ENABLE_SANITIZER: ON
             TARGET_ARCH: x86_64-asan-ubsan
             OSRM_CONNECTION_RETRIES: 10
             OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          - name: clang-17-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
-            ENABLE_LTO: OFF
-
-          - name: gcc-14-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-14
-            CXXCOMPILER: g++-14
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
-
-          - name: gcc-13-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
-
           - name: clang-20-debug-cov
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Debug
             CCOMPILER: clang-20
             CXXCOMPILER: clang++-20
             ENABLE_COVERAGE: ON
 
-          - name: vcpkg-linux-release-bindings
+          - name: gcc-14-release
+            continue-on-error: false
+            node: 24
+            runs-on: ubuntu-26.04
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-14
+            CXXCOMPILER: g++-14
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+
+          - name: gcc-15-release
+            continue-on-error: false
+            node: 24
+            runs-on: ubuntu-26.04
+            BUILD_TYPE: Release
+            CCOMPILER: gcc-15
+            CXXCOMPILER: g++-15
+            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
+
+          - name: linux-release-bindings
             build_bindings: true
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: vcpkg-linux-debug
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
-            NODE_PACKAGE_TESTS_ONLY: ON
-
-          - name: vcpkg-linux-arm64-release
+          - name: linux-arm64-release
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04-arm
@@ -422,28 +405,26 @@ jobs:
             CXXCOMPILER: clang++-18
             ENABLE_LTO: OFF
 
-          - name: vcpkg-macos-26-x64-release
+          - name: macos-26-x64-release
             continue-on-error: true
             node: 24
             runs-on: macos-26-intel # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
             vcpkg_triplet: x64-osx
 
-          - name: vcpkg-macos-26-arm64-release
+          - name: macos-26-arm64-release
             continue-on-error: true
             node: 24
             runs-on: macos-26 # arm64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
             vcpkg_triplet: arm64-osx
 
           # python & nodeJS release bindings — macos-15 for broad binary compatibility
-          - name: vcpkg-macos-15-x64-release-bindings
+          - name: macos-15-x64-release-bindings
             build_bindings: true
             continue-on-error: true
             node: 24
@@ -451,10 +432,9 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
             vcpkg_triplet: x64-osx
 
-          - name: vcpkg-macos-15-arm64-release-bindings
+          - name: macos-15-arm64-release-bindings
             build_bindings: true
             continue-on-error: true
             node: 24
@@ -462,7 +442,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
             vcpkg_triplet: arm64-osx
 
     name: ${{ matrix.name}}
@@ -645,8 +624,8 @@ jobs:
           exec llvm-cov-20 gcov "$@"
           EOF
           chmod +x llvm-gcov.sh
-          lcov --gcov-tool "${PWD}/llvm-gcov.sh" --directory "${OSRM_BUILD_DIR}" --capture --ignore-errors inconsistent --output-file coverage.lcov
-          lcov --ignore-errors inconsistent --remove coverage.lcov '*/test/*' '*/unit_tests/*' --output-file coverage.lcov.filtered
+          lcov --gcov-tool "${PWD}/llvm-gcov.sh" --directory "${OSRM_BUILD_DIR}" --capture --ignore-errors inconsistent,format --output-file coverage.lcov
+          lcov --ignore-errors inconsistent,format --remove coverage.lcov '*/test/*' '*/unit_tests/*' --output-file coverage.lcov.filtered
 
       - name: Upload coverage to codecov.io
         if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
@@ -770,7 +749,7 @@ jobs:
 
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, vcpkg-windows-release-bindings, docker-build-extract-test]
+    needs: [build-matrix, windows-release-bindings, docker-build-extract-test]
     if: github.repository == 'Project-OSRM/osrm-backend'
     steps:
       - name: Configure DNS servers

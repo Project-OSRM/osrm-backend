@@ -395,11 +395,6 @@ endif()
 # file exposes them via standard CMake find_package() / imported targets.
 find_package(Boost 1.83 REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
 find_package(TBB CONFIG REQUIRED)
-# Always link the release build of TBB, even in Debug/Coverage configurations.
-# vcpkg's debug TBB enables internal debug assertions (e.g. intrusive_list
-# invariants) that trip during osrm-extract's test-data generation on
-# ubuntu-24.04 under gcc-13. The master branch never hit this because it
-# linked the system's release-only TBB. Do the same here.
 foreach(_tbb_target TBB::tbb TBB::tbbmalloc TBB::tbbmalloc_proxy)
   if(TARGET ${_tbb_target})
     set_target_properties(${_tbb_target} PROPERTIES

@@ -12,7 +12,7 @@ permissions:
 
 jobs:
   stale:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
       - name: Configure DNS servers
         if: runner.os == 'Linux'
