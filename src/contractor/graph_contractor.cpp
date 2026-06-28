@@ -202,7 +202,8 @@ void ContractNode(const ContractorGraph &graph,
     {
         BOOST_ASSERT(inserted_edges);
     }
-    const int SEARCH_SPACE_SIZE = RUNSIMULATION ? 1000 : 2000;
+    const int SEARCH_SPACE_SIZE = static_cast<int>(
+        RUNSIMULATION ? SIMULATION_SEARCH_SPACE_SIZE : FULL_SEARCH_SPACE_SIZE);
 
     ContractorHeap &heap = thread_data.local();
 
