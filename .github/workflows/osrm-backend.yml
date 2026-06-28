@@ -485,6 +485,12 @@ jobs:
           set -x
           npx cucumber-js -p home -p mld -p mmap features/testbot/trip.feature:316
           { set +x; } 2>/dev/null
+          # DEBUG: capture leg debug output into logs artifact
+          if [ -f /tmp/osrm_leg_debug.txt ]; then
+            mkdir -p test/logs
+            cp /tmp/osrm_leg_debug.txt test/logs/
+            echo "Captured /tmp/osrm_leg_debug.txt"
+          fi
 
       - name: Generate coverage report
         if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
