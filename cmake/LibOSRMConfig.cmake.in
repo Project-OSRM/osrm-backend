@@ -1,0 +1,15 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+
+# osrm is built as a static library and links against all of the
+# below, so consumers need them re-resolved at link time.
+find_dependency(Boost 1.83 CONFIG COMPONENTS date_time iostreams regex thread)
+find_dependency(TBB CONFIG)
+find_dependency(Threads)
+find_dependency(ZLIB)
+find_dependency(LibArchive)
+
+include("${CMAKE_CURRENT_LIST_DIR}/LibOSRMTargets.cmake")
+
+check_required_components(LibOSRM)
