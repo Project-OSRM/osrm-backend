@@ -73,7 +73,7 @@ async function tableCodeOnlyParse(table, annotation, format) {
   let got;
 
   await this.reprocessAndLoadData();
-  const testRow = function (row, ri) {
+  const testRow = function (row, _ri) {
     return new Promise((resolve, reject) => {
       const afterRequest = function (err, res, body) {
         if (err) return reject(err);
@@ -174,7 +174,7 @@ async function tableParse(table, noRoute, annotation, format) {
   await this.reprocessAndLoadData();
   // compute matrix
 
-  const { response, body } = await new Promise((resolve, reject) => {
+  const { body } = await new Promise((resolve, reject) => {
     this.requestTable(waypoints, params, (err, response, body) => {
       if (err) return reject(err);
       resolve({ response, body });
