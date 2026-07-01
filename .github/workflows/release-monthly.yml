@@ -243,6 +243,7 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: read
     steps:
       - name: Configure DNS servers
         if: runner.os == 'Linux'
