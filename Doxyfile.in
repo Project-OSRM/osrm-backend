@@ -13,14 +13,14 @@ QUIET                  = YES
 
 INPUT                  = @CMAKE_CURRENT_SOURCE_DIR@
 USE_MDFILE_AS_MAINPAGE = @CMAKE_CURRENT_SOURCE_DIR@/README.md
-FILE_PATTERNS          = *.h *.hpp *.c *.cc *.cpp *.md
+FILE_PATTERNS          = *.h *.hpp *.c *.cc *.cpp *.md *.dox
 RECURSIVE              = YES
 
 EXCLUDE                = @CMAKE_CURRENT_SOURCE_DIR@/third_party \
                          @CMAKE_CURRENT_SOURCE_DIR@/build \
                          @CMAKE_CURRENT_SOURCE_DIR@/node_modules \
                          @CMAKE_CURRENT_SOURCE_DIR@/unit_tests \
-			 @CMAKE_CURRENT_SOURCE_DIR@/benchmarks \
+                         @CMAKE_CURRENT_SOURCE_DIR@/benchmarks \
                          @CMAKE_CURRENT_SOURCE_DIR@/features
 
 SOURCE_BROWSER         = YES
@@ -40,5 +40,4 @@ CALLER_GRAPH           = YES
 DOT_IMAGE_FORMAT       = svg
 INTERACTIVE_SVG        = YES
 DOT_GRAPH_MAX_NODES    = 500
-DOT_TRANSPARENT        = YES
 DOT_MULTI_TARGETS      = YES

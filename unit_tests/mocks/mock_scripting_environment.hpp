@@ -3,12 +3,10 @@
 
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_turn.hpp"
-#include "extractor/maneuver_override.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/scripting_environment.hpp"
 
 #include <string>
-#include <utility>
 #include <vector>
 
 namespace osrm::test
@@ -33,14 +31,10 @@ class MockScriptingEnvironment : public extractor::ScriptingEnvironment
     void ProcessTurn(extractor::ExtractionTurn &) override final {}
     void ProcessSegment(extractor::ExtractionSegment &) override final {}
 
-    void ProcessElements(const osmium::memory::Buffer &,
+    void ProcessRelation(extractor::ScriptingResults &) override final {};
+    void ProcessElements(extractor::ScriptingResults &,
                          const extractor::RestrictionParser &,
-                         const extractor::ManeuverOverrideRelationParser &,
-                         const extractor::ExtractionRelationContainer &,
-                         std::vector<std::pair<const osmium::Node &, extractor::ExtractionNode>> &,
-                         std::vector<std::pair<const osmium::Way &, extractor::ExtractionWay>> &,
-                         std::vector<extractor::InputTurnRestriction> &,
-                         std::vector<extractor::InputManeuverOverride> &) override final
+                         const extractor::ManeuverOverrideRelationParser &) override final
     {
     }
 

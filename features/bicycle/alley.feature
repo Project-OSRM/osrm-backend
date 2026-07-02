@@ -27,8 +27,7 @@ Feature: Bicycle - Route around alleys
             | cf    | residential |          |
 
         When I route I should get
-            | from | to | a:nodes    | weight | #                                |
-            | a    | f  | 1:2:3:6    | 196.2  | Avoids d,e,f                     |
-            | a    | e  | 1:2:5      | 172.2  | Take the alley b,e if neccessary |
-            | d    | f  | 4:1:2:3:6  | 248.4  | Avoids the alley d,e,f           |
-
+            | from | to | a:nodes | weight | #                                |
+            | a    | f  | abcf    | 196.2  | Avoids d,e,f                     |
+            | a    | e  | abe     | 172.2  | Take the alley b,e if neccessary |
+            | d    | f  | dabcf   | 248.4  | Avoids the alley d,e,f           |
