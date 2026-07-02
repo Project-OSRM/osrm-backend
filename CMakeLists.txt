@@ -152,7 +152,7 @@ endif()
 include_directories(BEFORE ${CMAKE_CURRENT_BINARY_DIR}/include/)
 include_directories(BEFORE ${CMAKE_CURRENT_SOURCE_DIR}/include/)
 
-set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework)
+set(BOOST_COMPONENTS date_time iostreams program_options thread unit_test_framework regex)
 
 configure_file(
   ${CMAKE_CURRENT_SOURCE_DIR}/include/util/version.hpp.in
