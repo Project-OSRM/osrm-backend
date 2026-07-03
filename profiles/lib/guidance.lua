@@ -1,5 +1,6 @@
 local Tags = require('lib/tags')
 local Set = require('lib/set')
+local Measure = require('lib/measure')
 
 local Guidance = {}
 
@@ -77,6 +78,70 @@ local function to_number_uint(s)
   return nil
 end
 
+local function first_width(way, keys)
+  for _, key in ipairs(keys) do
+    local width = Measure.get_max_width(way:get_value_by_key(key))
+    if width and width > 0 then
+      return width
+    end
+  end
+end
+
+local function sum_width_lanes(value)
+  if not value then
+    return nil
+  end
+
+  local total = 0
+  local found = false
+  for lane_width in (value .. '|'):gmatch("([^|]*)|") do
+    local width = Measure.get_max_width(lane_width)
+    if width and width > 0 then
+      total = total + width
+      found = true
+    end
+  end
+
+  if found then
+    return total
+  end
+end
+
+local function first_width_lanes(way, keys)
+  for _, key in ipairs(keys) do
+    local width = sum_width_lanes(way:get_value_by_key(key))
+    if width and width > 0 then
+      return width
+    end
+  end
+end
+
+function Guidance.get_road_width(way)
+  local width = first_width(way, { 'width:carriageway', 'width', 'est_width' })
+  if width then
+    return width
+  end
+
+  local forward_width = first_width(way, { 'width:forward' })
+  local backward_width = first_width(way, { 'width:backward' })
+
+  if forward_width or backward_width then
+    return (forward_width or 0) + (backward_width or 0)
+  end
+
+  forward_width = first_width_lanes(way, { 'width:lanes:forward' })
+  backward_width = first_width_lanes(way, { 'width:lanes:backward' })
+
+  if forward_width or backward_width then
+    return (forward_width or 0) + (backward_width or 0)
+  end
+
+  width = first_width_lanes(way, { 'width:lanes' })
+  if width then
+    return width
+  end
+end
+
 function Guidance.set_classification (highway, result, input_way)
   if motorway_types[highway] then
     result.road_classification.motorway_class = true
@@ -139,6 +204,11 @@ function Guidance.set_classification (highway, result, input_way)
     if total_count ~= 0 then
       result.road_classification.num_lanes = total_count
     end
+  end
+
+  local road_width = Guidance.get_road_width(input_way)
+  if road_width then
+    result.road_width = road_width
   end
 end
 

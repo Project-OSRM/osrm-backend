@@ -2,6 +2,7 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/extraction_turn.hpp"
+#include "extractor/intersection/constants.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/turn_path_compressor.hpp"
 
@@ -11,7 +12,10 @@
 
 #include "util/log.hpp"
 
+#include <algorithm>
 #include <boost/assert.hpp>
+#include <cmath>
+#include <limits>
 #include <unordered_set>
 
 namespace osrm::extractor
@@ -19,11 +23,20 @@ namespace osrm::extractor
 
 static constexpr int SECOND_TO_DECISECOND = 10;
 
+namespace
+{
+std::uint16_t encodeRoadWidth(const double road_width)
+{
+    return static_cast<std::uint16_t>(
+        std::min<double>(std::round(road_width * 100.), std::numeric_limits<std::uint16_t>::max()));
+}
+} // namespace
+
 void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                                std::vector<TurnRestriction> &turn_restrictions,
                                std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
                                util::NodeBasedDynamicGraph &graph,
-                               const std::vector<NodeBasedEdgeAnnotation> &node_data_container,
+                               std::vector<NodeBasedEdgeAnnotation> &node_data_container,
                                CompressedEdgeContainer &geometry_compressor)
 {
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
@@ -156,11 +169,16 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                 (fwd_edge_data1.reversed == fwd_edge_data2.reversed) &&
                 (rev_edge_data1.reversed == rev_edge_data2.reversed) &&
                 // annotations need to match, except for the lane-id which can differ
-                fwd_annotation_data1.CanCombineWith(fwd_annotation_data2) &&
-                rev_annotation_data1.CanCombineWith(rev_annotation_data2))
+                fwd_annotation_data1.CanCompressWith(fwd_annotation_data2) &&
+                rev_annotation_data1.CanCompressWith(rev_annotation_data2))
             {
                 BOOST_ASSERT(!(graph.GetEdgeData(forward_e1).reversed &&
                                graph.GetEdgeData(reverse_e1).reversed));
+
+                // we cannot handle this as node penalty, if it depends on turn direction
+                if (fwd_edge_data1.flags.restricted != fwd_edge_data2.flags.restricted)
+                    continue;
+
                 /*
                  * Remember Lane Data for compressed parts. This handles scenarios where lane-data
                  * is only kept up until a traffic light.
@@ -192,10 +210,43 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                     // During contraction, we keep only one of the tags. Usually the one closer
                     // to the intersection is preferred. If its empty, however, we keep the
                     // non-empty one
-                    if (node_data_container[back_annotation].lane_description_id ==
-                        INVALID_LANE_DESCRIPTIONID)
-                        return front_annotation;
-                    return back_annotation;
+                    const auto selected_annotation =
+                        node_data_container[back_annotation].lane_description_id ==
+                                INVALID_LANE_DESCRIPTIONID
+                            ? front_annotation
+                            : back_annotation;
+
+                    const auto front_number_of_lanes =
+                        node_data_container[front_annotation].number_of_lanes;
+                    const auto back_number_of_lanes =
+                        node_data_container[back_annotation].number_of_lanes;
+                    const auto number_of_lanes =
+                        front_number_of_lanes == 0
+                            ? back_number_of_lanes
+                            : (back_number_of_lanes == 0
+                                   ? front_number_of_lanes
+                                   : std::min(front_number_of_lanes, back_number_of_lanes));
+                    const auto road_width =
+                        front_number_of_lanes != back_number_of_lanes &&
+                                node_data_container[front_annotation].road_width == 0 &&
+                                node_data_container[back_annotation].road_width == 0
+                            ? encodeRoadWidth(
+                                  std::max(front_number_of_lanes, back_number_of_lanes) *
+                                  intersection::ASSUMED_LANE_WIDTH)
+                            : node_data_container[selected_annotation].road_width;
+
+                    if (node_data_container[selected_annotation].number_of_lanes ==
+                            number_of_lanes &&
+                        node_data_container[selected_annotation].road_width == road_width)
+                    {
+                        return selected_annotation;
+                    }
+
+                    auto combined_annotation = node_data_container[selected_annotation];
+                    combined_annotation.number_of_lanes = number_of_lanes;
+                    combined_annotation.road_width = road_width;
+                    node_data_container.push_back(combined_annotation);
+                    return static_cast<AnnotationID>(node_data_container.size() - 1);
                 };
 
                 graph.GetEdgeData(forward_e1).annotation_data = selectAnnotation(
@@ -206,10 +257,6 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                     fwd_edge_data2.annotation_data, fwd_edge_data1.annotation_data);
                 graph.GetEdgeData(reverse_e2).annotation_data = selectAnnotation(
                     rev_edge_data2.annotation_data, rev_edge_data1.annotation_data);
-
-                // we cannot handle this as node penalty, if it depends on turn direction
-                if (fwd_edge_data1.flags.restricted != fwd_edge_data2.flags.restricted)
-                    continue;
 
                 // Get weights before graph is modified
                 const auto forward_weight1 = fwd_edge_data1.weight;
