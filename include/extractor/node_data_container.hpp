@@ -3,6 +3,7 @@
 
 #include "extractor/class_data.hpp"
 #include "extractor/edge_based_node.hpp"
+#include "extractor/intersection/constants.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/travel_mode.hpp"
 
@@ -12,6 +13,8 @@
 #include "util/permutation.hpp"
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
+
+#include <algorithm>
 
 namespace osrm::extractor
 {
@@ -87,6 +90,32 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     ClassData GetClassData(const NodeID node_id) const
     {
         return annotation_data[nodes[node_id].annotation_id].classes;
+    }
+
+    std::uint8_t GetNumberOfLanes(const NodeID node_id) const
+    {
+        return annotation_data[nodes[node_id].annotation_id].number_of_lanes;
+    }
+
+    double GetRoadWidth(const NodeID node_id) const
+    {
+        return annotation_data[nodes[node_id].annotation_id].road_width / 100.;
+    }
+
+    double ComputeMaxRoadHalfWidth() const
+    {
+        double max_road_half_width = 0.;
+        for (const auto &annotation : annotation_data)
+        {
+            const double road_width = std::min<double>(annotation.road_width / 100.,
+                                                       intersection::MAX_ROAD_SURFACE_WIDTH);
+            const double fallback_width =
+                std::min<double>(annotation.number_of_lanes * intersection::ASSUMED_LANE_WIDTH,
+                                 intersection::MAX_ROAD_SURFACE_WIDTH);
+            max_road_half_width =
+                std::max(max_road_half_width, 0.5 * std::max(road_width, fallback_width));
+        }
+        return max_road_half_width;
     }
 
     friend void serialization::read<Ownership>(storage::tar::FileReader &reader,

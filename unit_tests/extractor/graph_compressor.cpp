@@ -1,5 +1,6 @@
 #include "extractor/graph_compressor.hpp"
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/intersection/constants.hpp"
 #include "extractor/maneuver_override.hpp"
 #include "extractor/restriction.hpp"
 #include "util/node_based_graph.hpp"
@@ -52,7 +53,7 @@ bool compatible(Graph const &graph,
     auto const &first_annotation = node_data_container[graph.GetEdgeData(first).annotation_data];
     auto const &second_annotation = node_data_container[graph.GetEdgeData(second).annotation_data];
 
-    return first_annotation.CanCombineWith(second_annotation);
+    return first_annotation.CanCompressWith(second_annotation);
 }
 
 } // namespace
@@ -239,6 +240,41 @@ BOOST_AUTO_TEST_CASE(direction_changes)
 
     BOOST_CHECK(graph.FindEdge(0, 1) != SPECIAL_EDGEID);
     BOOST_CHECK(graph.FindEdge(1, 2) != SPECIAL_EDGEID);
+}
+
+BOOST_AUTO_TEST_CASE(lane_count_changes_do_not_block_compression)
+{
+    //
+    // 0---1---2
+    //
+    GraphCompressor compressor;
+
+    std::vector<TurnRestriction> restrictions;
+    CompressedEdgeContainer container;
+    std::vector<NodeBasedEdgeAnnotation> annotations(2);
+    test::MockScriptingEnvironment scripting_environment;
+    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
+
+    std::vector<InputEdge> edges = {
+        MakeUnitEdge(0, 1), MakeUnitEdge(1, 0), MakeUnitEdge(1, 2), MakeUnitEdge(2, 1)};
+
+    annotations[0].number_of_lanes = 3;
+    annotations[1].number_of_lanes = 2;
+    edges[2].data.annotation_data = edges[3].data.annotation_data = 1;
+
+    Graph graph(3, edges);
+    BOOST_CHECK(compatible(graph, annotations, 0, 2));
+
+    compressor.Compress(
+        scripting_environment, restrictions, maneuver_overrides, graph, annotations, container);
+
+    BOOST_CHECK_EQUAL(graph.FindEdge(0, 1), SPECIAL_EDGEID);
+    BOOST_CHECK_EQUAL(graph.FindEdge(1, 2), SPECIAL_EDGEID);
+    const auto edge = graph.FindEdge(0, 2);
+    BOOST_REQUIRE(edge != SPECIAL_EDGEID);
+    BOOST_CHECK_EQUAL(annotations[graph.GetEdgeData(edge).annotation_data].number_of_lanes, 2);
+    BOOST_CHECK_EQUAL(annotations[graph.GetEdgeData(edge).annotation_data].road_width,
+                      static_cast<std::uint16_t>(3 * intersection::ASSUMED_LANE_WIDTH * 100.));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

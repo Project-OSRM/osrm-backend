@@ -1,6 +1,7 @@
 #ifndef GEOSPATIAL_QUERY_HPP
 #define GEOSPATIAL_QUERY_HPP
 
+#include "extractor/intersection/constants.hpp"
 #include "engine/approach.hpp"
 #include "engine/bearing.hpp"
 #include "engine/phantom_node.hpp"
@@ -57,12 +58,12 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     {
         auto results = rtree.SearchInRange(
             input_coordinate,
-            max_distance,
+            max_distance + datafacade.GetMaxRoadHalfWidth(),
             [this, approach, &input_coordinate, &bearing_with_range, &use_all_edges, max_distance](
                 const CandidateSegment &segment)
             {
                 auto invalidDistance =
-                    CheckSegmentDistance(input_coordinate, segment, max_distance);
+                    CheckSegmentDistance(input_coordinate, segment, max_distance, true);
                 if (invalidDistance)
                 {
                     return std::make_pair(false, false);
@@ -106,7 +107,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             {
                 return (num_results >= max_results) ||
                        (max_distance && max_distance != -1.0 &&
-                        CheckSegmentDistance(input_coordinate, segment, *max_distance));
+                        CheckSegmentDistance(input_coordinate, segment, *max_distance, false));
             });
 
         return MakePhantomNodes(input_coordinate, results);
@@ -495,11 +496,44 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                                                  wsg84_coordinate);
     }
 
+    double GetRoadHalfWidth(const NodeID node_id) const
+    {
+        const double road_width = std::min(datafacade.GetRoadWidth(node_id),
+                                           extractor::intersection::MAX_ROAD_SURFACE_WIDTH);
+        if (road_width > 0.)
+        {
+            return 0.5 * road_width;
+        }
+
+        return 0.5 * std::min<double>(datafacade.GetNumberOfLanes(node_id) *
+                                          extractor::intersection::ASSUMED_LANE_WIDTH,
+                                      extractor::intersection::MAX_ROAD_SURFACE_WIDTH);
+    }
+
+    double GetRoadHalfWidth(const CandidateSegment &segment) const
+    {
+        if (segment.data.forward_segment_id.enabled &&
+            segment.data.forward_segment_id.id != SPECIAL_SEGMENTID)
+        {
+            return GetRoadHalfWidth(segment.data.forward_segment_id.id);
+        }
+
+        if (segment.data.reverse_segment_id.enabled &&
+            segment.data.reverse_segment_id.id != SPECIAL_SEGMENTID)
+        {
+            return GetRoadHalfWidth(segment.data.reverse_segment_id.id);
+        }
+
+        return 0.;
+    }
+
     bool CheckSegmentDistance(const Coordinate input_coordinate,
                               const CandidateSegment &segment,
-                              const double max_distance) const
+                              const double max_distance,
+                              const bool account_road_surface) const
     {
-        return GetSegmentDistance(input_coordinate, segment) > max_distance;
+        return GetSegmentDistance(input_coordinate, segment) >
+               max_distance + (account_road_surface ? GetRoadHalfWidth(segment) : 0.);
     }
 
     std::pair<bool, bool> CheckSegmentExclude(const CandidateSegment &segment) const

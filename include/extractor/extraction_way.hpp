@@ -51,6 +51,7 @@ struct ExtractionWay
         exits.clear();
         turn_lanes_forward.clear();
         turn_lanes_backward.clear();
+        road_width = 0.;
         road_classification = RoadClassification();
         forward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
         backward_travel_mode = TRAVEL_MODE_INACCESSIBLE;
@@ -110,6 +111,7 @@ struct ExtractionWay
     std::string exits;
     std::string turn_lanes_forward;
     std::string turn_lanes_backward;
+    double road_width;
     RoadClassification road_classification;
     TravelMode forward_travel_mode : 4;
     TravelMode backward_travel_mode : 4;

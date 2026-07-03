@@ -159,6 +159,35 @@ Feature: Basic Map Matching
             | trace  | matchings |
             | afcde  | abcde     |
 
+    Scenario Outline: Testbot - Map matching accounts for road surface width from <source>
+        Given a grid size of 4 meters
+        Given the node map
+            """
+            a b c d
+
+
+            1 2 3 4
+            e f g h
+            """
+
+        And the ways
+            | nodes | oneway | lanes   | width   | width:carriageway   | width:forward   | width:backward   | width:lanes   | width:lanes:forward   | width:lanes:backward   |
+            | abcd  | no     | <lanes> | <width> | <width_carriageway> | <width_forward> | <width_backward> | <width_lanes> | <width_lanes_forward> | <width_lanes_backward> |
+            | efgh  | no     |         |         |                     |                 |                  |               |                       |                        |
+
+        When I match I should get
+            | trace | matchings |
+            | 1234  | abcd      |
+
+        Examples:
+            | source                | lanes | width | width_carriageway | width_forward | width_backward | width_lanes         | width_lanes_forward | width_lanes_backward |
+            | width                 |       | 26    |                   |               |                |                     |                     |                      |
+            | width:carriageway     |       |       | 26                |               |                |                     |                     |                      |
+            | width:forward/backward |       |       |                   | 13            | 13             |                     |                     |                      |
+            | width:lanes           |       |       |                   |               |                | 6.5\|6.5\|6.5\|6.5 |                     |                      |
+            | width:lanes directions |       |       |                   |               |                |                     | 13                  | 13                   |
+            | lanes fallback        | 24    |       |                   |               |                |                     |                     |                      |
+
     Scenario: Testbot - Map matching with oneways
         Given a grid size of 10 meters
         Given the node map
@@ -826,4 +855,3 @@ Feature: Basic Map Matching
         When I match I should get
             | trace | matchings | confidence |
             | abcd  | abcd      | 1 ~5%      |
-

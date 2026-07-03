@@ -167,6 +167,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::vector_view<TurnPenalty> m_turn_duration_penalties;
     extractor::SegmentDataView segment_data;
     extractor::EdgeBasedNodeDataView edge_based_node_data;
+    double m_max_road_half_width = 0.;
     std::optional<osrm::guidance::TurnDataView> turn_data;
 
     std::optional<util::vector_view<util::guidance::LaneTupleIdPair>> m_lane_tuple_id_pairs;
@@ -230,6 +231,7 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             new SharedGeospatialQuery(m_static_rtree, m_coordinate_list, *this));
 
         edge_based_node_data = make_ebn_data_view(index, "/common/ebg_node_data");
+        m_max_road_half_width = edge_based_node_data.ComputeMaxRoadHalfWidth();
 
         if (isIndexed(index, "/common/turn_data"))
         {
@@ -430,6 +432,18 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     {
         return edge_based_node_data.GetClassData(edge_based_node_id);
     }
+
+    std::uint8_t GetNumberOfLanes(const NodeID edge_based_node_id) const override final
+    {
+        return edge_based_node_data.GetNumberOfLanes(edge_based_node_id);
+    }
+
+    double GetRoadWidth(const NodeID edge_based_node_id) const override final
+    {
+        return edge_based_node_data.GetRoadWidth(edge_based_node_id);
+    }
+
+    double GetMaxRoadHalfWidth() const override final { return m_max_road_half_width; }
 
     bool ExcludeNode(const NodeID edge_based_node_id) const override final
     {

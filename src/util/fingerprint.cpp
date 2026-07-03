@@ -24,8 +24,8 @@ FingerPrint FingerPrint::GetValid()
     // 4 chars, 'O','S','R','N' - note the N instead of M, v1 of the fingerprint
     // used M, so we add one and use N to indicate the newer fingerprint magic number.
     // Bump this value if the fingerprint format ever changes.
-    // Changed to force incompatibility for updated packed storage layout (packed_osm_ids.hpp).
-    fingerprint.magic_number = {{'O', 'S', 'R', 'O'}};
+    // Changed to force incompatibility for updated edge annotation layout.
+    fingerprint.magic_number = {{'O', 'S', 'R', 'P'}};
     fingerprint.major_version = OSRM_VERSION_MAJOR;
     fingerprint.minor_version = OSRM_VERSION_MINOR;
     fingerprint.patch_version = OSRM_VERSION_PATCH;
