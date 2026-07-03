@@ -5,6 +5,7 @@
 -- Secondary road:  18km/h = 18000m/3600s = 100m/20s
 -- Tertiary road:  12km/h = 12000m/3600s = 100m/30s
 TrafficSignal = require("lib/traffic_signal")
+Guidance = require("lib/guidance")
 
 api_version = 4
 
@@ -55,6 +56,7 @@ function process_way (profile, way, result)
   local maxspeed_forward = tonumber(way:get_value_by_key( "maxspeed:forward"))
   local maxspeed_backward = tonumber(way:get_value_by_key( "maxspeed:backward"))
   local junction = way:get_value_by_key("junction")
+  local lanes = tonumber(way:get_value_by_key("lanes"))
 
   if name then
     result.name = name
@@ -118,6 +120,15 @@ function process_way (profile, way, result)
   if toll == "yes" then
       result.forward_classes["toll"] = true
       result.backward_classes["toll"] = true
+  end
+
+  if lanes and lanes > 0 then
+    result.road_classification.num_lanes = lanes
+  end
+
+  local road_width = Guidance.get_road_width(way)
+  if road_width then
+    result.road_width = road_width
   end
 
   if junction == 'roundabout' then

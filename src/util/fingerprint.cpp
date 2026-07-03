@@ -57,8 +57,9 @@ FingerPrint FingerPrint::GetValid()
     // or on-disk data layout changes, to force incompatibility with datasets
     // produced by older code.
     //   'M' -> v1, 'N' -> semver scheme, 'O' -> packed_osm_ids layout,
-    //   'P' -> added ABI descriptor (os / endianness / pointer size).
-    fingerprint.magic_number = {{'O', 'S', 'R', 'P'}};
+    //   'P' -> added ABI descriptor (os / endianness / pointer size),
+    //   'Q' -> edge annotation layout gained road width and lane count.
+    fingerprint.magic_number = {{'O', 'S', 'R', 'Q'}};
     fingerprint.major_version = OSRM_VERSION_MAJOR;
     fingerprint.minor_version = OSRM_VERSION_MINOR;
     fingerprint.patch_version = OSRM_VERSION_PATCH;
