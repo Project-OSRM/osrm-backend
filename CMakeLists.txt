@@ -20,7 +20,7 @@ if(BUILD_AS_SUBPROJECT)
 endif()
 
 # set OSRM_BUILD_DIR location (might be used in various scripts)
-if (NOT WIN32 AND NOT DEFINED ENV{OSRM_BUILD_DIR})
+if(NOT WIN32 AND NOT DEFINED ENV{OSRM_BUILD_DIR})
   set(ENV{OSRM_BUILD_DIR} ${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
@@ -40,7 +40,7 @@ option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 # The vcpkg toolchain file is wired up via CMakePresets.json or by passing
 # -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake.
 
-if (ENABLE_CLANG_TIDY)
+if(ENABLE_CLANG_TIDY)
   find_program(CLANG_TIDY_COMMAND NAMES clang-tidy)
   if(NOT CLANG_TIDY_COMMAND)
     message(FATAL_ERROR "ENABLE_CLANG_TIDY is ON but clang-tidy is not found!")
@@ -66,7 +66,7 @@ if(ENABLE_LTO AND (CMAKE_BUILD_TYPE MATCHES Release OR CMAKE_BUILD_TYPE MATCHES 
 endif()
 
 # add @loader_path/$ORIGIN to rpath to make binaries relocatable
-if (APPLE)
+if(APPLE)
   set(CMAKE_BUILD_RPATH "@loader_path")
 elseif(NOT WIN32)
   set(CMAKE_BUILD_RPATH "\$ORIGIN")
@@ -76,7 +76,7 @@ endif()
 
 include(JSONParser)
 file(READ "package.json" packagejsonraw)
-sbeParseJson(packagejson packagejsonraw)
+parse_json(packagejson packagejsonraw)
 
 # This regex supports multiple semver version formats:
 # - (YYYY-2000).M.patchlevel: Monthly releases, e.g., 26.4.0 (April 2026)
@@ -84,7 +84,7 @@ sbeParseJson(packagejson packagejsonraw)
 # - Legacy semver: traditional major.minor.patch with optional prerelease, e.g., 6.0.0, 6.0.0-rc1
 
 # Try monthly release format: (YYYY-2000).M.patchlevel with month 1-12, no leading zeros
-if (packagejson.version MATCHES "^([0-9]+)\\.(1[0-2]|[1-9])\\.(0|[1-9][0-9]*)$")
+if(packagejson.version MATCHES "^([0-9]+)\\.(1[0-2]|[1-9])\\.(0|[1-9][0-9]*)$")
   # Monthly format: (YYYY-2000).M.patchlevel
   # MAJOR is already offset (year - 2000)
   set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
@@ -93,7 +93,7 @@ if (packagejson.version MATCHES "^([0-9]+)\\.(1[0-2]|[1-9])\\.(0|[1-9][0-9]*)$")
   set(OSRM_VERSION_PRERELEASE_BUILD "")
   set(OSRM_VERSION "${packagejson.version}")
 # Try legacy semver format (major.minor.patch with optional prerelease/build)
-elseif (packagejson.version MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
+elseif(packagejson.version MATCHES "^([0-9]+)\\.([0-9]+)\\.([0-9]+)([-+][0-9a-zA-Z.-]+)?$")
   # Legacy semver format: major.minor.patch[-+prerelease]
   set(OSRM_VERSION_MAJOR            ${CMAKE_MATCH_1})
   set(OSRM_VERSION_MINOR            ${CMAKE_MATCH_2})
@@ -104,7 +104,7 @@ else()
   message(FATAL_ERROR "Version from package.json cannot be parsed. Expected one of:\n  - Monthly release format: (YYYY-2000).M.patchlevel with month 1-12, no leading zeros (e.g., 26.4.0)\n  - Legacy semver format: major.minor.patch with optional prerelease (e.g., 6.0.0 or 6.0.0-rc1)\nBut found: ${packagejson.version}")
 endif()
 
-if (MSVC)
+if(MSVC)
   add_definitions("-DOSRM_PROJECT_DIR=\"${CMAKE_CURRENT_SOURCE_DIR}\"")
 else()
   add_definitions(-DOSRM_PROJECT_DIR="${CMAKE_CURRENT_SOURCE_DIR}")
@@ -121,12 +121,12 @@ function(add_dependency_includes)
     list(APPEND DEPENDENCIES_INCLUDE_DIRS "${ARGV}")
     set(DEPENDENCIES_INCLUDE_DIRS "${DEPENDENCIES_INCLUDE_DIRS}" PARENT_SCOPE)
   endif()
-endfunction(add_dependency_includes)
+endfunction()
 
 function(add_dependency_defines defines)
   list(APPEND OSRM_DEFINES "${defines}")
   set(OSRM_DEFINES "${OSRM_DEFINES}" PARENT_SCOPE)
-endfunction(add_dependency_defines)
+endfunction()
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include(CheckCXXCompilerFlag)
@@ -247,8 +247,8 @@ if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
 endif()
 
 set(MAYBE_COVERAGE_LIBRARIES "")
-if (ENABLE_COVERAGE)
-  if (NOT CMAKE_BUILD_TYPE MATCHES "Debug")
+if(ENABLE_COVERAGE)
+  if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     message(ERROR "ENABLE_COVERAGE=ON only makes sense with a Debug build")
   endif()
   message(STATUS "Enabling coverage")
@@ -263,7 +263,7 @@ if (ENABLE_COVERAGE)
 endif()
 
 
-if (ENABLE_SANITIZER)
+if(ENABLE_SANITIZER)
   set(SANITIZER_FLAGS "-g -fsanitize=address -fsanitize-address-use-after-scope -fsanitize=undefined -fno-omit-frame-pointer")
   set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${SANITIZER_FLAGS}")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${SANITIZER_FLAGS}")
@@ -307,7 +307,7 @@ endif()
 
 if(UNIX AND NOT APPLE)
   find_library(RT_LIB rt)
-  if (RT_LIB)
+  if(RT_LIB)
     set(MAYBE_RT_LIBRARY -lrt)
   endif()
 endif()
@@ -384,7 +384,7 @@ foreach(_dep IN LISTS _osrm_vcpkg_header_targets)
 endforeach()
 
 
-if (MSVC)
+if(MSVC)
   # Disable Boost auto-linking on MSVC; we link boost libraries explicitly
   # via imported targets from vcpkg.
   add_definitions(-DBOOST_ALL_NO_LIB)
@@ -422,7 +422,6 @@ set(TBB_LIBRARIES TBB::tbb)
 set(Boost_DATE_TIME_LIBRARY            Boost::date_time)
 set(Boost_IOSTREAMS_LIBRARY            Boost::iostreams)
 set(Boost_THREAD_LIBRARY               Boost::thread)
-set(Boost_REGEX_LIBRARY                Boost::regex)
 set(Boost_PROGRAM_OPTIONS_LIBRARY      Boost::program_options)
 set(Boost_UNIT_TEST_FRAMEWORK_LIBRARY  Boost::unit_test_framework)
 
@@ -432,7 +431,6 @@ set(BOOST_BASE_LIBRARIES
   ${Boost_THREAD_LIBRARY})
 
 set(BOOST_ENGINE_LIBRARIES
-  ${Boost_REGEX_LIBRARY}
   ${BOOST_BASE_LIBRARIES})
 
 # add a target to generate API documentation with Doxygen
@@ -562,12 +560,12 @@ add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTI
 target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES})
 install(TARGETS osrm-io-benchmark DESTINATION bin)
 
-if (ENABLE_ASSERTIONS)
+if(ENABLE_ASSERTIONS)
   message(STATUS "Enabling assertions")
   add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)
 endif()
 
-if (ENABLE_DEBUG_LOGGING)
+if(ENABLE_DEBUG_LOGGING)
   message(STATUS "Enabling debug logging")
   add_definitions(-DENABLE_DEBUG_LOGGING)
 endif()
@@ -630,12 +628,12 @@ if(BUILD_PACKAGE)
   include(CPack)
 endif()
 
-function(JOIN VALUES GLUE OUTPUT)
-  string (REPLACE ";" "${GLUE}" _TMP_STR "${VALUES}")
-  set (${OUTPUT} "${_TMP_STR}" PARENT_SCOPE)
+function(join VALUES GLUE OUTPUT)
+  string(REPLACE ";" "${GLUE}" _TMP_STR "${VALUES}")
+  set(${OUTPUT} "${_TMP_STR}" PARENT_SCOPE)
 endfunction()
 
-JOIN("${OSRM_DEFINES}" " " TMP_OSRM_DEFINES)
+join("${OSRM_DEFINES}" " " TMP_OSRM_DEFINES)
 set(LibOSRM_CXXFLAGS "${OSRM_CXXFLAGS} ${TMP_OSRM_DEFINES}")
 set(LibOSRM_LDFLAGS "${OSRM_LDFLAGS}")
 
@@ -646,9 +644,9 @@ if(BUILD_AS_SUBPROJECT)
   set(LibOSRM_LIBRARIES "osrm" PARENT_SCOPE)
   set(LibOSRM_DEPENDENT_LIBRARIES "${ENGINE_LIBRARIES}" PARENT_SCOPE)
   set(LibOSRM_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
-                           "${CMAKE_CURRENT_SOURCE_DIR}/include/osrm"
-                           "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
-                           "${DEPENDENCIES_INCLUDE_DIRS}" PARENT_SCOPE)
+    "${CMAKE_CURRENT_SOURCE_DIR}/include/osrm"
+    "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
+    "${DEPENDENCIES_INCLUDE_DIRS}" PARENT_SCOPE)
   set(LibOSRM_LIBRARY_DIRS "${LibOSRM_LIBRARY_DIR}" PARENT_SCOPE)
 endif()
 
@@ -660,14 +658,13 @@ set(PKGCONFIG_INCLUDE_DIR "${CMAKE_INSTALL_PREFIX}/include")
 
 list(APPEND DEPENDENCIES_INCLUDE_DIRS "${PKGCONFIG_INCLUDE_DIR}")
 list(APPEND DEPENDENCIES_INCLUDE_DIRS "${PKGCONFIG_INCLUDE_DIR}/osrm")
-JOIN("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
-
+join("-I${DEPENDENCIES_INCLUDE_DIRS}" " -I" PKGCONFIG_OSRM_INCLUDE_FLAGS)
 
 foreach(engine_lib ${ENGINE_LIBRARIES})
   if(TARGET ${engine_lib})
-    # Some imported targets (e.g. Boost::regex in modern Boost) are
-    # INTERFACE-only and have no TARGET_LINKER_FILE. Only embed a linker
-    # file for targets that actually produce one.
+    # Some imported targets in modern Boost are INTERFACE-only and have no
+    # TARGET_LINKER_FILE. Only embed a linker file for targets that actually
+    # produce one.
     get_target_property(_tgt_type ${engine_lib} TYPE)
     if(_tgt_type STREQUAL "INTERFACE_LIBRARY")
       list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "-l${engine_lib}")
@@ -677,9 +674,9 @@ foreach(engine_lib ${ENGINE_LIBRARIES})
   else()
     list(APPEND PKGCONFIG_DEPENDENT_LIBRARIES "${engine_lib}")
   endif()
-endforeach(engine_lib)
+endforeach()
 
-JOIN("${PKGCONFIG_DEPENDENT_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
+join("${PKGCONFIG_DEPENDENT_LIBRARIES}" " " PKGCONFIG_OSRM_DEPENDENT_LIBRARIES)
 
 configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in pkgconfig.configured @ONLY)
 # Multi-config generators (e.g. Visual Studio) produce different values for
@@ -688,12 +685,7 @@ configure_file(${CMAKE_CURRENT_SOURCE_DIR}/cmake/pkgconfig.in pkgconfig.configur
 # skip generation for multi-config generators.
 get_property(_is_multi_config GLOBAL PROPERTY GENERATOR_IS_MULTI_CONFIG)
 if(NOT _is_multi_config)
-  file(GENERATE
-       OUTPUT
-       ${PROJECT_BINARY_DIR}/libosrm.pc
-       INPUT
-       ${PROJECT_BINARY_DIR}/pkgconfig.configured)
-
+  file(GENERATE OUTPUT ${PROJECT_BINARY_DIR}/libosrm.pc INPUT ${PROJECT_BINARY_DIR}/pkgconfig.configured)
   install(FILES ${PROJECT_BINARY_DIR}/libosrm.pc DESTINATION ${PKGCONFIG_LIBRARY_DIR}/pkgconfig)
 endif()
 
@@ -717,15 +709,15 @@ enable_testing()
 add_subdirectory(unit_tests)
 add_subdirectory(src/benchmarks)
 
-if (ENABLE_NODE_BINDINGS)
+if(ENABLE_NODE_BINDINGS)
   add_subdirectory(src/nodejs)
 endif()
 
-if (ENABLE_PYTHON_BINDINGS)
+if(ENABLE_PYTHON_BINDINGS)
   add_subdirectory(src/python)
 endif()
 
-if (ENABLE_FUZZING)
+if(ENABLE_FUZZING)
   # Requires libosrm being built with sanitizers; make configurable and default to ubsan
   set(FUZZ_SANITIZER "undefined" CACHE STRING "Sanitizer to be used for Fuzz testing")
   set_property(CACHE FUZZ_SANITIZER PROPERTY STRINGS "undefined" "integer" "address" "memory" "thread" "leak")
@@ -737,7 +729,7 @@ if (ENABLE_FUZZING)
   message(STATUS "Using -fsanitize=${FUZZ_SANITIZER} for Fuzz testing")
 
   add_subdirectory(fuzz)
-endif ()
+endif()
 
 # add headers sanity check target that includes all headers independently
 set(check_headers_dir "${PROJECT_BINARY_DIR}/check-headers")
@@ -745,13 +737,13 @@ file(GLOB_RECURSE headers_to_check
   ${PROJECT_BINARY_DIR}/*.hpp
   ${PROJECT_SOURCE_DIR}/include/*.hpp)
 foreach(header ${headers_to_check})
-  if ("${header}" MATCHES ".*/include/nodejs/.*")
+  if("${header}" MATCHES ".*/include/nodejs/.*")
     # we do not check NodeJS bindings headers
     continue()
   endif()
   get_filename_component(filename ${header} NAME_WE)
   set(filename "${check_headers_dir}/${filename}.cpp")
-  if (NOT EXISTS ${filename})
+  if(NOT EXISTS ${filename})
     file(WRITE ${filename} "#include \"${header}\"\n")
   endif()
   list(APPEND sources ${filename})
