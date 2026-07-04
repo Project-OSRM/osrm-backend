@@ -56,7 +56,7 @@ struct ContractorConfig final : storage::IOConfig
     std::filesystem::path GetOutputPath(const std::string &ext) const
     {
         // Validate the extension is configured (throws if not)
-        (void)GetPath(ext);
+        GetPath(ext);
         if (!output_path.empty())
             return {output_path.string() + ext};
         return GetPath(ext);
