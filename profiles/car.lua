@@ -268,12 +268,13 @@ function setup()
 
       cobblestone = 30,
       clay = 30,
-      laterite = 15,
 
       earth = 20,
       stone = 20,
       rocky = 20,
       sand = 20,
+
+      laterite = 15,
 
       mud = 10,
 
