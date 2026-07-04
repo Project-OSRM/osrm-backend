@@ -1,8 +1,8 @@
 #ifndef INTEGER_RANGE_HPP
 #define INTEGER_RANGE_HPP
 
-#include <iterator>
 #include <concepts>
+#include <iterator>
 
 namespace osrm::util
 {
