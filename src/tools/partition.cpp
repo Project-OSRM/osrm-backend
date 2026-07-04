@@ -117,9 +117,9 @@ return_code parseArguments(int argc,
              MaxCellSizesArgument{config.max_cell_sizes}),
          "Maximum cell sizes starting from the level 1. The first cell size value is a bisection "
          "termination citerion")(
-        "output,o",
-        boost::program_options::value<std::filesystem::path>(&config.output_path),
-        "Output base path for generated files (default: same as input)");
+            "output,o",
+            boost::program_options::value<std::filesystem::path>(&config.output_path),
+            "Output base path for generated files (default: same as input)");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user

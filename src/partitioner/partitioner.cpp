@@ -126,17 +126,16 @@ int Partitioner::Run(const PartitionerConfig &config)
     renumber(partitions, permutation);
     {
         renumber(mapping, permutation);
-        extractor::files::writeNBGMapping(
-            config.GetOutputPath(".osrm.cnbg_to_ebg").string(), mapping);
+        extractor::files::writeNBGMapping(config.GetOutputPath(".osrm.cnbg_to_ebg").string(),
+                                          mapping);
     }
     {
         // If writing to a different output path, copy the file first since we mmap in-place
         if (!config.output_path.empty())
         {
-            std::filesystem::copy_file(
-                config.GetPath(".osrm.fileIndex"),
-                config.GetOutputPath(".osrm.fileIndex"),
-                std::filesystem::copy_options::overwrite_existing);
+            std::filesystem::copy_file(config.GetPath(".osrm.fileIndex"),
+                                       config.GetOutputPath(".osrm.fileIndex"),
+                                       std::filesystem::copy_options::overwrite_existing);
         }
         boost::iostreams::mapped_file segment_region;
         auto segments = util::mmapFile<extractor::EdgeBasedNodeSegment>(

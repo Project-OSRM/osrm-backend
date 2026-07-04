@@ -74,9 +74,9 @@ return_code parseArguments(int argc,
                 ->default_value(""),
             "Required for conditional turn restriction parsing, provide a geojson file containing "
             "time zone boundaries")(
-        "output,o",
-        boost::program_options::value<std::filesystem::path>(&customization_config.output_path),
-        "Output base path for generated files (default: same as input)");
+            "output,o",
+            boost::program_options::value<std::filesystem::path>(&customization_config.output_path),
+            "Output base path for generated files (default: same as input)");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
