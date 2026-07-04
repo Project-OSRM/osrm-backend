@@ -26,6 +26,7 @@ Feature: Bike - Surfaces
             | cycleway | grass_paver           | 120 s   |
             | cycleway | dirt                  | 90 s    |
             | cycleway | earth                 | 120 s   |
+            | cycleway | laterite              | 144 s   |
             | cycleway | grass                 | 120 s   |
             | cycleway | mud                   | 240 s   |
             | cycleway | sand                  | 240 s   |

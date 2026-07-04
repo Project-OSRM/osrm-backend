@@ -199,6 +199,7 @@ function setup()
       ground = 10,
       dirt = 8,
       earth = 6,
+      laterite = 5,
       grass = 6,
       mud = 3,
       sand = 3,
