@@ -30,6 +30,14 @@ struct CustomizationConfig final : storage::IOConfig
         updater_config.UseDefaultOutputNames(base);
     }
 
+    std::filesystem::path GetOutputPath(const std::string &ext) const
+    {
+        if (!output_path.empty())
+            return {output_path.string() + ext};
+        return GetPath(ext);
+    }
+
+    std::filesystem::path output_path;
     unsigned requested_num_threads;
 
     updater::UpdaterConfig updater_config;

@@ -72,7 +72,7 @@ int Contractor::Run()
     std::unordered_map<std::string, ContractedMetric> metrics = {
         {metric_name, {std::move(query_graph), std::move(edge_filters)}}};
 
-    files::writeGraph(config.GetPath(".osrm.hsgr"), metrics, connectivity_checksum);
+    files::writeGraph(config.GetOutputPath(".osrm.hsgr"), metrics, connectivity_checksum);
 
     TIMER_STOP(preparing);
 

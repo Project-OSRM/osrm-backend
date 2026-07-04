@@ -31,6 +31,14 @@ struct PartitionerConfig final : storage::IOConfig
         IOConfig::UseDefaultOutputNames(base);
     }
 
+    std::filesystem::path GetOutputPath(const std::string &ext) const
+    {
+        if (!output_path.empty())
+            return {output_path.string() + ext};
+        return GetPath(ext);
+    }
+
+    std::filesystem::path output_path;
     unsigned requested_num_threads;
 
     double balance;
