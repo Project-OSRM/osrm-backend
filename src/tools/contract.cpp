@@ -10,6 +10,7 @@
 #include <boost/program_options.hpp>
 #include <boost/program_options/errors.hpp>
 
+#include <array>
 #include <cstdlib>
 #include <filesystem>
 #include <new>
@@ -72,7 +73,10 @@ return_code parseArguments(int argc,
         "time-zone-file",
         boost::program_options::value<std::string>(&contractor_config.updater_config.tz_file_path),
         "Required for conditional turn restriction parsing, provide a geojson file containing "
-        "time zone boundaries");
+        "time zone boundaries")(
+        "output,o",
+        boost::program_options::value<std::filesystem::path>(&contractor_config.output_path),
+        "Output base path for generated files (default: same as input)");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -165,6 +169,24 @@ try
     util::LogPolicy::GetInstance().SetLevel(verbosity);
 
     contractor_config.UseDefaultOutputNames(contractor_config.base_path);
+
+    if (!contractor_config.output_path.empty())
+    {
+        // Strip known extensions from the user-provided output path
+        std::string path = contractor_config.output_path.string();
+        const std::array<std::string, 6> known_extensions{
+            {".osm.bz2", ".osm.pbf", ".osm.xml", ".pbf", ".osm", ".osrm"}};
+        for (const auto &ext : known_extensions)
+        {
+            const auto pos = path.find(ext);
+            if (pos != std::string::npos)
+            {
+                path.replace(pos, ext.size(), "");
+                break;
+            }
+        }
+        contractor_config.output_path = path;
+    }
 
     if (1 > contractor_config.requested_num_threads)
     {

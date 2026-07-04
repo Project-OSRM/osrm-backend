@@ -53,8 +53,18 @@ struct ContractorConfig final : storage::IOConfig
 
     bool IsValid() const { return IOConfig::IsValid() && updater_config.IsValid(); }
 
+    std::filesystem::path GetOutputPath(const std::string &ext) const
+    {
+        // Validate the extension is configured (throws if not)
+        GetPath(ext);
+        if (!output_path.empty())
+            return {output_path.string() + ext};
+        return GetPath(ext);
+    }
+
     updater::UpdaterConfig updater_config;
 
+    std::filesystem::path output_path;
     unsigned requested_num_threads = 0;
 };
 } // namespace osrm::contractor

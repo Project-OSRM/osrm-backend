@@ -8,6 +8,7 @@
 #include "util/program_options_path.hpp"
 #include <boost/program_options.hpp>
 
+#include <array>
 #include <filesystem>
 #include <iostream>
 #include <set>
@@ -72,7 +73,10 @@ return_code parseArguments(int argc,
                 &customization_config.updater_config.tz_file_path)
                 ->default_value(""),
             "Required for conditional turn restriction parsing, provide a geojson file containing "
-            "time zone boundaries");
+            "time zone boundaries")(
+            "output,o",
+            boost::program_options::value<std::filesystem::path>(&customization_config.output_path),
+            "Output base path for generated files (default: same as input)");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
@@ -166,6 +170,24 @@ try
 
     // set the default in/output names
     customization_config.UseDefaultOutputNames(customization_config.base_path);
+
+    if (!customization_config.output_path.empty())
+    {
+        // Strip known extensions from the user-provided output path
+        std::string path = customization_config.output_path.string();
+        const std::array<std::string, 6> known_extensions{
+            {".osm.bz2", ".osm.pbf", ".osm.xml", ".pbf", ".osm", ".osrm"}};
+        for (const auto &ext : known_extensions)
+        {
+            const auto pos = path.find(ext);
+            if (pos != std::string::npos)
+            {
+                path.replace(pos, ext.size(), "");
+                break;
+            }
+        }
+        customization_config.output_path = path;
+    }
 
     if (1 > customization_config.requested_num_threads)
     {
