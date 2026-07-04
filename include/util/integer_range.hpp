@@ -2,7 +2,7 @@
 #define INTEGER_RANGE_HPP
 
 #include <iterator>
-#include <type_traits>
+#include <concepts>
 
 namespace osrm::util
 {
@@ -105,10 +105,8 @@ template <typename Integer> class range
 };
 
 template <typename Integer>
-range<Integer>
-irange(const Integer first,
-       const Integer last,
-       typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr) noexcept
+    requires std::integral<Integer>
+range<Integer> irange(const Integer first, const Integer last) noexcept
 {
     return range<Integer>(first, last);
 }

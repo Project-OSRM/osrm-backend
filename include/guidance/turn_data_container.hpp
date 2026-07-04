@@ -78,8 +78,8 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
     }
 
     // Used by EdgeBasedGraphFactory to fill data structure
-    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     void push_back(const TurnData &data)
+        requires(Ownership != storage::Ownership::View)
     {
         turn_instructions.push_back(data.turn_instruction);
         lane_data_ids.push_back(data.lane_data_id);
@@ -88,8 +88,8 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
         post_turn_bearings.push_back(data.post_turn_bearing);
     }
 
-    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     void append(const std::vector<TurnData> &others)
+        requires(Ownership != storage::Ownership::View)
     {
         std::for_each(
             others.begin(), others.end(), [this](const TurnData &other) { push_back(other); });
