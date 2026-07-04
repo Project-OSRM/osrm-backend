@@ -274,6 +274,8 @@ function setup()
       rocky = 20,
       sand = 20,
 
+      laterite = 15,
+
       mud = 10,
 
       -- winter surfaces (OSM surface=ice / surface=snow)

@@ -290,6 +290,7 @@
         {"key": "surface", "value": "cobblestone"},
         {"key": "surface", "value": "clay"},
         {"key": "surface", "value": "earth"},
+        {"key": "surface", "value": "laterite"},
         {"key": "surface", "value": "stone"},
         {"key": "surface", "value": "rocky"},
         {"key": "surface", "value": "sand"},
