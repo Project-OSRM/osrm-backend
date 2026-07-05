@@ -84,7 +84,7 @@ class IntersectionHandler
     // turn angles.
     template <typename IntersectionType> // works with Intersection and IntersectionView
     std::optional<std::size_t> findObviousTurn(const EdgeID via_edge,
-                                                  const IntersectionType &intersection) const;
+                                               const IntersectionType &intersection) const;
 
     // Obvious turns can still take multiple forms. This function looks at the turn onto a road
     // candidate when coming from a via_edge and determines the best instruction to emit.
