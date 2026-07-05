@@ -14,8 +14,8 @@ namespace osrm::engine
 bool SegmentHint::IsValid(const util::Coordinate /*new_input_coordinates*/,
                           const datafacade::BaseDataFacade &facade) const
 {
-    // Hints are deprecated; always report as valid to avoid rejecting requests
-    // that still include hints from older responses.
+    // Hints are deprecated; only validate via dataset checksum to avoid rejecting
+    // requests that still include hints from older responses.
     return facade.GetCheckSum() == data_checksum;
 }
 
@@ -88,7 +88,7 @@ Hint Hint::FromBase64(const std::string &base64Hint)
 bool Hint::IsValid(const util::Coordinate /*new_input_coordinates*/,
                    const datafacade::BaseDataFacade &facade) const
 {
-    // Hints are deprecated; always report as valid.
+    // Hints are deprecated; validate each segment hint via checksum-only check.
     const auto all_valid =
         std::all_of(segment_hints.begin(),
                     segment_hints.end(),
