@@ -560,7 +560,12 @@ IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         if (from_data.flags.roundabout != to_data.flags.roundabout)
             return std::nullopt;
 
-        return std::distance(intersection.begin(), iterator);
+        auto const index = std::distance(intersection.begin(), iterator);
+        // index 0 is the u-turn approach road — never an obvious turn
+        if (index == 0)
+            return std::nullopt;
+
+        return index;
     };
 
     // in case the continuing road is distinct, we prefer continuing on the current road.
