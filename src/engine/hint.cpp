@@ -89,10 +89,10 @@ bool Hint::IsValid(const util::Coordinate /*new_input_coordinates*/,
                    const datafacade::BaseDataFacade &facade) const
 {
     // Hints are deprecated; always report as valid.
-    const auto all_valid = std::all_of(segment_hints.begin(),
-                                       segment_hints.end(),
-                                       [&](const auto &seg_hint)
-                                       { return seg_hint.IsValid({}, facade); });
+    const auto all_valid =
+        std::all_of(segment_hints.begin(),
+                    segment_hints.end(),
+                    [&](const auto &seg_hint) { return seg_hint.IsValid({}, facade); });
     return all_valid;
 }
 
