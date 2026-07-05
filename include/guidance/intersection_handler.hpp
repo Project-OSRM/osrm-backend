@@ -83,7 +83,8 @@ class IntersectionHandler
     // other possible turns. The function will consider road categories and other inputs like the
     // turn angles.
     template <typename IntersectionType> // works with Intersection and IntersectionView
-    std::size_t findObviousTurn(const EdgeID via_edge, const IntersectionType &intersection) const;
+    std::optional<std::size_t> findObviousTurn(const EdgeID via_edge,
+                                               const IntersectionType &intersection) const;
 
     // Obvious turns can still take multiple forms. This function looks at the turn onto a road
     // candidate when coming from a via_edge and determines the best instruction to emit.
@@ -484,13 +485,14 @@ inline bool IntersectionHandler::IsDistinctTurn(const EdgeID via_edge,
 
 // Impl.
 template <typename IntersectionType> // works with Intersection and IntersectionView
-std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
-                                                 const IntersectionType &intersection) const
+std::optional<std::size_t>
+IntersectionHandler::findObviousTurn(const EdgeID via_edge,
+                                     const IntersectionType &intersection) const
 {
 
     // no obvious road
     if (intersection.size() == 1)
-        return 0;
+        return std::nullopt;
 
     // a single non u-turn is obvious
     if (intersection.size() == 2)
@@ -550,15 +552,20 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
 
     // this check is not part of the main conditions, so that if the turn looks obvious from all
     // other perspectives, a mode change will not result in different classification
-    auto const to_index_if_valid = [&](auto const iterator) -> std::size_t
+    auto const to_index_if_valid = [&](auto const iterator) -> std::optional<std::size_t>
     {
         auto const &from_data = node_based_graph.GetEdgeData(via_edge);
         auto const &to_data = node_based_graph.GetEdgeData(iterator->eid);
 
         if (from_data.flags.roundabout != to_data.flags.roundabout)
-            return 0;
+            return std::nullopt;
 
-        return std::distance(intersection.begin(), iterator);
+        auto const index = std::distance(intersection.begin(), iterator);
+        // index 0 is the u-turn approach road — never an obvious turn
+        if (index == 0)
+            return std::nullopt;
+
+        return index;
     };
 
     // in case the continuing road is distinct, we prefer continuing on the current road.
@@ -610,7 +617,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         STRAIGHT_ANGLE, [&](auto const &road) { return !road.entry_allowed; });
     // no valid turns
     if (straightmost_valid == intersection.end())
-        return 0;
+        return std::nullopt;
 
     auto const non_sharp_turns = intersection.Count(
         [&](auto const &road) { return util::angularDeviation(road.angle, STRAIGHT_ANGLE) <= 90; });
@@ -659,7 +666,7 @@ std::size_t IntersectionHandler::findObviousTurn(const EdgeID via_edge,
         return to_index_if_valid(straightmost_valid);
     }
 
-    return 0;
+    return std::nullopt;
 }
 
 } // namespace osrm::guidance
