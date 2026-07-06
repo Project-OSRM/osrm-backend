@@ -195,6 +195,9 @@ jobs:
   format-taginfo-docs:
     if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      pull-requests: write  # needed by suggest-changes to post review suggestions
     steps:
     - uses: actions/checkout@v7
     - name: Use Node.js
@@ -219,14 +222,22 @@ jobs:
         python-version: '3.12'
     - name: Run `pre-commit`
       uses: pre-commit/action@v3.0.1
-    - name: Run checks
-      run: |
-        ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-        # Check that code formatting is up to date
-        ./scripts/format.sh && ./scripts/error_on_dirty.sh "Run './scripts/format.sh' locally and commit the changes."
-        # Check that API documentation is up to date with JSDoc comments in node_osrm.cpp
-        npm run docs && ./scripts/error_on_dirty.sh "Run 'npm run docs' locally and commit the changes."
-        npm audit --production
+    - name: Validate taginfo
+      run: ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+    - name: Apply code formatting
+      run: ./scripts/format.sh
+    - name: Generate API documentation
+      run: npm run docs
+    - name: Suggest formatting and documentation changes on PR
+      if: github.event_name == 'pull_request'
+      uses: parkerbxyz/suggest-changes@v3
+      with:
+        comment: 'Please review and commit the suggested formatting and documentation changes.'
+        event: 'REQUEST_CHANGES'
+    - name: Verify no outstanding changes
+      run: ./scripts/error_on_dirty.sh "Run './scripts/format.sh' and/or 'npm run docs' locally and commit the changes."
+    - name: Run npm audit
+      run: npm audit --production
 
   docker-build-extract-test:
     strategy:
