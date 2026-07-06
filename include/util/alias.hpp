@@ -79,7 +79,7 @@ struct Alias final
     }
     inline Alias operator&(const Alias rhs_) const
     {
-    return Alias{__value & static_cast<const From>(rhs_)};
+        return Alias{__value & static_cast<const From>(rhs_)};
     }
     auto operator<=>(const Alias &) const = default;
 
