@@ -52,7 +52,7 @@ struct Alias final
     explicit operator From() const { return __value; }
     inline Alias operator+(const Alias rhs_) const
     {
-    return Alias{__value + static_cast<const From>(rhs_)};
+        return Alias{__value + static_cast<const From>(rhs_)};
     }
     inline Alias operator-(const Alias rhs_) const
     {
