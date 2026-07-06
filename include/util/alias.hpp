@@ -39,8 +39,7 @@ template <typename From, typename Tag> struct Alias;
 template <typename From, typename Tag>
 inline std::ostream &operator<<(std::ostream &stream, const Alias<From, Tag> &inst);
 
-template <typename From, typename Tag>
-struct Alias final
+template <typename From, typename Tag> struct Alias final
 {
     using value_type = From;
     static_assert(std::is_arithmetic<From>::value, "Needs to be based on an arithmetic type");
