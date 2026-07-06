@@ -114,10 +114,10 @@ template <typename From, typename Tag> struct Alias final
     }
     inline Alias operator&=(const Alias z_)
     {  __value &= static_cast<const From>(z_);
-    return *this;}
-};
-
-template <typename ToAlias, typename FromAlias> inline ToAlias alias_cast(const FromAlias &from)
+    {
+        __value &= static_cast<const From>(z_);
+        return *this;
+    }
 {
     static_assert(std::is_arithmetic<typename FromAlias::value_type>::value,
                   "Alias From needs to be based on an arithmetic type");
