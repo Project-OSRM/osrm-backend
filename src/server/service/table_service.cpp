@@ -1,5 +1,7 @@
 #include "server/service/table_service.hpp"
 
+#include <boost/assert.hpp>
+
 #include "server/api/parameters_parser.hpp"
 #include "engine/api/table_parameters.hpp"
 
