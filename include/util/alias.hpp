@@ -65,7 +65,7 @@ struct Alias final
     }
     inline Alias operator*(const Alias rhs_) const
     {
-    return Alias{__value * static_cast<const From>(rhs_)};
+        return Alias{__value * static_cast<const From>(rhs_)};
     }
     inline Alias operator*(const double rhs_) const { return Alias{__value * rhs_}; }
     inline Alias operator/(const Alias rhs_) const
