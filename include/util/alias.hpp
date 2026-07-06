@@ -90,8 +90,8 @@ struct Alias final
     }
     inline Alias operator--()
     {
-    __value--;
-    return *this;
+        __value--;
+        return *this;
     }
 
     inline Alias operator+=(const Alias z_)
