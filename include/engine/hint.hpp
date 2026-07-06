@@ -28,13 +28,13 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef ENGINE_HINT_HPP
 #define ENGINE_HINT_HPP
 
-#include "engine/phantom_node.hpp"
-
 #include "util/coordinate.hpp"
 
+#include <array>
 #include <cstdint>
 #include <iosfwd>
 #include <string>
+#include <vector>
 
 namespace osrm::engine
 {
@@ -45,12 +45,13 @@ namespace datafacade
 class BaseDataFacade;
 }
 
-// SegmentHint represents an individual segment position that could be used
-// as the waypoint for a given input location
+// SegmentHint is deprecated. It is kept as a fixed-size placeholder for
+// backward-compatible hint serialization in API responses.
 struct SegmentHint
 {
-    PhantomNode phantom;
-    std::uint32_t data_checksum;
+    // Placeholder bytes (was PhantomNode, now deprecated)
+    std::array<unsigned char, 80> deprecated_data{};
+    std::uint32_t data_checksum = 0;
 
     bool IsValid(const util::Coordinate new_input_coordinates,
                  const datafacade::BaseDataFacade &facade) const;
@@ -63,8 +64,7 @@ struct SegmentHint
     friend std::ostream &operator<<(std::ostream &, const SegmentHint &);
 };
 
-// Hint represents the suggested segment positions that could be used
-// as the waypoint for a given input location
+// Hint is deprecated. It is kept for backward-compatible serialization.
 struct Hint
 {
     std::vector<SegmentHint> segment_hints;
@@ -76,7 +76,7 @@ struct Hint
     static Hint FromBase64(const std::string &base64Hint);
 };
 
-static_assert(sizeof(SegmentHint) == 80 + 4, "Hint is bigger than expected");
+static_assert(sizeof(SegmentHint) == 80 + 4, "SegmentHint size must stay at 84 bytes");
 constexpr std::size_t ENCODED_SEGMENT_HINT_SIZE = 112;
 static_assert(ENCODED_SEGMENT_HINT_SIZE / 4 * 3 >= sizeof(SegmentHint),
               "ENCODED_SEGMENT_HINT_SIZE does not match size of SegmentHint");

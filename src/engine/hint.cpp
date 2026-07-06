@@ -6,21 +6,17 @@
 
 #include <algorithm>
 #include <iterator>
-#include <tuple>
-#include <unordered_set>
+#include <string>
 
 namespace osrm::engine
 {
 
-bool SegmentHint::IsValid(const util::Coordinate new_input_coordinates,
+bool SegmentHint::IsValid(const util::Coordinate /*new_input_coordinates*/,
                           const datafacade::BaseDataFacade &facade) const
 {
-    auto is_same_input_coordinate = new_input_coordinates.lon == phantom.input_location.lon &&
-                                    new_input_coordinates.lat == phantom.input_location.lat;
-    // FIXME this does not use the number of nodes to validate the phantom because
-    // GetNumberOfNodes()
-    // depends on the graph which is algorithm dependent
-    return is_same_input_coordinate && phantom.IsValid() && facade.GetCheckSum() == data_checksum;
+    // Hints are deprecated; only validate via dataset checksum to avoid rejecting
+    // requests that still include hints from older responses.
+    return facade.GetCheckSum() == data_checksum;
 }
 
 std::string SegmentHint::ToBase64() const
@@ -50,7 +46,7 @@ SegmentHint SegmentHint::FromBase64(const std::string &base64Hint)
 
 bool operator==(const SegmentHint &lhs, const SegmentHint &rhs)
 {
-    return std::tie(lhs.phantom, lhs.data_checksum) == std::tie(rhs.phantom, rhs.data_checksum);
+    return lhs.deprecated_data == rhs.deprecated_data && lhs.data_checksum == rhs.data_checksum;
 }
 
 bool operator!=(const SegmentHint &lhs, const SegmentHint &rhs) { return !(lhs == rhs); }
@@ -72,7 +68,6 @@ std::string Hint::ToBase64() const
 
 Hint Hint::FromBase64(const std::string &base64Hint)
 {
-
     BOOST_ASSERT_MSG(base64Hint.size() % ENCODED_SEGMENT_HINT_SIZE == 0,
                      "SegmentHint has invalid size");
 
@@ -90,36 +85,15 @@ Hint Hint::FromBase64(const std::string &base64Hint)
     return {std::move(res)};
 }
 
-bool Hint::IsValid(const util::Coordinate new_input_coordinates,
+bool Hint::IsValid(const util::Coordinate /*new_input_coordinates*/,
                    const datafacade::BaseDataFacade &facade) const
 {
-    const auto all_valid = std::all_of(segment_hints.begin(),
-                                       segment_hints.end(),
-                                       [&](const auto &seg_hint)
-                                       { return seg_hint.IsValid(new_input_coordinates, facade); });
-    if (!all_valid)
-    {
-        return false;
-    }
-
-    // Check hints do not contain duplicate segment pairs
-    // We can't allow duplicates as search heaps do not support it.
-    std::unordered_set<NodeID> forward_segments;
-    std::unordered_set<NodeID> reverse_segments;
-    for (const auto &seg_hint : segment_hints)
-    {
-        const auto forward_res = forward_segments.insert(seg_hint.phantom.forward_segment_id.id);
-        if (!forward_res.second)
-        {
-            return false;
-        }
-        const auto backward_res = reverse_segments.insert(seg_hint.phantom.reverse_segment_id.id);
-        if (!backward_res.second)
-        {
-            return false;
-        }
-    }
-    return true;
+    // Hints are deprecated; validate each segment hint via checksum-only check.
+    const auto all_valid =
+        std::all_of(segment_hints.begin(),
+                    segment_hints.end(),
+                    [&](const auto &seg_hint) { return seg_hint.IsValid({}, facade); });
+    return all_valid;
 }
 
 } // namespace osrm::engine

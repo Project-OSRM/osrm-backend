@@ -29,6 +29,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define ENGINE_API_TABLE_PARAMETERS_HPP
 
 #include "engine/api/base_parameters.hpp"
+#include "util/typedefs.hpp"
 
 #include <cstddef>
 

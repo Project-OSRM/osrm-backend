@@ -37,13 +37,10 @@ BOOST_AUTO_TEST_CASE(rfc4648_test_vectors_roundtrip)
 BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip)
 {
     using namespace osrm::engine;
-    using namespace osrm::util;
 
-    const Coordinate coordinate;
-    const PhantomNode phantom;
     const osrm::test::MockDataFacade<osrm::engine::routing_algorithms::ch::Algorithm> facade{};
 
-    const SegmentHint seg_hint{phantom, facade.GetCheckSum()};
+    const SegmentHint seg_hint{.data_checksum = facade.GetCheckSum()};
 
     const auto base64 = seg_hint.ToBase64();
 
@@ -58,18 +55,15 @@ BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip)
 BOOST_AUTO_TEST_CASE(hint_encoding_decoding_roundtrip_bytewise)
 {
     using namespace osrm::engine;
-    using namespace osrm::util;
 
-    const Coordinate coordinate;
-    const PhantomNode phantom;
     const osrm::test::MockDataFacade<osrm::engine::routing_algorithms::ch::Algorithm> facade{};
 
-    const SegmentHint seg_hint{phantom, facade.GetCheckSum()};
+    const SegmentHint seg_hint{.data_checksum = facade.GetCheckSum()};
 
     const auto decoded = SegmentHint::FromBase64(seg_hint.ToBase64());
 
     BOOST_CHECK(std::equal(reinterpret_cast<const unsigned char *>(&seg_hint),
-                           reinterpret_cast<const unsigned char *>(&seg_hint) + sizeof(Hint),
+                           reinterpret_cast<const unsigned char *>(&seg_hint) + sizeof(SegmentHint),
                            reinterpret_cast<const unsigned char *>(&decoded)));
 }
 
@@ -90,13 +84,10 @@ BOOST_AUTO_TEST_CASE(invalid_base64_decoding)
 BOOST_AUTO_TEST_CASE(hint_serialization_size)
 {
     using namespace osrm::engine;
-    using namespace osrm::util;
 
-    const Coordinate coordinate;
-    const PhantomNode phantom;
     const osrm::test::MockDataFacade<osrm::engine::routing_algorithms::ch::Algorithm> facade{};
 
-    const SegmentHint hint{phantom, facade.GetCheckSum()};
+    const SegmentHint hint{.data_checksum = facade.GetCheckSum()};
     const auto base64 = hint.ToBase64();
 
     BOOST_CHECK_EQUAL(base64.size(), 112);

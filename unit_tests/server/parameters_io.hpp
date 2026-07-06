@@ -5,6 +5,8 @@
 #include "engine/approach.hpp"
 #include "engine/bearing.hpp"
 
+#include <boost/assert.hpp>
+
 #include <ostream>
 
 namespace osrm::engine
