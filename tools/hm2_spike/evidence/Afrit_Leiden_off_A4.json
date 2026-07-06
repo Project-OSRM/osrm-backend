@@ -1,0 +1,293 @@
+{
+  "case": {
+    "name": "Afrit Leiden off A4",
+    "kind": "afrit",
+    "frm": [
+      4.48,
+      51.92
+    ],
+    "to": [
+      4.497,
+      52.16
+    ],
+    "branch": "Leiden"
+  },
+  "gore": [
+    4.395358,
+    52.073305
+  ],
+  "probes": [
+    {
+      "point": [
+        4.39016,
+        52.071239
+      ],
+      "bearing": 56.474289969537665,
+      "offset_m": 423,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.390160,52.071239?bearings=56,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 7,
+            "target": {
+              "departure_bearing": 66.41319096,
+              "geometry_points": 2,
+              "start": {
+                "lat": 52.073305,
+                "lng": 4.395358
+              },
+              "name": "",
+              "destinations": "Ring N14: Leidschendam, Wassenaar (N44), Den Haag-Noord",
+              "ref": "A4",
+              "end": {
+                "lat": 52.07363,
+                "lng": 4.396566
+              },
+              "exits": "8",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 2499044
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "fork"
+          },
+          {
+            "turn_type_id": 7,
+            "target": {
+              "departure_bearing": 59.6954949,
+              "geometry_points": 10,
+              "start": {
+                "lat": 52.073305,
+                "lng": 4.395358
+              },
+              "name": "",
+              "destinations": "A4: Amsterdam, Leiden",
+              "ref": "A4",
+              "end": {
+                "lat": 52.07524,
+                "lng": 4.400595
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 2499045
+            },
+            "turn_modifier": "slight left",
+            "turn_type": "fork"
+          }
+        ],
+        "start": {
+          "departure_bearing": 45.84400241,
+          "geometry_points": 32,
+          "start": {
+            "lat": 52.068325,
+            "lng": 4.384261
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A4",
+          "end": {
+            "lat": 52.073305,
+            "lng": 4.395358
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 217790
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 236,
+          "requested_bearing": 56,
+          "input": {
+            "lat": 52.071239,
+            "lng": 4.39016
+          },
+          "segment_bearing_forward": 56,
+          "location": {
+            "lat": 52.071239,
+            "lng": 4.39016
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        4.388019,
+        52.070324
+      ],
+      "bearing": 53.38047499504489,
+      "offset_m": 601,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.388019,52.070324?bearings=53,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 7,
+            "target": {
+              "departure_bearing": 66.41319096,
+              "geometry_points": 2,
+              "start": {
+                "lat": 52.073305,
+                "lng": 4.395358
+              },
+              "name": "",
+              "destinations": "Ring N14: Leidschendam, Wassenaar (N44), Den Haag-Noord",
+              "ref": "A4",
+              "end": {
+                "lat": 52.07363,
+                "lng": 4.396566
+              },
+              "exits": "8",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 2499044
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "fork"
+          },
+          {
+            "turn_type_id": 7,
+            "target": {
+              "departure_bearing": 59.6954949,
+              "geometry_points": 10,
+              "start": {
+                "lat": 52.073305,
+                "lng": 4.395358
+              },
+              "name": "",
+              "destinations": "A4: Amsterdam, Leiden",
+              "ref": "A4",
+              "end": {
+                "lat": 52.07524,
+                "lng": 4.400595
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 2499045
+            },
+            "turn_modifier": "slight left",
+            "turn_type": "fork"
+          }
+        ],
+        "start": {
+          "departure_bearing": 45.84400241,
+          "geometry_points": 32,
+          "start": {
+            "lat": 52.068325,
+            "lng": 4.384261
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A4",
+          "end": {
+            "lat": 52.073305,
+            "lng": 4.395358
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 217790
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 233,
+          "requested_bearing": 53,
+          "input": {
+            "lat": 52.070324,
+            "lng": 4.388019
+          },
+          "segment_bearing_forward": 53,
+          "location": {
+            "lat": 52.070324,
+            "lng": 4.388019
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        4.383427,
+        52.067859
+      ],
+      "bearing": 46.753788025371705,
+      "offset_m": 1018,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.383427,52.067859?bearings=47,45",
+      "tree": {
+        "out_degree": 2,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 45.84400241,
+              "geometry_points": 32,
+              "start": {
+                "lat": 52.068325,
+                "lng": 4.384261
+              },
+              "name": "",
+              "destinations": "",
+              "ref": "A4",
+              "end": {
+                "lat": 52.073305,
+                "lng": 4.395358
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 217790
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 41.95214226,
+          "geometry_points": 28,
+          "start": {
+            "lat": 52.065094,
+            "lng": 4.379223
+          },
+          "name": "",
+          "destinations": "RING N14: Leidschendam, Wassenaar (N44), Den Haag-Leidschenveen, Forepark",
+          "ref": "A4",
+          "end": {
+            "lat": 52.068325,
+            "lng": 4.384261
+          },
+          "exits": "8",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 217788
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 226,
+          "requested_bearing": 47,
+          "input": {
+            "lat": 52.067859,
+            "lng": 4.383427
+          },
+          "segment_bearing_forward": 46,
+          "location": {
+            "lat": 52.067859,
+            "lng": 4.383427
+          }
+        },
+        "code": "Ok"
+      }
+    }
+  ]
+}

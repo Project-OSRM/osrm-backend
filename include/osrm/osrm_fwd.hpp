@@ -49,6 +49,7 @@ struct NearestParameters;
 struct TripParameters;
 struct MatchParameters;
 struct TileParameters;
+struct TreeParameters;
 } // namespace api
 
 class EngineInterface;

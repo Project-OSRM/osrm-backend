@@ -1,0 +1,214 @@
+{
+  "case": {
+    "name": "A2 south, hard_cap 20km",
+    "lng": 5.06526,
+    "lat": 52.02042,
+    "bearing": 145,
+    "cap": 20000,
+    "expect_qualify_order": [
+      "A27",
+      "A15"
+    ],
+    "expect_not_qualify": [],
+    "max_len_m": 30000
+  },
+  "url": "http://127.0.0.1:5050/tree/v1/driving/5.06526,52.02042?bearings=145,45&hard_cap_m=20000&debug=true",
+  "tree": {
+    "segment_count": 3,
+    "junctions": [
+      {
+        "qualifies": false,
+        "toward": [],
+        "at_offset_m": 1672.952627,
+        "toward_ref": null,
+        "turn_type": "off ramp",
+        "name": ""
+      },
+      {
+        "qualifies": false,
+        "toward": [],
+        "at_offset_m": 3124.398458,
+        "toward_ref": null,
+        "turn_type": "off ramp",
+        "name": ""
+      },
+      {
+        "qualifies": true,
+        "toward": [
+          "A27",
+          "Breda",
+          "Gorinchem"
+        ],
+        "at_offset_m": 4547.197692,
+        "toward_ref": "A27",
+        "turn_type": "off ramp",
+        "name": ""
+      },
+      {
+        "qualifies": false,
+        "toward": [],
+        "at_offset_m": 9752.311167,
+        "toward_ref": null,
+        "turn_type": "off ramp",
+        "name": ""
+      },
+      {
+        "qualifies": false,
+        "toward": [
+          "N320",
+          "Culemborg"
+        ],
+        "at_offset_m": 10498.29938,
+        "toward_ref": "N320",
+        "turn_type": "off ramp",
+        "name": ""
+      },
+      {
+        "qualifies": false,
+        "toward": [],
+        "at_offset_m": 12535.24888,
+        "toward_ref": null,
+        "turn_type": "off ramp",
+        "name": ""
+      },
+      {
+        "qualifies": false,
+        "toward": [],
+        "at_offset_m": 14083.11456,
+        "toward_ref": null,
+        "turn_type": "off ramp",
+        "name": ""
+      },
+      {
+        "qualifies": false,
+        "toward": [
+          "N327",
+          "Geldermalsen",
+          "Leerdam"
+        ],
+        "at_offset_m": 16666.23322,
+        "toward_ref": "N327",
+        "turn_type": "off ramp",
+        "name": ""
+      },
+      {
+        "qualifies": true,
+        "toward": [
+          "A15",
+          "Rotterdam",
+          "Gorinchem",
+          "Nijmegen",
+          "Tiel"
+        ],
+        "at_offset_m": 18153.30403,
+        "toward_ref": "A15",
+        "turn_type": "off ramp",
+        "name": ""
+      },
+      {
+        "qualifies": false,
+        "toward": [],
+        "at_offset_m": 21084.00149,
+        "toward_ref": null,
+        "turn_type": "off ramp",
+        "name": ""
+      }
+    ],
+    "snapped": {
+      "requested_bearing": 145,
+      "input": {
+        "lat": 52.02042,
+        "lng": 5.06526
+      },
+      "location": {
+        "lat": 52.02042,
+        "lng": 5.06526
+      }
+    },
+    "length_m": 24450.05423,
+    "start_offset_m": 0,
+    "ref": "A2",
+    "polyline": "sfo|H{h|]??\\a@??nAu@??vAqAbBo@??n@Y??x@[??jEiB??dCkA??~C_B??~G}D??`HoD??b^kP??p@[??h@U??zCsA??fE_B~By@??|Bs@??fGaB??`Cs@??bBk@lAa@??l@U??bBm@??`FuB??nMaG??`MyF??`QsInEeC??xKsG|AcA??v@i@??fA_A??vC_D??zAyB??rAyB??~BcEz@mB??n@{A??pI{R??lGwN??fBkE??jCaGbA}Bf@gA??~AsC??vBgD??lDaF??`F}G??tFsH??vEmG??rGsH??dDmD??bFiF??|G{GtIwI??vb@ic@??Z[??lOuO??tGwG??pFqF??dG{G??`B}B??|AcC??dB}C??jKqS??`Vqe@??|EoJ??zWai@??zGcNlUce@pHeO??tC}F??hC_F??~@_B??~@yA??zAuB??xAgB??lE{E??lFqFnCqC??dGkG??tJ}JfBgB??RS??~JiK??bJgJ??rIyI??pEuE??bDcD??vGaG??bGyE??zB{A??^Y??zI}FbHuE??bAs@??xa@{XpJsG??nFqD??rDoC??fF}D??dFiE??fL}KPS??vAwA??bK{K??xFeG??~BaC??zByBpFyE??~G}F??vRgP??vD_D??|TgR??pJwH??lIgG??tBuA??rEgD??nFkEzBsB??zDqD??fDgD??nFoGfGkH??rA_B??bBkB??`CaC??zEiE??xF}E??xL{J??zHkG??hDoCbFiE??`FaE??~GqF??dEgD??|MwK??jFiE`SeP??xCqC??vF{F??j\\w\\`LiL??|OgP??tO}O??~B_C??`C}B??vEiE??zEeE",
+    "branches": [
+      {
+        "route": {
+          "junctions": [
+            {
+              "qualifies": false,
+              "toward": [],
+              "at_offset_m": 10547.04267,
+              "toward_ref": null,
+              "turn_type": "off ramp",
+              "name": ""
+            },
+            {
+              "qualifies": false,
+              "toward": [],
+              "at_offset_m": 18124.93623,
+              "toward_ref": null,
+              "turn_type": "off ramp",
+              "name": ""
+            },
+            {
+              "qualifies": false,
+              "toward": [],
+              "at_offset_m": 20647.39301,
+              "toward_ref": null,
+              "turn_type": "off ramp",
+              "name": ""
+            }
+          ],
+          "ref": "A27",
+          "polyline": "upg|Hifb^bBgC??FIv@kA??z@kA??rCaD??|AmA??dBiA??tAq@??xAe@??lBe@??jBU??~AG??`BB??jAD??nBV??jBh@??xAh@??pBdA??xAdA??pAfA??lApA??|A`B??hApA??tDbE??f@\\x@bA??b@l@??zElG??rG~I??dEhG??|BhD??pBdD??dBnC??tFnJ??pDxG??|BvE??pApC??t@bB??rA`D??lAzC??~@fC??`BzE??xA|E??x@xC??r@nC??l@fC??l@xC??ZxA??`@`C??j@bD??d@fD??`@vC??ZtC??VbC??RxB??TzC??XjE??TdF??NrD??FbC??FlD??BrD??BtG??@vE??EnE??ApV??AtH??Eho@??Cnh@??@zH??@nC??B`HDhD??@lB??DpB??LhG??FbC??FxB??LjD??NdD??XdF??NxB??^rE??ZhD??RhB??XbC??VjB??XpB??V`B??^lB??^jB??|@bE|@pD??bAjD??tAfE??z@zB??~@zB??f@jA??n@rA??z@`B??|@~A??dAfB??lAdB??fAxA??`AjA??jAnA??p@r@??xAxA??rOtO??fQhQ??bDdD??ja@ja@??LN??xCxC??XX??~E`F??nBnB??vAtA??jC`C??~@v@??z@p@??`@Z??nA|@??tA~@??nAv@??`B~@??|BnA??~b@jT??tMvG??vXfN??vQbJ??`FdC??nAn@??pB~@??pAj@??nAd@??|Bx@??bBh@??fJpC??zJtC??zTrG??lMxDtJpC??rA`@??XH??dAZ??`N|DrQlF??zEzA??vBx@??xB~@??nAl@??fB~@??`QfJ??zBlA??va@tT??`QdJ??xEdC??`J|E",
+          "length_m": 16864.50456,
+          "start_offset_m": 4547.197692,
+          "branches": []
+        },
+        "junction": {
+          "toward": [
+            "A27",
+            "Breda",
+            "Gorinchem"
+          ],
+          "connector_length_m": 0,
+          "at_offset_m": 4547.197692,
+          "exit_ref": null,
+          "name": ""
+        }
+      },
+      {
+        "route": {
+          "junctions": [
+            {
+              "qualifies": false,
+              "toward": [],
+              "at_offset_m": 20598.16782,
+              "toward_ref": null,
+              "turn_type": "off ramp",
+              "name": ""
+            }
+          ],
+          "ref": "A15",
+          "polyline": "wwp{H{{z^tCyA??xB}AnBsA??rEcD`Ac@??pAi@??lA[??dBY??l@E??p@???t@@??p@F??x@L??fBf@??r@T??j@Z??v@h@??t@p@??n@n@??v@`A??|@xA??^t@??d@`A??j@vA??Vz@??^nA??x@`CfEpP??z@bD??ZjA??`CrI??jAdDhAnF??f@nC??n@bE??\\jC??TnB??V|B??jF~i@??XrC??z@xI??r@nH",
+          "length_m": 2867.298373,
+          "start_offset_m": 18153.30403,
+          "branches": []
+        },
+        "junction": {
+          "toward": [
+            "A15",
+            "Rotterdam",
+            "Gorinchem",
+            "Nijmegen",
+            "Tiel"
+          ],
+          "connector_length_m": 0,
+          "at_offset_m": 18153.30403,
+          "exit_ref": null,
+          "name": ""
+        }
+      }
+    ],
+    "code": "Ok"
+  }
+}

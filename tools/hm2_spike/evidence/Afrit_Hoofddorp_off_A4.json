@@ -1,0 +1,268 @@
+{
+  "case": {
+    "name": "Afrit Hoofddorp off A4",
+    "kind": "afrit",
+    "frm": [
+      4.48,
+      51.92
+    ],
+    "to": [
+      4.69,
+      52.302
+    ],
+    "branch": "Hoofddorp"
+  },
+  "gore": [
+    4.698702,
+    52.268483
+  ],
+  "probes": [
+    {
+      "point": [
+        4.694614,
+        52.265633
+      ],
+      "bearing": 41.28858423422486,
+      "offset_m": 422,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.694614,52.265633?bearings=41,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 52.42310701,
+              "geometry_points": 2,
+              "start": {
+                "lat": 52.268483,
+                "lng": 4.698702
+              },
+              "name": "",
+              "destinations": "N201: Hoofddorp, Aalsmeer",
+              "ref": "A4",
+              "end": {
+                "lat": 52.268955,
+                "lng": 4.699702
+              },
+              "exits": "3+3a",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 168053
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          },
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 40.95531752,
+              "geometry_points": 6,
+              "start": {
+                "lat": 52.268483,
+                "lng": 4.698702
+              },
+              "name": "",
+              "destinations": "A4: Amsterdam, Schiphol, Haarlem",
+              "ref": "A4",
+              "end": {
+                "lat": 52.278781,
+                "lng": 4.713497
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 168054
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 41.29328328,
+          "geometry_points": 6,
+          "start": {
+            "lat": 52.26253,
+            "lng": 4.690171
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A4",
+          "end": {
+            "lat": 52.268483,
+            "lng": 4.698702
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 167942
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 221,
+          "requested_bearing": 41,
+          "input": {
+            "lat": 52.265633,
+            "lng": 4.694614
+          },
+          "segment_bearing_forward": 41,
+          "location": {
+            "lat": 52.265633,
+            "lng": 4.694614
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        4.690171,
+        52.26253
+      ],
+      "bearing": 41.226943294467844,
+      "offset_m": 880,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.690171,52.262530?bearings=41,45",
+      "tree": {
+        "out_degree": 2,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 41.29328328,
+              "geometry_points": 6,
+              "start": {
+                "lat": 52.26253,
+                "lng": 4.690171
+              },
+              "name": "",
+              "destinations": "",
+              "ref": "A4",
+              "end": {
+                "lat": 52.268483,
+                "lng": 4.698702
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 167942
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 41.20828881,
+          "geometry_points": 6,
+          "start": {
+            "lat": 52.257722,
+            "lng": 4.683283
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A4",
+          "end": {
+            "lat": 52.26253,
+            "lng": 4.690171
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 24403
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 220,
+          "requested_bearing": 41,
+          "input": {
+            "lat": 52.26253,
+            "lng": 4.690171
+          },
+          "segment_bearing_forward": 40,
+          "location": {
+            "lat": 52.26253,
+            "lng": 4.690171
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        4.683687,
+        52.258005
+      ],
+      "bearing": 41.372311477489404,
+      "offset_m": 1550,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.683687,52.258005?bearings=41,45",
+      "tree": {
+        "out_degree": 2,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 41.29328328,
+              "geometry_points": 6,
+              "start": {
+                "lat": 52.26253,
+                "lng": 4.690171
+              },
+              "name": "",
+              "destinations": "",
+              "ref": "A4",
+              "end": {
+                "lat": 52.268483,
+                "lng": 4.698702
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 167942
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 41.20828881,
+          "geometry_points": 6,
+          "start": {
+            "lat": 52.257722,
+            "lng": 4.683283
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A4",
+          "end": {
+            "lat": 52.26253,
+            "lng": 4.690171
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 24403
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 221,
+          "requested_bearing": 41,
+          "input": {
+            "lat": 52.258005,
+            "lng": 4.683687
+          },
+          "segment_bearing_forward": 41,
+          "location": {
+            "lat": 52.258005,
+            "lng": 4.683687
+          }
+        },
+        "code": "Ok"
+      }
+    }
+  ]
+}

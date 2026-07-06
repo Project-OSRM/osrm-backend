@@ -1,0 +1,293 @@
+{
+  "case": {
+    "name": "KP Ridderkerk (A15->A16)",
+    "kind": "knooppunt",
+    "frm": [
+      4.12,
+      51.95
+    ],
+    "to": [
+      4.776,
+      51.586
+    ],
+    "branch": "A16"
+  },
+  "gore": [
+    4.545299,
+    51.864872
+  ],
+  "probes": [
+    {
+      "point": [
+        4.540804,
+        51.863976
+      ],
+      "bearing": 75.27532196380497,
+      "offset_m": 325,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.540804,51.863976?bearings=75,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 7,
+            "target": {
+              "departure_bearing": 64.87763124,
+              "geometry_points": 20,
+              "start": {
+                "lat": 51.864872,
+                "lng": 4.545299
+              },
+              "name": "",
+              "destinations": "",
+              "ref": "A15",
+              "end": {
+                "lat": 51.868445,
+                "lng": 4.555406
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 20222
+            },
+            "turn_modifier": "slight left",
+            "turn_type": "fork"
+          },
+          {
+            "turn_type_id": 7,
+            "target": {
+              "departure_bearing": 76.8812155,
+              "geometry_points": 2,
+              "start": {
+                "lat": 51.864872,
+                "lng": 4.545299
+              },
+              "name": "",
+              "destinations": "RING A16",
+              "ref": "A15",
+              "end": {
+                "lat": 51.865005,
+                "lng": 4.546221
+              },
+              "exits": "20",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 139075
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "fork"
+          }
+        ],
+        "start": {
+          "departure_bearing": 89.5511992,
+          "geometry_points": 22,
+          "start": {
+            "lat": 51.863529,
+            "lng": 4.533919
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A15",
+          "end": {
+            "lat": 51.864872,
+            "lng": 4.545299
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 139055
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 258,
+          "requested_bearing": 75,
+          "input": {
+            "lat": 51.863976,
+            "lng": 4.540804
+          },
+          "segment_bearing_forward": 78,
+          "location": {
+            "lat": 51.863976,
+            "lng": 4.540804
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        4.536631,
+        51.86358
+      ],
+      "bearing": 84.7328992361409,
+      "offset_m": 615,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.536631,51.863580?bearings=85,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 7,
+            "target": {
+              "departure_bearing": 64.87763124,
+              "geometry_points": 20,
+              "start": {
+                "lat": 51.864872,
+                "lng": 4.545299
+              },
+              "name": "",
+              "destinations": "",
+              "ref": "A15",
+              "end": {
+                "lat": 51.868445,
+                "lng": 4.555406
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 20222
+            },
+            "turn_modifier": "slight left",
+            "turn_type": "fork"
+          },
+          {
+            "turn_type_id": 7,
+            "target": {
+              "departure_bearing": 76.8812155,
+              "geometry_points": 2,
+              "start": {
+                "lat": 51.864872,
+                "lng": 4.545299
+              },
+              "name": "",
+              "destinations": "RING A16",
+              "ref": "A15",
+              "end": {
+                "lat": 51.865005,
+                "lng": 4.546221
+              },
+              "exits": "20",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 139075
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "fork"
+          }
+        ],
+        "start": {
+          "departure_bearing": 89.5511992,
+          "geometry_points": 22,
+          "start": {
+            "lat": 51.863529,
+            "lng": 4.533919
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A15",
+          "end": {
+            "lat": 51.864872,
+            "lng": 4.545299
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 139055
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 267,
+          "requested_bearing": 85,
+          "input": {
+            "lat": 51.86358,
+            "lng": 4.536631
+          },
+          "segment_bearing_forward": 87,
+          "location": {
+            "lat": 51.86358,
+            "lng": 4.536631
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        4.529138,
+        51.863813
+      ],
+      "bearing": 97.9668523415728,
+      "offset_m": 1131,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.529138,51.863813?bearings=98,45",
+      "tree": {
+        "out_degree": 3,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 89.5511992,
+              "geometry_points": 22,
+              "start": {
+                "lat": 51.863529,
+                "lng": 4.533919
+              },
+              "name": "",
+              "destinations": "",
+              "ref": "A15",
+              "end": {
+                "lat": 51.864872,
+                "lng": 4.545299
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 139055
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 102.1434944,
+          "geometry_points": 10,
+          "start": {
+            "lat": 51.864179,
+            "lng": 4.52626
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A15",
+          "end": {
+            "lat": 51.863529,
+            "lng": 4.533919
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 20226
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 281,
+          "requested_bearing": 98,
+          "input": {
+            "lat": 51.863813,
+            "lng": 4.529138
+          },
+          "segment_bearing_forward": 101,
+          "location": {
+            "lat": 51.863813,
+            "lng": 4.529138
+          }
+        },
+        "code": "Ok"
+      }
+    }
+  ]
+}

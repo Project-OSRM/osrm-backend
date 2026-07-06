@@ -6,6 +6,7 @@
 #include "engine/api/route_parameters.hpp"
 #include "engine/api/table_parameters.hpp"
 #include "engine/api/tile_parameters.hpp"
+#include "engine/api/tree_parameters.hpp"
 #include "engine/api/trip_parameters.hpp"
 #include "engine/concepts.hpp"
 #include "engine/datafacade_provider.hpp"
@@ -14,6 +15,7 @@
 #include "engine/plugins/nearest.hpp"
 #include "engine/plugins/table.hpp"
 #include "engine/plugins/tile.hpp"
+#include "engine/plugins/tree.hpp"
 #include "engine/plugins/trip.hpp"
 #include "engine/plugins/viaroute.hpp"
 #include "engine/routing_algorithms.hpp"
@@ -37,6 +39,7 @@ class EngineInterface
     virtual Status Trip(const api::TripParameters &parameters, api::ResultT &result) const = 0;
     virtual Status Match(const api::MatchParameters &parameters, api::ResultT &result) const = 0;
     virtual Status Tile(const api::TileParameters &parameters, api::ResultT &result) const = 0;
+    virtual Status Tree(const api::TreeParameters &parameters, api::ResultT &result) const = 0;
 };
 
 template <routing_algorithms::RoutingAlgorithm Algorithm>
@@ -53,7 +56,8 @@ class Engine final : public EngineInterface
           match_plugin(config.max_locations_map_matching,
                        config.max_radius_map_matching,
                        config.default_radius), //
-          tile_plugin()                        //
+          tile_plugin(),                       //
+          tree_plugin(config.default_radius)   //
 
     {
         if (config.use_shared_memory)
@@ -118,6 +122,11 @@ class Engine final : public EngineInterface
         return tile_plugin.HandleRequest(GetAlgorithms(params), params, result);
     }
 
+    Status Tree(const api::TreeParameters &params, api::ResultT &result) const override final
+    {
+        return tree_plugin.HandleRequest(GetAlgorithms(params), params, result);
+    }
+
   private:
     template <typename ParametersT> auto GetAlgorithms(const ParametersT &params) const
     {
@@ -132,6 +141,7 @@ class Engine final : public EngineInterface
     const plugins::TripPlugin trip_plugin;
     const plugins::MatchPlugin match_plugin;
     const plugins::TilePlugin tile_plugin;
+    const plugins::TreePlugin tree_plugin;
 };
 } // namespace osrm::engine
 

@@ -5,6 +5,7 @@
 #include "server/service/route_service.hpp"
 #include "server/service/table_service.hpp"
 #include "server/service/tile_service.hpp"
+#include "server/service/tree_service.hpp"
 #include "server/service/trip_service.hpp"
 
 #include "server/api/parsed_url.hpp"
@@ -20,6 +21,7 @@ ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(con
     service_map["trip"] = std::make_unique<service::TripService>(routing_machine);
     service_map["match"] = std::make_unique<service::MatchService>(routing_machine);
     service_map["tile"] = std::make_unique<service::TileService>(routing_machine);
+    service_map["tree"] = std::make_unique<service::TreeService>(routing_machine);
 }
 
 engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,

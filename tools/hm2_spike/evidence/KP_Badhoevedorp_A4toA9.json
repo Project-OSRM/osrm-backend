@@ -1,0 +1,318 @@
+{
+  "case": {
+    "name": "KP Badhoevedorp (A4->A9)",
+    "kind": "knooppunt",
+    "frm": [
+      4.48,
+      51.92
+    ],
+    "to": [
+      4.75,
+      52.63
+    ],
+    "branch": "A9"
+  },
+  "gore": [
+    4.736287,
+    52.34935
+  ],
+  "probes": [
+    {
+      "point": [
+        4.735752,
+        52.346547
+      ],
+      "bearing": 4.902278597552936,
+      "offset_m": 314,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.735752,52.346547?bearings=5,45",
+      "tree": {
+        "out_degree": 3,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 15.74670803,
+              "geometry_points": 18,
+              "start": {
+                "lat": 52.34935,
+                "lng": 4.736287
+              },
+              "name": "",
+              "destinations": "A9: Alkmaar, Haarlem, Amstelveen, Badhoevedorp",
+              "ref": "A5",
+              "end": {
+                "lat": 52.352679,
+                "lng": 4.738026
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1847111
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          },
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 9.470293967,
+              "geometry_points": 10,
+              "start": {
+                "lat": 52.34935,
+                "lng": 4.736287
+              },
+              "name": "",
+              "destinations": "A5: Zaanstad, Amsterdam-Westpoort",
+              "ref": "A5",
+              "end": {
+                "lat": 52.352931,
+                "lng": 4.737559
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1847112
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 3.17336273,
+          "geometry_points": 46,
+          "start": {
+            "lat": 52.321889,
+            "lng": 4.733464
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A5",
+          "end": {
+            "lat": 52.34935,
+            "lng": 4.736287
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 1847143
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 183,
+          "requested_bearing": 5,
+          "input": {
+            "lat": 52.346547,
+            "lng": 4.735752
+          },
+          "segment_bearing_forward": 3,
+          "location": {
+            "lat": 52.346547,
+            "lng": 4.735752
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        4.735476,
+        52.343867
+      ],
+      "bearing": 3.390657762602814,
+      "offset_m": 612,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.735476,52.343867?bearings=3,45",
+      "tree": {
+        "out_degree": 3,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 15.74670803,
+              "geometry_points": 18,
+              "start": {
+                "lat": 52.34935,
+                "lng": 4.736287
+              },
+              "name": "",
+              "destinations": "A9: Alkmaar, Haarlem, Amstelveen, Badhoevedorp",
+              "ref": "A5",
+              "end": {
+                "lat": 52.352679,
+                "lng": 4.738026
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1847111
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          },
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 9.470293967,
+              "geometry_points": 10,
+              "start": {
+                "lat": 52.34935,
+                "lng": 4.736287
+              },
+              "name": "",
+              "destinations": "A5: Zaanstad, Amsterdam-Westpoort",
+              "ref": "A5",
+              "end": {
+                "lat": 52.352931,
+                "lng": 4.737559
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1847112
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 3.17336273,
+          "geometry_points": 46,
+          "start": {
+            "lat": 52.321889,
+            "lng": 4.733464
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A5",
+          "end": {
+            "lat": 52.34935,
+            "lng": 4.736287
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 1847143
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 183,
+          "requested_bearing": 3,
+          "input": {
+            "lat": 52.343867,
+            "lng": 4.735476
+          },
+          "segment_bearing_forward": 3,
+          "location": {
+            "lat": 52.343867,
+            "lng": 4.735476
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        4.735149,
+        52.340281
+      ],
+      "bearing": 3.1016516569856662,
+      "offset_m": 1012,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/4.735149,52.340281?bearings=3,45",
+      "tree": {
+        "out_degree": 3,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 15.74670803,
+              "geometry_points": 18,
+              "start": {
+                "lat": 52.34935,
+                "lng": 4.736287
+              },
+              "name": "",
+              "destinations": "A9: Alkmaar, Haarlem, Amstelveen, Badhoevedorp",
+              "ref": "A5",
+              "end": {
+                "lat": 52.352679,
+                "lng": 4.738026
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1847111
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          },
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 9.470293967,
+              "geometry_points": 10,
+              "start": {
+                "lat": 52.34935,
+                "lng": 4.736287
+              },
+              "name": "",
+              "destinations": "A5: Zaanstad, Amsterdam-Westpoort",
+              "ref": "A5",
+              "end": {
+                "lat": 52.352931,
+                "lng": 4.737559
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1847112
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 3.17336273,
+          "geometry_points": 46,
+          "start": {
+            "lat": 52.321889,
+            "lng": 4.733464
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A5",
+          "end": {
+            "lat": 52.34935,
+            "lng": 4.736287
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 1847143
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 183,
+          "requested_bearing": 3,
+          "input": {
+            "lat": 52.340281,
+            "lng": 4.735149
+          },
+          "segment_bearing_forward": 3,
+          "location": {
+            "lat": 52.340281,
+            "lng": 4.735149
+          }
+        },
+        "code": "Ok"
+      }
+    }
+  ]
+}

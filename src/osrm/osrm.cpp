@@ -5,6 +5,7 @@
 #include "engine/api/nearest_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
 #include "engine/api/table_parameters.hpp"
+#include "engine/api/tree_parameters.hpp"
 #include "engine/api/trip_parameters.hpp"
 #include "engine/engine.hpp"
 #include "engine/engine_config.hpp"
@@ -129,6 +130,19 @@ Status OSRM::Tile(const engine::api::TileParameters &params, std::string &str_re
 Status OSRM::Tile(const engine::api::TileParameters &params, engine::api::ResultT &result) const
 {
     return engine_->Tile(params, result);
+}
+
+Status OSRM::Tree(const engine::api::TreeParameters &params, json::Object &json_result) const
+{
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Tree(params, result);
+    json_result = std::move(std::get<json::Object>(result));
+    return status;
+}
+
+Status OSRM::Tree(const TreeParameters &params, engine::api::ResultT &result) const
+{
+    return engine_->Tree(params, result);
 }
 
 } // namespace osrm

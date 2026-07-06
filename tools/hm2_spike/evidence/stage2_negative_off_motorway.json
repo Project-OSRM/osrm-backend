@@ -1,0 +1,14 @@
+{
+  "case": {
+    "name": "off-motorway (local road) -> NoSegment",
+    "lng": 4.89218,
+    "lat": 52.3732,
+    "bearing": 90
+  },
+  "url": "http://127.0.0.1:5050/tree/v1/driving/4.89218,52.3732?bearings=90,45",
+  "http": 400,
+  "tree": {
+    "message": "Snapped coordinate is not on a motorway",
+    "code": "NoSegment"
+  }
+}

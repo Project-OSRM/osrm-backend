@@ -5,6 +5,7 @@
 #include "server/api/route_parameters_grammar.hpp"
 #include "server/api/table_parameter_grammar.hpp"
 #include "server/api/tile_parameter_grammar.hpp"
+#include "server/api/tree_parameter_grammar.hpp"
 #include "server/api/trip_parameter_grammar.hpp"
 
 #include <type_traits>
@@ -70,6 +71,13 @@ std::optional<engine::api::NearestParameters> parseParameters(std::string::itera
 {
     return detail::parseParameters<engine::api::NearestParameters>(
         iter, end, nearest_grammar::root_rule);
+}
+
+template <>
+std::optional<engine::api::TreeParameters> parseParameters(std::string::iterator &iter,
+                                                           const std::string::iterator end)
+{
+    return detail::parseParameters<engine::api::TreeParameters>(iter, end, tree_grammar::root_rule);
 }
 
 template <>

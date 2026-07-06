@@ -1,0 +1,318 @@
+{
+  "case": {
+    "name": "KP Deil (A2->A15)",
+    "kind": "knooppunt",
+    "frm": [
+      5.1214,
+      52.0907
+    ],
+    "to": [
+      5.43,
+      51.886
+    ],
+    "branch": "A15"
+  },
+  "gore": [
+    5.221904,
+    51.864441
+  ],
+  "probes": [
+    {
+      "point": [
+        5.21984,
+        51.866865
+      ],
+      "bearing": 152.32141519319146,
+      "offset_m": 305,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/5.219840,51.866865?bearings=152,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 151.281632,
+              "geometry_points": 12,
+              "start": {
+                "lat": 51.864441,
+                "lng": 5.221904
+              },
+              "name": "",
+              "destinations": "A2: Maastricht, 's-Hertogenbosch",
+              "ref": "A2",
+              "end": {
+                "lat": 51.856168,
+                "lng": 5.228978
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1367502
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          },
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 159.8263097,
+              "geometry_points": 4,
+              "start": {
+                "lat": 51.864441,
+                "lng": 5.221904
+              },
+              "name": "",
+              "destinations": "A15: Rotterdam, Gorinchem, Nijmegen, Tiel",
+              "ref": "A2",
+              "end": {
+                "lat": 51.863082,
+                "lng": 5.222818
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1367503
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          }
+        ],
+        "start": {
+          "departure_bearing": 144.8532406,
+          "geometry_points": 18,
+          "start": {
+            "lat": 51.874316,
+            "lng": 5.212652
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A2",
+          "end": {
+            "lat": 51.864441,
+            "lng": 5.221904
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 1367521
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 332,
+          "requested_bearing": 152,
+          "input": {
+            "lat": 51.866865,
+            "lng": 5.21984
+          },
+          "segment_bearing_forward": 152,
+          "location": {
+            "lat": 51.866865,
+            "lng": 5.21984
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        5.216834,
+        51.870332
+      ],
+      "bearing": 151.37771076681787,
+      "offset_m": 742,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/5.216834,51.870332?bearings=151,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 151.281632,
+              "geometry_points": 12,
+              "start": {
+                "lat": 51.864441,
+                "lng": 5.221904
+              },
+              "name": "",
+              "destinations": "A2: Maastricht, 's-Hertogenbosch",
+              "ref": "A2",
+              "end": {
+                "lat": 51.856168,
+                "lng": 5.228978
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1367502
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          },
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 159.8263097,
+              "geometry_points": 4,
+              "start": {
+                "lat": 51.864441,
+                "lng": 5.221904
+              },
+              "name": "",
+              "destinations": "A15: Rotterdam, Gorinchem, Nijmegen, Tiel",
+              "ref": "A2",
+              "end": {
+                "lat": 51.863082,
+                "lng": 5.222818
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1367503
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          }
+        ],
+        "start": {
+          "departure_bearing": 144.8532406,
+          "geometry_points": 18,
+          "start": {
+            "lat": 51.874316,
+            "lng": 5.212652
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A2",
+          "end": {
+            "lat": 51.864441,
+            "lng": 5.221904
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 1367521
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 331,
+          "requested_bearing": 151,
+          "input": {
+            "lat": 51.870332,
+            "lng": 5.216834
+          },
+          "segment_bearing_forward": 151,
+          "location": {
+            "lat": 51.870332,
+            "lng": 5.216834
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        5.214625,
+        51.872575
+      ],
+      "bearing": 146.144728663494,
+      "offset_m": 1034,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/5.214625,51.872575?bearings=146,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 151.281632,
+              "geometry_points": 12,
+              "start": {
+                "lat": 51.864441,
+                "lng": 5.221904
+              },
+              "name": "",
+              "destinations": "A2: Maastricht, 's-Hertogenbosch",
+              "ref": "A2",
+              "end": {
+                "lat": 51.856168,
+                "lng": 5.228978
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1367502
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          },
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 159.8263097,
+              "geometry_points": 4,
+              "start": {
+                "lat": 51.864441,
+                "lng": 5.221904
+              },
+              "name": "",
+              "destinations": "A15: Rotterdam, Gorinchem, Nijmegen, Tiel",
+              "ref": "A2",
+              "end": {
+                "lat": 51.863082,
+                "lng": 5.222818
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 1367503
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          }
+        ],
+        "start": {
+          "departure_bearing": 144.8532406,
+          "geometry_points": 18,
+          "start": {
+            "lat": 51.874316,
+            "lng": 5.212652
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A2",
+          "end": {
+            "lat": 51.864441,
+            "lng": 5.221904
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 1367521
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 325,
+          "requested_bearing": 146,
+          "input": {
+            "lat": 51.872575,
+            "lng": 5.214625
+          },
+          "segment_bearing_forward": 145,
+          "location": {
+            "lat": 51.872575,
+            "lng": 5.214625
+          }
+        },
+        "code": "Ok"
+      }
+    }
+  ]
+}

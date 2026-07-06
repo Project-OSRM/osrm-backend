@@ -1,0 +1,94 @@
+
+########## KP Everdingen (A2->A27)  [knooppunt]  gore=[5.108904, 51.970487]
+--- probe 5.11252,51.96693 bearing=328 (~467m upstream)
+  START ref='A2' classes=['motorway'] out_degree=4
+    turn=off ramp  mod=slight right | tgt ref='A2'     classes=['motorway']   dest='A27: Almere, Utrecht'
+    turn=invalid   mod=straight | tgt ref='A2'     classes=['motorway']   dest='A2: Amsterdam, Utrecht-West, Vianen'
+--- probe 5.11641,51.96304 bearing=328 (~975m upstream)
+  START ref='A2' classes=['motorway'] out_degree=4
+    turn=off ramp  mod=slight right | tgt ref='A2'     classes=['motorway']   dest='A27: Almere, Utrecht'
+    turn=invalid   mod=straight | tgt ref='A2'     classes=['motorway']   dest='A2: Amsterdam, Utrecht-West, Vianen'
+--- probe 5.11700,51.96249 bearing=327 (~1048m upstream)
+  START ref='A2' classes=['motorway'] out_degree=4
+    turn=off ramp  mod=slight right | tgt ref='A2'     classes=['motorway']   dest='A27: Almere, Utrecht'
+    turn=invalid   mod=straight | tgt ref='A2'     classes=['motorway']   dest='A2: Amsterdam, Utrecht-West, Vianen'
+
+########## KP Deil (A2->A15)  [knooppunt]  gore=[5.221904, 51.864441]
+--- probe 5.21984,51.86686 bearing=152 (~305m upstream)
+  START ref='A2' classes=['motorway'] out_degree=4
+    turn=invalid   mod=straight | tgt ref='A2'     classes=['motorway']   dest="A2: Maastricht, 's-Hertogenbosch"
+    turn=off ramp  mod=slight right | tgt ref='A2'     classes=['motorway']   dest='A15: Rotterdam, Gorinchem, Nijmegen, Tiel'
+--- probe 5.21683,51.87033 bearing=151 (~742m upstream)
+  START ref='A2' classes=['motorway'] out_degree=4
+    turn=invalid   mod=straight | tgt ref='A2'     classes=['motorway']   dest="A2: Maastricht, 's-Hertogenbosch"
+    turn=off ramp  mod=slight right | tgt ref='A2'     classes=['motorway']   dest='A15: Rotterdam, Gorinchem, Nijmegen, Tiel'
+--- probe 5.21462,51.87257 bearing=146 (~1034m upstream)
+  START ref='A2' classes=['motorway'] out_degree=4
+    turn=invalid   mod=straight | tgt ref='A2'     classes=['motorway']   dest="A2: Maastricht, 's-Hertogenbosch"
+    turn=off ramp  mod=slight right | tgt ref='A2'     classes=['motorway']   dest='A15: Rotterdam, Gorinchem, Nijmegen, Tiel'
+
+########## KP Badhoevedorp (A4->A9)  [knooppunt]  gore=[4.736287, 52.34935]
+--- probe 4.73575,52.34655 bearing=5 (~314m upstream)
+  START ref='A5' classes=['motorway'] out_degree=3
+    turn=off ramp  mod=slight right | tgt ref='A5'     classes=['motorway']   dest='A9: Alkmaar, Haarlem, Amstelveen, Badhoevedorp'
+    turn=invalid   mod=straight | tgt ref='A5'     classes=['motorway']   dest='A5: Zaanstad, Amsterdam-Westpoort'
+--- probe 4.73548,52.34387 bearing=3 (~612m upstream)
+  START ref='A5' classes=['motorway'] out_degree=3
+    turn=off ramp  mod=slight right | tgt ref='A5'     classes=['motorway']   dest='A9: Alkmaar, Haarlem, Amstelveen, Badhoevedorp'
+    turn=invalid   mod=straight | tgt ref='A5'     classes=['motorway']   dest='A5: Zaanstad, Amsterdam-Westpoort'
+--- probe 4.73515,52.34028 bearing=3 (~1012m upstream)
+  START ref='A5' classes=['motorway'] out_degree=3
+    turn=off ramp  mod=slight right | tgt ref='A5'     classes=['motorway']   dest='A9: Alkmaar, Haarlem, Amstelveen, Badhoevedorp'
+    turn=invalid   mod=straight | tgt ref='A5'     classes=['motorway']   dest='A5: Zaanstad, Amsterdam-Westpoort'
+
+########## KP Ridderkerk (A15->A16)  [knooppunt]  gore=[4.545299, 51.864872]
+--- probe 4.54080,51.86398 bearing=75 (~325m upstream)
+  START ref='A15' classes=['motorway'] out_degree=4
+    turn=fork      mod=slight left | tgt ref='A15'    classes=['motorway']   dest=''
+    turn=fork      mod=slight right | tgt ref='A15'    classes=['motorway']   dest='RING A16'
+--- probe 4.53663,51.86358 bearing=85 (~615m upstream)
+  START ref='A15' classes=['motorway'] out_degree=4
+    turn=fork      mod=slight left | tgt ref='A15'    classes=['motorway']   dest=''
+    turn=fork      mod=slight right | tgt ref='A15'    classes=['motorway']   dest='RING A16'
+--- probe 4.52914,51.86381 bearing=98 (~1131m upstream)
+  START ref='A15' classes=['motorway'] out_degree=3
+    turn=invalid   mod=straight | tgt ref='A15'    classes=['motorway']   dest=''
+
+########## Afrit Culemborg off A2  [afrit]  gore=[5.167787, 51.925968]
+--- probe 5.17253,51.92132 bearing=328 (~611m upstream)
+  START ref='A2' classes=['motorway'] out_degree=4
+    turn=off ramp  mod=slight right | tgt ref='A2'     classes=['motorway']   dest='N320: Culemborg'
+    turn=invalid   mod=straight | tgt ref='A2'     classes=['motorway']   dest=''
+--- probe 5.17253,51.92132 bearing=328 (~611m upstream)
+  START ref='A2' classes=['motorway'] out_degree=4
+    turn=off ramp  mod=slight right | tgt ref='A2'     classes=['motorway']   dest='N320: Culemborg'
+    turn=invalid   mod=straight | tgt ref='A2'     classes=['motorway']   dest=''
+--- probe 5.17561,51.91788 bearing=333 (~1047m upstream)
+  START ref='A2' classes=['motorway'] out_degree=4
+    turn=off ramp  mod=slight right | tgt ref='A2'     classes=['motorway']   dest='N320: Culemborg'
+    turn=invalid   mod=straight | tgt ref='A2'     classes=['motorway']   dest=''
+
+########## Afrit Hoofddorp off A4  [afrit]  gore=[4.698702, 52.268483]
+--- probe 4.69461,52.26563 bearing=41 (~422m upstream)
+  START ref='A4' classes=['motorway'] out_degree=4
+    turn=off ramp  mod=slight right | tgt ref='A4'     classes=['motorway']   dest='N201: Hoofddorp, Aalsmeer'
+    turn=invalid   mod=straight | tgt ref='A4'     classes=['motorway']   dest='A4: Amsterdam, Schiphol, Haarlem'
+--- probe 4.69017,52.26253 bearing=41 (~880m upstream)
+  START ref='A4' classes=['motorway'] out_degree=2
+    turn=invalid   mod=straight | tgt ref='A4'     classes=['motorway']   dest=''
+--- probe 4.68369,52.25800 bearing=41 (~1550m upstream)
+  START ref='A4' classes=['motorway'] out_degree=2
+    turn=invalid   mod=straight | tgt ref='A4'     classes=['motorway']   dest=''
+
+########## Afrit Leiden off A4  [afrit]  gore=[4.395358, 52.073305]
+--- probe 4.39016,52.07124 bearing=56 (~423m upstream)
+  START ref='A4' classes=['motorway'] out_degree=4
+    turn=fork      mod=slight right | tgt ref='A4'     classes=['motorway']   dest='Ring N14: Leidschendam, Wassenaar (N44), Den Haag-Noord'
+    turn=fork      mod=slight left | tgt ref='A4'     classes=['motorway']   dest='A4: Amsterdam, Leiden'
+--- probe 4.38802,52.07032 bearing=53 (~601m upstream)
+  START ref='A4' classes=['motorway'] out_degree=4
+    turn=fork      mod=slight right | tgt ref='A4'     classes=['motorway']   dest='Ring N14: Leidschendam, Wassenaar (N44), Den Haag-Noord'
+    turn=fork      mod=slight left | tgt ref='A4'     classes=['motorway']   dest='A4: Amsterdam, Leiden'
+--- probe 4.38343,52.06786 bearing=47 (~1018m upstream)
+  START ref='A4' classes=['motorway'] out_degree=2
+    turn=invalid   mod=straight | tgt ref='A4'     classes=['motorway']   dest=''

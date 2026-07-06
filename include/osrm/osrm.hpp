@@ -44,6 +44,7 @@ using engine::api::NearestParameters;
 using engine::api::RouteParameters;
 using engine::api::TableParameters;
 using engine::api::TileParameters;
+using engine::api::TreeParameters;
 using engine::api::TripParameters;
 
 /**
@@ -136,6 +137,16 @@ class OSRM final
      */
     Status Tile(const TileParameters &parameters, std::string &result) const;
     Status Tile(const TileParameters &parameters, engine::api::ResultT &result) const;
+
+    /**
+     * Tree: motorway "charger-ahead" tree from a coordinate and bearing (Highway Mode 2 spike).
+     *
+     * \param parameters tree query specific parameters
+     * \return Status indicating success for the query or failure
+     * \see Status, TreeParameters and json::Object
+     */
+    Status Tree(const TreeParameters &parameters, json::Object &result) const;
+    Status Tree(const TreeParameters &parameters, engine::api::ResultT &result) const;
 
   private:
     std::unique_ptr<engine::EngineInterface> engine_;

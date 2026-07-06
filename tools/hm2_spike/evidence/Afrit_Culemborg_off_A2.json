@@ -1,0 +1,318 @@
+{
+  "case": {
+    "name": "Afrit Culemborg off A2",
+    "kind": "afrit",
+    "frm": [
+      5.3037,
+      51.6978
+    ],
+    "to": [
+      5.227,
+      51.956
+    ],
+    "branch": "Culemborg"
+  },
+  "gore": [
+    5.167787,
+    51.925968
+  ],
+  "probes": [
+    {
+      "point": [
+        5.172528,
+        51.921316
+      ],
+      "bearing": 327.81313163563203,
+      "offset_m": 611,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/5.172528,51.921316?bearings=328,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 337.953851,
+              "geometry_points": 14,
+              "start": {
+                "lat": 51.925968,
+                "lng": 5.167787
+              },
+              "name": "",
+              "destinations": "N320: Culemborg",
+              "ref": "A2",
+              "end": {
+                "lat": 51.928064,
+                "lng": 5.166577
+              },
+              "exits": "13",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 135810
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          },
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 327.9350216,
+              "geometry_points": 12,
+              "start": {
+                "lat": 51.925968,
+                "lng": 5.167787
+              },
+              "name": "",
+              "destinations": "",
+              "ref": "A2",
+              "end": {
+                "lat": 51.932086,
+                "lng": 5.161552
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 135811
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 335.3837095,
+          "geometry_points": 16,
+          "start": {
+            "lat": 51.915946,
+            "lng": 5.17707
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A2",
+          "end": {
+            "lat": 51.925968,
+            "lng": 5.167787
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 135730
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 147,
+          "requested_bearing": 328,
+          "input": {
+            "lat": 51.921316,
+            "lng": 5.172528
+          },
+          "segment_bearing_forward": 327,
+          "location": {
+            "lat": 51.921316,
+            "lng": 5.172528
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        5.172528,
+        51.921316
+      ],
+      "bearing": 327.81313163563203,
+      "offset_m": 611,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/5.172528,51.921316?bearings=328,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 337.953851,
+              "geometry_points": 14,
+              "start": {
+                "lat": 51.925968,
+                "lng": 5.167787
+              },
+              "name": "",
+              "destinations": "N320: Culemborg",
+              "ref": "A2",
+              "end": {
+                "lat": 51.928064,
+                "lng": 5.166577
+              },
+              "exits": "13",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 135810
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          },
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 327.9350216,
+              "geometry_points": 12,
+              "start": {
+                "lat": 51.925968,
+                "lng": 5.167787
+              },
+              "name": "",
+              "destinations": "",
+              "ref": "A2",
+              "end": {
+                "lat": 51.932086,
+                "lng": 5.161552
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 135811
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 335.3837095,
+          "geometry_points": 16,
+          "start": {
+            "lat": 51.915946,
+            "lng": 5.17707
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A2",
+          "end": {
+            "lat": 51.925968,
+            "lng": 5.167787
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 135730
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 147,
+          "requested_bearing": 328,
+          "input": {
+            "lat": 51.921316,
+            "lng": 5.172528
+          },
+          "segment_bearing_forward": 327,
+          "location": {
+            "lat": 51.921316,
+            "lng": 5.172528
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        5.175611,
+        51.917883
+      ],
+      "bearing": 332.78356542471005,
+      "offset_m": 1047,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/5.175611,51.917883?bearings=333,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 337.953851,
+              "geometry_points": 14,
+              "start": {
+                "lat": 51.925968,
+                "lng": 5.167787
+              },
+              "name": "",
+              "destinations": "N320: Culemborg",
+              "ref": "A2",
+              "end": {
+                "lat": 51.928064,
+                "lng": 5.166577
+              },
+              "exits": "13",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 135810
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          },
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 327.9350216,
+              "geometry_points": 12,
+              "start": {
+                "lat": 51.925968,
+                "lng": 5.167787
+              },
+              "name": "",
+              "destinations": "",
+              "ref": "A2",
+              "end": {
+                "lat": 51.932086,
+                "lng": 5.161552
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 135811
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 335.3837095,
+          "geometry_points": 16,
+          "start": {
+            "lat": 51.915946,
+            "lng": 5.17707
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A2",
+          "end": {
+            "lat": 51.925968,
+            "lng": 5.167787
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 135730
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 154,
+          "requested_bearing": 333,
+          "input": {
+            "lat": 51.917883,
+            "lng": 5.175611
+          },
+          "segment_bearing_forward": 334,
+          "location": {
+            "lat": 51.917883,
+            "lng": 5.175611
+          }
+        },
+        "code": "Ok"
+      }
+    }
+  ]
+}

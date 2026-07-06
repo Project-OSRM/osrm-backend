@@ -1,0 +1,318 @@
+{
+  "case": {
+    "name": "KP Everdingen (A2->A27)",
+    "kind": "knooppunt",
+    "frm": [
+      5.3037,
+      51.6978
+    ],
+    "to": [
+      5.1214,
+      52.0907
+    ],
+    "branch": "A27"
+  },
+  "gore": [
+    5.108904,
+    51.970487
+  ],
+  "probes": [
+    {
+      "point": [
+        5.112519,
+        51.966926
+      ],
+      "bearing": 327.97814760740613,
+      "offset_m": 467,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/5.112519,51.966926?bearings=328,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 336.709474,
+              "geometry_points": 38,
+              "start": {
+                "lat": 51.970487,
+                "lng": 5.108904
+              },
+              "name": "",
+              "destinations": "A27: Almere, Utrecht",
+              "ref": "A2",
+              "end": {
+                "lat": 51.983521,
+                "lng": 5.108338
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 19545
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          },
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 327.3529489,
+              "geometry_points": 20,
+              "start": {
+                "lat": 51.970487,
+                "lng": 5.108904
+              },
+              "name": "",
+              "destinations": "A2: Amsterdam, Utrecht-West, Vianen",
+              "ref": "A2",
+              "end": {
+                "lat": 51.980697,
+                "lng": 5.096777
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 19546
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 313.7703191,
+          "geometry_points": 30,
+          "start": {
+            "lat": 51.945576,
+            "lng": 5.14097
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A2",
+          "end": {
+            "lat": 51.970487,
+            "lng": 5.108904
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 19768
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 147,
+          "requested_bearing": 328,
+          "input": {
+            "lat": 51.966926,
+            "lng": 5.112519
+          },
+          "segment_bearing_forward": 327,
+          "location": {
+            "lat": 51.966926,
+            "lng": 5.112519
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        5.116411,
+        51.963043
+      ],
+      "bearing": 328.3032561592251,
+      "offset_m": 975,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/5.116411,51.963043?bearings=328,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 336.709474,
+              "geometry_points": 38,
+              "start": {
+                "lat": 51.970487,
+                "lng": 5.108904
+              },
+              "name": "",
+              "destinations": "A27: Almere, Utrecht",
+              "ref": "A2",
+              "end": {
+                "lat": 51.983521,
+                "lng": 5.108338
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 19545
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          },
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 327.3529489,
+              "geometry_points": 20,
+              "start": {
+                "lat": 51.970487,
+                "lng": 5.108904
+              },
+              "name": "",
+              "destinations": "A2: Amsterdam, Utrecht-West, Vianen",
+              "ref": "A2",
+              "end": {
+                "lat": 51.980697,
+                "lng": 5.096777
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 19546
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 313.7703191,
+          "geometry_points": 30,
+          "start": {
+            "lat": 51.945576,
+            "lng": 5.14097
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A2",
+          "end": {
+            "lat": 51.970487,
+            "lng": 5.108904
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 19768
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 148,
+          "requested_bearing": 328,
+          "input": {
+            "lat": 51.963043,
+            "lng": 5.116411
+          },
+          "segment_bearing_forward": 328,
+          "location": {
+            "lat": 51.963043,
+            "lng": 5.116411
+          }
+        },
+        "code": "Ok"
+      }
+    },
+    {
+      "point": [
+        5.116998,
+        51.96249
+      ],
+      "bearing": 326.542461597602,
+      "offset_m": 1048,
+      "url": "http://127.0.0.1:5050/tree/v1/driving/5.116998,51.962490?bearings=327,45",
+      "tree": {
+        "out_degree": 4,
+        "outgoing_edges": [
+          {
+            "turn_type_id": 6,
+            "target": {
+              "departure_bearing": 336.709474,
+              "geometry_points": 38,
+              "start": {
+                "lat": 51.970487,
+                "lng": 5.108904
+              },
+              "name": "",
+              "destinations": "A27: Almere, Utrecht",
+              "ref": "A2",
+              "end": {
+                "lat": 51.983521,
+                "lng": 5.108338
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 19545
+            },
+            "turn_modifier": "slight right",
+            "turn_type": "off ramp"
+          },
+          {
+            "turn_type_id": 18,
+            "target": {
+              "departure_bearing": 327.3529489,
+              "geometry_points": 20,
+              "start": {
+                "lat": 51.970487,
+                "lng": 5.108904
+              },
+              "name": "",
+              "destinations": "A2: Amsterdam, Utrecht-West, Vianen",
+              "ref": "A2",
+              "end": {
+                "lat": 51.980697,
+                "lng": 5.096777
+              },
+              "exits": "",
+              "classes": [
+                "motorway"
+              ],
+              "edge_based_node_id": 19546
+            },
+            "turn_modifier": "straight",
+            "turn_type": "invalid"
+          }
+        ],
+        "start": {
+          "departure_bearing": 313.7703191,
+          "geometry_points": 30,
+          "start": {
+            "lat": 51.945576,
+            "lng": 5.14097
+          },
+          "name": "",
+          "destinations": "",
+          "ref": "A2",
+          "end": {
+            "lat": 51.970487,
+            "lng": 5.108904
+          },
+          "exits": "",
+          "classes": [
+            "motorway"
+          ],
+          "edge_based_node_id": 19768
+        },
+        "snapped": {
+          "chose_forward_direction": true,
+          "segment_bearing_reverse": 147,
+          "requested_bearing": 327,
+          "input": {
+            "lat": 51.96249,
+            "lng": 5.116998
+          },
+          "segment_bearing_forward": 327,
+          "location": {
+            "lat": 51.96249,
+            "lng": 5.116998
+          }
+        },
+        "code": "Ok"
+      }
+    }
+  ]
+}

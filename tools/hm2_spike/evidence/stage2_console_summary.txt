@@ -1,0 +1,23 @@
+
+### A2 south (Everdingen then Deil)
+    ref=A2 code=Ok length_km=178.1 junctions=55 qualifying=['A27', 'A15', 'A65', 'A50', 'A58', 'A67', 'A76', 'A79']
+    PASS
+
+### A4 south (Badhoevedorp then Leiden N-ring)
+    ref=A4 code=Ok length_km=67.5 junctions=22 qualifying=['A9', 'A5', 'A44', 'A12', 'A13', 'A20', 'A15', 'A15']
+    note: N201 not seen on this branch (topology), skipping check
+    PASS
+
+### A2 south, hard_cap 20km
+    ref=A2 code=Ok length_km=24.5 junctions=10 qualifying=['A27', 'A15']
+    PASS
+
+### A10 Amsterdam ring (cycle termination)
+    ref=A10 code=Ok length_km=6.0 junctions=5 qualifying=['A4']
+    PASS
+
+### off-motorway (local road) -> NoSegment
+    http=400 code=NoSegment message=Snapped coordinate is not on a motorway
+    PASS
+
+=== Stage 2 validation: ALL PASS ===

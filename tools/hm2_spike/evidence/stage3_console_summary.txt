@@ -1,0 +1,7 @@
+(a) A2 south A27 child: PASS  start_offset=4547 = junction 4547 + connector 0, len=55km
+(b) A4 south A9 child + no N-road branches: PASS  A9_present=True n_road_branches=[]
+(c) A10 ring cap 50km terminates: PASS  segments=46 root_len=6km
+(d) A2/A67 no toward-self qualifying junction: PASS  offenders=[]
+(e) every junction name is "": PASS  checked=1126 distinct=['']
+
+=== Stage 3 validation: ALL PASS ===
