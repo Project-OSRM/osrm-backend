@@ -197,6 +197,7 @@ jobs:
     runs-on: ubuntu-slim
     permissions:
       contents: read
+      actions: write  # needed by actions/cache
       pull-requests: write  # needed by suggest-changes to post review suggestions
     steps:
     - uses: actions/checkout@v7
@@ -229,7 +230,7 @@ jobs:
     - name: Generate API documentation
       run: npm run docs
     - name: Suggest formatting and documentation changes on PR
-      if: github.event_name == 'pull_request'
+      if: github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
       uses: parkerbxyz/suggest-changes@v3
       with:
         comment: 'Please review and commit the suggested formatting and documentation changes.'
