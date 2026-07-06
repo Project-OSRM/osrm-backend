@@ -35,7 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm
 {
 
-template <typename From,typename Tag> struct Alias;
+template <typename From, typename Tag> struct Alias;
 template <typename From, typename Tag>
 inline std::ostream &operator<<(std::ostream &stream, const Alias<From, Tag> &inst);
 
