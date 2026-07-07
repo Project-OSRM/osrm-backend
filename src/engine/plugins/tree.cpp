@@ -10,6 +10,7 @@
 #include "util/coordinate_calculation.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cctype>
 #include <functional>
 #include <limits>
@@ -58,6 +59,12 @@ constexpr double CONNECTOR_M = 3000.0;
 // Two direction candidates ending within this of each other are the same alignment reached via
 // duplicate forks - keep one.
 constexpr double SAME_DIRECTION_M = 500.0;
+// Same-direction overlap de-dup: two same-ref siblings whose arc-distance samples stay within
+// DIR_MATCH_M of each other for at least DIR_OVERLAP_FRAC of the shared samples are the same
+// physical corridor reached twice (twin entry ramps / parallel carriageways onto one crossing
+// direction) even when they end far enough apart to slip past the end-coordinate check.
+constexpr double DIR_MATCH_M = 300.0;
+constexpr double DIR_OVERLAP_FRAC = 0.75;
 
 // Turn types that mean "stay on the current road". Stage 1 report finding 7.3: the mainline
 // continuation at a diverge is Suppressed/NoTurn, never classified Continue.
@@ -101,6 +108,34 @@ double polylineLength(const std::vector<util::Coordinate> &coords)
         length += util::coordinate_calculation::greatCircleDistance(coords[i - 1], coords[i]);
     }
     return length;
+}
+
+// Arc-distance sample distances (metres) used to fingerprint a branch's alignment for
+// same-direction de-duplication. Two branches from a coincident start that run together (parallel
+// carriageways / twin entry ramps onto the same crossing direction) coincide at every distance;
+// opposite directions diverge within the first km. Geometrically-spaced so a few points span both
+// short and 150 km branches.
+constexpr std::array<double, 7> DIR_SAMPLE_M = {1000, 2000, 4000, 8000, 16000, 32000, 64000};
+
+// The branch's coordinate at each DIR_SAMPLE_M distance that is within its length (a prefix of the
+// list), for the same-direction overlap test in the per-parent de-dup.
+std::vector<util::Coordinate> sampleAlong(const std::vector<util::Coordinate> &coords)
+{
+    std::vector<util::Coordinate> samples;
+    if (coords.empty())
+        return samples;
+    double accumulated = 0.0;
+    std::size_t next = 0;
+    for (std::size_t i = 1; i < coords.size() && next < DIR_SAMPLE_M.size(); ++i)
+    {
+        accumulated += util::coordinate_calculation::greatCircleDistance(coords[i - 1], coords[i]);
+        while (next < DIR_SAMPLE_M.size() && accumulated >= DIR_SAMPLE_M[next])
+        {
+            samples.push_back(coords[i]);
+            ++next;
+        }
+    }
+    return samples;
 }
 
 bool isMotorwayNode(const datafacade::BaseDataFacade &facade, const NodeID node)
@@ -370,6 +405,7 @@ struct SegmentResult
     double order_key; // start_offset, for stable nearest-first sibling ordering
     std::string ref;
     util::Coordinate end_coord; // last geometry point, for de-duplicating same-direction branches
+    std::vector<util::Coordinate> dir_samples; // arc-distance fingerprint for the overlap de-dup
     util::json::Object junction;
     util::json::Object route; // {ref, start_offset_m, length_m, polyline, [junctions]}
 };
@@ -385,10 +421,19 @@ struct WalkOutput
     std::vector<WorkItem> children;
     std::vector<WorkItem> siblings; // extra direction branches (children of this segment's parent)
     util::Coordinate end_coord;     // last geometry point (for de-duplicating sibling directions)
+    std::vector<util::Coordinate> dir_samples; // arc-distance fingerprint for the overlap de-dup
     double length = 0.0;
     bool bad_ending = false;
     bool rejoined_ancestor = false; // walk merged back onto an ancestor path (parallel carriageway)
     bool ended_by_cycle = false;    // stopped because a motorway continuation was already visited
+    // Every edge-based node this walk occupied, so a descendant can inherit the ancestor's FULL
+    // path and detect a rejoin onto it (the per-path visited set the child was spawned with only
+    // covers the ancestor up to the spawn junction - see the driver's ancestor-path completion).
+    std::vector<NodeID> path_nodes;
+    // The post-split signage of the direction this walk actually took, when the segment forks into
+    // multiple same-ref directions near its start (a shared slip-road gantry carries the union of
+    // both directions' destinations; each direction's refined signage lives on its own arm).
+    std::string refined_toward;
     // Early forks (node, an untaken usable motorway arm) - retry candidates for a bad landing.
     std::vector<std::pair<NodeID, NodeID>> forks;
     // Same-ref arms suppressed near the start - the crossing road's other travel direction(s).
@@ -412,8 +457,10 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
     std::vector<util::Coordinate> polyline;
     util::json::Array junctions_debug;
     std::vector<WorkItem> children;
+    std::vector<NodeID> path_nodes;
     std::vector<std::pair<NodeID, NodeID>> forks;
     std::vector<std::pair<NodeID, NodeID>> direction_forks;
+    std::string refined_toward;
     bool stopped_by_cap = false;
     bool rejoined_ancestor = false;
     bool ended_by_cycle = false;
@@ -433,11 +480,16 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
 
     while (true)
     {
+        path_nodes.push_back(current);
         const double node_len = polylineLength(current_coords);
         const double node_end_offset = offset + node_len;
         if (!isMotorwayNode(facade, current))
             non_motorway_len += node_len;
         const auto current_refs = refComponents(current_ref);
+        // Set when this node forks off a same-ref direction (the crossing road's other way): the
+        // signage captured at the parent's junction is then the pre-split slip-road union, so the
+        // arm we take here carries this direction's refined destinations.
+        bool direction_fork_here = false;
 
         const auto outgoing = gatherForwardOutgoing(facade, mld, current);
         const auto continuation = selectContinuation(outgoing, current_refs);
@@ -473,9 +525,12 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
                 if (item.parent_id != NO_PARENT &&
                     (node_end_offset - item.start_offset) < CONNECTOR_M &&
                     shareComponent(reported_refs, it->branch_refs) &&
-                    isMotorwayNode(facade, it->target) && !visited.count(it->target) &&
-                    direction_forks.size() < MAX_CROSSING_DIRECTIONS)
-                    direction_forks.push_back({current, it->target});
+                    isMotorwayNode(facade, it->target) && !visited.count(it->target))
+                {
+                    direction_fork_here = true;
+                    if (direction_forks.size() < MAX_CROSSING_DIRECTIONS)
+                        direction_forks.push_back({current, it->target});
+                }
                 continue;
             }
 
@@ -564,6 +619,13 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
                     break;
                 }
 
+        // At a same-ref direction split, the arm we take carries this direction's own refined
+        // signage (the parent-junction signage was the shared pre-split union). Capture the first
+        // one so the driver can replace this segment's merged junction "toward".
+        if (direction_fork_here && refined_toward.empty() && chosen != outgoing.end() &&
+            !chosen->destinations.empty())
+            refined_toward = chosen->destinations;
+
         // Record early forks (usable arms we did not take) so a bad landing can be retried down an
         // alternative - a stack ramp can offer two motorway arms, one of them a service loop that
         // only reveals itself as a cycle several km later.
@@ -623,10 +685,13 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
     out.route = std::move(route);
     out.children = std::move(children);
     out.length = length;
+    out.dir_samples = sampleAlong(polyline);
     out.end_coord = polyline.empty() ? item.start_coords.front() : polyline.back();
     out.bad_ending = !stopped_by_cap;
     out.rejoined_ancestor = rejoined_ancestor;
     out.ended_by_cycle = ended_by_cycle;
+    out.path_nodes = std::move(path_nodes);
+    out.refined_toward = std::move(refined_toward);
     out.forks = std::move(forks);
     out.direction_forks = std::move(direction_forks);
     return out;
@@ -828,10 +893,17 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     // segment, so when MAX_SEGMENTS truncates the tree the retained segments are the nearest ones
     // across all spurs (matching the app's nearest-first prune) rather than one deep subtree.
     std::vector<WorkItem> pool;
+    std::vector<std::size_t> parent_of; // pool id -> parent pool id (for climbing the ancestor path)
+    std::unordered_map<std::size_t, std::vector<NodeID>> segment_path; // pool id -> its walked nodes
     std::priority_queue<Pending, std::vector<Pending>, std::greater<>> pq;
+    const auto enqueue = [&](WorkItem &&w)
+    {
+        parent_of.push_back(w.parent_id);
+        pq.push({w.start_offset, w.id});
+        pool.push_back(std::move(w));
+    };
 
-    pq.push({chosen->start_offset, chosen->id});
-    pool.push_back(std::move(*chosen));
+    enqueue(std::move(*chosen));
 
     std::vector<SegmentResult> segments;
     util::json::Array dropped_stubs; // debug-only: parallel-carriageway stubs dropped at rejoin
@@ -841,8 +913,22 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         pq.pop();
         WorkItem item = std::move(pool[id]);
 
+        // Complete the per-path visited set with every ancestor's FULL walked path. The set the
+        // child was spawned with only reached the spawn junction; best-first guarantees each
+        // ancestor is fully walked (and its path recorded) before this item pops. Without this a
+        // parallel carriageway that leaves the mainline and rejoins it further on (the A4
+        // parallelbaan mis-signed A13 at KP Ypenburg) never sees the rejoin and re-expands a
+        // duplicate copy of the whole tree.
+        for (std::size_t p = item.parent_id; p != NO_PARENT; p = parent_of[p])
+        {
+            const auto it = segment_path.find(p);
+            if (it != segment_path.end())
+                item.visited.insert(it->second.begin(), it->second.end());
+        }
+
         WalkOutput out =
             expandSegment(facade, *mld, item, static_cast<double>(params.hard_cap_m), params.debug);
+        segment_path[item.id] = std::move(out.path_nodes);
 
         // Drop a childless branch that just merges back onto an ancestor path: it is a parallel
         // carriageway of a road already in the tree, its stations are within metres of the main
@@ -867,8 +953,7 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         {
             child.id = pool.size();
             child.parent_id = item.id;
-            pq.push({child.start_offset, child.id});
-            pool.push_back(std::move(child));
+            enqueue(std::move(child));
         }
 
         // Sibling direction branches attach to this segment's PARENT (both directions of a crossing
@@ -876,9 +961,15 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         for (auto &sibling : out.siblings)
         {
             sibling.id = pool.size();
-            pq.push({sibling.start_offset, sibling.id});
-            pool.push_back(std::move(sibling));
+            enqueue(std::move(sibling));
         }
+
+        // Refine merged junction signage: when this (primary) branch forks into same-ref directions
+        // just past the junction, the signage captured at spawn was the shared slip-road union;
+        // replace it with the destinations of the arm this direction actually took. Siblings already
+        // carry their own arm's signage (set in expandSegment), so leave those untouched.
+        if (item.override_node == SPECIAL_NODEID && !out.refined_toward.empty())
+            item.junction.values["toward"] = towardArray(out.refined_toward);
 
         SegmentResult segment;
         segment.id = item.id;
@@ -886,6 +977,7 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         segment.order_key = item.start_offset;
         segment.ref = item.reported_ref;
         segment.end_coord = out.end_coord;
+        segment.dir_samples = std::move(out.dir_samples);
         segment.junction = std::move(item.junction);
         segment.route = std::move(out.route);
         segments.push_back(std::move(segment));
@@ -911,20 +1003,36 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                               segments[a].id < segments[b].id);
                   });
 
-        // Drop same-direction duplicates: a crossing's two directions end far apart, but a direction
-        // sibling can land on the same alignment as an already-kept child (different spawn paths).
-        // Keep the nearest (already first after the sort).
+        // Drop same-direction duplicates. A crossing's two directions end far apart, but the same
+        // physical corridor can appear twice as same-ref siblings: a direction sibling landing on an
+        // already-kept child's alignment (different spawn paths), or two qualifying entry ramps onto
+        // one crossing direction (KP Muiderberg's twin A6 lanes). The first ends at the same node
+        // (end-coord check); the second runs together from a coincident start but ends km apart when
+        // the copies truncate differently (arc-distance overlap check). Keep the nearest (first after
+        // the sort).
+        const auto same_corridor = [&](std::size_t a, std::size_t b)
+        {
+            if (segments[a].ref != segments[b].ref)
+                return false;
+            if (util::coordinate_calculation::greatCircleDistance(
+                    segments[a].end_coord, segments[b].end_coord) < SAME_DIRECTION_M)
+                return true;
+            const auto &sa = segments[a].dir_samples;
+            const auto &sb = segments[b].dir_samples;
+            const std::size_t n = std::min(sa.size(), sb.size());
+            if (n < 2)
+                return false;
+            std::size_t matched = 0;
+            for (std::size_t i = 0; i < n; ++i)
+                if (util::coordinate_calculation::greatCircleDistance(sa[i], sb[i]) < DIR_MATCH_M)
+                    ++matched;
+            return matched >= static_cast<std::size_t>(DIR_OVERLAP_FRAC * n + 0.5);
+        };
         std::vector<std::size_t> kept;
         for (const auto idx : entry.second)
         {
-            const bool dup = std::any_of(
-                kept.begin(),
-                kept.end(),
-                [&](std::size_t k) {
-                    return segments[k].ref == segments[idx].ref &&
-                           util::coordinate_calculation::greatCircleDistance(
-                               segments[k].end_coord, segments[idx].end_coord) < SAME_DIRECTION_M;
-                });
+            const bool dup = std::any_of(kept.begin(), kept.end(),
+                                         [&](std::size_t k) { return same_corridor(k, idx); });
             if (!dup)
                 kept.push_back(idx);
         }

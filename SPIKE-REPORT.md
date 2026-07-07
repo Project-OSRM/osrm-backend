@@ -408,3 +408,95 @@ Product gap: at Prins Clausplein (A4 north), only the **A12-east** branch (towar
 - All prior cases green: containment, same-ref, breadth, ring termination, A12-east recovery, root snap retry, parallelbaan drop, off-motorway `NoSegment`, junction names `""`.
 
 **Files:** `src/engine/plugins/tree.cpp` (`WorkItem.override_node/override_target`; `WalkOutput.direction_forks/end_coord/ended_by_cycle`; `SegmentResult.ref/end_coord`; direction-fork recording in `walkOne`; sibling spawn + per-spawn de-dup in `expandSegment`; per-parent end_coord de-dup at assembly); `tools/hm2_spike/regression.py` (`DIRECTIONS_CASE` + `run_directions_case`); evidence regenerated.
+
+## S3-fix7 — per-direction signage + duplicate-corridor removal (rejoin re-expansion & twin ramps)
+
+Two defects surfaced on the A4 north probe `4.3236797,52.0268771` bearing 32 (A4 approaching KP
+Ypenburg then Prins Clausplein), both around the crossing-directions machinery added in S3-fix6.
+
+### Bug 1 — merged signage on a crossing direction (root cause pre-existing, exposed by S3-fix6)
+
+**Evidence.** The two A12 directions at Prins Clausplein shared one junction but carried:
+- A12-east (toward Utrecht, 135 km): `toward = [A12, Den Haag, Voorburg, Utrecht, Zoetermeer]`
+- A12-west (Utrechtsebaan, 4.5 km): `toward = [A12, Den Haag, Voorburg]`
+
+The east list is the **union** of both directions — the shared A4→A12 slip-road gantry signage
+(`destination=A12;Den Haag;Voorburg;Utrecht;Zoetermeer`) before the ramp splits into per-direction
+links. The west sibling was already correct because S3-fix6 reads a sibling's `toward` from its own
+post-split arm (`df.second`); the **primary** branch instead inherited the junction signage captured
+at spawn, which is the pre-split union. (Pre-existing: a normal branch always took the mainline
+arm's signage; S3-fix6 merely put the two directions side by side and made the defect visible.)
+
+**Fix.** `walkOne` now records `refined_toward` — the destinations of the arm it actually follows at
+the first same-ref direction split near the branch start (where a `direction_fork` is recorded). The
+driver replaces the primary segment's junction `toward` with it (siblings already carry their own
+arm's signage). Result: east = `[A12, Utrecht, Zoetermeer, Den Haag-Ypenburg]`, west = `[A12, Den
+Haag, Voorburg]`. Verified across the A2-south / A4-north trees: all 29 two-direction junctions now
+carry distinct per-direction signage (A15 Rotterdam/Gorinchem vs Nijmegen/Tiel; A58 Antwerpen vs
+Eindhoven; …), zero empty `toward`.
+
+### Bug 2a — parallelbaan re-expansion (root cause: per-path visited set was incomplete)
+
+**Evidence.** Root A4 carried an `A13`-signed branch at `at_offset_m≈1128`, length **39 km**
+(the real A13 is ~16 km), whose polyline was **100 % within 150 m of root A4** and whose children
+(A12, A5, A4-Amsterdam) replicated root's own children ~255 m shifted. It is the A4 **parallelbaan**
+at KP Ypenburg (carrying the A13 gantry): the walk followed it, it rejoined the A4 hoofdbaan, and
+re-expanded a parallel copy of the whole tree. The S3-fix5 rejoin-drop did not catch it because that
+rule only fires for **childless** rejoins, and this branch spawned (duplicate) children.
+
+**Root cause.** The per-path `visited` set is snapshotted when a child is spawned. Best-first pops
+the root and walks it **fully** before any child, but the child's snapshot only covers the ancestor
+up to the spawn junction — so when the parallelbaan rejoined the A4 at nodes root walked *after*
+offset 1128, those nodes were not in `visited`, no cycle was detected, and it re-expanded.
+
+**Fix.** The driver now completes each popped item's `visited` set with every ancestor's **full**
+walked path (each segment records `path_nodes`; best-first guarantees ancestors finish first). The
+parallelbaan now hits a visited ancestor node at the rejoin, stops childless, and is dropped by the
+existing rejoin rule. This only affects a branch rejoining **its own ancestor chain** — the same
+road reached via a *different* parent (design decision §12, two legitimate routes to one charger) is
+untouched (971 legitimate cross-parent coincident-start corridors preserved in the 200 km tree).
+
+### Bug 2b — twin entry ramps onto one crossing direction (dedup gap)
+
+**Evidence.** After 2a, an audit still found same-ref sibling pairs overlapping ~92 % (e.g. two `A6`
+children of an A9 parent at KP Muiderberg, both toward Almere/Groningen, 147 vs 146 km). These are
+two qualifying entry ramps onto the **same** A6 direction, both emitted as normal children; they
+start at coincident coordinates but distinct edge nodes and end 1–8 km apart, so the S3-fix6
+end-coordinate dedup (`SAME_DIRECTION_M`) missed them. Start-coordinate dedup can't be used — the
+legitimate opposite directions (A12 east/west) also share a start.
+
+**Fix.** The per-parent assembly dedup now also treats two same-ref children as duplicates when their
+**arc-distance fingerprints** overlap: each branch is sampled at 1/2/4/…/64 km (`sampleAlong` →
+`dir_samples`); if ≥ `DIR_OVERLAP_FRAC` (0.75) of the shared samples are within `DIR_MATCH_M` (300 m)
+they are the same corridor and the nearer is kept. Opposite directions diverge within the first km
+(≈0 overlap) and are both kept; the A10-ring partial overlap (0.55) stays under threshold.
+
+### Regression (`tools/hm2_spike/regression.py`, all green — 36 checks)
+
+- `run_signage_case` (`SIGNAGE_CASE`): A12-east has `Utrecht` and NOT the shared-slip `Voorburg`;
+  A12-west keeps `Den Haag`/`Voorburg`. (Pre-fix east carried the merged union.)
+- `run_dup_case` (`DUP_CASE`, A4 north 200 km): (a) no root branch overlaps root A4 > 0.6 (pre-fix
+  the A13 parallelbaan = 1.00); (b) no two same-ref children of one parent overlap > 0.75 (pre-fix
+  13 such pairs at 0.85–0.93).
+- All prior cases stay green: both A12 directions still emitted, A12-east recovery, containment,
+  same-ref, breadth (A2-south root = 7), parallelbaan drop, ring, root-snap, off-motorway, names.
+
+### Tree cost, and what was deliberately left
+
+- **Segment cost dropped where duplicates were removed:** A2-south 90 km **354 → 256** segments
+  (fewer duplicate/parallelbaan walks); 200 km still 400 (cap), root breadth unchanged (7). Timing
+  unchanged: 200 km ≈ 0.15 s, 90 km ≈ 0.08 s.
+- **Not fixed — cross-parent corridor repetition (design §12).** The same road reached via different
+  parent chains still appears once per chain (971 coincident-start pairs at 200 km); these are real
+  alternative routes and are deduped at station level in the JS layer, per the locked design. The
+  duplicates removed here are only same-parent twins and own-ancestor rejoins.
+- **Budget note.** Twin-ramp duplicates are still *walked* before being dropped at assembly (their
+  geometry is only known after the walk), so at the segment cap a little budget is spent on copies
+  that don't reach the output. Under practical PoC caps (30–90 km) the tree is far below the cap, so
+  this is not observable; a spawn-time signal would need geometry that isn't available at emission.
+
+**Files:** `src/engine/plugins/tree.cpp` (`WalkOutput.path_nodes`/`refined_toward`/`dir_samples`;
+`sampleAlong`; direction-split signage capture in `walkOne`; driver ancestor-path completion +
+refined-toward application + arc-distance overlap in the per-parent dedup);
+`tools/hm2_spike/regression.py` (`SIGNAGE_CASE`/`run_signage_case`, `DUP_CASE`/`run_dup_case`,
+`_frac_within`).

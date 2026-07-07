@@ -104,6 +104,26 @@ PARALLELBAAN_CASE = dict(name="A4 Leiden–Hoofddorp — parallel-carriageway st
 DIRECTIONS_CASE = dict(name="A4 @ Prins Clausplein — both A12 directions emitted",
                        lng=4.31100, lat=52.00468, bearing=351, cap=70000)
 
+# Crossing-road signage refinement (S3-fix7). The A4->A12 ramp at Prins Clausplein is a shared
+# slip road whose gantry carries the union of both directions' destinations
+# (A12;Den Haag;Voorburg;Utrecht;Zoetermeer). The primary (east, toward Utrecht) branch used to
+# inherit that whole union; each direction must instead carry its own post-split signage - east has
+# Utrecht/Zoetermeer and NOT the west-only Voorburg; west keeps Den Haag/Voorburg.
+SIGNAGE_CASE = dict(name="A4 @ Prins Clausplein — each A12 direction carries its own refined signage",
+                    lng=4.31100, lat=52.00468, bearing=351, cap=70000)
+
+# Duplicate-corridor guards (S3-fix7). Two ways the same physical corridor used to appear twice:
+#  (a) a parallel carriageway that leaves the mainline and rejoins it further on (the A4 parallelbaan
+#      mis-signed A13 at KP Ypenburg) re-expanded a ~255 m-shifted copy of the whole tree as a root
+#      branch hugging root A4 for 39 km;
+#  (b) two qualifying entry ramps onto one crossing direction (KP Muiderberg's twin A6 lanes) both
+#      emitted as same-parent children, ending km apart so the end-coordinate de-dup missed them.
+# Distinct from the legitimate cross-parent reachability (design decision #12): the same road reached
+# via two different parent chains is two real routes and is kept. These guards are (a) no root branch
+# hugs the root corridor, (b) no two same-ref children of ONE parent are the same corridor.
+DUP_CASE = dict(name="A4 north — no duplicate corridor (parallelbaan re-expansion / twin ramps)",
+                lng=4.3236797, lat=52.0268771, bearing=32, cap=200000)
+
 # Off-motorway (Amsterdam centrum local road) -> NoSegment.
 OFF_MOTORWAY_CASE = dict(name="off-motorway -> NoSegment",
                          lng=4.89218, lat=52.37320, bearing=90)
@@ -368,6 +388,68 @@ def run_directions_case(c):
           f"east={east} west={west}")
 
 
+def _frac_within(a, b, thr=150.0):
+    """Fraction of points in polyline a that lie within thr metres of any point in b."""
+    if not a or not b:
+        return 0.0
+    return sum(1 for x in a if min(_haversine(x, y) for y in b) < thr) / len(a)
+
+
+def run_signage_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok", f"{c['name']}: code Ok", f"http={http}"):
+        return
+    east_toward = west_toward = None
+    for _, b in iter_branches(tree):
+        if b["route"]["ref"] != "A12":
+            continue
+        co = _decode_polyline(b["route"]["polyline"])
+        if not co or co[0][0] > 4.42:
+            continue  # only the two directions spawned at the interchange
+        toward = b["junction"].get("toward", [])
+        if max(x[0] for x in co) > 4.48:
+            east_toward = toward
+        if min(x[0] for x in co) < 4.36:
+            west_toward = toward
+    check(east_toward is not None and "Utrecht" in east_toward and "Voorburg" not in east_toward,
+          f"{c['name']}: A12-east carries its own refined signage (Utrecht, not the shared Voorburg)",
+          f"east_toward={east_toward}")
+    check(west_toward is not None and "Voorburg" in west_toward,
+          f"{c['name']}: A12-west keeps its Den Haag/Voorburg signage",
+          f"west_toward={west_toward}")
+
+
+def run_dup_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok", f"{c['name']}: code Ok", f"http={http}"):
+        return
+    # (a) no root-level branch re-expands a parallel copy of the root corridor.
+    root = _decode_polyline(tree["polyline"])[::3]
+    reexpanders = [(b["route"]["ref"], round(b["route"]["length_m"] / 1000))
+                   for b in tree.get("branches", [])
+                   if _frac_within(_decode_polyline(b["route"]["polyline"])[::3], root) > 0.6]
+    check(not reexpanders,
+          f"{c['name']}: no root branch re-expands the root corridor (parallelbaan drop)",
+          f"offenders={reexpanders[:5]}")
+
+    # (b) no two same-ref children of one parent are the same physical corridor.
+    dups = []
+    for parent in iter_routes(tree):
+        kids = parent.get("branches", [])
+        decoded = [_decode_polyline(k["route"]["polyline"])[::4] for k in kids]
+        for i in range(len(kids)):
+            for j in range(i + 1, len(kids)):
+                if kids[i]["route"]["ref"] != kids[j]["route"]["ref"]:
+                    continue
+                if _frac_within(decoded[i], decoded[j]) > 0.75:
+                    dups.append((parent["ref"], kids[i]["route"]["ref"]))
+    check(not dups,
+          f"{c['name']}: no same-ref sibling duplicates a corridor (overlap de-dup)",
+          f"offenders={dups[:5]}")
+
+
 def run_off_motorway_case(c):
     print(f"\n# {c['name']}")
     tree, http = get(f"/tree/v1/driving/{c['lng']},{c['lat']}?bearings={c['bearing']},45")
@@ -402,6 +484,8 @@ def main():
     run_root_retry_case(ROOT_RETRY_CASE)
     run_parallelbaan_case(PARALLELBAAN_CASE)
     run_directions_case(DIRECTIONS_CASE)
+    run_signage_case(SIGNAGE_CASE)
+    run_dup_case(DUP_CASE)
     run_off_motorway_case(OFF_MOTORWAY_CASE)
     run_junction_names()
 

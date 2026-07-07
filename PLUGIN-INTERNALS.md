@@ -98,6 +98,36 @@ change; extend it for EVERY fix.
   (both A12 east lng>4.48 and west lng<4.36). Note: 6→7 root breadth on A2-south is the recovered
   A15-west at Deil — a coverage win, NOT drift (`BREADTH_CASE` asserts root ≥ 4).
 
+- **Per-direction junction signage** (§S3-fix7). A branch's junction `toward` is captured at spawn
+  from the mainline arm's signage. Where a knooppunt is entered via a **shared slip road** that splits
+  into per-direction links (Prins Clausplein A4→A12: gantry `A12;Den Haag;Voorburg;Utrecht;Zoetermeer`
+  before the split), that captured signage is the *union* of both directions. `walkOne` records
+  `refined_toward` — the signage of the arm it actually follows at the first same-ref direction split
+  (where a `direction_fork` is recorded) — and the driver overwrites the **primary** segment's junction
+  `toward` with it (siblings already carry their own arm's signage from `df.second`). Each direction
+  then shows its own destinations (east: Utrecht/Zoetermeer; west: Den Haag/Voorburg). Case:
+  `SIGNAGE_CASE`. WHY: the merged union mislabels which cities a direction actually leads to.
+
+- **Complete ancestor visited set — no parallelbaan re-expansion** (§S3-fix7). The per-path `visited`
+  set a child is spawned with only covers the ancestor **up to the spawn junction**. Best-first walks
+  every ancestor to completion before a child pops, so the driver completes each item's `visited` with
+  every ancestor's FULL `path_nodes` before walking it. WHY: a parallel carriageway that leaves the
+  mainline and rejoins it *past* the spawn point (the A4 parallelbaan mis-signed `A13` at KP Ypenburg —
+  100% overlap with root A4, children duplicating root's) otherwise never sees the rejoin and
+  re-expands a ~255 m-shifted copy of the whole tree; with the complete set it hits a visited ancestor
+  node at the rejoin, stops childless, and is dropped by the rejoin rule. Only affects a branch
+  rejoining **its own ancestor chain** — the same road via a *different* parent (design §12) is kept.
+  Case: `DUP_CASE` part (a).
+
+- **Same-direction overlap dedup — twin entry ramps** (§S3-fix7). The end-coordinate dedup
+  (`SAME_DIRECTION_M`) misses two qualifying entry ramps onto ONE crossing direction (KP Muiderberg's
+  twin A6 lanes): same-ref, coincident start, but ending km apart when the copies truncate
+  differently. The per-parent assembly dedup also compares **arc-distance fingerprints** (`dir_samples`
+  at 1/2/4/…/64 km via `sampleAlong`): same-ref children with ≥ `DIR_OVERLAP_FRAC` of shared samples
+  within `DIR_MATCH_M` are one corridor, keep the nearer. Opposite directions diverge within 1 km (≈0
+  overlap) and are both kept. Start-coordinate dedup is unusable — legit opposite directions share a
+  start. Case: `DUP_CASE` part (b).
+
 Other cases: `RING_CASE` (cycle termination), `OFF_MOTORWAY_CASE` (→ `NoSegment`),
 `run_junction_names` (every junction/branch name is `""`).
 
@@ -149,7 +179,9 @@ re-deriving.
 
 **Constants worth knowing** (top of `tree.cpp`): `MAX_SEGMENTS=400`, `MAX_DEPTH=10`,
 `MAX_RAMP_HOPS=15`, `RETRY_MIN_M=5000`, `MAX_LANDING_RETRIES=6`, `MAX_ROOT_CANDIDATES=3`,
-`MAX_CROSSING_DIRECTIONS=3`, `MIN_DIRECTION_M=1500`, `CONNECTOR_M=3000`, `SAME_DIRECTION_M=500`.
+`MAX_CROSSING_DIRECTIONS=3`, `MIN_DIRECTION_M=1500`, `CONNECTOR_M=3000`, `SAME_DIRECTION_M=500`,
+`DIR_MATCH_M=300`, `DIR_OVERLAP_FRAC=0.75` (arc-distance overlap dedup), `DIR_SAMPLE_M`
+(1/2/4/…/64 km fingerprint distances).
 
 **Region note:** the motorway ref regex (`isMotorwayRef`) is tuned for NL/EU (`^[AE]\d+`). UK (`^M\d+`)
 and other launch regions need per-region patterns — make it configurable before those launches
