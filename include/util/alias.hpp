@@ -110,8 +110,7 @@ template <typename From, typename Tag> struct Alias final
     __value |= static_cast<const From>(z_);
     return *this;
     }
-    inline Alias operator&=(const Alias z_)
-    {  __value &= static_cast<const From>(z_);
+    inline Alias operator*=(const Alias z_)
     {
         __value &= static_cast<const From>(z_);
         return *this;
