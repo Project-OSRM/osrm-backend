@@ -225,32 +225,30 @@ jobs:
       uses: pre-commit/action@v3.0.1
     - name: Validate taginfo
       run: ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-    - name: Apply code formatting
-      run: ./scripts/format.sh
-    - name: Generate API documentation
-      run: npm run docs
-    - name: Check for outstanding changes
-      id: changes
+    # ---- code formatting ----
+    - name: Check code formatting
+      id: format
       run: |
+        ./scripts/format.sh
         if ! git diff --exit-code --quiet; then
           echo "dirty=true" >> "$GITHUB_OUTPUT"
           git diff > /tmp/formatting-fixes.patch
         fi
-    - name: Upload formatting patch as artifact
-      if: steps.changes.outputs.dirty == 'true'
+    - name: Upload formatting patch
+      if: steps.format.outputs.dirty == 'true'
       uses: actions/upload-artifact@v7
       with:
         name: formatting-fixes
         path: /tmp/formatting-fixes.patch
         retention-days: 7
-    - name: Post download instructions on PR
-      if: steps.changes.outputs.dirty == 'true' && github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
+    - name: Post formatting instructions on PR
+      if: steps.format.outputs.dirty == 'true' && github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
       run: |
-        gh pr comment "${{ github.event.pull_request.number }}" --body "## :wrench: Code Formatting / Documentation Required
+        gh pr comment "${{ github.event.pull_request.number }}" --body "## :wrench: Code Formatting Required
 
-        \`./scripts/format.sh\` and/or \`npm run docs\` produced changes on this branch.
+        \`./scripts/format.sh\` produced changes on this branch.
 
-        **Option 1 — Apply the patch:**
+        **Option 1 — Download and apply** [formatting-fixes.zip](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/formatting-fixes.zip):
         \`\`\`bash
         curl -LO https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/formatting-fixes.zip
         unzip formatting-fixes.zip
@@ -260,17 +258,67 @@ jobs:
         **Option 2 — Run locally:**
         \`\`\`bash
         ./scripts/format.sh
+        \`\`\`
+        Then commit the changes."
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Stash formatting changes
+      if: steps.format.outputs.dirty == 'true'
+      run: git stash push --message "formatting changes"
+
+    # ---- api documentation ----
+    - name: Check API documentation
+      id: docs
+      run: |
+        npm run docs
+        if ! git diff --exit-code --quiet; then
+          echo "dirty=true" >> "$GITHUB_OUTPUT"
+          git diff > /tmp/docs-fixes.patch
+        fi
+    - name: Upload documentation patch
+      if: steps.docs.outputs.dirty == 'true'
+      uses: actions/upload-artifact@v7
+      with:
+        name: docs-fixes
+        path: /tmp/docs-fixes.patch
+        retention-days: 7
+    - name: Post documentation instructions on PR
+      if: steps.docs.outputs.dirty == 'true' && github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
+      run: |
+        gh pr comment "${{ github.event.pull_request.number }}" --body "## :memo: API Documentation Required
+
+        \`npm run docs\` produced changes on this branch.
+
+        **Option 1 — Download and apply** [docs-fixes.zip](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/docs-fixes.zip):
+        \`\`\`bash
+        curl -LO https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/docs-fixes.zip
+        unzip docs-fixes.zip
+        git apply docs-fixes.patch
+        \`\`\`
+
+        **Option 2 — Run locally:**
+        \`\`\`bash
         npm run docs
         \`\`\`
         Then commit the changes."
       env:
         GH_TOKEN: ${{ github.token }}
+    - name: Restore formatting changes
+      if: steps.format.outputs.dirty == 'true'
+      run: git stash pop
+
+    # ---- final checks ----
     - name: Run npm audit
       run: npm audit --production
     - name: Fail on outstanding changes
-      if: steps.changes.outputs.dirty == 'true'
+      if: steps.format.outputs.dirty == 'true' || steps.docs.outputs.dirty == 'true'
       run: |
-        echo "::error::Code formatting and/or documentation is out of date. Download the patch from the workflow artifacts (see PR comment for direct link) and apply with 'git apply formatting-fixes.patch', or run './scripts/format.sh' and 'npm run docs' locally."
+        if [[ "${{ steps.format.outputs.dirty }}" == 'true' ]]; then
+          echo "::error title=Code formatting out of date::Run './scripts/format.sh' locally, or download formatting-fixes.zip from the workflow artifacts."
+        fi
+        if [[ "${{ steps.docs.outputs.dirty }}" == 'true' ]]; then
+          echo "::error title=API documentation out of date::Run 'npm run docs' locally, or download docs-fixes.zip from the workflow artifacts."
+        fi
         exit 1
 
   docker-build-extract-test:
