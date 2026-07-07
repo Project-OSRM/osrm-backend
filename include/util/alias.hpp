@@ -35,12 +35,11 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm
 {
 
-template <typename From,typename Tag> struct Alias;
+template <typename From, typename Tag> struct Alias;
 template <typename From, typename Tag>
 inline std::ostream &operator<<(std::ostream &stream, const Alias<From, Tag> &inst);
 
-template <typename From, typename Tag>
-struct Alias final
+template <typename From, typename Tag> struct Alias final
 {
     using value_type = From;
     static_assert(std::is_arithmetic<From>::value, "Needs to be based on an arithmetic type");
@@ -52,11 +51,11 @@ struct Alias final
     explicit operator From() const { return __value; }
     inline Alias operator+(const Alias rhs_) const
     {
-    return Alias{__value + static_cast<const From>(rhs_)};
+        return Alias{__value + static_cast<const From>(rhs_)};
     }
     inline Alias operator-(const Alias rhs_) const
     {
-    return Alias{__value - static_cast<const From>(rhs_)};
+        return Alias{__value - static_cast<const From>(rhs_)};
     }
     inline Alias operator-() const
         requires(std::is_signed_v<From> || std::is_floating_point_v<From>)
@@ -65,56 +64,65 @@ struct Alias final
     }
     inline Alias operator*(const Alias rhs_) const
     {
-    return Alias{__value * static_cast<const From>(rhs_)};
+        return Alias{__value * static_cast<const From>(rhs_)};
     }
     inline Alias operator*(const double rhs_) const { return Alias{__value * rhs_}; }
     inline Alias operator/(const Alias rhs_) const
     {
-    return Alias{__value / static_cast<const From>(rhs_)};
+        return Alias{__value / static_cast<const From>(rhs_)};
     }
     inline Alias operator/(const double rhs_) const { return Alias{__value / rhs_}; }
     inline Alias operator|(const Alias rhs_) const
     {
-    return Alias{__value | static_cast<const From>(rhs_)};
+        return Alias{__value | static_cast<const From>(rhs_)};
     }
     inline Alias operator&(const Alias rhs_) const
     {
-    return Alias{__value & static_cast<const From>(rhs_)};
+        return Alias{__value & static_cast<const From>(rhs_)};
     }
     auto operator<=>(const Alias &) const = default;
 
     inline Alias operator++()
     {
-    __value++;
-    return *this;
+        __value++;
+        return *this;
     }
     inline Alias operator--()
     {
-    __value--;
-    return *this;
+        __value--;
+        return *this;
     }
 
-    inline Alias operator+=(const Alias z_){
-    __value += static_cast<const From>(z_);
-    return *this;
+    inline Alias operator+=(const Alias z_)
+    {
+        __value += static_cast<const From>(z_);
+        return *this;
     }
     inline Alias operator-=(const Alias z_)
-    {  __value -= static_cast<const From>(z_);
-    return *this;  }
-    inline Alias operator/=(const Alias z_){
-    __value /= static_cast<const From>(z_);
-    return *this;
+    {
+        __value -= static_cast<const From>(z_);
+        return *this;
+    }
+    inline Alias operator/=(const Alias z_)
+    {
+        __value /= static_cast<const From>(z_);
+        return *this;
     }
     inline Alias operator*=(const Alias z_)
-    {  __value *= static_cast<const From>(z_);
-    return *this;  }
-    inline Alias operator|=(const Alias z_){
-    __value |= static_cast<const From>(z_);
-    return *this;
+    {
+        __value *= static_cast<const From>(z_);
+        return *this;
+    }
+    inline Alias operator|=(const Alias z_)
+    {
+        __value |= static_cast<const From>(z_);
+        return *this;
     }
     inline Alias operator&=(const Alias z_)
-    {  __value &= static_cast<const From>(z_);
-    return *this;}
+    {
+        __value &= static_cast<const From>(z_);
+        return *this;
+    }
 };
 
 template <typename ToAlias, typename FromAlias> inline ToAlias alias_cast(const FromAlias &from)
