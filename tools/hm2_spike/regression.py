@@ -79,6 +79,19 @@ CONTAINMENT_CASE = dict(name="A4 @ Ypenburg — tree stays on motorways (no S-ro
 SAMEREF_CASE = dict(name="A4 Den Hoorn — no branch shares a ref component with its parent",
                     lng=4.32313, lat=51.99008, bearing=330, cap=40000)
 
+# Landing retry: the A12-east branch off the A4 at Prins Clausplein used to dead-end at Nootdorp
+# (~3 km) because the ramp dropped onto a service loop; the through-lane is the other arm of a
+# motorway fork ~1 km in. The fork-backtracking retry must recover it well past Nootdorp/Zoetermeer.
+RETRY_CASE = dict(name="A4 @ Prins Clausplein — A12-east branch recovers past Nootdorp",
+                  lng=4.31100, lat=52.00468, bearing=351, cap=70000)
+
+# Root snap retry: snapping inside the Prins Clausplein stack, the nearest bearing-valid candidate
+# here is a non-motorway surface road; the multi-candidate snap must fall through to a motorway
+# alignment and produce a full corridor. Without it this returns NoSegment (worst-case: the whole
+# corridor is lost). Asserts a long root.
+ROOT_RETRY_CASE = dict(name="Inside Prins Clausplein stack — root snaps through to a motorway",
+                       lng=4.36, lat=52.048, bearing=90, cap=60000)
+
 # Off-motorway (Amsterdam centrum local road) -> NoSegment.
 OFF_MOTORWAY_CASE = dict(name="off-motorway -> NoSegment",
                          lng=4.89218, lat=52.37320, bearing=90)
@@ -224,6 +237,57 @@ def run_sameref_case(c):
           f"offenders={offenders[:5]}")
 
 
+def _decode_polyline(s, prec=1e5):
+    coords, i, lat, lng = [], 0, 0, 0
+    while i < len(s):
+        for who in range(2):
+            shift = res = 0
+            while True:
+                b = ord(s[i]) - 63
+                i += 1
+                res |= (b & 0x1F) << shift
+                shift += 5
+                if b < 0x20:
+                    break
+            d = ~(res >> 1) if res & 1 else res >> 1
+            if who == 0:
+                lat += d
+            else:
+                lng += d
+        coords.append((lng / prec, lat / prec))
+    return coords
+
+
+def run_retry_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok", f"{c['name']}: code Ok", f"http={http}"):
+        return
+    # an A12 branch that starts near Prins Clausplein (lng < 4.42) must reach east past Zoetermeer.
+    best_east = None
+    for r in iter_routes(tree):
+        if r["ref"] != "A12":
+            continue
+        co = _decode_polyline(r["polyline"])
+        if co and co[0][0] < 4.42:
+            east = max(x[0] for x in co)
+            best_east = east if best_east is None else max(best_east, east)
+    check(best_east is not None and best_east > 4.48,
+          f"{c['name']}: A12-east branch reaches past Zoetermeer (lng > 4.48)",
+          f"max_east_lng={best_east}")
+
+
+def run_root_retry_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok", f"{c['name']}: code Ok (root snapped to a motorway)",
+                 f"http={http} code={tree.get('code')}"):
+        return
+    check(tree.get("length_m", 0) > 20000,
+          f"{c['name']}: root corridor > 20 km",
+          f"ref={tree.get('ref')} len_km={tree.get('length_m', 0) / 1000:.1f}")
+
+
 def run_off_motorway_case(c):
     print(f"\n# {c['name']}")
     tree, http = get(f"/tree/v1/driving/{c['lng']},{c['lat']}?bearings={c['bearing']},45")
@@ -254,6 +318,8 @@ def main():
     run_breadth_case(BREADTH_CASE)
     run_containment_case(CONTAINMENT_CASE)
     run_sameref_case(SAMEREF_CASE)
+    run_retry_case(RETRY_CASE)
+    run_root_retry_case(ROOT_RETRY_CASE)
     run_off_motorway_case(OFF_MOTORWAY_CASE)
     run_junction_names()
 

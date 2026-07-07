@@ -330,3 +330,45 @@ Two field reports investigated live; neither required a plugin change.
 **2. A5 branch near Badhoevedorp — LEGITIMATE.** From the A4 northbound near Schiphol, the branch tracing Badhoevedorp → Westpoort is the genuine **A5** (Verlengde Westrandweg + Westrandweg): spawned from the root A4 at `start_offset_m` 2164, signed "A5, Zaanstad, Haarlem", `non_motorway_m = 0` (all motorway class), continuing onto the A10 ring at Coenplein (a `NewName` renumber A5→A10). Its geometry snaps to "Westrandweg" and "Ringweg-Noord/West". It parallels the A4 southwest of Badhoevedorp because the A5 and A4 genuinely meet there — real geography, not a U-turn artifact.
 
 **Files:** `tools/hm2_spike/regression.py` (added the same-ref guard case). No `tree.cpp` change.
+
+## S3-note2 — A12-east amputation at Prins Clausplein (not a class gap; no change shipped)
+
+Field report: the A12-east branch (toward Zoetermeer/Utrecht) from the A4 north at Prins Clausplein terminates ~3 km in at Nootdorp (~52.046,4.40). Hypothesis was that the S3-fix2 motorway-class guard amputates a legitimate branch at a short OSM class-tagging gap. Investigated thoroughly; **it is not a class-gap issue and no code change was shipped.**
+
+Findings (live, `debug=true` + temporary per-node instrumentation):
+- The A12-east **mainline** is healthy: a fresh root probe at the break point (4.40055,52.0537) heading east walks **68 km to Utrecht, `non_motorway_m = 0`**. The data and the mainline are fine.
+- The A12 **branch from the A4** stops at Nootdorp via a **self-cycle** (`cycle_own`): the branch, arriving from the interchange, reaches a node whose only continuation is a non-motorway local/service structure that loops back onto the branch's own path. The clean eastbound A12 mainline is a *different* edge-based node the branch never lands on — a carriageway/alignment landing artifact at a complex stack interchange, not a tagging gap.
+- Both candidate fixes were built and tested, both failed: (a) a class-gap tolerance (buffer non-motorway, resume if motorway returns within N metres) — the observed gaps (A12 820 m, A13 704 m, A200 955 m, A7 738 m, A2 782 m) are all **non-resuming on the branch's walked path**, so no tolerance recovers them, and raising it only risks re-opening the Utrechtsebaan escape; (b) a motorway-class preference in `selectContinuation` — there is **no motorway continuation edge** at the branch's Nootdorp node to prefer.
+- Ruled out the overlay-visibility alternative: the branch has no child segment continuing beyond (`branches: []`); it genuinely terminates.
+
+Decision: reverted both experiments; the plugin is byte-identical to the S3-fix2 baseline (A2 60 km tree matches saved evidence exactly; full `regression.py` green). The A12-east reachability is a deeper interchange carriageway-landing problem (which alignment the A4→A12 ramp lands on and how the walk threads the stack), warranting its own scoping rather than a speculative heuristic that doesn't fix the reported case and risks the containment guarantee.
+
+## S3-fix4 — landing retry via fork-backtracking (A12-east recovered)
+
+Un-parked from §S3-note2. The A12-east branch off the A4 at Prins Clausplein dead-ended ~3 km in at Nootdorp. We already *detect* the self-cycle (per-path visited set); the missing half was **retry**.
+
+**Why landing/ramp retry (the first-cut idea) doesn't work here.** The ramp does not land wrong at the connector: it lands on a legitimate motorway alignment and walks 3 km of real ramp/curve before cycling. The decisive wrong turn is a **motorway fork ~600 m in** (`fork slight right ref=A4` toward the A12 merge vs the arm the walk took), where *both* arms are motorway class and same-ref, so nothing distinguishes them until the taken arm loops 3 km later. Retrying at the landing node or exploring ramp arms (which are 0-length in NL — knooppunt ramps are `highway=motorway`) finds nothing.
+
+**Fix — bounded fork-backtracking retry.** `walkOne` records the early forks it passes (nodes with a usable motorway arm it did *not* take, within `RETRY_MIN_M` of the branch start). When a branch walk ends badly — a cycle/dead-end (not the distance cap), childless, shorter than `RETRY_MIN_M` (5 km) — `expandSegment` re-walks forcing each recorded fork's alternative arm (≤ `MAX_LANDING_RETRIES` = 6 attempts) and keeps the **longest** result (the first arm that merely beats the loop can be another short spur; the through-lane is the long one). Deterministic, bounded, side-effect-free (children are collected, not enqueued, until the winning walk is chosen). Never emits a non-motorway or the failed attempt. Root segments and deep cycles (the A10 ring, which cycles far beyond 5 km) are untouched.
+
+**Validation** (`tools/hm2_spike/regression.py`, all green; new `run_retry_case`):
+- **A12-east @ Prins Clausplein: recovered 3.2 km → 72 km** (reaches past Zoetermeer/Utrecht, `lng` 5.35, `non_motorway_m = 0`). New regression asserts an A12 branch starting near the interchange reaches `lng > 4.48`.
+- All prior cases stay green: containment (`non_motorway_m == 0` everywhere), same-ref, breadth (root 6 branches @ 200 km), ring termination, off-motorway `NoSegment`, junction names `""`.
+- **Trees changed only where retry legitimately recovered** (saved evidence updated): A2 south 60 km — 19 segments unchanged, the A65-toward-Tilburg branch extends 2.7 → 3.2 km; A4 south 45 km — 44 segments unchanged, one deep A4 branch extends 4.4 → 5.3 km. No segment-count changes, no spurious branches.
+- Timing: 200 km trees ~0.09–0.11 s (was ~0.07 s); the retry only fires on short bad landings.
+
+**Residuals (honest).** Genuine dead-ends still stop correctly and are *not* retried into existence: the A12 **west** (Utrechtsebaan into Den Haag) has no motorway through-lane, so it stays trimmed. No short (< 2 km) childless orphan branches remain in the Prins Clausplein tree.
+
+**Files:** `src/engine/plugins/tree.cpp` (`WalkOutput` refactor: `walkOne` returns route + collected children + early forks; `expandSegment` fork-backtracking retry; driver enqueues the chosen walk's children); `tools/hm2_spike/regression.py` (retry case + polyline decoder); evidence updated.
+
+## S3-fix4b — root snap retry (corridor no longer lost on a bad self-snap)
+
+Addendum to S3-fix4: the same failure can hit the **root**. If the driver's own snap lands on a bad motorway alignment inside a stack (Prins Clausplein has several within snap distance), the whole corridor - not just one branch - truncates ~2 km ahead. Worst-case product failure.
+
+Two changes:
+1. **Fork-backtracking now applies to the root too** (the `parent_id != NO_PARENT` gate was dropped): a short, childless, cyclic *root* walk retries its early forks exactly like a branch. This alone rescues most bad self-snaps inside the stacks.
+2. **Multi-candidate root snap.** `GetPhantomNodes` is asked for several bearing-filtered candidates (nearest-first). Each is reduced to its heading-matched carriageway and motorway-post-filtered; the first whose root walk lands well (reaches `RETRY_MIN_M`, spawns a branch, or runs to the cap) is used, else the furthest-reaching one. `MAX_ROOT_CANDIDATES = 3`. This covers the case where the nearest candidate is a non-motorway surface road or a genuinely truncating alignment. Off-network points still return `NoSegment` (all candidates non-motorway).
+
+**Validation** (new `run_root_retry_case`): snapping *inside* the Prins Clausplein stack at `4.36,52.048` bearing 90 returns `NoSegment` with a single candidate (the nearest is a surface road) but a **48 km A4 corridor** with the multi-candidate snap. Asserts root length > 20 km. Off-motorway probes (North Sea, an Amsterdam city street) still `NoSegment`. Full regression green; 200 km ~0.08 s.
+
+**Files:** `src/engine/plugins/tree.cpp` (`HandleRequest` multi-candidate snap loop + `make_root` helper; root fork-backtracking); `tools/hm2_spike/regression.py` (root-retry case).

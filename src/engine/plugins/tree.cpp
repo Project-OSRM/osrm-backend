@@ -13,6 +13,7 @@
 #include <cctype>
 #include <functional>
 #include <limits>
+#include <optional>
 #include <queue>
 #include <regex>
 #include <string>
@@ -35,6 +36,15 @@ namespace TT = osrm::guidance::TurnType;
 constexpr int MAX_SEGMENTS = 400;
 constexpr int MAX_DEPTH = 10;
 constexpr int MAX_RAMP_HOPS = 15;
+// Landing retry: a branch whose walk ends in a cycle/dead-end (not the distance cap) after less
+// than this, having spawned no children, is treated as a bad ramp landing at a complex interchange
+// and retried from an alternative motorway alignment at the landing node (bounded attempts).
+constexpr double RETRY_MIN_M = 5000.0;
+constexpr std::size_t MAX_LANDING_RETRIES = 6;
+// Root snap retry: inside a stack the nearest bearing-valid motorway alignment can be a service
+// loop that truncates the whole corridor; if the root walk lands badly, fall back to the next
+// snap candidate. Bounded number of motorway candidates tried.
+constexpr std::size_t MAX_ROOT_CANDIDATES = 3;
 
 // Turn types that mean "stay on the current road". Stage 1 report finding 7.3: the mainline
 // continuation at a diverge is Suppressed/NoTurn, never classified Continue.
@@ -347,21 +357,38 @@ struct SegmentResult
 
 using Pending = std::pair<double, std::size_t>; // (start_offset, work id) - min-heap key
 
-// Walk one mainline segment (no recursion): follow the continuation, accumulate geometry, record
-// junctions, and enqueue a child WorkItem for each qualifying motorway branch. Returns the
-// segment's route object (branches attached later during assembly).
-SegmentResult walkOneSegment(const datafacade::BaseDataFacade &facade,
-                             const MLDFacade &mld,
-                             WorkItem &&item,
-                             const double hard_cap,
-                             const bool debug,
-                             std::vector<WorkItem> &pool,
-                             std::priority_queue<Pending, std::vector<Pending>, std::greater<>> &pq)
+// Output of walking one segment: its route object, the children it would spawn (id assigned by the
+// driver), the walked length, and whether it ended badly - a cycle / dead-end / class downgrade
+// rather than the distance cap - which is the trigger for a landing retry.
+struct WalkOutput
 {
-    std::vector<util::Coordinate> current_coords = std::move(item.start_coords);
-    std::unordered_set<NodeID> visited = std::move(item.visited);
+    util::json::Object route;
+    std::vector<WorkItem> children;
+    double length = 0.0;
+    bool bad_ending = false;
+    // Early forks (node, an untaken usable motorway arm) - retry candidates for a bad landing.
+    std::vector<std::pair<NodeID, NodeID>> forks;
+};
+
+// Walk one mainline segment from item.start_node (no recursion, no side effects): follow the
+// continuation, accumulate geometry, record junctions, and collect a child WorkItem for each
+// qualifying motorway branch. An optional fork override forces the continuation at one node onto a
+// given target (used by the landing retry to explore an alternative early arm).
+WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
+                   const MLDFacade &mld,
+                   const WorkItem &item,
+                   const double hard_cap,
+                   const bool debug,
+                   const NodeID override_node = SPECIAL_NODEID,
+                   const NodeID override_target = SPECIAL_NODEID)
+{
+    std::vector<util::Coordinate> current_coords = item.start_coords;
+    std::unordered_set<NodeID> visited = item.visited;
     std::vector<util::Coordinate> polyline;
     util::json::Array junctions_debug;
+    std::vector<WorkItem> children;
+    std::vector<std::pair<NodeID, NodeID>> forks;
+    bool stopped_by_cap = false;
 
     NodeID current = item.start_node;
     // Initialise from the ref we branched onto, not the start node's own ref: at a gore the first
@@ -460,7 +487,6 @@ SegmentResult walkOneSegment(const datafacade::BaseDataFacade &facade,
             junction.values["toward"] = towardArray(it->destinations);
 
             WorkItem child;
-            child.id = pool.size();
             child.parent_id = item.id;
             child.start_node = ramp.exit_node;
             child.reported_ref = primary_ref;
@@ -470,33 +496,55 @@ SegmentResult walkOneSegment(const datafacade::BaseDataFacade &facade,
             child.visited.insert(ramp.exit_node);
             child.depth = item.depth + 1;
             child.junction = std::move(junction);
-            pq.push({child.start_offset, child.id});
-            pool.push_back(std::move(child));
+            children.push_back(std::move(child));
         }
 
         polyline.insert(polyline.end(), current_coords.begin(), current_coords.end());
 
-        if (continuation == outgoing.end())
-            break;
         if (node_end_offset >= hard_cap)
+        {
+            stopped_by_cap = true;
+            break;
+        }
+
+        // Choose the next node. Normally the continuation, but never advance onto a non-motorway
+        // node - the A12 Utrechtsebaan into Den Haag, the A13 ending at Ypenburg - nor onto a
+        // visited node (a cycle). A usable arm stays on the motorway network and off our own path.
+        const auto usable = [&](const Outgoing &o)
+        { return isMotorwayNode(facade, o.target) && !visited.count(o.target); };
+
+        auto chosen = (continuation != outgoing.end() && usable(*continuation)) ? continuation
+                                                                                : outgoing.end();
+
+        // Landing retry: at the designated node, force the alternative arm instead.
+        if (current == override_node)
+            for (auto it = outgoing.begin(); it != outgoing.end(); ++it)
+                if (it->target == override_target && usable(*it))
+                {
+                    chosen = it;
+                    break;
+                }
+
+        // Record early forks (usable arms we did not take) so a bad landing can be retried down an
+        // alternative - a stack ramp can offer two motorway arms, one of them a service loop that
+        // only reveals itself as a cycle several km later.
+        if (chosen != outgoing.end() && (node_end_offset - item.start_offset) < RETRY_MIN_M)
+            for (auto it = outgoing.begin(); it != outgoing.end() && forks.size() < 8; ++it)
+                if (it != chosen && usable(*it))
+                    forks.push_back({current, it->target});
+
+        if (chosen == outgoing.end())
             break;
 
-        const NodeID next = continuation->target;
-        // Stay on the motorway network. If the continuation leaves motorway class - the A12
-        // Utrechtsebaan degrading into Den Haag city streets, or the A13 ending at Ypenburg - the
-        // motorway has ended; stop rather than walking the branch onto local roads. selectContinuation
-        // keys on turn type and ref, neither of which notices a motorway->urban downgrade.
-        if (!isMotorwayNode(facade, next))
-            break;
-        if (!visited.insert(next).second)
-            break; // cycle (e.g. the A10 ring): the distance budget also guards this
+        const NodeID next = chosen->target;
+        visited.insert(next);
 
         // Update the road identity only when OSRM signals a genuine renumbering (NewName). Plain
         // continuations (NoTurn/Suppressed) through a knooppunt gore carry the *crossing* motorway's
         // stale ref (Stage 1 finding 7.4); overwriting on those loses the road we branched onto and
         // makes the same-road fork suppression fail.
-        if (continuation->turn.type == TT::NewName && !continuation->ref.empty())
-            current_ref = continuation->ref;
+        if (chosen->turn.type == TT::NewName && !chosen->ref.empty())
+            current_ref = chosen->ref;
 
         auto next_coords = nodeForwardCoordinates(facade, next);
         // The shared junction vertex is the last point of `current` and the first of `next`.
@@ -509,7 +557,8 @@ SegmentResult walkOneSegment(const datafacade::BaseDataFacade &facade,
     util::json::Object route;
     route.values["ref"] = item.reported_ref;
     route.values["start_offset_m"] = item.start_offset;
-    route.values["length_m"] = polylineLength(polyline);
+    const double length = polylineLength(polyline);
+    route.values["length_m"] = length;
     route.values["polyline"] = encodePolyline<100000>(polyline.cbegin(), polyline.cend());
     if (debug)
     {
@@ -517,14 +566,50 @@ SegmentResult walkOneSegment(const datafacade::BaseDataFacade &facade,
         route.values["non_motorway_m"] = non_motorway_len;
     }
 
-    SegmentResult segment;
-    segment.id = item.id;
-    segment.parent_id = item.parent_id;
-    segment.order_key = item.start_offset;
-    segment.junction = std::move(item.junction);
-    segment.route = std::move(route);
-    return segment;
+    WalkOutput out;
+    out.route = std::move(route);
+    out.children = std::move(children);
+    out.length = length;
+    out.bad_ending = !stopped_by_cap;
+    out.forks = std::move(forks);
+    return out;
 }
+
+// Walk a segment; if it lands badly - a short, childless branch walk that ended in a cycle or
+// dead-end rather than the distance cap - retry by forcing an alternative arm at one of the early
+// forks it passed. A stack ramp (Prins Clausplein) can drop onto a service loop while the
+// through-lane is the other arm of a motorway fork ~1 km in, only revealed as a cycle later. Take
+// the first alternative that beats the failed distance; never emit the failed attempt.
+WalkOutput expandSegment(const datafacade::BaseDataFacade &facade,
+                         const MLDFacade &mld,
+                         const WorkItem &item,
+                         const double hard_cap,
+                         const bool debug)
+{
+    WalkOutput best = walkOne(facade, mld, item, hard_cap, debug);
+    const bool bad_landing =
+        best.bad_ending && best.children.empty() && best.length < RETRY_MIN_M;
+    if (bad_landing)
+    {
+        // Try each early fork's alternative arm and keep the one that reaches furthest - the first
+        // arm that merely beats the loop may itself be a short spur; the through-lane is the long
+        // one. Bounded number of attempts for determinism and cost.
+        const auto forks = best.forks;
+        std::size_t tries = 0;
+        for (const auto &fork : forks)
+        {
+            if (tries >= MAX_LANDING_RETRIES)
+                break;
+            ++tries;
+            WalkOutput candidate =
+                walkOne(facade, mld, item, hard_cap, debug, fork.first, fork.second);
+            if (candidate.length > best.length)
+                best = std::move(candidate);
+        }
+    }
+    return best;
+}
+
 } // namespace
 
 TreePlugin::TreePlugin(const std::optional<double> default_radius) : BasePlugin(default_radius) {}
@@ -560,48 +645,90 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
     const double heading = params.bearings.front()->bearing;
 
-    auto phantom_nodes = GetPhantomNodes(facade, params, 1);
+    // Snap to several bearing-filtered candidates (the R-tree returns them nearest-first). Inside a
+    // stack the nearest motorway alignment can be a service loop that truncates the whole corridor
+    // ~2 km ahead; if the root walk from a candidate lands badly, fall back to the next.
+    auto phantom_nodes = GetPhantomNodes(facade, params, 2 * MAX_ROOT_CANDIDATES);
     if (phantom_nodes.front().empty())
     {
         return Error("NoSegment", "Could not find a matching segment for coordinate", result);
     }
-    const auto &phantom = phantom_nodes.front().front().phantom_node;
 
-    // Pick the carriageway whose onward heading matches the request.
-    const bool forward_ok = phantom.forward_segment_id.enabled;
-    const bool reverse_ok = phantom.reverse_segment_id.enabled;
-    const auto forward_delta =
-        forward_ok ? bearingDelta(heading, phantom.GetBearing(false)) : 360.0;
-    const auto reverse_delta =
-        reverse_ok ? bearingDelta(heading, phantom.GetBearing(true)) : 360.0;
-    const NodeID start_node = (forward_delta <= reverse_delta) ? phantom.forward_segment_id.id
-                                                               : phantom.reverse_segment_id.id;
+    // Build a root WorkItem for a snap candidate, or nullopt if its heading-matched carriageway is
+    // not on a motorway (Stage 1 finding 7.7: the snap API has no class filter, so an off-network
+    // point snaps to the nearest road rather than failing).
+    const auto make_root = [&](const PhantomNode &phantom) -> std::optional<WorkItem>
+    {
+        const bool forward_ok = phantom.forward_segment_id.enabled;
+        const bool reverse_ok = phantom.reverse_segment_id.enabled;
+        const auto forward_delta =
+            forward_ok ? bearingDelta(heading, phantom.GetBearing(false)) : 360.0;
+        const auto reverse_delta =
+            reverse_ok ? bearingDelta(heading, phantom.GetBearing(true)) : 360.0;
+        const NodeID start_node = (forward_delta <= reverse_delta) ? phantom.forward_segment_id.id
+                                                                   : phantom.reverse_segment_id.id;
+        if (start_node == SPECIAL_NODEID || !isMotorwayNode(facade, start_node))
+            return std::nullopt;
 
-    // Motorway class post-filter (Stage 1 finding 7.7: the snap API has no class filter, and an
-    // off-network point snaps to the nearest road rather than failing). Off-motorway snap becomes
-    // NoSegment so the app maps it to the off-motorway state.
-    if (!isMotorwayNode(facade, start_node))
+        // Begin the root polyline at the vertex of the start node nearest the snap.
+        const auto node_coords = nodeForwardCoordinates(facade, start_node);
+        std::size_t snap_index = 0;
+        double closest = std::numeric_limits<double>::max();
+        for (std::size_t i = 0; i < node_coords.size(); ++i)
+        {
+            const auto d = util::coordinate_calculation::greatCircleDistance(node_coords[i],
+                                                                             phantom.location);
+            if (d < closest)
+            {
+                closest = d;
+                snap_index = i;
+            }
+        }
+
+        WorkItem root;
+        root.id = 0;
+        root.parent_id = NO_PARENT;
+        root.start_node = start_node;
+        root.reported_ref = std::string(facade.GetRefForID(facade.GetNameIndex(start_node)));
+        root.start_coords.assign(node_coords.begin() + snap_index, node_coords.end());
+        root.start_offset = 0.0;
+        root.visited = {start_node};
+        root.depth = 0;
+        return root;
+    };
+
+    // Try candidates in nearest-first order; take the first whose root walk lands well (reaches the
+    // retry threshold, spawns a branch, or runs to the cap), else keep the furthest-reaching one.
+    std::optional<WorkItem> chosen;
+    util::Coordinate snapped_location;
+    double chosen_len = -1.0;
+    std::size_t tried = 0;
+    for (const auto &candidate : phantom_nodes.front())
+    {
+        if (tried >= MAX_ROOT_CANDIDATES)
+            break;
+        auto root = make_root(candidate.phantom_node);
+        if (!root)
+            continue;
+        ++tried;
+        const auto probe =
+            expandSegment(facade, *mld, *root, static_cast<double>(params.hard_cap_m), false);
+        const bool good =
+            probe.length >= RETRY_MIN_M || !probe.children.empty() || !probe.bad_ending;
+        if (!chosen || good || probe.length > chosen_len)
+        {
+            chosen = std::move(root);
+            snapped_location = candidate.phantom_node.location;
+            chosen_len = probe.length;
+        }
+        if (good)
+            break;
+    }
+
+    if (!chosen)
     {
         return Error("NoSegment", "Snapped coordinate is not on a motorway", result);
     }
-
-    // Begin the root polyline at the snap: start from the vertex of the start node nearest the snap.
-    auto node_coords = nodeForwardCoordinates(facade, start_node);
-    std::size_t snap_index = 0;
-    double closest = std::numeric_limits<double>::max();
-    for (std::size_t i = 0; i < node_coords.size(); ++i)
-    {
-        const auto d =
-            util::coordinate_calculation::greatCircleDistance(node_coords[i], phantom.location);
-        if (d < closest)
-        {
-            closest = d;
-            snap_index = i;
-        }
-    }
-    std::vector<util::Coordinate> root_coords(node_coords.begin() + snap_index, node_coords.end());
-
-    const std::string root_ref(facade.GetRefForID(facade.GetNameIndex(start_node)));
 
     // Best-first expansion ordered by start_offset_m: always expand the globally nearest pending
     // segment, so when MAX_SEGMENTS truncates the tree the retained segments are the nearest ones
@@ -609,33 +736,35 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     std::vector<WorkItem> pool;
     std::priority_queue<Pending, std::vector<Pending>, std::greater<>> pq;
 
-    WorkItem root;
-    root.id = 0;
-    root.parent_id = NO_PARENT;
-    root.start_node = start_node;
-    root.reported_ref = root_ref;
-    root.start_coords = std::move(root_coords);
-    root.start_offset = 0.0;
-    root.visited = {start_node};
-    root.depth = 0;
-    pq.push({root.start_offset, root.id});
-    pool.push_back(std::move(root));
+    pq.push({chosen->start_offset, chosen->id});
+    pool.push_back(std::move(*chosen));
 
     std::vector<SegmentResult> segments;
     while (!pq.empty() && segments.size() < static_cast<std::size_t>(MAX_SEGMENTS))
     {
         const auto id = pq.top().second;
         pq.pop();
-        // Move the item out of the pool before walking: walkOneSegment pushes children into the
-        // pool, which can reallocate it.
         WorkItem item = std::move(pool[id]);
-        segments.push_back(walkOneSegment(facade,
-                                          *mld,
-                                          std::move(item),
-                                          static_cast<double>(params.hard_cap_m),
-                                          params.debug,
-                                          pool,
-                                          pq));
+
+        WalkOutput out =
+            expandSegment(facade, *mld, item, static_cast<double>(params.hard_cap_m), params.debug);
+
+        // Enqueue the chosen walk's children (id assigned here = its future pool index).
+        for (auto &child : out.children)
+        {
+            child.id = pool.size();
+            child.parent_id = item.id;
+            pq.push({child.start_offset, child.id});
+            pool.push_back(std::move(child));
+        }
+
+        SegmentResult segment;
+        segment.id = item.id;
+        segment.parent_id = item.parent_id;
+        segment.order_key = item.start_offset;
+        segment.junction = std::move(item.junction);
+        segment.route = std::move(out.route);
+        segments.push_back(std::move(segment));
     }
 
     // Reattach children to parents (a parent always completes before its children, since a child's
@@ -692,7 +821,7 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     response.values["segment_count"] = static_cast<double>(segments.size());
 
     util::json::Object snapped;
-    snapped.values["location"] = makeCoordinate(phantom.location);
+    snapped.values["location"] = makeCoordinate(snapped_location);
     snapped.values["input"] = makeCoordinate(params.coordinates.front());
     snapped.values["requested_bearing"] = heading;
     response.values["snapped"] = std::move(snapped);
