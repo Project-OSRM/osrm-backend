@@ -1,0 +1,168 @@
+# syntax=docker/dockerfile:1.7
+#
+# Highway Mode 2 — OSRM fork build image (the /tree plugin).
+#
+# Purpose-built, data-less image for the HM2 charger-ahead service. Ships only the
+# four pipeline/serving binaries + the routing profiles; the OSM dataset is NOT baked
+# in — it is produced by docker/pipeline.sh and mounted from a PVC at runtime
+# (deploy/k8s/). This keeps the image a pure function of the source tree and lets the
+# same image serve any region whose data the pipeline has processed.
+#
+# Kept separate from the upstream docker/Dockerfile-debian on purpose:
+#   - it builds through the repo's own CMake preset (ci-linux) rather than a hand-rolled
+#     cmake invocation, so it tracks whatever the CI build does; and
+#   - it strips the runtime down to the HM2 binary set.
+#
+# NOT built here (the daemon is busy with the demo stack) — this file is reasoned from
+# the repo's CMakePresets.json + vcpkg manifest and the proven layer strategy in
+# Dockerfile-debian, not verified by an actual `docker build`.
+#
+# Build:
+#   docker build -f docker/Dockerfile.hm2 -t osrm-hm2:$(git rev-parse --short HEAD) .
+#
+# ---------------------------------------------------------------------------------------
+
+FROM debian:trixie-slim AS builder
+
+# vcpkg checkout used to bootstrap the tool. Manifest-mode package *versions* are pinned
+# by the baseline in vcpkg-configuration.json (d015e31e…); this commit only needs to be a
+# vcpkg tree that contains that baseline. Keep it moving with vcpkg-configuration.json.
+ARG VCPKG_COMMIT=d015e31e90838a4c9dfa3eed45979bc70d9357fc
+ARG BUILD_CONCURRENCY
+
+# The CMake preset to configure/build with. ci-linux == Release, triplet x64-linux
+# (see CMakePresets.json). Override to ci-linux-debug for an assertions build.
+ARG CMAKE_PRESET=ci-linux
+
+RUN apt-get update && \
+    apt-get -y --no-install-recommends --no-install-suggests install \
+        autoconf \
+        automake \
+        build-essential \
+        ca-certificates \
+        ccache \
+        cmake \
+        curl \
+        git \
+        libtool \
+        make \
+        ninja-build \
+        pkg-config \
+        tar \
+        unzip \
+        zip && \
+    rm -rf /var/lib/apt/lists/*
+
+# VCPKG_ROOT lives outside /opt (and outside /src) so the runtime stage's COPYs never
+# drag the multi-GB vcpkg tree along. The preset references $env{VCPKG_ROOT}.
+ENV VCPKG_ROOT=/vcpkg \
+    VCPKG_FORCE_SYSTEM_BINARIES=1
+RUN mkdir -p ${VCPKG_ROOT} && \
+    curl -fsSL https://github.com/microsoft/vcpkg/archive/${VCPKG_COMMIT}.tar.gz | \
+    tar -xz --strip-components=1 -C ${VCPKG_ROOT} && \
+    ${VCPKG_ROOT}/bootstrap-vcpkg.sh -disableMetrics
+
+WORKDIR /src
+
+# Install manifest deps as their own layer, before the source copy, so ordinary code
+# changes don't invalidate the (expensive, one-time) dependency build. The cache mounts
+# persist across host builds:
+#   - /root/.cache/vcpkg/archives : vcpkg per-package binary cache (the big win)
+#   - /vcpkg/downloads            : upstream tarball cache (boost, tbb, …)
+#   - /vcpkg/buildtrees           : partial builds (helps when a single port fails)
+# ci-linux uses triplet x64-linux; this pre-install must match, or the preset's
+# configure-time install rebuilds everything.
+COPY vcpkg.json vcpkg-configuration.json ./
+COPY vcpkg-overlay-ports/ ./vcpkg-overlay-ports/
+RUN --mount=type=cache,target=/root/.cache/vcpkg/archives,sharing=locked \
+    --mount=type=cache,target=/vcpkg/downloads,sharing=locked \
+    --mount=type=cache,target=/vcpkg/buildtrees,sharing=locked \
+    export VCPKG_DEFAULT_BINARY_CACHE=/root/.cache/vcpkg/archives && \
+    mkdir -p "$VCPKG_DEFAULT_BINARY_CACHE" && \
+    ${VCPKG_ROOT}/vcpkg install \
+        --x-manifest-root=/src \
+        --x-install-root=/src/build/vcpkg_installed \
+        --triplet=x64-linux \
+        --no-print-usage \
+        --clean-buildtrees-after-build \
+        --clean-packages-after-build
+
+# Now the source tree. This layer is what code changes invalidate — everything above
+# stays cached. .dockerignore already excludes build/, test/, node_modules/.
+COPY . /src
+
+# Configure + build through the repo's own preset. CMake GLOBs sources without
+# CONFIGURE_DEPENDS (SPIKE-REPORT §2), so the new tree.cpp is only picked up because
+# configure (`--preset`) runs here before the build — a fresh image always re-configures,
+# so this is naturally correct. The preset's toolchain hits the binary cache populated
+# above, so this reuses the prebuilt deps rather than recompiling boost/tbb.
+RUN --mount=type=cache,target=/root/.ccache \
+    export CCACHE_DIR=/root/.ccache CCACHE_MAXSIZE=2G CCACHE_COMPRESSLEVEL=6 && \
+    NPROC=${BUILD_CONCURRENCY:-$(nproc)} && \
+    git config --global --add safe.directory /src || true && \
+    git rev-parse HEAD > /opt/OSRM_GITSHA 2>/dev/null || echo "unknown" > /opt/OSRM_GITSHA && \
+    cmake --preset ${CMAKE_PRESET} \
+        -DCMAKE_C_COMPILER_LAUNCHER=ccache \
+        -DCMAKE_CXX_COMPILER_LAUNCHER=ccache && \
+    cmake --build --preset ${CMAKE_PRESET} -j ${NPROC} && \
+    ccache -s
+
+# Stage the runtime payload: the four HM2 binaries, the TBB shared lib (the only vcpkg
+# dep not linked statically under x64-linux — see Dockerfile-debian), and the profiles.
+# osrm-partition/customize are needed by the pipeline; osrm-routed serves; osrm-extract
+# builds the .osrm from a .pbf.
+RUN set -eux; \
+    mkdir -p /opt/bin /opt/profiles /opt/vcpkg-runtime-libs; \
+    for b in osrm-extract osrm-partition osrm-customize osrm-routed; do \
+        cp build/$b /opt/bin/$b; \
+        strip /opt/bin/$b; \
+    done; \
+    cp docker/pipeline.sh /opt/bin/osrm-pipeline; \
+    chmod +x /opt/bin/osrm-pipeline; \
+    cp -r profiles/* /opt/profiles/; \
+    find build/vcpkg_installed -name 'libtbb*.so*' -exec cp -a {} /opt/vcpkg-runtime-libs/ \;
+
+# ---------------------------------------------------------------------------------------
+FROM debian:trixie-slim AS runstage
+
+# REGION documents/defaults the dataset this image is intended to serve. It does NOT bake
+# data in — the pipeline writes datasets to the mounted volume and osrm-routed is pointed
+# at OSRM_DATASET at start. Overridable per-deployment.
+ARG REGION=europe/netherlands
+ENV OSRM_REGION=${REGION} \
+    OSRM_DATA_DIR=/data \
+    OSRM_DATASET=/data/current/data.osrm \
+    OSRM_ALGORITHM=mld \
+    PATH=/opt/bin:$PATH
+
+LABEL org.opencontainers.image.title="osrm-hm2" \
+      org.opencontainers.image.description="OSRM fork with the Highway Mode 2 /tree plugin" \
+      org.opencontainers.image.source="https://github.com/e-flux-platform/osrm-backend" \
+      eflux.osrm.region="${REGION}"
+
+COPY --from=builder /opt/bin/ /usr/local/bin/
+COPY --from=builder /opt/profiles/ /opt/profiles/
+COPY --from=builder /opt/vcpkg-runtime-libs/ /usr/local/lib/
+COPY --from=builder /opt/OSRM_GITSHA /opt/OSRM_GITSHA
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends --no-install-suggests \
+        ca-certificates \
+        curl \
+        libgcc-s1 \
+        libstdc++6 && \
+    rm -rf /var/lib/apt/lists/* && \
+    ldconfig /usr/local/lib && \
+    # Smoke-test that the binaries load (catches a missing shared lib at build time).
+    osrm-extract --help > /dev/null && \
+    osrm-partition --help > /dev/null && \
+    osrm-customize --help > /dev/null && \
+    osrm-routed --help > /dev/null
+
+WORKDIR /data
+EXPOSE 5000
+
+# Serve the MLD-customized `current` dataset (the pipeline maintains the `current`
+# symlink). The plugin is MLD-only (SPIKE-REPORT §5) — the algorithm is not overridable
+# to CH. --max-matching-size etc. left at defaults; tune via the k8s command/args.
+CMD ["sh", "-c", "exec osrm-routed --algorithm ${OSRM_ALGORITHM} --ip 0.0.0.0 --port 5000 ${OSRM_DATASET}"]

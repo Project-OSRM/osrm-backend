@@ -1,0 +1,21 @@
+# DRAFT — NOT APPLIED. Needs infra review (see deploy/k8s/README.md).
+#
+# In-cluster ClusterIP. The charger-ahead BE (services/api) reaches the router at
+# http://osrm-routed:5000 as OSRM_BASE_URL. No Ingress — this is never public, and there is
+# no AirPlay/port-5000 conflict inside the cluster (that was only Ray's macOS host, which is
+# why the local demo uses 5050).
+apiVersion: v1
+kind: Service
+metadata:
+  name: osrm-routed
+  labels:
+    name: osrm-routed
+spec:
+  type: ClusterIP
+  selector:
+    name: osrm-routed
+  ports:
+    - name: http
+      protocol: TCP
+      port: 5000
+      targetPort: http

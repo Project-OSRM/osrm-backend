@@ -1,0 +1,19 @@
+# DRAFT — NOT APPLIED. Needs infra review (see deploy/k8s/README.md).
+#
+# Groups the HM2 OSRM routing service. Namespace is intentionally NOT set here — infra to
+# decide where this lands (a dedicated `routing` namespace, or `infra` alongside redis).
+# The image tag is a placeholder; wire it to the same image-update-automation the house
+# uses for services/api (see deployment/environments/*/services/api/kustomization.yaml).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - osrm-pvc.yaml
+  - osrm-routed.deployment.yaml
+  - osrm-routed.service.yaml
+  - osrm-pipeline.rbac.yaml
+  - osrm-pipeline.cronjob.yaml
+
+images:
+  - name: europe-west3-docker.pkg.dev/eflux-staging/docker/osrm-hm2
+    newTag: latest # PLACEHOLDER — pin to a built gitsha / let image-update-automation manage

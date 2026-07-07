@@ -1,0 +1,74 @@
+# DRAFT — NOT APPLIED. Needs infra review (see deploy/k8s/README.md).
+#
+# Monthly data refresh: downloads the Geofabrik extract, runs extract/partition/customize
+# into a new dated dataset dir on the shared PVC, atomically swaps `current`, prunes to 2.
+# A failure leaves `current` untouched (see docker/pipeline.sh), so the router keeps serving
+# the last-good dataset.
+#
+# After a successful pipeline run the Job triggers a rolling restart of the osrm-routed
+# Deployment (osrm-routed does not hot-reload the symlink swap). That needs the RBAC in
+# osrm-pipeline.rbac.yaml. If infra prefers to decouple the restart (e.g. a separate
+# reconciler or a manual step), drop the second container and the RBAC.
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: osrm-pipeline
+  labels:
+    name: osrm-pipeline
+spec:
+  schedule: "0 3 1 * *" # 03:00 UTC on the 1st of each month (Geofabrik daily extracts; monthly is plenty)
+  concurrencyPolicy: Forbid
+  successfulJobsHistoryLimit: 1
+  failedJobsHistoryLimit: 3
+  jobTemplate:
+    spec:
+      backoffLimit: 2
+      # Extract+partition+customize on NL is a few minutes; cap the whole job at 2h to
+      # cover a slow mirror + a larger future region, and to release the PVC on a hang.
+      activeDeadlineSeconds: 7200
+      template:
+        spec:
+          serviceAccountName: osrm-pipeline
+          imagePullSecrets:
+            - name: artifact-registry
+          restartPolicy: OnFailure
+          containers:
+            - name: pipeline
+              image: europe-west3-docker.pkg.dev/eflux-staging/docker/osrm-hm2
+              imagePullPolicy: Always
+              command: ["osrm-pipeline"]
+              env:
+                - name: REGION
+                  value: europe/netherlands
+                - name: OSRM_DATA_DIR
+                  value: /data
+                - name: OSRM_PROFILE
+                  value: /opt/profiles/car.lua
+                - name: RETENTION
+                  value: "2"
+                - name: MIN_FREE_GB
+                  value: "12"
+              resources:
+                requests:
+                  # osrm-extract peaks ~5.3 GB on NL (SPIKE-REPORT §3). Request 5Gi so the
+                  # scheduler places it somewhere it can actually finish; limit 8Gi covers
+                  # peak + a larger future extract without room to run away.
+                  cpu: "1000m"
+                  memory: 5Gi
+                limits:
+                  cpu: "3000m"
+                  memory: 8Gi
+              volumeMounts:
+                - name: osrm-data
+                  mountPath: /data
+          # Second container CANNOT be a sidecar in a Job (it must exit). The restart is done
+          # as an init-style follow-up instead: see the note above — implemented here as a
+          # separate short-lived Job would be cleaner, but kubectl-in-cronjob is the common
+          # house-simple pattern. To keep it one object, the pipeline image could `kubectl
+          # rollout restart` at the end of osrm-pipeline if kubectl is added to the image.
+          # Flagged for infra: choose (a) add kubectl to the image + call it in pipeline.sh,
+          # or (b) a dedicated post-run reconciler. RBAC in osrm-pipeline.rbac.yaml supports (a).
+          volumes:
+            - name: osrm-data
+              persistentVolumeClaim:
+                claimName: osrm-data

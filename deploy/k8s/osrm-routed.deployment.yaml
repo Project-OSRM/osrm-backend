@@ -1,0 +1,97 @@
+# DRAFT — NOT APPLIED. Needs infra review (see deploy/k8s/README.md).
+#
+# osrm-routed serving the MLD-customized `current` dataset from the shared PVC. The /tree
+# plugin is MLD-only (SPIKE-REPORT §5), so --algorithm mld is not optional.
+#
+# osrm-routed does NOT hot-reload when the pipeline swaps the `current` symlink. A dataset
+# refresh is picked up by a rolling restart, which the CronJob triggers after a successful
+# run (see osrm-pipeline.cronjob.yaml + osrm-pipeline.rbac.yaml). On restart the process
+# re-opens /data/current/data.osrm.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: osrm-routed
+  labels:
+    name: osrm-routed
+spec:
+  # Single replica by default. Scaling >1 is safe for the router itself (read-only), but
+  # depends on the PVC access mode resolved in osrm-pvc.yaml (RWX) — do not scale up on RWO.
+  replicas: 1
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0 # new pod must be Ready before the old one goes (dataset load takes time)
+  selector:
+    matchLabels:
+      name: osrm-routed
+  template:
+    metadata:
+      labels:
+        name: osrm-routed
+    spec:
+      imagePullSecrets:
+        - name: artifact-registry
+      terminationGracePeriodSeconds: 30
+      containers:
+        - name: osrm-routed
+          image: europe-west3-docker.pkg.dev/eflux-staging/docker/osrm-hm2
+          imagePullPolicy: Always
+          command: ["osrm-routed"]
+          args:
+            - "--algorithm"
+            - "mld"
+            - "--ip"
+            - "0.0.0.0"
+            - "--port"
+            - "5000"
+            - "/data/current/data.osrm"
+          ports:
+            - name: http
+              containerPort: 5000
+          resources:
+            requests:
+              # NL MLD dataset resident set sits comfortably under 4Gi; request 4Gi so the
+              # scheduler reserves real headroom and the process is never first to be OOM-
+              # reaped. Limit 6Gi absorbs request spikes + page cache growth without letting
+              # a bad dataset balloon the node. Re-measure per region before launch (DE/UK
+              # extracts are larger). CPU: routing is bursty and cheap for /tree; 250m/1000m.
+              cpu: 250m
+              memory: 4Gi
+            limits:
+              cpu: "1000m"
+              memory: 6Gi
+          startupProbe:
+            # Loading the .osrm into memory takes tens of seconds; give it up to ~2.5 min
+            # before liveness/readiness begin, so a slow cold start is never killed.
+            httpGet:
+              path: /route/v1/driving/4.8952,52.3702;4.9041,52.3676
+              port: http
+            periodSeconds: 5
+            failureThreshold: 30
+          readinessProbe:
+            # A cheap real /route between two nearby Amsterdam points: proves the dataset is
+            # loaded AND the engine answers, not just that the socket is open. code:Ok => 200.
+            httpGet:
+              path: /route/v1/driving/4.8952,52.3702;4.9041,52.3676
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+            timeoutSeconds: 3
+            failureThreshold: 3
+          livenessProbe:
+            httpGet:
+              path: /route/v1/driving/4.8952,52.3702;4.9041,52.3676
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 30
+            timeoutSeconds: 5
+            failureThreshold: 3
+          volumeMounts:
+            - name: osrm-data
+              mountPath: /data
+              readOnly: true # the router only reads; the CronJob is the sole writer
+      volumes:
+        - name: osrm-data
+          persistentVolumeClaim:
+            claimName: osrm-data

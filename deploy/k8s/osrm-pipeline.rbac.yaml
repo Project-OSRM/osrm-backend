@@ -1,0 +1,41 @@
+# DRAFT — NOT APPLIED. Needs infra review (see deploy/k8s/README.md).
+#
+# ServiceAccount for the pipeline CronJob, plus the minimal RBAC to trigger a rolling
+# restart of the osrm-routed Deployment after a successful data refresh (osrm-routed does
+# not hot-reload the `current` symlink swap). Grant scope is a single named Deployment.
+# If infra decouples the restart, this whole file can be dropped and the SA reference
+# removed from the CronJob.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: osrm-pipeline
+  labels:
+    name: osrm-pipeline
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: osrm-pipeline-rollout
+  labels:
+    name: osrm-pipeline
+rules:
+  # get/patch to bump the pod template annotation (what `kubectl rollout restart` does);
+  # resourceNames pins it to the one Deployment.
+  - apiGroups: ["apps"]
+    resources: ["deployments"]
+    resourceNames: ["osrm-routed"]
+    verbs: ["get", "patch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: osrm-pipeline-rollout
+  labels:
+    name: osrm-pipeline
+subjects:
+  - kind: ServiceAccount
+    name: osrm-pipeline
+roleRef:
+  kind: Role
+  name: osrm-pipeline-rollout
+  apiGroup: rbac.authorization.k8s.io

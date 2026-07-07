@@ -1,0 +1,30 @@
+# DRAFT — NOT APPLIED. Needs infra review (see deploy/k8s/README.md).
+#
+# Shared dataset volume. Written by the pipeline CronJob (osrm-extract/partition/customize
+# + `current` symlink swap) and read by the osrm-routed Deployment. Because a writer pod
+# and one or more reader pods mount it at the same time and may land on different nodes,
+# this MUST be ReadWriteMany — a plain ReadWriteOnce standard-ssd volume (the house default,
+# e.g. redis.pvc.yaml) can only attach to a single node and will block the second pod.
+#
+# INFRA DECISION NEEDED: the cluster does not appear to ship an RWX storage class today
+# (only standard-ssd / standard-rwo were seen under deployment/). Options:
+#   1. Provision a Filestore (GCP) / NFS-backed RWX class -> use it here (preferred).
+#   2. Keep RWO and co-locate the CronJob + Deployment on one node via nodeAffinity, and
+#      scale the Deployment to a single replica. Loses multi-AZ HA for the router.
+# storageClassName below is a placeholder pending that decision.
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: osrm-data
+  labels:
+    name: osrm-data
+spec:
+  storageClassName: standard-rwx # PLACEHOLDER — RWX class TBD by infra (see note above)
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      # NL extract is ~1.4 GB pbf; the .osrm* set is a few GB; retention keeps 2 datasets
+      # plus one in-progress work dir during a run. 40Gi leaves generous headroom and room
+      # to grow the extract as launch regions are added.
+      storage: 40Gi
