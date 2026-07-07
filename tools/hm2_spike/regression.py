@@ -92,6 +92,12 @@ RETRY_CASE = dict(name="A4 @ Prins Clausplein — A12-east branch recovers past 
 ROOT_RETRY_CASE = dict(name="Inside Prins Clausplein stack — root snaps through to a motorway",
                        lng=4.36, lat=52.048, bearing=90, cap=60000)
 
+# Parallel carriageway (parallelbaan) on the A4 Leiden–Hoofddorp: a same-road arm that splits and
+# rejoins with no exits of its own is a stub, not a route option. It must be dropped, AND the drop
+# must not lose a unique alignment (a dropped stub must hug the kept tree).
+PARALLELBAAN_CASE = dict(name="A4 Leiden–Hoofddorp — parallel-carriageway stubs dropped, no over-drop",
+                         lng=4.49431, lat=52.13088, bearing=53, cap=80000)
+
 # Off-motorway (Amsterdam centrum local road) -> NoSegment.
 OFF_MOTORWAY_CASE = dict(name="off-motorway -> NoSegment",
                          lng=4.89218, lat=52.37320, bearing=90)
@@ -288,6 +294,53 @@ def run_root_retry_case(c):
           f"ref={tree.get('ref')} len_km={tree.get('length_m', 0) / 1000:.1f}")
 
 
+def _haversine(a, b):
+    import math
+    R = 6371000.0
+    la1, la2 = math.radians(a[1]), math.radians(b[1])
+    dla, dlo = math.radians(b[1] - a[1]), math.radians(b[0] - a[0])
+    h = math.sin(dla / 2) ** 2 + math.cos(la1) * math.cos(la2) * math.sin(dlo / 2) ** 2
+    return 2 * R * math.asin(math.sqrt(h))
+
+
+def run_parallelbaan_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok", f"{c['name']}: code Ok", f"http={http}"):
+        return
+
+    root = _decode_polyline(tree["polyline"])[::4]
+    # (a) no KEPT childless branch hugs the root line (an undropped parallelbaan stub). Exclude
+    # cap-truncated branches: a real branch cut off at hard_cap can run parallel to the root and be
+    # childless without being a rejoin stub (it would have continued/branched given more budget).
+    hugging = []
+    for _, b in iter_branches(tree):
+        r = b["route"]
+        if r["branches"] or r["length_m"] > 4000:
+            continue
+        if r["start_offset_m"] + r["length_m"] >= c["cap"] - 3000:
+            continue  # cap-truncated, not a rejoin stub
+        co = _decode_polyline(r["polyline"])
+        if not co:
+            continue
+        near = sum(1 for x in co if min(_haversine(x, rp) for rp in root) < 120) / len(co)
+        if near > 0.6:
+            hugging.append((r["ref"], round(r["length_m"])))
+    check(not hugging, f"{c['name']}: no childless branch hugs the root (parallel stub survived)",
+          f"offenders={hugging[:5]}")
+
+    # (b) over-drop guard: every dropped stub stays close to the kept tree (no unique alignment lost).
+    kept = [p for r in iter_routes(tree) for p in _decode_polyline(r["polyline"])[::3]]
+    worst = 0
+    for d in tree.get("dropped_stubs", []):
+        co = _decode_polyline(d["polyline"])[::3]
+        for x in co:
+            worst = max(worst, min(_haversine(x, kp) for kp in kept))
+    check(worst < 1000,
+          f"{c['name']}: dropped stubs hug the kept tree (max stray < 1 km)",
+          f"dropped={len(tree.get('dropped_stubs', []))} max_stray_m={round(worst)}")
+
+
 def run_off_motorway_case(c):
     print(f"\n# {c['name']}")
     tree, http = get(f"/tree/v1/driving/{c['lng']},{c['lat']}?bearings={c['bearing']},45")
@@ -320,6 +373,7 @@ def main():
     run_sameref_case(SAMEREF_CASE)
     run_retry_case(RETRY_CASE)
     run_root_retry_case(ROOT_RETRY_CASE)
+    run_parallelbaan_case(PARALLELBAAN_CASE)
     run_off_motorway_case(OFF_MOTORWAY_CASE)
     run_junction_names()
 

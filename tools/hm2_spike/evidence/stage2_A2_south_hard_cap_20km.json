@@ -15,6 +15,7 @@
   "url": "http://127.0.0.1:5050/tree/v1/driving/5.06526,52.02042?bearings=145,45&hard_cap_m=20000&debug=true",
   "tree": {
     "segment_count": 3,
+    "dropped_stubs": [],
     "junctions": [
       {
         "qualifies": false,

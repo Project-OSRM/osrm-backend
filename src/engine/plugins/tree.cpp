@@ -366,6 +366,7 @@ struct WalkOutput
     std::vector<WorkItem> children;
     double length = 0.0;
     bool bad_ending = false;
+    bool rejoined_ancestor = false; // walk merged back onto an ancestor path (parallel carriageway)
     // Early forks (node, an untaken usable motorway arm) - retry candidates for a bad landing.
     std::vector<std::pair<NodeID, NodeID>> forks;
 };
@@ -389,6 +390,7 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
     std::vector<WorkItem> children;
     std::vector<std::pair<NodeID, NodeID>> forks;
     bool stopped_by_cap = false;
+    bool rejoined_ancestor = false;
 
     NodeID current = item.start_node;
     // Initialise from the ref we branched onto, not the start node's own ref: at a gore the first
@@ -534,7 +536,20 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
                     forks.push_back({current, it->target});
 
         if (chosen == outgoing.end())
+        {
+            // Did we stop because a motorway continuation merges back onto an ancestor's path? That
+            // is a parallel carriageway (parallelbaan) rejoining the main line - the caller drops
+            // such a stub if it carried no exits of its own. item.visited is exactly the inherited
+            // ancestor path (plus this segment's start); the local `visited` also holds our own
+            // nodes, so test against the inherited set.
+            for (const auto &o : outgoing)
+                if (isMotorwayNode(facade, o.target) && item.visited.count(o.target))
+                {
+                    rejoined_ancestor = true;
+                    break;
+                }
             break;
+        }
 
         const NodeID next = chosen->target;
         visited.insert(next);
@@ -571,6 +586,7 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
     out.children = std::move(children);
     out.length = length;
     out.bad_ending = !stopped_by_cap;
+    out.rejoined_ancestor = rejoined_ancestor;
     out.forks = std::move(forks);
     return out;
 }
@@ -740,6 +756,7 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     pool.push_back(std::move(*chosen));
 
     std::vector<SegmentResult> segments;
+    util::json::Array dropped_stubs; // debug-only: parallel-carriageway stubs dropped at rejoin
     while (!pq.empty() && segments.size() < static_cast<std::size_t>(MAX_SEGMENTS))
     {
         const auto id = pq.top().second;
@@ -748,6 +765,24 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
 
         WalkOutput out =
             expandSegment(facade, *mld, item, static_cast<double>(params.hard_cap_m), params.debug);
+
+        // Drop a childless branch that just merges back onto an ancestor path: it is a parallel
+        // carriageway of a road already in the tree, its stations are within metres of the main
+        // polyline, so the corridor join loses nothing. Branches that spawned children stay
+        // (parallelbanen carrying real exits; genuine ring routes) - only the bare stub is dropped.
+        if (item.parent_id != NO_PARENT && out.rejoined_ancestor && out.children.empty())
+        {
+            if (params.debug)
+            {
+                util::json::Object d;
+                d.values["ref"] = item.reported_ref;
+                d.values["start_offset_m"] = item.start_offset;
+                d.values["length_m"] = out.length;
+                d.values["polyline"] = std::move(out.route.values["polyline"]);
+                dropped_stubs.values.emplace_back(std::move(d));
+            }
+            continue;
+        }
 
         // Enqueue the chosen walk's children (id assigned here = its future pool index).
         for (auto &child : out.children)
@@ -817,7 +852,10 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     response.values["polyline"] = std::move(root_route.values["polyline"]);
     response.values["branches"] = std::move(root_route.values["branches"]);
     if (params.debug)
+    {
         response.values["junctions"] = std::move(root_route.values["junctions"]);
+        response.values["dropped_stubs"] = std::move(dropped_stubs);
+    }
     response.values["segment_count"] = static_cast<double>(segments.size());
 
     util::json::Object snapped;

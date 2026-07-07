@@ -1,5 +1,5 @@
 {
-  "segment_count": 42,
+  "segment_count": 41,
   "snapped": {
     "requested_bearing": 178,
     "input": {
@@ -465,28 +465,6 @@
                                 ],
                                 "connector_length_m": 0,
                                 "at_offset_m": 32512.83942,
-                                "exit_ref": null,
-                                "name": ""
-                              }
-                            },
-                            {
-                              "route": {
-                                "polyline": "ggm~Hkkq\\BtCAX??A\\??Ad@??I`A??Eh@??I|@??Kt@??Ih@??[|A??WpA??Q~@??Mz@??OlA??MbB??EvA??EhB??ClA??@|A??BxAFhI???nF??Qx[??@t@??ApB??@pD??@hB???xF???`F",
-                                "length_m": 1334.597156,
-                                "start_offset_m": 37367.86664,
-                                "branches": [],
-                                "ref": "A4"
-                              },
-                              "junction": {
-                                "toward": [
-                                  "A4",
-                                  "Rotterdam",
-                                  "Den Haag",
-                                  "Schiphol",
-                                  "Haarlem"
-                                ],
-                                "connector_length_m": 0,
-                                "at_offset_m": 37367.86664,
                                 "exit_ref": null,
                                 "name": ""
                               }

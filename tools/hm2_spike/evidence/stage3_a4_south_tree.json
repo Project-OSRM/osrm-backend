@@ -1,5 +1,13 @@
 {
-  "segment_count": 44,
+  "segment_count": 43,
+  "dropped_stubs": [
+    {
+      "polyline": "ggm~Hkkq\\BtCAX??A\\??Ad@??I`A??Eh@??I|@??Kt@??Ih@??[|A??WpA??Q~@??Mz@??OlA??MbB??EvA??EhB??ClA??@|A??BxAFhI???nF??Qx[??@t@??ApB??@pD??@hB???xF???`F",
+      "length_m": 1334.597156,
+      "start_offset_m": 31971.25385,
+      "ref": "A4"
+    }
+  ],
   "junctions": [
     {
       "qualifies": false,
@@ -1797,30 +1805,6 @@
                           ],
                           "connector_length_m": 0,
                           "at_offset_m": 27116.22664,
-                          "exit_ref": null,
-                          "name": ""
-                        }
-                      },
-                      {
-                        "route": {
-                          "branches": [],
-                          "junctions": [],
-                          "ref": "A4",
-                          "polyline": "ggm~Hkkq\\BtCAX??A\\??Ad@??I`A??Eh@??I|@??Kt@??Ih@??[|A??WpA??Q~@??Mz@??OlA??MbB??EvA??EhB??ClA??@|A??BxAFhI???nF??Qx[??@t@??ApB??@pD??@hB???xF???`F",
-                          "length_m": 1334.597156,
-                          "non_motorway_m": 0,
-                          "start_offset_m": 31971.25385
-                        },
-                        "junction": {
-                          "toward": [
-                            "A4",
-                            "Rotterdam",
-                            "Den Haag",
-                            "Schiphol",
-                            "Haarlem"
-                          ],
-                          "connector_length_m": 0,
-                          "at_offset_m": 31971.25385,
                           "exit_ref": null,
                           "name": ""
                         }

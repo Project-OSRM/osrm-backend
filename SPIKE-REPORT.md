@@ -372,3 +372,19 @@ Two changes:
 **Validation** (new `run_root_retry_case`): snapping *inside* the Prins Clausplein stack at `4.36,52.048` bearing 90 returns `NoSegment` with a single candidate (the nearest is a surface road) but a **48 km A4 corridor** with the multi-candidate snap. Asserts root length > 20 km. Off-motorway probes (North Sea, an Amsterdam city street) still `NoSegment`. Full regression green; 200 km ~0.08 s.
 
 **Files:** `src/engine/plugins/tree.cpp` (`HandleRequest` multi-candidate snap loop + `make_root` helper; root fork-backtracking); `tools/hm2_spike/regression.py` (root-retry case).
+
+## S3-fix5 — parallel-carriageway (parallelbaan) stubs dropped at rejoin
+
+Field report: on A4 parallelbaan sections (Zoeterwoude–Hoofddorp — split, rejoin, split again) the overlay showed same-road branch stubs that run alongside the main line and end at the rejoin; the walk detects the rejoin as a cycle and stops, but the stub was kept as if it were a route option. Two composing fixes were scoped; **only the robust one (#2) was needed and shipped.**
+
+**Shipped — #2 rejoin-drop (the generic net).** `walkOne` now records whether it stopped because a motorway continuation merges back onto an *ancestor* path (a forward motorway edge targets a node in the inherited `visited` set). The driver drops a branch that is childless AND `rejoined_ancestor`: a parallel carriageway of a road already in the tree, whose stations are within metres of the main polyline, so the corridor join loses nothing. Branches that spawned children stay (parallelbanen carrying real exits; genuine ring routes, which spawn children). Composes cleanly with fork-backtracking: a short rejoining stub still triggers the retry, and if an alternative arm reaches a real (non-rejoining) road that's the win; only the bare rejoining stub is dropped.
+
+**Not shipped — #1 split-side edge-ref suppression (verified unnecessary + risky).** The idea was to also suppress a split arm whose *own edge ref* (e.g. `A4;E19`) component-matches the current road even when its signage escaped the existing `branch_refs`/current/continuation/reported checks. Findings: (a) **zero** E-ref branches exist anywhere in the NL trees — the specific escape does not occur; (b) the parallelbaan arms that *do* escape and get dropped by #2 are same-ref (A2/A5/A1), escaping for diverse reasons (`current_ref` drift, not E-signage), which #2 catches at the rejoin regardless; (c) adding an arm-edge-ref check would **over-suppress real branches at gores** — the A27 off-ramp at Everdingen has a stale edge ref of `A2` (Stage 1 finding 7.4), which component-matches the current A2 and would wrongly kill the A27 branch. So #2 alone is the correct, safe end state.
+
+**Validation** (`tools/hm2_spike/regression.py`, new `run_parallelbaan_case`, all green):
+- A4 Leiden–Hoofddorp @ 80 km: 4 parallelbaan stubs dropped, **max stray of any dropped stub from the kept tree = 134 m** (over-drop guard asserts < 1 km) — every dropped stub hugs its ancestor the whole way; nothing unique lost. Even the longest dropped stub (a 5.8 km A2 parallel run) stays within 202 m of the kept tree.
+- **No undropped hug-root childless stub survives** (excluding cap-truncated branches — a real branch cut at `hard_cap` can run parallel to the root and be childless without being a rejoin stub; that is not a bug).
+- All prior cases green: containment (`non_motorway_m == 0`), same-ref, breadth, ring termination, A12-east recovery, root snap retry, off-motorway `NoSegment`, junction names `""`. 28 checks total; 200 km ~0.14 s.
+- `debug=true` now also returns `dropped_stubs[]` (ref, start_offset_m, length_m, polyline) for auditing the drops.
+
+**Files:** `src/engine/plugins/tree.cpp` (`WalkOutput.rejoined_ancestor` + detection in `walkOne`; driver drop + `dropped_stubs` debug); `tools/hm2_spike/regression.py` (parallelbaan case + haversine helper); evidence regenerated.

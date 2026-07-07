@@ -1,5 +1,13 @@
 {
-  "segment_count": 19,
+  "segment_count": 18,
+  "dropped_stubs": [
+    {
+      "polyline": "ykm{Hoaf]m@a@IG??WY??Wg@??Me@??E[??C_@??A_@??@]??Fg@??F]??N_@??N[??TU??\\Q??PC??R???TF??RH??PN??PT??LV??HX??H^??DV??RfA",
+      "length_m": 352.4894285,
+      "start_offset_m": 37817.85877,
+      "ref": "A15"
+    }
+  ],
   "junctions": [
     {
       "qualifies": false,
@@ -972,29 +980,6 @@
                       {
                         "route": {
                           "branches": [
-                            {
-                              "route": {
-                                "branches": [],
-                                "junctions": [],
-                                "ref": "A15",
-                                "polyline": "ykm{Hoaf]m@a@IG??WY??Wg@??Me@??E[??C_@??A_@??@]??Fg@??F]??N_@??N[??TU??\\Q??PC??R???TF??RH??PN??PT??LV??HX??H^??DV??RfA",
-                                "length_m": 352.4894285,
-                                "non_motorway_m": 0,
-                                "start_offset_m": 37817.85877
-                              },
-                              "junction": {
-                                "toward": [
-                                  "A15",
-                                  "Rotterdam",
-                                  "Dordrecht",
-                                  "Gorinchem"
-                                ],
-                                "connector_length_m": 0,
-                                "at_offset_m": 37817.85877,
-                                "exit_ref": null,
-                                "name": ""
-                              }
-                            },
                             {
                               "route": {
                                 "branches": [],
