@@ -98,6 +98,12 @@ ROOT_RETRY_CASE = dict(name="Inside Prins Clausplein stack — root snaps throug
 PARALLELBAAN_CASE = dict(name="A4 Leiden–Hoofddorp — parallel-carriageway stubs dropped, no over-drop",
                          lng=4.49431, lat=52.13088, bearing=53, cap=80000)
 
+# Crossing-road directions: a single A4->A12 ramp at Prins Clausplein reaches both A12 directions
+# via a fork; both must be emitted — A12 east (toward Utrecht, long) AND A12 west (Utrechtsebaan
+# toward Den Haag, legitimately short). Assert existence of both, not length.
+DIRECTIONS_CASE = dict(name="A4 @ Prins Clausplein — both A12 directions emitted",
+                       lng=4.31100, lat=52.00468, bearing=351, cap=70000)
+
 # Off-motorway (Amsterdam centrum local road) -> NoSegment.
 OFF_MOTORWAY_CASE = dict(name="off-motorway -> NoSegment",
                          lng=4.89218, lat=52.37320, bearing=90)
@@ -341,6 +347,27 @@ def run_parallelbaan_case(c):
           f"dropped={len(tree.get('dropped_stubs', []))} max_stray_m={round(worst)}")
 
 
+def run_directions_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok", f"{c['name']}: code Ok", f"http={http}"):
+        return
+    east = west = False
+    for r in iter_routes(tree):
+        if r["ref"] != "A12":
+            continue
+        co = _decode_polyline(r["polyline"])
+        if not co or co[0][0] > 4.42:
+            continue  # only the branches spawned near Prins Clausplein
+        if max(x[0] for x in co) > 4.48:
+            east = True
+        if min(x[0] for x in co) < 4.36:
+            west = True
+    check(east and west,
+          f"{c['name']}: both A12 east (toward Utrecht) and A12 west (toward Den Haag) present",
+          f"east={east} west={west}")
+
+
 def run_off_motorway_case(c):
     print(f"\n# {c['name']}")
     tree, http = get(f"/tree/v1/driving/{c['lng']},{c['lat']}?bearings={c['bearing']},45")
@@ -374,6 +401,7 @@ def main():
     run_retry_case(RETRY_CASE)
     run_root_retry_case(ROOT_RETRY_CASE)
     run_parallelbaan_case(PARALLELBAAN_CASE)
+    run_directions_case(DIRECTIONS_CASE)
     run_off_motorway_case(OFF_MOTORWAY_CASE)
     run_junction_names()
 
