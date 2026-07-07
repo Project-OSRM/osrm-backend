@@ -293,3 +293,40 @@ Off-motorway snap still returns `400 {"code":"NoSegment"}`. Raw trees in `tools/
 
 - **`start_offset_m` vs connector**: implemented per the brief (`junction.at_offset_m + connector_length_m`), and `connector_length_m` is emitted on the junction. With NL connectors at 0 this equals `at_offset_m`; when connectors are non-zero the BE must treat child polyline point distance as `start_offset_m + along_polyline` (the connector is *not* in the child polyline — it is represented as the offset gap, which keeps the §3.3 "start_offset + along = distance-from-me" invariant intact). Flagging the one deviation from "connector geometry in the child polyline": it is represented as distance, not geometry.
 - **Combinatorial breadth at large `hard_cap_m`**: recommend the JS layer drive expansion by quota, or the plugin gain a `max_branches`/quota param, before running trees at 150–200 km in dense regions.
+
+## S3-fix — best-first expansion (truncation was depth-first)
+
+**Bug (reviewer, live).** With the recursive depth-first build, when the tree exceeds `MAX_SEGMENTS` the recursion sinks the entire budget into the *first* junction's subtree: the A2 south probe at `hard_cap_m=200000` hit `segment_count=400` inside the A27 branch (@4.5 km) and the root's later first-level junctions — A15 @18 km, A65, A50, A58, A67 — silently vanished (root had **1** branch). Truncation dropped the *nearest* options, the opposite of what the downstream nearest-first prune wants.
+
+**Fix.** Replaced the recursion with **best-first expansion ordered by `start_offset_m`**. A min-heap of pending walk-starts (`WorkItem`: start node, ref, start coords, absolute `start_offset`, per-path visited set, depth, and the junction that attaches it to its parent) is seeded with the root. The loop pops the globally nearest pending segment, walks it (a single non-recursive `walkOneSegment` — same continuation/suppression/ramp logic as before), records it, and enqueues a child for each qualifying junction at its connector-resolved absolute offset. It stops when the queue drains or `MAX_SEGMENTS` segments have been walked. Because a child's `start_offset` always exceeds its parent's, parents are always walked before their children, so the nested tree is reassembled after the loop from a `parent_id` map (each parent's branches sorted nearest-first by `start_offset`). Per-path visited set, `hard_cap` budget, ramp traversal, and same-road suppression are unchanged.
+
+**Result:** when the budget truncates, the retained 400 segments are the globally nearest across all spurs.
+
+**Validation** (`tools/hm2_spike/regression.py`, all green; new `run_breadth_case`):
+- A2 south @200 km: root back to **6** first-level branches (A27, A15, A65, A50, A58, A67), `segment_count=400`, max retained `start_offset_m` ≈ 130 km (was ~200 km down one spur).
+- Below the cap the output is **byte-identical** to the old depth-first tree (A2 @60 km debug: 19 segments, structurally equal) — the order change does not alter content when `MAX_SEGMENTS` isn't hit.
+- A2/A67 concurrency (zero toward-self), A10 ring, off-motorway `NoSegment`, all-names-`""`, and the qualify/afrit cases stay green. 200 km responds in ~0.07 s.
+
+**Files:** `src/engine/plugins/tree.cpp` (best-first driver + `walkOneSegment` + `WorkItem`/`SegmentResult`/`Pending`, replacing recursive `walkSegment`); `tools/hm2_spike/regression.py` (added the 200 km breadth case).
+
+## S3-fix2 — motorway containment (branches were escaping onto city streets)
+
+**Bug (field report, map overlay near Knooppunt Ypenburg / Prins Clausplein).** A branch polyline continued off the motorway network onto local roads (the S107/Westvlietweg toward Voorburg/Binckhorst). Reproduced live from an A4 point near Ypenburg (`4.31100,52.00468` bearing 351): the A13-toward-Den Haag branch walked **6.9 km** of non-motorway city roads and the two A12 (Utrechtsebaan) branches ~0.95 km each. Root cause: `walkOneSegment` chose its continuation by turn type + ref, neither of which notices a motorway → urban downgrade, and there was **no road-class guard on the continuation**. So where a motorway keeps its ref but drops below `highway=motorway` — the A12 Utrechtsebaan entering Den Haag, the A13 ending at Ypenburg, the A65 near Tilburg — the walk kept going onto local roads. (The snap post-filter only guards the *root's* first node; every subsequent node was unchecked.)
+
+**Fix (one guard).** Before advancing to the continuation target, stop the segment if that node is not motorway-class: `if (!isMotorwayNode(facade, next)) break;`. Every walked node is now motorway-class (the start node already is, by the root post-filter / `traverseRamp`'s exit condition). Ramp connectors are unaffected — they are resolved separately by `traverseRamp` and represented as the offset gap.
+
+**Evidence it is correct, not over-trimming.** A direct A13-southbound probe still walks **45 km** of motorway with `non_motorway_m = 0`; the A4→A13 branch stops at 1.4 km only because *that* direction is the short A13 stub that ends at Ypenburg. In the A2 south tree the only change is the A65-toward-Tilburg branch shrinking 30 km → 2.7 km (it had escaped 27 km onto the A65's non-motorway section); every other segment is byte-identical.
+
+**Diagnostic + regression.** `walkOneSegment` now emits `non_motorway_m` per segment under `debug=true` (metres walked off motorway; must be 0). Added `run_containment_case` to `regression.py` — the Ypenburg A4 probe asserts every segment's `non_motorway_m == 0`. Full harness green; Stage 2 and Stage 3 probe suites green.
+
+**Files:** `src/engine/plugins/tree.cpp` (motorway-class continuation guard + `non_motorway_m` debug diagnostic); `tools/hm2_spike/regression.py` (containment case).
+
+## S3-note — opposite-carriageway spur (not a bug) + A5-near-Badhoevedorp (legitimate)
+
+Two field reports investigated live; neither required a plugin change.
+
+**1. Opposite-carriageway spur near A4 exit 13 Den Hoorn — NOT reproduced; already guarded.** The hypothesis was that qualifying OffRamps (unlike Fork arms) escape same-ref suppression, letting a U-turn/loop ramp signed "A4" walk the opposite carriageway as a branch. Not the case: the same-road suppression in `walkOneSegment` runs on **every** non-continuation `OffRamp`/`Fork` edge (it precedes the qualify/spawn logic), matching component-wise against three ref sets — `current_ref`, the continuation arm's ref, and the segment's `reported_ref`. A full-tree audit found **zero** parent→child edges sharing a ref component, at the exact Den Hoorn location and in the full A2 south 200 km tree; a scan of the whole northbound A4 corridor found **no** branch paralleling the root (overlap > 50 %, length > 3 km). The reported overlay spur was most likely the pre-`S3-fix2` local-road escape (now fixed), or the genuinely-parallel A13 (a real motorway alongside the A4 between Delft and Ypenburg). Added `run_sameref_case` to `regression.py` (A4 Den Hoorn: no branch shares a ref component with its parent) as a permanent guard.
+
+**2. A5 branch near Badhoevedorp — LEGITIMATE.** From the A4 northbound near Schiphol, the branch tracing Badhoevedorp → Westpoort is the genuine **A5** (Verlengde Westrandweg + Westrandweg): spawned from the root A4 at `start_offset_m` 2164, signed "A5, Zaanstad, Haarlem", `non_motorway_m = 0` (all motorway class), continuing onto the A10 ring at Coenplein (a `NewName` renumber A5→A10). Its geometry snaps to "Westrandweg" and "Ringweg-Noord/West". It parallels the A4 southwest of Badhoevedorp because the A5 and A4 genuinely meet there — real geography, not a U-turn artifact.
+
+**Files:** `tools/hm2_spike/regression.py` (added the same-ref guard case). No `tree.cpp` change.

@@ -60,6 +60,25 @@ RING_CASE = dict(name="A10 Amsterdam ring (cycle termination, 50 km cap)",
 CONCURRENCY_CASE = dict(name="A2/A67 concurrency — zero toward-self junctions (200 km)",
                         lng=5.06526, lat=52.02042, bearing=145, cap=200000)
 
+# Breadth: best-first expansion must keep the root's near first-level branches even when the
+# 200 km tree is truncated at MAX_SEGMENTS — regression against the depth-first bug where the
+# first subtree exhausted the whole segment budget and the root collapsed to a single branch.
+BREADTH_CASE = dict(name="A2 south breadth — root keeps first-level branches at 200 km",
+                    lng=5.06526, lat=52.02042, bearing=145, cap=200000)
+
+# Motorway containment: near KP Ypenburg / Prins Clausplein the A12 Utrechtsebaan degrades into Den
+# Haag city streets and the A13 ends at Ypenburg. The walk used to escape onto ~7 km of local roads
+# (the S107/Westvlietweg field report). Every segment's non_motorway_m (debug field) must be 0.
+CONTAINMENT_CASE = dict(name="A4 @ Ypenburg — tree stays on motorways (no S-road escape)",
+                        lng=4.31100, lat=52.00468, bearing=351, cap=40000)
+
+# Same-ref suppression must cover ALL qualifying junction types (OffRamp AND Fork), not just forks:
+# a branch must never be the same road as the segment it forks from (the opposite-carriageway /
+# U-turn-loop spur). The A4 near Den Hoorn sits in a dense interchange cluster (Kethelplein A4/A20,
+# KP Ypenburg A4/A13) that stresses this. Checked over the whole tree.
+SAMEREF_CASE = dict(name="A4 Den Hoorn — no branch shares a ref component with its parent",
+                    lng=4.32313, lat=51.99008, bearing=330, cap=40000)
+
 # Off-motorway (Amsterdam centrum local road) -> NoSegment.
 OFF_MOTORWAY_CASE = dict(name="off-motorway -> NoSegment",
                          lng=4.89218, lat=52.37320, bearing=90)
@@ -159,6 +178,52 @@ def run_concurrency_case(c):
           f"offenders={toward_self[:5]}")
 
 
+def run_breadth_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok", f"{c['name']}: code Ok", f"http={http}"):
+        return
+    check(len(tree.get("branches", [])) >= 4,
+          f"{c['name']}: root has >= 4 first-level branches",
+          f"root_branches={len(tree.get('branches', []))} segments={tree.get('segment_count')}")
+
+
+def run_containment_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok", f"{c['name']}: code Ok", f"http={http}"):
+        return
+    escapes = [(r["ref"], round(r.get("non_motorway_m", 0)))
+               for r in iter_routes(tree) if r.get("non_motorway_m", 0) > 1.0]
+    check(not escapes,
+          f"{c['name']}: every segment stays on motorway (non_motorway_m == 0)",
+          f"escapes={escapes[:5]}")
+
+
+def run_sameref_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok", f"{c['name']}: code Ok", f"http={http}"):
+        return
+
+    def comps(ref):
+        return {x.strip().upper() for x in ref.split(";") if x.strip()}
+
+    offenders = []
+
+    def walk(r):
+        pc = comps(r["ref"])
+        for b in r["branches"]:
+            if pc & comps(b["route"]["ref"]):
+                offenders.append((r["ref"], b["route"]["ref"], round(b["junction"]["at_offset_m"])))
+            walk(b["route"])
+
+    walk(tree)
+    check(not offenders,
+          f"{c['name']}: no branch shares a ref component with its parent",
+          f"offenders={offenders[:5]}")
+
+
 def run_off_motorway_case(c):
     print(f"\n# {c['name']}")
     tree, http = get(f"/tree/v1/driving/{c['lng']},{c['lat']}?bearings={c['bearing']},45")
@@ -186,6 +251,9 @@ def main():
         run_qualify_case(c)
     run_ring_case(RING_CASE)
     run_concurrency_case(CONCURRENCY_CASE)
+    run_breadth_case(BREADTH_CASE)
+    run_containment_case(CONTAINMENT_CASE)
+    run_sameref_case(SAMEREF_CASE)
     run_off_motorway_case(OFF_MOTORWAY_CASE)
     run_junction_names()
 

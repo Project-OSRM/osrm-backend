@@ -11,10 +11,14 @@
 
 #include <algorithm>
 #include <cctype>
+#include <functional>
 #include <limits>
+#include <queue>
 #include <regex>
 #include <string>
+#include <unordered_map>
 #include <unordered_set>
+#include <utility>
 #include <vector>
 
 namespace osrm::engine::plugins
@@ -315,37 +319,69 @@ RampResult traverseRamp(const datafacade::BaseDataFacade &facade,
     return result;
 }
 
-// Recursively walk one mainline segment: follow the continuation, accumulate geometry, and recurse
-// into each qualifying motorway branch. Returns the Contract 1 route object.
-util::json::Object walkSegment(const datafacade::BaseDataFacade &facade,
-                               const MLDFacade &mld,
-                               const NodeID start_node,
-                               const std::string &reported_ref,
-                               std::vector<util::Coordinate> current_coords,
-                               const double start_offset,
-                               const double hard_cap,
-                               std::unordered_set<NodeID> visited,
-                               const bool debug,
-                               const int depth,
-                               int &segment_count)
+constexpr std::size_t NO_PARENT = std::numeric_limits<std::size_t>::max();
+
+// One pending segment to expand: a walk-start plus everything needed to place it in the tree.
+struct WorkItem
 {
+    std::size_t id;
+    std::size_t parent_id;
+    NodeID start_node;
+    std::string reported_ref;
+    std::vector<util::Coordinate> start_coords;
+    double start_offset;
+    std::unordered_set<NodeID> visited; // per-path visited set (copied from the parent)
+    int depth;
+    util::json::Object junction; // how this segment attaches to its parent (empty for the root)
+};
+
+// One walked segment: its route object plus the wiring to reattach it to its parent afterwards.
+struct SegmentResult
+{
+    std::size_t id;
+    std::size_t parent_id;
+    double order_key; // start_offset, for stable nearest-first sibling ordering
+    util::json::Object junction;
+    util::json::Object route; // {ref, start_offset_m, length_m, polyline, [junctions]}
+};
+
+using Pending = std::pair<double, std::size_t>; // (start_offset, work id) - min-heap key
+
+// Walk one mainline segment (no recursion): follow the continuation, accumulate geometry, record
+// junctions, and enqueue a child WorkItem for each qualifying motorway branch. Returns the
+// segment's route object (branches attached later during assembly).
+SegmentResult walkOneSegment(const datafacade::BaseDataFacade &facade,
+                             const MLDFacade &mld,
+                             WorkItem &&item,
+                             const double hard_cap,
+                             const bool debug,
+                             std::vector<WorkItem> &pool,
+                             std::priority_queue<Pending, std::vector<Pending>, std::greater<>> &pq)
+{
+    std::vector<util::Coordinate> current_coords = std::move(item.start_coords);
+    std::unordered_set<NodeID> visited = std::move(item.visited);
     std::vector<util::Coordinate> polyline;
-    util::json::Array branches;
     util::json::Array junctions_debug;
 
-    NodeID current = start_node;
+    NodeID current = item.start_node;
     // Initialise from the ref we branched onto, not the start node's own ref: at a gore the first
     // segment still carries the mainline ref (Stage 1 finding 7.4), which would defeat the
     // same-road suppression on the child's very first node.
-    std::string current_ref = reported_ref;
+    std::string current_ref = item.reported_ref;
     // The committed road identity for this whole segment; unlike current_ref it never drifts, so
     // it is the stable backstop for same-road suppression at depth.
-    const auto reported_refs = refComponents(reported_ref);
-    double offset = start_offset;
+    const auto reported_refs = refComponents(item.reported_ref);
+    double offset = item.start_offset;
+    // Diagnostic: metres walked on non-motorway-class nodes. Should always be 0 - a non-zero value
+    // means the walk escaped the motorway network (see the motorway-class continuation guard below).
+    double non_motorway_len = 0.0;
 
     while (true)
     {
-        const double node_end_offset = offset + polylineLength(current_coords);
+        const double node_len = polylineLength(current_coords);
+        const double node_end_offset = offset + node_len;
+        if (!isMotorwayNode(facade, current))
+            non_motorway_len += node_len;
         const auto current_refs = refComponents(current_ref);
 
         const auto outgoing = gatherForwardOutgoing(facade, mld, current);
@@ -399,8 +435,7 @@ util::json::Object walkSegment(const datafacade::BaseDataFacade &facade,
                 junctions_debug.values.emplace_back(std::move(dbg));
             }
 
-            if (!qualifies || node_end_offset >= hard_cap || segment_count >= MAX_SEGMENTS ||
-                depth >= MAX_DEPTH)
+            if (!qualifies || node_end_offset >= hard_cap || item.depth >= MAX_DEPTH)
                 continue;
 
             const auto ramp = traverseRamp(facade, mld, it->target, hard_cap - node_end_offset);
@@ -413,22 +448,6 @@ util::json::Object walkSegment(const datafacade::BaseDataFacade &facade,
             if (visited.count(ramp.exit_node))
                 continue; // branch loops back onto our own path
 
-            auto child_visited = visited;
-            child_visited.insert(ramp.exit_node);
-            ++segment_count;
-
-            auto child_route = walkSegment(facade,
-                                           mld,
-                                           ramp.exit_node,
-                                           firstMotorwayRef(it->branch_refs),
-                                           nodeForwardCoordinates(facade, ramp.exit_node),
-                                           child_start_offset,
-                                           hard_cap,
-                                           std::move(child_visited),
-                                           debug,
-                                           depth + 1,
-                                           segment_count);
-
             util::json::Object junction;
             junction.values["name"] = ""; // never derivable in-plugin (Stage 2 finding); app models
                                           // require a non-null string
@@ -440,10 +459,19 @@ util::json::Object walkSegment(const datafacade::BaseDataFacade &facade,
             junction.values["connector_length_m"] = ramp.connector_length;
             junction.values["toward"] = towardArray(it->destinations);
 
-            util::json::Object branch;
-            branch.values["junction"] = std::move(junction);
-            branch.values["route"] = std::move(child_route);
-            branches.values.emplace_back(std::move(branch));
+            WorkItem child;
+            child.id = pool.size();
+            child.parent_id = item.id;
+            child.start_node = ramp.exit_node;
+            child.reported_ref = primary_ref;
+            child.start_coords = nodeForwardCoordinates(facade, ramp.exit_node);
+            child.start_offset = child_start_offset;
+            child.visited = visited;
+            child.visited.insert(ramp.exit_node);
+            child.depth = item.depth + 1;
+            child.junction = std::move(junction);
+            pq.push({child.start_offset, child.id});
+            pool.push_back(std::move(child));
         }
 
         polyline.insert(polyline.end(), current_coords.begin(), current_coords.end());
@@ -454,6 +482,12 @@ util::json::Object walkSegment(const datafacade::BaseDataFacade &facade,
             break;
 
         const NodeID next = continuation->target;
+        // Stay on the motorway network. If the continuation leaves motorway class - the A12
+        // Utrechtsebaan degrading into Den Haag city streets, or the A13 ending at Ypenburg - the
+        // motorway has ended; stop rather than walking the branch onto local roads. selectContinuation
+        // keys on turn type and ref, neither of which notices a motorway->urban downgrade.
+        if (!isMotorwayNode(facade, next))
+            break;
         if (!visited.insert(next).second)
             break; // cycle (e.g. the A10 ring): the distance budget also guards this
 
@@ -473,14 +507,23 @@ util::json::Object walkSegment(const datafacade::BaseDataFacade &facade,
     }
 
     util::json::Object route;
-    route.values["ref"] = reported_ref;
-    route.values["start_offset_m"] = start_offset;
+    route.values["ref"] = item.reported_ref;
+    route.values["start_offset_m"] = item.start_offset;
     route.values["length_m"] = polylineLength(polyline);
     route.values["polyline"] = encodePolyline<100000>(polyline.cbegin(), polyline.cend());
-    route.values["branches"] = std::move(branches);
     if (debug)
+    {
         route.values["junctions"] = std::move(junctions_debug);
-    return route;
+        route.values["non_motorway_m"] = non_motorway_len;
+    }
+
+    SegmentResult segment;
+    segment.id = item.id;
+    segment.parent_id = item.parent_id;
+    segment.order_key = item.start_offset;
+    segment.junction = std::move(item.junction);
+    segment.route = std::move(route);
+    return segment;
 }
 } // namespace
 
@@ -558,22 +601,83 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     }
     std::vector<util::Coordinate> root_coords(node_coords.begin() + snap_index, node_coords.end());
 
-    std::unordered_set<NodeID> visited;
-    visited.insert(start_node);
-    int segment_count = 1;
     const std::string root_ref(facade.GetRefForID(facade.GetNameIndex(start_node)));
 
-    auto root_route = walkSegment(facade,
-                                  *mld,
-                                  start_node,
-                                  root_ref,
-                                  std::move(root_coords),
-                                  0.0,
-                                  static_cast<double>(params.hard_cap_m),
-                                  std::move(visited),
-                                  params.debug,
-                                  0,
-                                  segment_count);
+    // Best-first expansion ordered by start_offset_m: always expand the globally nearest pending
+    // segment, so when MAX_SEGMENTS truncates the tree the retained segments are the nearest ones
+    // across all spurs (matching the app's nearest-first prune) rather than one deep subtree.
+    std::vector<WorkItem> pool;
+    std::priority_queue<Pending, std::vector<Pending>, std::greater<>> pq;
+
+    WorkItem root;
+    root.id = 0;
+    root.parent_id = NO_PARENT;
+    root.start_node = start_node;
+    root.reported_ref = root_ref;
+    root.start_coords = std::move(root_coords);
+    root.start_offset = 0.0;
+    root.visited = {start_node};
+    root.depth = 0;
+    pq.push({root.start_offset, root.id});
+    pool.push_back(std::move(root));
+
+    std::vector<SegmentResult> segments;
+    while (!pq.empty() && segments.size() < static_cast<std::size_t>(MAX_SEGMENTS))
+    {
+        const auto id = pq.top().second;
+        pq.pop();
+        // Move the item out of the pool before walking: walkOneSegment pushes children into the
+        // pool, which can reallocate it.
+        WorkItem item = std::move(pool[id]);
+        segments.push_back(walkOneSegment(facade,
+                                          *mld,
+                                          std::move(item),
+                                          static_cast<double>(params.hard_cap_m),
+                                          params.debug,
+                                          pool,
+                                          pq));
+    }
+
+    // Reattach children to parents (a parent always completes before its children, since a child's
+    // start_offset exceeds its parent's), each parent's branches sorted nearest-first.
+    std::unordered_map<std::size_t, std::size_t> result_index;
+    for (std::size_t i = 0; i < segments.size(); ++i)
+        result_index[segments[i].id] = i;
+    std::unordered_map<std::size_t, std::vector<std::size_t>> children;
+    for (std::size_t i = 0; i < segments.size(); ++i)
+        if (segments[i].parent_id != NO_PARENT)
+            children[segments[i].parent_id].push_back(i);
+    for (auto &entry : children)
+    {
+        std::sort(entry.second.begin(),
+                  entry.second.end(),
+                  [&](std::size_t a, std::size_t b)
+                  {
+                      return segments[a].order_key < segments[b].order_key ||
+                             (segments[a].order_key == segments[b].order_key &&
+                              segments[a].id < segments[b].id);
+                  });
+    }
+
+    std::function<util::json::Object(std::size_t)> assemble = [&](std::size_t idx)
+    {
+        util::json::Object route = std::move(segments[idx].route);
+        util::json::Array branches;
+        const auto found = children.find(segments[idx].id);
+        if (found != children.end())
+        {
+            for (const auto child_idx : found->second)
+            {
+                util::json::Object branch;
+                branch.values["junction"] = std::move(segments[child_idx].junction);
+                branch.values["route"] = assemble(child_idx);
+                branches.values.emplace_back(std::move(branch));
+            }
+        }
+        route.values["branches"] = std::move(branches);
+        return route;
+    };
+    auto root_route = assemble(result_index[0]);
 
     result = util::json::Object();
     auto &response = std::get<util::json::Object>(result);
@@ -585,7 +689,7 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     response.values["branches"] = std::move(root_route.values["branches"]);
     if (params.debug)
         response.values["junctions"] = std::move(root_route.values["junctions"]);
-    response.values["segment_count"] = static_cast<double>(segment_count);
+    response.values["segment_count"] = static_cast<double>(segments.size());
 
     util::json::Object snapped;
     snapped.values["location"] = makeCoordinate(phantom.location);
