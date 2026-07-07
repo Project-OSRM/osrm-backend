@@ -250,8 +250,10 @@ jobs:
 
         \`./scripts/format.sh\` and/or \`npm run docs\` produced changes on this branch.
 
-        **Option 1 — Apply the patch:** Download [formatting-fixes.patch](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) from this workflow run's artifacts and apply it:
+        **Option 1 — Apply the patch:**
         \`\`\`bash
+        curl -LO https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/formatting-fixes.zip
+        unzip formatting-fixes.zip
         git apply formatting-fixes.patch
         \`\`\`
 
@@ -268,7 +270,7 @@ jobs:
     - name: Fail on outstanding changes
       if: steps.changes.outputs.dirty == 'true'
       run: |
-        echo "::error::Code formatting and/or documentation is out of date. Download the patch from the workflow artifacts and apply with 'git apply formatting-fixes.patch', or run './scripts/format.sh' and 'npm run docs' locally."
+        echo "::error::Code formatting and/or documentation is out of date. Download the patch from the workflow artifacts (see PR comment for direct link) and apply with 'git apply formatting-fixes.patch', or run './scripts/format.sh' and 'npm run docs' locally."
         exit 1
 
   docker-build-extract-test:
