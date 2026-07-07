@@ -97,8 +97,8 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
                                     const std::string &name,
                                     const EdgeBasedNodeDataContainerImpl &ebn_data_container);
 
-    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     void Renumber(const std::vector<std::uint32_t> &permutation)
+        requires(Ownership == storage::Ownership::Container)
     {
         util::inplacePermutation(nodes.begin(), nodes.end(), permutation);
     }

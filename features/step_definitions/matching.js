@@ -8,7 +8,7 @@ When(/^I match I should get$/, async function (table) {
   let got;
 
   await this.reprocessAndLoadData();
-  const testRow = function (row, ri) {
+  const testRow = function (row, _ri) {
     return new Promise((resolve, reject) => {
       const afterRequest = function (err, res, body) {
         if (err) return reject(err);
@@ -97,6 +97,14 @@ When(/^I match I should get$/, async function (table) {
             duration = json.matchings[0].duration;
           }
 
+          if (headers.has('confidence')) {
+            if (json.matchings.length != 1)
+              throw new Error(
+                '*** Checking confidence only supported for matchings with one subtrace',
+              );
+            got.confidence = json.matchings[0].confidence.toString();
+          }
+
           // annotation response values are requested by 'a:{type_name}'
           let found = false;
           headers.forEach((h) => {
@@ -120,6 +128,12 @@ When(/^I match I should get$/, async function (table) {
 
           if (headers.has('alternatives')) {
             alternatives = this.alternativesList(json);
+          }
+
+          if (headers.has('matchings_index')) {
+            got.matchings_index = json.tracepoints
+              .map(tp => tp === null ? '' : tp.matchings_index.toString())
+              .join(',');
           }
         }
 
@@ -271,6 +285,14 @@ When(/^I match I should get$/, async function (table) {
           got.waypoints = resultWaypoints.join(';');
           got.matchings = encodedResult;
           row.matchings = extendedTarget;
+        }
+
+        const skipFuzzy = new Set(['matchings', 'waypoints', 'timestamps', 'trace']);
+        for (const key in row) {
+          if (skipFuzzy.has(key)) continue;
+          if (this.FuzzyMatch.match(got[key], row[key])) {
+            got[key] = row[key];
+          }
         }
 
         resolve(got);

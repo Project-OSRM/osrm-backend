@@ -12,7 +12,7 @@ namespace osrm::contractor
 namespace detail
 {
 template <storage::Ownership Ownership>
-using QueryGraph = util::StaticGraph<typename QueryEdge::EdgeData, Ownership>;
+using QueryGraph = util::StaticGraph<QueryEdge::EdgeData, Ownership>;
 } // namespace detail
 
 using QueryGraph = detail::QueryGraph<storage::Ownership::Container>;

@@ -34,7 +34,15 @@ jobs:
       version: ${{ steps.version.outputs.version }}
       run_id: ${{ steps.wait_ci.outputs.run_id }}
     steps:
-      - uses: actions/checkout@v6
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
+      - uses: actions/checkout@v7
         with:
           token: ${{ secrets.BACKEND_RELEASE_TOKEN }}
           ref: ${{ inputs.branch || 'master' }}
@@ -143,15 +151,6 @@ jobs:
           git push origin "$BRANCH"
           git push origin "${{ steps.version.outputs.tag }}"
 
-      - name: Trigger CI for tag
-        env:
-          GH_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
-        run: |
-          # GITHUB_TOKEN pushes don't trigger workflow runs (prevents loops).
-          # Explicitly dispatch CI on the tag so binaries get built and uploaded.
-          gh workflow run osrm-backend.yml --ref "${{ steps.version.outputs.tag }}"
-          echo "Dispatched osrm-backend.yml on ${{ steps.version.outputs.tag }}"
-
       - name: Generate changelog
         id: changelog
         run: |
@@ -196,7 +195,7 @@ jobs:
           
           echo "Waiting for CI workflow to complete for tag $TAG (commit $TAG_SHA)"
           
-          MAX_WAIT=3600  # 1 hour
+          MAX_WAIT=10800  # 3 hours
           ELAPSED=0
           POLL_INTERVAL=10
           
@@ -244,8 +243,17 @@ jobs:
     permissions:
       id-token: write
       contents: read
+      actions: read
     steps:
-      - uses: actions/checkout@v6
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
+      - uses: actions/checkout@v7
         with:
           ref: ${{ needs.release.outputs.tag }}
 
@@ -275,4 +283,3 @@ jobs:
           skip-existing: true
           verbose: true
           # repository-url: https://test.pypi.org/legacy/
-

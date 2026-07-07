@@ -24,10 +24,10 @@ class FilteredGraphImpl<util::StaticGraph<EdgeDataT, Ownership>, Ownership>
 
   public:
     using Graph = util::StaticGraph<EdgeDataT, Ownership>;
-    using EdgeIterator = typename Graph::EdgeIterator;
-    using NodeIterator = typename Graph::NodeIterator;
-    using NodeArrayEntry = typename Graph::NodeArrayEntry;
-    using EdgeArrayEntry = typename Graph::EdgeArrayEntry;
+    using EdgeIterator = Graph::EdgeIterator;
+    using NodeIterator = Graph::NodeIterator;
+    using NodeArrayEntry = Graph::NodeArrayEntry;
+    using EdgeArrayEntry = Graph::EdgeArrayEntry;
     using EdgeRange = util::filtered_range<EdgeIterator, Vector<bool>>;
 
     unsigned GetNumberOfNodes() const { return graph.GetNumberOfNodes(); }

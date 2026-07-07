@@ -76,11 +76,11 @@ template <typename BaseIt, typename IndexIt> class permutation_iterator
   public:
     using index_traits = std::iterator_traits<IndexIt>;
     using base_traits = std::iterator_traits<BaseIt>;
-    using iterator_category = typename index_traits::iterator_category;
-    using value_type = typename base_traits::value_type;
-    using difference_type = typename index_traits::difference_type;
-    using pointer = typename base_traits::pointer;
-    using reference = typename base_traits::reference;
+    using iterator_category = index_traits::iterator_category;
+    using value_type = base_traits::value_type;
+    using difference_type = index_traits::difference_type;
+    using pointer = base_traits::pointer;
+    using reference = base_traits::reference;
 
     permutation_iterator() = default;
     permutation_iterator(BaseIt base, IndexIt index_it) : base(base), index_it(index_it) {}

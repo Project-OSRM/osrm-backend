@@ -141,7 +141,7 @@ class QueryHeap
         }
     };
     using HeapContainer = DAryHeap<HeapData, 4>;
-    using HeapHandle = typename HeapContainer::HeapHandle;
+    using HeapHandle = HeapContainer::HeapHandle;
 
   public:
     using WeightType = Weight;
@@ -333,6 +333,15 @@ class QueryHeap
     {
         BOOST_ASSERT(!WasRemoved(heapNode.node));
         heap.decrease(heapNode.handle,
+                      HeapData{heapNode.weight, heap[heapNode.handle].index},
+                      [this](const auto &heapData, auto new_handle)
+                      { inserted_nodes[heapData.index].handle = new_handle; });
+    }
+
+    void IncreaseKey(const HeapNode &heapNode)
+    {
+        BOOST_ASSERT(!WasRemoved(heapNode.node));
+        heap.increase(heapNode.handle,
                       HeapData{heapNode.weight, heap[heapNode.handle].index},
                       [this](const auto &heapData, auto new_handle)
                       { inserted_nodes[heapData.index].handle = new_handle; });

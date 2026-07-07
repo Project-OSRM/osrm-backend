@@ -186,6 +186,17 @@ Feature: Bike - Access tags on ways
             | residential | tram    |        | yes    | cycling | pushing bike |
             | service     | tram    | psv    | yes    | cycling | pushing bike |
 
+    Scenario: Bike - Directional access tag blacklisting (e.g. vehicle:forward=agricultural)
+        Then routability should be
+            | highway | vehicle:forward | vehicle:backward | bicycle  | forw    | backw   |
+            | primary |                 |                  |          | cycling | cycling |
+            | primary | agricultural    |                  |          |         | cycling |
+            | primary |                 | agricultural     |          | cycling |         |
+            | primary | agricultural    | agricultural     |          |         |         |
+            | primary | agricultural    |                  | yes      | cycling | cycling |
+            | primary |                 | agricultural     | yes      | cycling | cycling |
+            | primary |                 |                  | agricultural |         |         |
+
     Scenario: Bike - Access combinations
         Then routability should be
             | highway    | access     | bothw   |

@@ -42,7 +42,7 @@ template <bool DIRECTION>
 void relaxOutgoingEdges(
     const DataFacade<Algorithm> &facade,
     const typename SearchEngineData<Algorithm>::ManyToManyQueryHeap::HeapNode &heapNode,
-    typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
+    SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
     const PhantomNodeCandidates &)
 {
     if (stallAtNode<DIRECTION>(facade, heapNode, query_heap))
@@ -87,7 +87,7 @@ void relaxOutgoingEdges(
 void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         const std::size_t row_index,
                         const std::size_t number_of_targets,
-                        typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
+                        SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
                         const std::vector<NodeBucket> &search_space_with_buckets,
                         std::vector<EdgeWeight> &weights_table,
                         std::vector<EdgeDuration> &durations_table,
@@ -150,7 +150,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
 
 void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                          const unsigned column_index,
-                         typename SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
+                         SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
                          std::vector<NodeBucket> &search_space_with_buckets,
                          const PhantomNodeCandidates &candidates)
 {

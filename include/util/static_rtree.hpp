@@ -454,9 +454,9 @@ class StaticRTree
     /**
      * Constructs an empty RTree for de-serialization.
      */
-    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     explicit StaticRTree(const std::filesystem::path &on_disk_file_name,
                          const Vector<Coordinate> &coordinate_list)
+        requires(Ownership == storage::Ownership::Container)
         : m_coordinate_list(coordinate_list.data(), coordinate_list.size()),
           m_objects(mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region))
     {

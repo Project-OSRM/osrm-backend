@@ -1,5 +1,7 @@
 #include "server/service/match_service.hpp"
 
+#include <boost/assert.hpp>
+
 #include "server/api/parameters_parser.hpp"
 #include "server/service/utils.hpp"
 #include "engine/api/match_parameters.hpp"

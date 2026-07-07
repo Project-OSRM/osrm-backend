@@ -411,6 +411,11 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
     const auto maneuver_override_ways = IdentifyManeuverOverrideWays();
     scripting_environment.m_obstacle_map.preProcess(used_node_id_list, way_node_id_offsets);
 
+    ways_list.clear();
+    ways_list.shrink_to_fit();
+    way_node_id_offsets.clear();
+    way_node_id_offsets.shrink_to_fit();
+
     PrepareNodes();
     PrepareEdges(scripting_environment);
     scripting_environment.m_obstacle_map.fixupNodes(used_node_id_list);
@@ -547,6 +552,9 @@ void ExtractionContainers::PrepareNodes()
         log << "ok, after " << TIMER_SEC(write_nodes) << "s";
     }
 
+    all_nodes_list.clear();
+    all_nodes_list.shrink_to_fit();
+
     util::Log() << "Processed " << max_internal_node_id << " nodes";
 }
 
@@ -567,13 +575,13 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         log << "Setting start coords      ... " << std::flush;
         TIMER_START(set_start_coords);
         // Traverse list of edges and nodes in parallel and set start coord
-        auto node_iterator = all_nodes_list.begin();
+        auto node_iterator = used_nodes.begin();
         auto edge_iterator = all_edges_list.begin();
 
         const auto all_edges_list_end = all_edges_list.end();
-        const auto all_nodes_list_end = all_nodes_list.end();
+        const auto used_nodes_end = used_nodes.end();
 
-        while (edge_iterator != all_edges_list_end && node_iterator != all_nodes_list_end)
+        while (edge_iterator != all_edges_list_end && node_iterator != used_nodes_end)
         {
             if (edge_iterator->result.osm_source_id < node_iterator->node_id)
             {
@@ -639,15 +647,15 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         util::UnbufferedLog log;
         log << "Computing edge weights    ... " << std::flush;
         TIMER_START(compute_weights);
-        auto node_iterator = all_nodes_list.begin();
+        auto node_iterator = used_nodes.begin();
         auto edge_iterator = all_edges_list.begin();
         const auto all_edges_list_end_ = all_edges_list.end();
-        const auto all_nodes_list_end_ = all_nodes_list.end();
+        const auto used_nodes_end_ = used_nodes.end();
 
         const auto weight_multiplier =
             scripting_environment.GetProfileProperties().GetWeightMultiplier();
 
-        while (edge_iterator != all_edges_list_end_ && node_iterator != all_nodes_list_end_)
+        while (edge_iterator != all_edges_list_end_ && node_iterator != used_nodes_end_)
         {
             // skip all invalid edges
             if (edge_iterator->result.source == SPECIAL_NODEID)
@@ -840,9 +848,6 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
             all_edges_list[j].result.target = SPECIAL_NODEID;
         }
     }
-
-    all_nodes_list.clear(); // free all_nodes_list before allocation of used_edges
-    all_nodes_list.shrink_to_fit();
 
     used_edges.reserve(all_edges_list.size());
     {

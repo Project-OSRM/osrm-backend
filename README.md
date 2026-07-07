@@ -62,7 +62,7 @@ If you want to use the CH pipeline instead replace `osrm-partition` and `osrm-cu
 
 ### Using Docker
 
-We base our Docker images ([backend](https://github.com/Project-OSRM/osrm-backend/pkgs/container/osrm-backend), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Debian and make sure they are as lightweight as possible. Older backend versions can be found on [Docker Hub](https://hub.docker.com/r/osrm/osrm-backend/).
+We base our Docker images ([backend](https://github.com/Project-OSRM/osrm-backend/pkgs/container/osrm-backend), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Debian Linux and make sure they are as lightweight as possible. Older backend versions can be found on [Docker Hub](https://hub.docker.com/r/osrm/osrm-backend/).
 
 Download OpenStreetMap extracts for example from [Geofabrik](http://download.geofabrik.de/)
 
@@ -109,7 +109,7 @@ We support the following images in the Container Registry:
 ### Building from Source
 
 Dependencies are managed with [vcpkg](https://vcpkg.io/) in manifest mode.
-The required tooling on Linux is minimal — only a C++20 compiler, CMake ≥ 3.25,
+The required tooling on Linux is minimal — only a C++20 compiler, CMake ≥ 3.29,
 Ninja, and a handful of autotools packages that some vcpkg ports need to
 bootstrap themselves:
 
@@ -135,7 +135,7 @@ sudo cmake --install build
 ```
 
 The first configure will build every dependency (boost, tbb, expat, bzip2,
-lua, fmt, libosmium, …) from source. Subsequent configures reuse vcpkg's
+lua, libosmium, …) from source. Subsequent configures reuse vcpkg's
 binary cache.
 
 ### Request Against the Demo Server

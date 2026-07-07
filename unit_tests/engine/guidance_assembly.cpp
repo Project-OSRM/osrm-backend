@@ -19,7 +19,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
     using namespace osrm::engine;
     using namespace osrm::util;
 
-    IntermediateIntersection intersection1{{FloatLongitude{-73.981154}, FloatLatitude{40.767762}},
+    IntermediateIntersection intersection1{{-73.981154_lon, 40.767762_lat},
                                            {302},
                                            {1},
                                            IntermediateIntersection::NO_INDEX,
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                            {0, 255},
                                            {},
                                            {}};
-    IntermediateIntersection intersection2{{FloatLongitude{-73.981495}, FloatLatitude{40.768275}},
+    IntermediateIntersection intersection2{{-73.981495_lon, 40.768275_lat},
                                            {180},
                                            {1},
                                            0,
@@ -51,7 +51,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                      1.9076601161280742,
                                      0.2,
                                      TRAVEL_MODE_DRIVING,
-                                     {{FloatLongitude{-73.981492}, FloatLatitude{40.768258}},
+                                     {{-73.981492_lon, 40.768258_lat},
                                       329,
                                       348,
                                       {TurnType::ExitRotary, DirectionModifier::Straight},
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                      0,
                                      0,
                                      TRAVEL_MODE_DRIVING,
-                                     {{FloatLongitude{-73.981495}, FloatLatitude{40.768275}},
+                                     {{-73.981495_lon, 40.768275_lat},
                                       0,
                                       0,
                                       {TurnType::NoTurn, DirectionModifier::UTurn},
@@ -87,9 +87,9 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
                                      false}};
 
     LegGeometry geometry;
-    geometry.locations = {{FloatLongitude{-73.981492}, FloatLatitude{40.768258}},
-                          {FloatLongitude{-73.981495}, FloatLatitude{40.768275}},
-                          {FloatLongitude{-73.981495}, FloatLatitude{40.768275}}};
+    geometry.locations = {{-73.981492_lon, 40.768258_lat},
+                          {-73.981495_lon, 40.768275_lat},
+                          {-73.981495_lon, 40.768275_lat}};
     geometry.segment_offsets = {0, 2};
     geometry.segment_distances = {1.9076601161280742};
     geometry.node_ids = {NodeID{0}, NodeID{1}, NodeID{2}};

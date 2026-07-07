@@ -60,6 +60,9 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
     }
 
     {
+        // Ensure obstacle map internal storage is prepared for queries.
+        scripting_environment.m_obstacle_map.sort();
+
         const auto weight_multiplier =
             scripting_environment.GetProfileProperties().GetWeightMultiplier();
         util::UnbufferedLog log;

@@ -36,7 +36,8 @@ constexpr std::size_t RELAXED_NODE_LIMIT = HASH_MAP_CAPACITY * 0.75;
 
 void search(ContractorHeap &heap,
             const ContractorGraph &graph,
-            const std::vector<bool> &contractable,
+            const NodeID start,
+            const std::vector<bool> &contractible,
             const unsigned number_of_targets,
             const int node_limit,
             const EdgeWeight weight_limit,

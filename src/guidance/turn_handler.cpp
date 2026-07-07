@@ -257,7 +257,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
         { return node_based_graph.GetEdgeData(road.eid).flags.road_classification.IsLinkClass(); });
 
     auto fork = findFork(via_edge, intersection);
-    if (fork && (all_links || obvious_index == 0))
+    if (fork && (all_links || !obvious_index))
     {
         assignFork(via_edge, fork->getLeft(), fork->getRight());
     }
@@ -269,7 +269,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                 I
                 I
      */
-    else if (isEndOfRoad(intersection[0], intersection[1], intersection[2]) && obvious_index == 0)
+    else if (isEndOfRoad(intersection[0], intersection[1], intersection[2]) && !obvious_index)
     {
         if (intersection[1].entry_allowed)
         {
@@ -286,11 +286,11 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
                 intersection[2].instruction = {TurnType::OnRamp, DirectionModifier::Left};
         }
     }
-    else if (obvious_index != 0) // has an obvious continuing road/obvious turn
+    else if (obvious_index) // has an obvious continuing road/obvious turn
     {
         const auto direction_at_one = getTurnDirection(intersection[1].angle);
         const auto direction_at_two = getTurnDirection(intersection[2].angle);
-        if (obvious_index == 1)
+        if (*obvious_index == 1)
         {
             intersection[1].instruction =
                 getInstructionForObvious(3,
@@ -312,7 +312,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
         }
         else
         {
-            BOOST_ASSERT(obvious_index == 2);
+            BOOST_ASSERT(*obvious_index == 2);
             intersection[2].instruction =
                 getInstructionForObvious(3,
                                          via_edge,
@@ -344,7 +344,7 @@ Intersection TurnHandler::handleThreeWayTurn(const EdgeID via_edge, Intersection
 
 Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection intersection) const
 {
-    const std::size_t obvious_index = findObviousTurn(via_edge, intersection);
+    const auto obvious_index = findObviousTurn(via_edge, intersection);
     const auto fork = findFork(via_edge, intersection);
 
     const auto straightmost = intersection.findClosestTurn(STRAIGHT_ANGLE);
@@ -352,22 +352,22 @@ Intersection TurnHandler::handleComplexTurn(const EdgeID via_edge, Intersection 
     const auto straightmost_angle_dev = angularDeviation(straightmost->angle, STRAIGHT_ANGLE);
 
     // check whether the obvious choice is actually a through street
-    if (obvious_index != 0)
+    if (obvious_index)
     {
-        intersection[obvious_index].instruction =
+        intersection[*obvious_index].instruction =
             getInstructionForObvious(intersection.size(),
                                      via_edge,
-                                     isThroughStreet(obvious_index,
+                                     isThroughStreet(*obvious_index,
                                                      intersection,
                                                      node_based_graph,
                                                      node_data_container,
                                                      string_table,
                                                      street_name_suffix_table),
-                                     intersection[obvious_index]);
+                                     intersection[*obvious_index]);
 
         // assign left/right turns
-        intersection = assignLeftTurns(via_edge, std::move(intersection), obvious_index);
-        intersection = assignRightTurns(via_edge, std::move(intersection), obvious_index);
+        intersection = assignLeftTurns(via_edge, std::move(intersection), *obvious_index);
+        intersection = assignRightTurns(via_edge, std::move(intersection), *obvious_index);
     }
     else if (fork) // found fork
     {

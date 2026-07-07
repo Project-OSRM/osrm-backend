@@ -61,10 +61,10 @@ template <typename NodeEntryT, typename EdgeEntryT> class RemappableGraph
     using NodeT = NodeEntryT;
     using EdgeT = EdgeEntryT;
 
-    using NodeIterator = typename std::vector<NodeT>::iterator;
-    using ConstNodeIterator = typename std::vector<NodeT>::const_iterator;
-    using EdgeIterator = typename std::vector<EdgeT>::iterator;
-    using ConstEdgeIterator = typename std::vector<EdgeT>::const_iterator;
+    using NodeIterator = std::vector<NodeT>::iterator;
+    using ConstNodeIterator = std::vector<NodeT>::const_iterator;
+    using EdgeIterator = std::vector<EdgeT>::iterator;
+    using ConstEdgeIterator = std::vector<EdgeT>::const_iterator;
 
     // Constructs an empty graph with a given number of nodes.
     explicit RemappableGraph(std::vector<NodeT> nodes_, std::vector<EdgeT> edges_)

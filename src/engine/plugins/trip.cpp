@@ -2,7 +2,7 @@
 
 #include "engine/api/trip_api.hpp"
 #include "engine/api/trip_parameters.hpp"
-#include "engine/trip/trip_brute_force.hpp"
+#include "engine/trip/trip_dynamic_programming.hpp"
 #include "engine/trip/trip_farthest_insertion.hpp"
 #include "util/dist_table_wrapper.hpp" // to access the dist table more easily
 
@@ -222,7 +222,7 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Status::Error;
     }
 
-    const constexpr std::size_t BF_MAX_FEASIBLE = 10;
+    const constexpr std::size_t DP_MAX_FEASIBLE = 15;
     BOOST_ASSERT_MSG(result_duration_table.size() == number_of_locations * number_of_locations,
                      "Distance Table has wrong size");
 
@@ -247,13 +247,15 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     std::vector<NodeID> duration_trip;
     duration_trip.reserve(number_of_locations);
     // get an optimized order in which the destinations should be visited
-    if (number_of_locations < BF_MAX_FEASIBLE)
+    if (number_of_locations <= DP_MAX_FEASIBLE)
     {
-        duration_trip = trip::BruteForceTrip(number_of_locations, result_duration_table);
+        duration_trip = trip::DynamicProgrammingTrip(number_of_locations, result_duration_table);
     }
     else
     {
-        duration_trip = trip::FarthestInsertionTrip(number_of_locations, result_duration_table);
+        duration_trip = trip::TwoOptTrip(
+            trip::FarthestInsertionTrip(number_of_locations, result_duration_table),
+            result_duration_table);
     }
 
     if (!fixed_end || fixed_start)

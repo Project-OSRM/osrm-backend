@@ -162,8 +162,10 @@ OSRM will use 4/5 of the projected free-flow speed.
             | highway | maxspeed | width | lane_markings | forw    | backw   | forw_rate | backw_rate |
             | primary |          |       |               | 64 km/h | 64 km/h | 18.1      | 18.1       |
             | primary |          | 3     |               | 64 km/h | 64 km/h | 9         | 9          |
+            | primary |          | 9'    |               | 64 km/h | 64 km/h | 9         | 9          |
             | primary |          |       | no            | 64 km/h | 64 km/h | 13.5      | 13.5       |
             | primary |          | 3     | no            | 64 km/h | 64 km/h | 9         | 9          |
+            | primary |          | 20'   |               | 64 km/h | 64 km/h | 18.1      | 18.1       |
 
     Scenario: Car - Single lane and lane_markings penalties interaction
         Then routability should be

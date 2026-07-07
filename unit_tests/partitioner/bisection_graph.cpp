@@ -1,6 +1,7 @@
 #include "partitioner/bisection_graph.hpp"
 #include "partitioner/graph_generator.hpp"
 
+#include "../common/random_seed.hpp"
 #include "util/debug.hpp"
 
 #include <algorithm>
@@ -92,8 +93,7 @@ BOOST_AUTO_TEST_CASE(access_edges)
     const auto coordinates = makeGridCoordinates(rows, cols, step_size, 0, 0);
 
     auto grid_edges = makeGridEdges(rows, cols, 0);
-    std::random_device rd;
-    std::mt19937 rng(rd());
+    std::mt19937 rng(osrm::test::getTestRandomSeed());
     std::shuffle(grid_edges.begin(), grid_edges.end(), rng);
     groupEdgesBySource(grid_edges.begin(), grid_edges.end());
 

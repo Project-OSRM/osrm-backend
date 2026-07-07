@@ -1,6 +1,8 @@
 #include "util/vector_view.hpp"
 #include "util/typedefs.hpp"
 
+#include "../common/random_seed.hpp"
+
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
@@ -20,8 +22,7 @@ BOOST_AUTO_TEST_CASE(rw_short)
                                           num_elements);
     std::vector<std::uint16_t> reference;
 
-    std::mt19937 rng;
-    rng.seed(1337);
+    std::mt19937 rng(osrm::test::getTestRandomSeed());
     std::uniform_int_distribution<std::mt19937::result_type> dist(0, (1UL << 16));
 
     for (std::size_t i = 0; i < num_elements; i++)
@@ -40,15 +41,13 @@ BOOST_AUTO_TEST_CASE(rw_short)
 BOOST_AUTO_TEST_CASE(rw_bool)
 {
     std::size_t num_elements = 1000;
-    auto data = std::make_unique<typename vector_view<bool>::Word[]>(
-        (num_elements + sizeof(typename vector_view<bool>::Word) - 1) /
-        sizeof(typename vector_view<bool>::Word));
-    util::vector_view<bool> view(reinterpret_cast<typename vector_view<bool>::Word *>(data.get()),
+    auto data = std::make_unique<vector_view<bool>::Word[]>(
+        (num_elements + sizeof(vector_view<bool>::Word) - 1) / sizeof(vector_view<bool>::Word));
+    util::vector_view<bool> view(reinterpret_cast<vector_view<bool>::Word *>(data.get()),
                                  num_elements);
     std::vector<bool> reference;
 
-    std::mt19937 rng;
-    rng.seed(1337);
+    std::mt19937 rng(osrm::test::getTestRandomSeed());
     std::uniform_int_distribution<std::mt19937::result_type> dist(0, 2);
 
     for (std::size_t i = 0; i < num_elements; i++)

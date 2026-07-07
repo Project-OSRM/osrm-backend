@@ -9,6 +9,7 @@ local set_classification = require("lib/guidance").set_classification
 local get_destination = require("lib/destination").get_destination
 local Tags = require('lib/tags')
 local Measure = require("lib/measure")
+local resolve_access = require("lib/access").resolve_access
 
 WayHandlers = {}
 
@@ -260,6 +261,9 @@ function WayHandlers.access(profile,way,result,data)
   data.forward_access, data.backward_access =
     Tags.get_forward_backward_by_set(way,data,profile.access_tags_hierarchy)
 
+  data.forward_access = resolve_access(data.forward_access, profile)
+  data.backward_access = resolve_access(data.backward_access, profile)
+
   -- only allow a subset of roads to be treated as restricted
   if profile.restricted_highway_whitelist[data.highway] then
       if profile.restricted_access_tag_list[data.forward_access] then
@@ -399,12 +403,8 @@ function WayHandlers.penalties(profile,way,result,data)
   end
 
   local width_penalty = 1.0
-  local width = math.huge
+  local width = Measure.get_max_width(way:get_value_by_key("width"))
   local lanes = math.huge
-  local width_string = way:get_value_by_key("width")
-  if width_string and tonumber(width_string:match("%d*")) then
-    width = tonumber(width_string:match("%d*"))
-  end
 
   local lanes_string = way:get_value_by_key("lanes")
   if lanes_string and tonumber(lanes_string:match("%d*")) then
@@ -420,7 +420,19 @@ function WayHandlers.penalties(profile,way,result,data)
     width_penalty = profile.lane_markings_penalty
   end
 
-  if width <= 3 or (lanes <= 1 and is_bidirectional) then
+  if width and is_bidirectional then
+    if width <= 3 then
+      width_penalty = 0.5
+    elseif width < 4 then
+      width_penalty = 0.6
+    elseif width < 5 then
+      width_penalty = 0.75
+    elseif width < 6 then
+      width_penalty = 0.8
+    end
+  end
+
+  if lanes <= 1 and is_bidirectional then
     width_penalty = 0.5
   end
 

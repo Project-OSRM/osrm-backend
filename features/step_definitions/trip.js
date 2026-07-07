@@ -11,7 +11,7 @@ When(/^I plan a trip I should get$/, async function (table) {
   let got;
 
   await this.reprocessAndLoadData();
-  const testRow = function (row, ri) {
+  const testRow = function (row) {
     return new Promise((resolve, reject) => {
       const afterRequest = function (err, res, body) {
         if (err) return reject(err);
@@ -68,13 +68,53 @@ When(/^I plan a trip I should get$/, async function (table) {
         let trip_distance;
         let ok = res.statusCode === 200;
         if (ok) {
+          if (headers.has('weight_name')) {
+            got.weight_name = json.trips && json.trips[0] ? json.trips[0].weight_name : '';
+          }
           if (headers.has('trips')) {
-            subTrips = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map((sl, i) => {
-              const toAdd = [];
-              if (i === 0) toAdd.push(sl.steps[0].intersections[0].location);
-              toAdd.push(sl.steps[sl.steps.length-1].intersections[0].location);
-              return toAdd;
-            })));
+            // Prefer waypoint_index/trips_index from the API response to reconstruct
+            // trip order. This is robust against route-geometry details and still
+            // works for both single and multiple disconnected trips.
+            if (json.waypoints && json.waypoints.length > 0) {
+              const sortedWaypoints = json.waypoints
+                .slice()
+                .sort((a, b) => {
+                  if (a.trips_index !== b.trips_index) {
+                    return a.trips_index - b.trips_index;
+                  }
+                  return a.waypoint_index - b.waypoint_index;
+                });
+
+              const byTrip = [];
+              for (const waypoint of sortedWaypoints) {
+                if (!byTrip[waypoint.trips_index]) byTrip[waypoint.trips_index] = [];
+                byTrip[waypoint.trips_index].push(
+                  this.findNodeByLocation(waypoint.location),
+                );
+              }
+
+              const roundtripParam =
+                row.roundtrip ??
+                this.queryParams.roundtrip ??
+                'true';
+              const isRoundtrip = `${roundtripParam}` === 'true';
+
+              subTrips = byTrip
+                .filter(Boolean)
+                .map((trip) => {
+                  if (isRoundtrip && trip.length > 0) {
+                    return trip.concat(trip[0]);
+                  }
+                  return trip;
+                });
+            } else {
+              subTrips = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map((sl, i) => {
+                const toAdd = [];
+                if (i === 0) toAdd.push(sl.steps[0].intersections[0].location);
+                toAdd.push(sl.steps[sl.steps.length-1].intersections[0].location);
+                return toAdd;
+              })));
+            }
           }
           if(headers.has('durations')) {
             const all_durations = json.trips.filter(t => !!t).map(t => t.legs).map(tl => Array.prototype.concat.apply([], tl.map(sl => {
@@ -98,13 +138,22 @@ When(/^I plan a trip I should get$/, async function (table) {
           } else {
             // TODO: Check all rotations of the round trip
             for (let ni=0; ni<sub.length; ni++) {
-              const node = this.findNodeByName(sub[ni]),
-                outNode = subTrips[si][ni];
-              if (this.FuzzyMatch.matchLocation(outNode, node)) {
-                encodedResult += sub[ni];
+              const outNode = subTrips[si][ni];
+              if (typeof outNode === 'string') {
+                if (outNode === sub[ni]) {
+                  encodedResult += outNode;
+                } else {
+                  ok = false;
+                  encodedResult += outNode;
+                }
               } else {
-                ok = false;
-                encodedResult += util.format('? [%s,%s]', outNode[0], outNode[1]);
+                const node = this.findNodeByName(sub[ni]);
+                if (this.FuzzyMatch.matchLocation(outNode, node)) {
+                  encodedResult += sub[ni];
+                } else {
+                  ok = false;
+                  encodedResult += util.format('? [%s,%s]', outNode[0], outNode[1]);
+                }
               }
             }
           }

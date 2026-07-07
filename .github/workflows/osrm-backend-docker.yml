@@ -11,18 +11,26 @@ on:
         type: string
 
 env:
-  SEMVER_REF: ${{ inputs.ref || github.ref }}
+  SEMVER_REF: ${{ inputs.ref || github.ref_name }}
 
 jobs:
   build-amd64:
     if: github.repository == 'Project-OSRM/osrm-backend'
     strategy: &docker-base-image-matrix
       matrix:
-        docker-base-image: ["debian", "alpine"]
+        docker-base-image: ["debian"]
     runs-on: ubuntu-latest
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Check out the repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.ref }}
 
@@ -34,7 +42,10 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
           tags: |
+            type=raw,value=latest,suffix=-amd64-${{ matrix.docker-base-image }}
             type=semver,pattern=v{{version}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
             type=semver,pattern={{version}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
             type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }},suffix=-amd64-${{ matrix.docker-base-image }}
@@ -86,6 +97,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metadebug.outputs.tags  }}
           labels: ${{ steps.metadebug.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -97,6 +109,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metaassertions.outputs.tags  }}
           labels: ${{ steps.metaassertions.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -108,6 +121,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.meta.outputs.tags  }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -116,8 +130,16 @@ jobs:
     strategy: *docker-base-image-matrix
     runs-on: ubuntu-24.04-arm
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Check out the repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           ref: ${{ inputs.ref || github.ref }}
 
@@ -129,7 +151,10 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ghcr.io/${{ github.repository }}
+          flavor: |
+            latest=false
           tags: |
+            type=raw,value=latest,suffix=-arm64-${{ matrix.docker-base-image }}
             type=semver,pattern=v{{version}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
             type=semver,pattern={{version}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
             type=semver,pattern={{major}}.{{minor}},value=${{ env.SEMVER_REF }},suffix=-arm64-${{ matrix.docker-base-image }}
@@ -181,6 +206,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metadebug.outputs.tags  }}
           labels: ${{ steps.metadebug.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metadebug.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -192,6 +218,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.metaassertions.outputs.tags  }}
           labels: ${{ steps.metaassertions.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.metaassertions.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -203,6 +230,7 @@ jobs:
           file: ./docker/Dockerfile-${{ matrix.docker-base-image }}
           tags: ${{ steps.meta.outputs.tags  }}
           labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           build-args: |
             DOCKER_TAG=${{ join(steps.meta.outputs.tags ) }}-${{ matrix.docker-base-image }}
 
@@ -212,6 +240,14 @@ jobs:
     strategy: *docker-base-image-matrix
     runs-on: ubuntu-latest
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
@@ -254,7 +290,11 @@ jobs:
             MAJOR_MINOR="${VERSION%.*}"
             TAGS+=("$VERSION" "$MAJOR_MINOR")
           fi
-          
+
+          # Always include latest so the multi-arch manifest serves as the
+          # default image for docker pull without an explicit version tag.
+          TAGS+=("latest")
+
           # Deduplicate tags while preserving order
           MANIFEST_TAGS=()
           declare -A SEEN_TAGS=()
@@ -269,8 +309,21 @@ jobs:
 
           for IMAGE_SUFFIX in "" "-debug" "-assertions"; do
             for TAG in "${MANIFEST_TAGS[@]}"; do
+              # The "latest" tag only applies to the base image, not to
+              # -debug or -assertions variant suffixes.
+              if [ "$TAG" = "latest" ] && [ -n "$IMAGE_SUFFIX" ]; then
+                continue
+              fi
               docker buildx imagetools create -t "$REGISTRY:${TAG}${IMAGE_SUFFIX}-${{ matrix.docker-base-image }}" \
                 "$REGISTRY:${TAG}${IMAGE_SUFFIX}-amd64-${{ matrix.docker-base-image }}" \
                 "$REGISTRY:${TAG}${IMAGE_SUFFIX}-arm64-${{ matrix.docker-base-image }}"
+
+              # Additionally create a bare "latest" multi-arch manifest (no
+              # -debian suffix) so that "docker pull …:latest" works as expected.
+              if [ "$TAG" = "latest" ] && [ -z "$IMAGE_SUFFIX" ]; then
+                docker buildx imagetools create -t "$REGISTRY:latest" \
+                  "$REGISTRY:latest-amd64-${{ matrix.docker-base-image }}" \
+                  "$REGISTRY:latest-arm64-${{ matrix.docker-base-image }}"
+              fi
             done
           done

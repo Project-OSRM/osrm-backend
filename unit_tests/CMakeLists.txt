@@ -1,5 +1,3 @@
-enable_testing()
-
 file(GLOB EngineTestsSources
     engine_tests.cpp
     engine/*.cpp)
@@ -61,68 +59,54 @@ file(GLOB UtilTestsSources
     util_tests.cpp
     util/*.cpp)
 
-add_executable(engine-tests
-	EXCLUDE_FROM_ALL
+add_executable(engine-tests EXCLUDE_FROM_ALL
 	${EngineTestsSources}
         $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
-add_executable(contractor-tests
-	EXCLUDE_FROM_ALL
+add_executable(contractor-tests EXCLUDE_FROM_ALL
     ${ContractorTestsSources}
     $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
 
-add_executable(extractor-tests
-	EXCLUDE_FROM_ALL
+add_executable(extractor-tests EXCLUDE_FROM_ALL
 	${ExtractorTestsSources}
 	$<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 
-add_executable(partitioner-tests
-	EXCLUDE_FROM_ALL
+add_executable(partitioner-tests EXCLUDE_FROM_ALL
 	${PartitionTestsSources}
 	$<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:UTIL>)
 
-add_executable(customizer-tests
-	EXCLUDE_FROM_ALL
+add_executable(customizer-tests EXCLUDE_FROM_ALL
     ${CustomizerTestsSources}
     $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
 
-add_executable(updater-tests
-	EXCLUDE_FROM_ALL
+add_executable(updater-tests EXCLUDE_FROM_ALL
     ${UpdaterTestsSources}
     $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
 
-add_executable(storage-tests
-	EXCLUDE_FROM_ALL
+add_executable(storage-tests EXCLUDE_FROM_ALL
     ${StorageTestsSources}
     $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
 
-add_executable(library-tests
-	EXCLUDE_FROM_ALL
+add_executable(library-tests EXCLUDE_FROM_ALL
 	${LibraryTestsSources})
 
-add_executable(library-extract-tests
-	EXCLUDE_FROM_ALL
+add_executable(library-extract-tests EXCLUDE_FROM_ALL
 	${LibraryExtractTestsSources})
 
-add_executable(library-contract-tests
-	EXCLUDE_FROM_ALL
+add_executable(library-contract-tests EXCLUDE_FROM_ALL
 	${LibraryContractTestsSources})
 
-add_executable(library-customize-tests
-    EXCLUDE_FROM_ALL
+add_executable(library-customize-tests EXCLUDE_FROM_ALL
     ${LibraryCustomizeTestsSources})
 
-add_executable(library-partition-tests
-    EXCLUDE_FROM_ALL
+add_executable(library-partition-tests EXCLUDE_FROM_ALL
     ${LibraryPartitionTestsSources})
 
-add_executable(server-tests
-	EXCLUDE_FROM_ALL
+add_executable(server-tests EXCLUDE_FROM_ALL
 	${ServerTestsSources}
 	$<TARGET_OBJECTS:UTIL> $<TARGET_OBJECTS:SERVER>)
 
-add_executable(util-tests
-	EXCLUDE_FROM_ALL
+add_executable(util-tests EXCLUDE_FROM_ALL
 	${UtilTestsSources}
         $<TARGET_OBJECTS:UTIL>)
 
@@ -145,20 +129,19 @@ if (NOT WIN32)
     COMMENT "Building test data in ${TEST_DATA_DIR}"
     VERBATIM)
   add_dependencies(test-data osrm-extract osrm-contract osrm-partition osrm-customize)
-  # Ensure test data is built before building library-tests
-  add_dependencies(library-tests test-data)
 endif()
 
 
-target_compile_definitions(extractor-tests PRIVATE COMPILE_DEFINITIONS OSRM_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/unit_tests/fixtures")
-target_compile_definitions(library-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
-target_compile_definitions(library-extract-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
-target_compile_definitions(library-contract-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
-target_compile_definitions(library-customize-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
-target_compile_definitions(library-partition-tests PRIVATE COMPILE_DEFINITIONS OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
-target_compile_definitions(updater-tests PRIVATE COMPILE_DEFINITIONS TEST_DATA_DIR="${UPDATER_TEST_DATA_DIR}")
-target_compile_definitions(contractor-tests PRIVATE COMPILE_DEFINITIONS TEST_DATA_DIR="${TEST_DATA_DIR}")
-target_compile_definitions(storage-tests PRIVATE COMPILE_DEFINITIONS TEST_DATA_DIR="${TEST_DATA_DIR}")
+target_compile_definitions(extractor-tests PRIVATE OSRM_FIXTURES_DIR="${CMAKE_SOURCE_DIR}/unit_tests/fixtures")
+target_compile_definitions(extractor-tests PRIVATE OSRM_PROFILES_DIR="${CMAKE_SOURCE_DIR}/profiles")
+target_compile_definitions(library-tests PRIVATE OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
+target_compile_definitions(library-extract-tests PRIVATE OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
+target_compile_definitions(library-contract-tests PRIVATE OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
+target_compile_definitions(library-customize-tests PRIVATE OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
+target_compile_definitions(library-partition-tests PRIVATE OSRM_TEST_DATA_DIR="${TEST_DATA_DIR}")
+target_compile_definitions(updater-tests PRIVATE TEST_DATA_DIR="${UPDATER_TEST_DATA_DIR}")
+target_compile_definitions(contractor-tests PRIVATE TEST_DATA_DIR="${TEST_DATA_DIR}")
+target_compile_definitions(storage-tests PRIVATE TEST_DATA_DIR="${TEST_DATA_DIR}")
 
 target_include_directories(engine-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(library-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
@@ -188,7 +171,9 @@ target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_L
 target_link_libraries(contractor-tests osrm_contract ${CONTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 target_link_libraries(storage-tests osrm_store ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 
-# Register unit test executables with CTest
+# Register unit test executables with CTest.
+# Each test uses a fixture so that ctest automatically builds the executable
+# (and test data where needed) before running it.
 set(TEST_TARGETS
     engine-tests
     contractor-tests
@@ -206,23 +191,60 @@ set(TEST_TARGETS
     util-tests
 )
 
+# Tests that need the monaco extraction test data
+set(LIBRARY_TEST_TARGETS
+    library-tests
+    library-extract-tests
+    library-contract-tests
+    library-customize-tests
+    library-partition-tests
+)
+
 foreach(t ${TEST_TARGETS})
+    # Build step: compile the test executable
+    add_test(NAME ${t}-build
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${t} --config $<CONFIG>)
+    set_tests_properties(${t}-build PROPERTIES FIXTURES_SETUP ${t}-fixture)
+
+    # Run step: execute the test
     add_test(NAME ${t} COMMAND $<TARGET_FILE:${t}>)
+    set_tests_properties(${t} PROPERTIES FIXTURES_REQUIRED ${t}-fixture)
 endforeach()
+
+# Build test data before running the library tests that need it
+if (NOT WIN32)
+    add_test(NAME test-data-build
+        COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target test-data --config $<CONFIG>)
+    set_tests_properties(test-data-build PROPERTIES FIXTURES_SETUP test-data-fixture)
+
+    foreach(t ${LIBRARY_TEST_TARGETS})
+        set_tests_properties(${t} PROPERTIES FIXTURES_REQUIRED "${t}-fixture;test-data-fixture")
+    endforeach()
+endif()
 
 if(BUILD_AS_SUBPROJECT)
   add_custom_target(osrm_tests
-	DEPENDS engine-tests extractor-tests contractor-tests partitioner-tests updater-tests customizer-tests library-tests library-extract-tests library-contract-tests library-customize-tests library-partition-tests server-tests util-tests storage-tests)
+	DEPENDS ${TEST_TARGETS})
 else()
   add_custom_target(tests
-	DEPENDS engine-tests extractor-tests contractor-tests partitioner-tests updater-tests customizer-tests library-tests library-extract-tests library-contract-tests library-customize-tests library-partition-tests server-tests util-tests storage-tests)
+	DEPENDS ${TEST_TARGETS})
 endif()
 
-# Provide a 'check' target that builds the test executables then runs ctest.
-# This prevents surprising failures when users run `ctest` without first building tests
-# (the test executables are EXCLUDE_FROM_ALL by design).
+if (NOT WIN32)
+  if(BUILD_AS_SUBPROJECT)
+    add_dependencies(osrm_tests test-data)
+  else()
+    add_dependencies(tests test-data)
+  endif()
+
+  foreach(t ${LIBRARY_TEST_TARGETS})
+    add_dependencies(${t} test-data)
+  endforeach()
+endif()
+
+# Provide a 'check' target that builds everything then runs ctest.
 add_custom_target(check
   DEPENDS ${TEST_TARGETS}
   COMMAND ${CMAKE_CTEST_COMMAND} --output-on-failure
-  COMMENT "Build tests and run ctest (use 'cmake --build . --target check')"
+  COMMENT "Build tests and run ctest"
 )

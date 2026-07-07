@@ -18,13 +18,13 @@ DirectionModifier::Enum getMatchingModifier(const extractor::TurnLaneType::Mask 
 bool isValidMatch(const extractor::TurnLaneType::Mask tag, const TurnInstruction instruction);
 
 // localisation of the best possible match for a tag
-typename Intersection::const_iterator findBestMatch(const extractor::TurnLaneType::Mask tag,
-                                                    const Intersection &intersection);
+Intersection::const_iterator findBestMatch(const extractor::TurnLaneType::Mask tag,
+                                           const Intersection &intersection);
 
 // the quality of a matching to decide between first/second possibility on segregated intersections
 double getMatchingQuality(const extractor::TurnLaneType::Mask tag, const ConnectedRoad &road);
 
-typename Intersection::const_iterator
+Intersection::const_iterator
 findBestMatchForReverse(const extractor::TurnLaneType::Mask leftmost_tag,
                         const Intersection &intersection);
 

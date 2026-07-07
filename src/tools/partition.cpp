@@ -11,6 +11,7 @@
 #include <boost/algorithm/string/join.hpp>
 #include <boost/program_options.hpp>
 
+#include <array>
 #include <filesystem>
 #include <iostream>
 #include <iterator>
@@ -115,7 +116,10 @@ return_code parseArguments(int argc,
          boost::program_options::value<MaxCellSizesArgument>()->default_value(
              MaxCellSizesArgument{config.max_cell_sizes}),
          "Maximum cell sizes starting from the level 1. The first cell size value is a bisection "
-         "termination citerion");
+         "termination criterion")(
+            "output,o",
+            boost::program_options::value<std::filesystem::path>(&config.output_path),
+            "Output base path for generated files (default: same as input)");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
@@ -219,6 +223,24 @@ try
 
     // set the default in/output names
     partition_config.UseDefaultOutputNames(partition_config.base_path);
+
+    if (!partition_config.output_path.empty())
+    {
+        // Strip known extensions from the user-provided output path
+        std::string path = partition_config.output_path.string();
+        const std::array<std::string, 6> known_extensions{
+            {".osm.bz2", ".osm.pbf", ".osm.xml", ".pbf", ".osm", ".osrm"}};
+        for (const auto &ext : known_extensions)
+        {
+            const auto pos = path.find(ext);
+            if (pos != std::string::npos)
+            {
+                path.replace(pos, ext.size(), "");
+                break;
+            }
+        }
+        partition_config.output_path = path;
+    }
 
     if (1 > partition_config.requested_num_threads)
     {

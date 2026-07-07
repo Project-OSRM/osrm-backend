@@ -28,7 +28,7 @@ template <typename AlgorithmT, template <typename A> class FacadeT>
 class ExternalProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
 {
   public:
-    using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
+    using Facade = DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
     ExternalProvider(const storage::StorageConfig &config)
         : facade_factory(std::make_shared<datafacade::MMapMemoryAllocator>(config))
@@ -52,7 +52,7 @@ template <typename AlgorithmT, template <typename A> class FacadeT>
 class ImmutableProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
 {
   public:
-    using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
+    using Facade = DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
     ImmutableProvider(const storage::StorageConfig &config)
         : facade_factory(std::make_shared<datafacade::ProcessMemoryAllocator>(config))
@@ -78,7 +78,7 @@ class WatchingProvider : public DataFacadeProvider<AlgorithmT, FacadeT>
     DataWatchdog<AlgorithmT, FacadeT> watchdog;
 
   public:
-    using Facade = typename DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
+    using Facade = DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
     WatchingProvider(const std::string &dataset_name) : watchdog(dataset_name) {}
 

@@ -31,7 +31,7 @@ class BrowseResistantCache
     };
 
     using List = std::list<Entry>;
-    using ListIterator = typename List::iterator;
+    using ListIterator = List::iterator;
     using Map = std::unordered_map<Key, ListIterator, Hash, KeyEqual>;
 
   public:

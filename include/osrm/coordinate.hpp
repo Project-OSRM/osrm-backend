@@ -37,6 +37,8 @@ using util::FixedLatitude;
 using util::FixedLongitude;
 using util::FloatLatitude;
 using util::FloatLongitude;
+using util::operator""_lat;
+using util::operator""_lon;
 using util::toFixed;
 using util::toFloating;
 } // namespace osrm

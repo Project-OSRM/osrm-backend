@@ -55,3 +55,12 @@ Then you can test it with:
 ```bash
 curl 'http://localhost:8888?start=7.419758,43.731142&end=7.419505,43.736825'
 ```
+
+### `trip.html`
+
+`trip.html` is a static browser demo for the Trip service. It talks directly to
+an `osrm-routed` HTTP endpoint, uses a vector-tile basemap, and supports click
+to add, drag to move, and click/delete to remove markers.
+
+Open it from any static web server and point the `osrm-routed base URL` field
+at your running `osrm-routed` instance.

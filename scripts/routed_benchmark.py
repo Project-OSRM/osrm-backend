@@ -159,21 +159,42 @@ def make_csv(args):
 def report(args):
     rows = list()
     index = list()
+
+    current_run = None
+    current_log = None
+
     for logfile in args.logfiles:
         with open(logfile) as log:
             for line in log:
-                if m := re.search(r"^### (\d+) \"(.*?)\" \"(.*?)\"$", line):
-                    index.append((int(m.group(1)), m.group(3)))
-                    rows.append({"samples": 0, "time": 0.0, "distance": 0.0})
-                if m := re.search(r"([.\d]+)ms", line):
-                    rows[-1]["time"] += float(m.group(1))
-                    rows[-1]["samples"] += 1
-                if m := re.search(r"Distance: ([.\d]+)", line):
-                    rows[-1]["distance"] += float(m.group(1))
+                if m := re.search(
+                    r"^### (\d+) \"(.*?)\" \"(.*?)\"$", line
+                ):  # run build log
+                    current_run = int(m.group(1))
+                    current_log = m.group(3)
+                    continue
+
+                if m := re.search(r"(/route/v1/.*$)", line):
+                    current_url = m.group(1)
+                    index.append([current_run, current_log, current_url])
+                    if m := re.search(r"([.\d]+)ms", line):
+                        current_time = float(m.group(1))
+                    line = log.readline()
+                    if m := re.search(r"Distance: ([.\d]+)", line):
+                        current_distance = float(m.group(1))
+                        rows.append(
+                            {
+                                "time": current_time,
+                                "distance": current_distance,
+                            }
+                        )
 
     df = pd.DataFrame(
-        rows, index=pd.MultiIndex.from_tuples(index, names=("run", "log"))
+        rows, index=pd.MultiIndex.from_tuples(index, names=("run", "log", "url"))
     )
+
+    # pd.set_option('display.max_rows', 500)
+    # pd.set_option('display.max_columns', 500)
+    # pd.set_option("display.width", 1000)
 
     print(f"## RAW data - {datetime.datetime.now().isoformat()}\n```")
     print(df)
@@ -181,6 +202,9 @@ def report(args):
 
     def norm(series):
         return series / series.iloc[0]
+
+    check = df.distance.groupby(["url"], sort=False).agg(["std"])
+    print(check[check["std"] > 0])
 
     groupby = ["log"]
 
@@ -197,7 +221,7 @@ def report(args):
     agg = agg.reset_index(names=groupby)
 
     headers = ("log", "time (ms)", "norm", "distance", "norm")
-    floatfmt = ("", ".2f", ".3f", ".0f", ".3f")
+    floatfmt = ("", ".2f", ".3f", ".3f", ".3f")
     print(
         tabulate.tabulate(
             agg, headers, tablefmt="github", floatfmt=floatfmt, showindex=False

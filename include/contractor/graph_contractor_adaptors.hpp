@@ -44,9 +44,9 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, const InputEdgeContain
                            input_edge.data.distance,
                            1,
                            input_edge.data.turn_id,
-                           false,
-                           input_edge.data.forward ? true : false,
-                           input_edge.data.backward ? true : false);
+                           false, // shortcut
+                           input_edge.data.forward,
+                           input_edge.data.backward);
 
         edges.emplace_back(input_edge.target,
                            input_edge.source,
@@ -56,8 +56,8 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, const InputEdgeContain
                            1,
                            input_edge.data.turn_id,
                            false,
-                           input_edge.data.backward ? true : false,
-                           input_edge.data.forward ? true : false);
+                           input_edge.data.backward,
+                           input_edge.data.forward);
     };
     tbb::parallel_sort(edges.begin(), edges.end());
 

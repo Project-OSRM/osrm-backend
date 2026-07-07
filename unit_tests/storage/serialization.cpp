@@ -2,6 +2,7 @@
 
 #include "util/vector_view.hpp"
 
+#include "../common/random_seed.hpp"
 #include "../common/range_tools.hpp"
 #include "../common/temporary_file.hpp"
 
@@ -31,8 +32,7 @@ BOOST_AUTO_TEST_CASE(vector_view_pack_test)
     // what vector_view<bool> expects
 
     // 1. Generate a random bool vector that covers several uint64_t bytes
-    constexpr unsigned RANDOM_SEED = 42;
-    std::mt19937 g(RANDOM_SEED);
+    std::mt19937 g(osrm::test::getTestRandomSeed());
     std::uniform_int_distribution<> binary_distribution(0, 1);
     std::vector<bool> v(150);
     for (std::size_t i = 0; i < v.size(); ++i)
