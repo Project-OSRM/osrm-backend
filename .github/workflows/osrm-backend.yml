@@ -198,7 +198,7 @@ jobs:
     permissions:
       contents: read
       actions: write  # needed by actions/cache
-      pull-requests: write  # needed by suggest-changes to post review suggestions
+      pull-requests: write  # needed to post PR comments with instructions
     steps:
     - uses: actions/checkout@v7
     - name: Use Node.js
@@ -229,16 +229,47 @@ jobs:
       run: ./scripts/format.sh
     - name: Generate API documentation
       run: npm run docs
-    - name: Suggest formatting and documentation changes on PR
-      if: github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
-      uses: parkerbxyz/suggest-changes@v3
+    - name: Check for outstanding changes
+      id: changes
+      run: |
+        if ! git diff --exit-code --quiet; then
+          echo "dirty=true" >> "$GITHUB_OUTPUT"
+          git diff > /tmp/formatting-fixes.patch
+        fi
+    - name: Upload formatting patch as artifact
+      if: steps.changes.outputs.dirty == 'true'
+      uses: actions/upload-artifact@v7
       with:
-        comment: 'Please review and commit the suggested formatting and documentation changes.'
-        event: 'REQUEST_CHANGES'
-    - name: Verify no outstanding changes
-      run: ./scripts/error_on_dirty.sh "Run './scripts/format.sh' and/or 'npm run docs' locally and commit the changes."
+        name: formatting-fixes
+        path: /tmp/formatting-fixes.patch
+        retention-days: 7
+    - name: Post download instructions on PR
+      if: steps.changes.outputs.dirty == 'true' && github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
+      run: |
+        gh pr comment "${{ github.event.pull_request.number }}" --body "## :wrench: Code Formatting / Documentation Required
+
+        \`./scripts/format.sh\` and/or \`npm run docs\` produced changes on this branch.
+
+        **Option 1 — Apply the patch:** Download [formatting-fixes.patch](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}) from this workflow run's artifacts and apply it:
+        \`\`\`bash
+        git apply formatting-fixes.patch
+        \`\`\`
+
+        **Option 2 — Run locally:**
+        \`\`\`bash
+        ./scripts/format.sh
+        npm run docs
+        \`\`\`
+        Then commit the changes."
+      env:
+        GH_TOKEN: ${{ github.token }}
     - name: Run npm audit
       run: npm audit --production
+    - name: Fail on outstanding changes
+      if: steps.changes.outputs.dirty == 'true'
+      run: |
+        echo "::error::Code formatting and/or documentation is out of date. Download the patch from the workflow artifacts and apply with 'git apply formatting-fixes.patch', or run './scripts/format.sh' and 'npm run docs' locally."
+        exit 1
 
   docker-build-extract-test:
     strategy:
