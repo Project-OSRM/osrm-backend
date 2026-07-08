@@ -494,15 +494,16 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
         const auto outgoing = gatherForwardOutgoing(facade, mld, current);
         const auto continuation = selectContinuation(outgoing, current_refs);
 
-        // Ref components of the arm we are following, for the same-road split test below.
+        // Ref components of the arm we are following, for the same-road split test below. Only the
+        // continuation's RAW ref identifies the road we stay on; its DESTINATION signage must be
+        // excluded, because at a knooppunt gore the through-lane's sign merges the mainline with the
+        // crossing motorway (A50's through-sign reads "A50, A1: Zwolle, ..., Amsterdam"). Folding
+        // those destination refs in makes the crossing motorway's own off-ramp look like a
+        // same-road split, and one direction of every such crossing gets wrongly suppressed
+        // (§S3-fix8: A1-east at KP Beekbergen, A28-north at KP Hattemerbroek).
         std::vector<std::string> continuation_refs;
         if (continuation != outgoing.end())
-        {
             continuation_refs = refComponents(continuation->ref);
-            continuation_refs.insert(continuation_refs.end(),
-                                     continuation->branch_refs.begin(),
-                                     continuation->branch_refs.end());
-        }
 
         for (auto it = outgoing.begin(); it != outgoing.end(); ++it)
         {

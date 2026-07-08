@@ -500,3 +500,75 @@ they are the same corridor and the nearer is kept. Opposite directions diverge w
 refined-toward application + arc-distance overlap in the per-parent dedup);
 `tools/hm2_spike/regression.py` (`SIGNAGE_CASE`/`run_signage_case`, `DUP_CASE`/`run_dup_case`,
 `_frac_within`).
+
+## S3-fix8 — crossing-motorway direction dropped at cloverleaf gores (over-suppression by continuation destinations)
+
+Product gap: driving A50 north (from the A12-east → A50-north route out of KP Grijsoord), only **one**
+direction of each crossing motorway showed. At **KP Beekbergen** (A1, a klaverblad) the tree emitted
+only A1-**west** (toward Amsterdam) — A1-**east** (Deventer/Hengelo) was missing. At **KP
+Hattemerbroek** (A28) only A28-**south** (Amersfoort) — A28-**north** (Zwolle/Groningen) was missing.
+This is **not** the S3-fix6 direction-fork path (that handles a *single* shared ramp that forks into
+both directions after landing, e.g. Prins Clausplein). At a cloverleaf the two directions leave the
+mainline as two **separate** off-ramps, and the second one was being dropped in junction *detection*.
+
+**Root cause (candidate (b), refined — evidenced with an all-arms graph dump at the two gores).** The
+missing direction's off-ramp is present, motorway-signed, and would qualify:
+- KP Beekbergen node ≈41078: `OffRamp`, `destination = "A1: Hengelo, Deventer"` → `branch_refs = [A1]`.
+- KP Hattemerbroek node ≈71908: `OffRamp`, `destination = "A28: Groningen, Zwolle"` → `[A28]`.
+
+But the **same-ref suppression** block killed it. `continuation_refs` (the identity of the road we
+stay on, used to suppress parallel-carriageway / concurrency-unbundling splits) was built from the
+continuation arm's **raw ref PLUS its destination signage** (`continuation->branch_refs`). At a
+knooppunt gore the through-lane is a `Suppressed`/`NoTurn` arm whose **destination sign merges the
+mainline with the crossing road**: at Beekbergen the A50 through-arm reads
+`"A50, A1: Zwolle, Apeldoorn, Amsterdam, Utrecht, Amersfoort"` → `branch_refs = [A50, A1]`; at
+Hattemerbroek `"N50, A28: Emmeloord, Kampen, Amersfoort"` → `[N50, A28]`. Folding those into
+`continuation_refs` made the crossing motorway's own off-ramp (`[A1]` / `[A28]`) share a component with
+"the road we're continuing on", so it was suppressed as if it were a same-road split. This is the
+documented **"gore ref = mainline ref"** sharp edge biting through the *destination* channel rather
+than the raw ref. It hit exactly **one** direction per junction, incidentally: whichever through-gore
+arm `selectContinuation` picked determined whether the crossing ref leaked — at Beekbergen the picked
+A1-west gore arm's sign happened *not* to carry the A1 component (empty/`"A50: Zwolle, Apeldoorn"`), so
+A1-west survived while A1-east died. Not budget/depth (the A50 branch is only 12 segments at a 70 km
+cap; these are depth-2 children but depth is irrelevant — this is per-node suppression logic).
+
+**Fix (one-line, root-cause-targeted).** `continuation_refs` now uses **only the continuation arm's
+raw ref** (`refComponents(continuation->ref)`), not its destination signage. The raw ref identifies
+the physical road we stay on (reliably the mainline at every NL gore observed); the destinations
+*advertise* reachable roads and must not drive same-road suppression. The drift-protection intent
+(continuation covers `current_ref` only updating on `NewName`) is preserved — a genuine renumbering
+carries the new ref on the continuation **edge**, which the raw ref still catches. Nothing else
+changed; the direction is now detected as an ordinary qualifying crossing branch (no fix6 machinery
+involved).
+
+**Validation** (`tools/hm2_spike/regression.py`, new `run_cloverleaf_case` / `CLOVERLEAF_CASE`, all
+green — 38 checks):
+- **A50 north** (root snap, 70 km): both A1 directions at Beekbergen (`[A1, Hengelo, Deventer]` +
+  `[A1, Amsterdam, Utrecht, Amersfoort]`) and both A28 directions at Hattemerbroek (`[A28, Groningen,
+  Zwolle]` + `[A28, Amersfoort]`) now present. Pre-fix only A1-west and A28-south appeared (new case
+  fails on the fix7 build, passes on fix8). On the original repro (`5.600339,52.030307` bearing 85,
+  200 km) the A50 subtree's direct children go from **2 → 4** (A1 ×2 + A28 ×2).
+- **Defect size (fixed vs unfixed, same probes):** A2-south 90 km — junctions emitting both crossing
+  directions **47 → 75**; A4-north 60 km **8 → 10**; Ede A12 200 km **60 → 77**. The recovered pairs
+  are genuine opposite directions with correct distinct signage across many interchange types
+  (A2→A15 Rotterdam vs Nijmegen; A2→A67 Antwerpen vs Venlo; A27→A58 Antwerpen vs Eindhoven; A16→A20
+  Gouda vs Hoek van Holland; …) — i.e. the bug was widespread, not Beekbergen-specific. S3-fix6 had
+  only recovered the *fork-after-landing* subset; this covers the *separate-ramp* (cloverleaf)
+  subset.
+- **No over-suppression regression:** SAMEREF (no branch shares a ref with its parent), CONCURRENCY
+  (no toward-self junction, 200 km), and DUP (no same-ref sibling corridor duplicates) all stay
+  green — the newly emitted branches are distinct crossing directions, not parallel/concurrency
+  splits, and the per-parent dedup absorbs any collision with a fix6 sibling. All prior cases green.
+
+**Tree cost.** Sub-cap probes grow by the recovered directions: A2-south 90 km **256 → 340** segments
+(+33 %), A4-north 60 km **45 → 49**; timing unchanged (A2-south 90 km ≈ 0.05 s, 200 km ≈ 0.15 s). At
+the 400-segment cap the extra near directions **displace distant reach** (Ede 200 km stays 400
+segments; both-direction junctions 60 → 77 but total branches 388 → 389) — a genuine
+near-vs-far budget tradeoff, consistent with S3-fix6's "both directions at a junction is the product
+requirement". Under practical PoC caps (30–90 km) the tree is well below the cap, so it is pure
+coverage gain. **Deliberately not changed:** `MAX_CROSSING_DIRECTIONS`/segment budget — re-tuning the
+cap for the richer tree is a separate product call, not part of this root-cause fix.
+
+**Files:** `src/engine/plugins/tree.cpp` (`continuation_refs` in `walkOne` — drop the
+`continuation->branch_refs` fold, keep the raw-ref components); `tools/hm2_spike/regression.py`
+(`CLOVERLEAF_CASE` + `run_cloverleaf_case`).

@@ -58,7 +58,13 @@ change; extend it for EVERY fix.
   current road would otherwise emit spurious "via A2" junctions. Case: `SAMEREF_CASE` (A4 Den Hoorn).
   **Do NOT gate on the arm's own EDGE ref** — the A27 off-ramp at Everdingen carries a *stale edge
   ref of `A2`* (Stage 1 finding 7.4), which would wrongly kill the real A27 branch. Signage only.
-  See §S3-fix5 "Not shipped — #1".
+  See §S3-fix5 "Not shipped — #1". **The continuation check uses the continuation arm's RAW ref only,
+  NEVER its destination signage** (§S3-fix8). At a knooppunt gore the through-lane's `destination`
+  sign merges the mainline with the *crossing* road (A50's through-sign reads `A50, A1: Zwolle, …,
+  Amsterdam`); folding those destination refs in makes the crossing motorway's own off-ramp look like
+  a same-road split and drops one direction of the crossing (A1-east at KP Beekbergen, A28-north at KP
+  Hattemerbroek). The raw ref identifies the road we stay on; destinations advertise reachable roads.
+  Case: `CLOVERLEAF_CASE` (A50 north, both directions at both cloverleaf crossings).
 
 - **Motorway containment guard** (`isMotorwayNode`/`isMotorwayRef`, L106/L180; enforced in the walk
   loop). Only continue onto motorway-class edges; a branch must never escape onto an N-road/city
@@ -168,7 +174,7 @@ cmake --build build --target osrm-routed     # normal iterate: rebuild just the 
 ```
 
 **Test — non-negotiable loop:** after every change, `python3 tools/hm2_spike/regression.py` (must be
-all-green; currently 30 assertions across the `run_*_case` fns). For every bug you fix, ADD a case
+all-green; currently 39 assertions across the `run_*_case` fns). For every bug you fix, ADD a case
 that fails before and passes after — that is how each rule above earned its line. Use `debug=true`
 to inspect `dropped_stubs[]`.
 

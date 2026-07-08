@@ -124,6 +124,18 @@ SIGNAGE_CASE = dict(name="A4 @ Prins Clausplein — each A12 direction carries i
 DUP_CASE = dict(name="A4 north — no duplicate corridor (parallelbaan re-expansion / twin ramps)",
                 lng=4.3236797, lat=52.0268771, bearing=32, cap=200000)
 
+# Crossing-road directions at a cloverleaf (S3-fix8). At a klaverblad the two directions of the
+# crossing motorway leave the mainline as two SEPARATE off-ramps (unlike Prins Clausplein, where one
+# shared ramp forks into both — that path is covered by S3-fix6/DIRECTIONS_CASE). The through-lane's
+# gore sign merges the mainline ref with the crossing ref (A50's through-sign reads
+# "A50, A1: Zwolle, ..., Amsterdam"); folding that destination signage into the same-ref suppression
+# made the crossing's own off-ramp look like a same-road split and dropped exactly ONE direction of
+# each crossing. Probing A50 north, KP Beekbergen (A1) and KP Hattemerbroek (A28) must each emit BOTH
+# directions with the right per-direction signage. Pre-fix: only A1-west (Amsterdam) and A28-south
+# (Amersfoort) appeared; A1-east (Deventer/Hengelo) and A28-north (Zwolle/Groningen) were missing.
+CLOVERLEAF_CASE = dict(name="A50 north — both directions of each cloverleaf crossing (Beekbergen A1, Hattemerbroek A28)",
+                       lng=5.94851, lat=52.08628, bearing=9, cap=70000)
+
 # Off-motorway (Amsterdam centrum local road) -> NoSegment.
 OFF_MOTORWAY_CASE = dict(name="off-motorway -> NoSegment",
                          lng=4.89218, lat=52.37320, bearing=90)
@@ -450,6 +462,33 @@ def run_dup_case(c):
           f"offenders={dups[:5]}")
 
 
+def run_cloverleaf_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok" and tree.get("ref") == "A50",
+                 f"{c['name']}: root snaps to A50", f"http={http} ref={tree.get('ref')}"):
+        return
+
+    # Places on the direct A50-root children of a given crossing ref (one set per emitted direction).
+    def toward_sets(ref):
+        return [set(b["junction"].get("toward", []))
+                for b in tree.get("branches", []) if b["route"]["ref"] == ref]
+
+    a1 = toward_sets("A1")
+    a1_east = any({"Deventer", "Hengelo"} & p for p in a1)   # KP Beekbergen, eastbound
+    a1_west = any("Amsterdam" in p for p in a1)              # westbound
+    check(a1_east and a1_west,
+          f"{c['name']}: both A1 directions at KP Beekbergen (east Deventer/Hengelo + west Amsterdam)",
+          f"a1_toward={a1}")
+
+    a28 = toward_sets("A28")
+    a28_north = any({"Zwolle", "Groningen"} & p for p in a28)  # KP Hattemerbroek, northbound
+    a28_south = any("Amersfoort" in p for p in a28)            # southbound
+    check(a28_north and a28_south,
+          f"{c['name']}: both A28 directions at KP Hattemerbroek (north Zwolle/Groningen + south Amersfoort)",
+          f"a28_toward={a28}")
+
+
 def run_off_motorway_case(c):
     print(f"\n# {c['name']}")
     tree, http = get(f"/tree/v1/driving/{c['lng']},{c['lat']}?bearings={c['bearing']},45")
@@ -486,6 +525,7 @@ def main():
     run_directions_case(DIRECTIONS_CASE)
     run_signage_case(SIGNAGE_CASE)
     run_dup_case(DUP_CASE)
+    run_cloverleaf_case(CLOVERLEAF_CASE)
     run_off_motorway_case(OFF_MOTORWAY_CASE)
     run_junction_names()
 
