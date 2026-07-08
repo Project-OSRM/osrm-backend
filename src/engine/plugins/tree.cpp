@@ -18,6 +18,7 @@
 #include <queue>
 #include <regex>
 #include <string>
+#include <tuple>
 #include <unordered_map>
 #include <unordered_set>
 #include <utility>
@@ -56,6 +57,14 @@ constexpr double MIN_DIRECTION_M = 1500.0;
 // A same-ref arm suppressed this close to a branch's start is the crossing road's other direction
 // (not a mainline parallelbaan); it is spawned as a sibling if it reaches a real road.
 constexpr double CONNECTOR_M = 3000.0;
+// Same-road parallel carriageway (hoofdbaan/parallelbaan split, e.g. the A2 through
+// 's-Hertogenbosch): the through carriageway the walk follows can skip motorway junctions that only
+// the parallel carriageway serves (KP Empel/Hintham, where the A59 leaves). The parallelbaan is
+// never emitted (it is the same road), but each such arm is probed this far - bounded; it stops
+// earlier where the parallelbaan rejoins the through path - to lift those junctions onto the
+// mainline. See §S3-fix9.
+constexpr std::size_t MAX_PARALLEL_FORKS = 12;
+constexpr double PARALLELBAAN_PROBE_M = 12000.0;
 // Two direction candidates ending within this of each other are the same alignment reached via
 // duplicate forks - keep one.
 constexpr double SAME_DIRECTION_M = 500.0;
@@ -394,6 +403,10 @@ struct WorkItem
     // these pin that fork (SPECIAL_NODEID = the primary branch, which also spawns the siblings).
     NodeID override_node = SPECIAL_NODEID;
     NodeID override_target = SPECIAL_NODEID;
+    // The start_offset of this item's FIRST-LEVEL ancestor (the spur head it hangs off), for the
+    // class-weighted budget ordering (§S3-fix9). -1 on the root; == start_offset on a first-level
+    // branch (it is its own spur head); inherited from the parent deeper down.
+    double spur_head_offset = -1.0;
     util::json::Object junction; // how this segment attaches to its parent (empty for the root)
 };
 
@@ -410,7 +423,24 @@ struct SegmentResult
     util::json::Object route; // {ref, start_offset_m, length_m, polyline, [junctions]}
 };
 
-using Pending = std::pair<double, std::size_t>; // (start_offset, work id) - min-heap key
+// Min-heap key for the class-weighted best-first budget (§S3-fix9): (priority_class, start_offset,
+// work id). Lower class pops first; within a class, nearest-first. Class 0 = the root and every
+// first-level spur head (guaranteed a slot at any distance); class 1 = a spur's subtree within
+// SPUR_RESERVED_DEPTH_M of its head; class 2 = deep fill (the old pure nearest-first behaviour).
+using Pending = std::tuple<int, double, std::size_t>;
+
+// A first-level spur is guaranteed its head plus this much of its own subtree before deep fill
+// starts, so every spur can report an honest first-charger distance / desert bound rather than a
+// stub. Mirrors the BE stage-A SPUR_RESERVED_DEPTH_M.
+constexpr double SPUR_RESERVED_DEPTH_M = 25000.0;
+
+// The budget priority class of a pending work item (see Pending). parent_id 0 is the root's id.
+int priorityClass(const WorkItem &w)
+{
+    if (w.parent_id == NO_PARENT || w.parent_id == 0)
+        return 0; // the root chain and every first-level spur head
+    return (w.start_offset - w.spur_head_offset) <= SPUR_RESERVED_DEPTH_M ? 1 : 2;
+}
 
 // Output of walking one segment: its route object, the children it would spawn (id assigned by the
 // driver), the walked length, and whether it ended badly - a cycle / dead-end / class downgrade
@@ -438,6 +468,10 @@ struct WalkOutput
     std::vector<std::pair<NodeID, NodeID>> forks;
     // Same-ref arms suppressed near the start - the crossing road's other travel direction(s).
     std::vector<std::pair<NodeID, NodeID>> direction_forks;
+    // Same-road parallel carriageways (hoofdbaan/parallelbaan split): (offset, first node on the
+    // arm). expandSegment probes each to lift the motorway junctions the through carriageway skipped
+    // (the A59 interchanges on the A2 parallelbaan at 's-Hertogenbosch). See §S3-fix9.
+    std::vector<std::pair<double, NodeID>> parallel_forks;
 };
 
 // Walk one mainline segment from item.start_node (no recursion, no side effects): follow the
@@ -460,6 +494,7 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
     std::vector<NodeID> path_nodes;
     std::vector<std::pair<NodeID, NodeID>> forks;
     std::vector<std::pair<NodeID, NodeID>> direction_forks;
+    std::vector<std::pair<double, NodeID>> parallel_forks;
     std::string refined_toward;
     bool stopped_by_cap = false;
     bool rejoined_ancestor = false;
@@ -555,6 +590,27 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
                 dbg.values["qualifies"] = qualifies ? util::json::Value(util::json::True())
                                                     : util::json::Value(util::json::False());
                 junctions_debug.values.emplace_back(std::move(dbg));
+            }
+
+            // Same-road parallel carriageway (hoofdbaan/parallelbaan split): a Fork/OffRamp arm whose
+            // RAW ref is the road we are on but which advertises no crossing motorway of its own (the
+            // parallelbaan entry has an empty destination). It is not a branch (same road) and not the
+            // through carriageway (we took that arm), yet it can serve motorway junctions the through
+            // lane skips - the A59 interchanges on the A2 parallelbaan through 's-Hertogenbosch.
+            // Record it so expandSegment can probe it and lift those junctions onto this segment.
+            // Keyed on the RAW ref (the destination is empty) but only when the arm does NOT qualify
+            // as a different motorway - this excludes the documented "gore ref = mainline ref" stale
+            // edge-ref case (the A27 off-ramp at Everdingen reads raw ref A2 but is really the A27,
+            // which already qualifies as its own branch). Only on the current road and the first
+            // spurs (depth <= 1): that is where the parallelstructuur matters for the driver, and it
+            // bounds the probing cost (the ruling's "prioritise the current road and the first
+            // spurs"). See §S3-fix9.
+            if (!qualifies && item.depth <= 1 && continuation != outgoing.end() &&
+                isMotorwayNode(facade, it->target) && !visited.count(it->target) &&
+                shareComponent(current_refs, refComponents(it->ref)) &&
+                parallel_forks.size() < MAX_PARALLEL_FORKS)
+            {
+                parallel_forks.push_back({node_end_offset, it->target});
             }
 
             if (!qualifies || node_end_offset >= hard_cap || item.depth >= MAX_DEPTH)
@@ -695,6 +751,7 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
     out.refined_toward = std::move(refined_toward);
     out.forks = std::move(forks);
     out.direction_forks = std::move(direction_forks);
+    out.parallel_forks = std::move(parallel_forks);
     return out;
 }
 
@@ -766,6 +823,29 @@ WalkOutput expandSegment(const datafacade::BaseDataFacade &facade,
         if (!arm_toward.values.empty())
             sib.junction.values["toward"] = std::move(arm_toward);
         best.siblings.push_back(std::move(sib));
+    }
+
+    // Same-road parallel carriageways -> lift the junctions the through carriageway skipped. Probe
+    // each recorded parallelbaan arm from the split, seeded with the through walk's full path so it
+    // stops where the parallelbaan rejoins us (it then only surfaces the junctions between split and
+    // rejoin, not a parallel copy of the rest of the tree). The parallelbaan itself is never emitted
+    // - only its crossing children, which become children of this segment and are de-duplicated at
+    // assembly against the through carriageway's own (same-ref end-coord / arc-overlap). See §S3-fix9.
+    for (const auto &pf : best.parallel_forks)
+    {
+        WorkItem probe = item;
+        probe.override_node = SPECIAL_NODEID;
+        probe.override_target = SPECIAL_NODEID;
+        probe.start_node = pf.second;
+        probe.start_coords = nodeForwardCoordinates(facade, pf.second);
+        probe.start_offset = pf.first;
+        probe.reported_ref = item.reported_ref;
+        for (const auto n : best.path_nodes)
+            probe.visited.insert(n);
+        const double probe_cap = std::min(hard_cap, pf.first + PARALLELBAAN_PROBE_M);
+        WalkOutput pout = walkOne(facade, mld, probe, probe_cap, debug);
+        for (auto &child : pout.children)
+            best.children.push_back(std::move(child));
     }
     return best;
 }
@@ -890,17 +970,30 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Error("NoSegment", "Snapped coordinate is not on a motorway", result);
     }
 
-    // Best-first expansion ordered by start_offset_m: always expand the globally nearest pending
-    // segment, so when MAX_SEGMENTS truncates the tree the retained segments are the nearest ones
-    // across all spurs (matching the app's nearest-first prune) rather than one deep subtree.
+    // Class-weighted best-first expansion (§S3-fix9, the 2026-07-08 budget-priority ruling). The
+    // heap orders by (priority_class, start_offset): the root chain and every first-level spur head
+    // are class 0 (guaranteed a slot at ANY distance - "always prioritise the current road and the
+    // first spurs"), each spur's subtree within SPUR_RESERVED_DEPTH_M of its head is class 1, and
+    // everything deeper is class 2 filled nearest-first (the old behaviour). So when MAX_SEGMENTS
+    // truncates a dense tree, a far first-level spur is no longer starved by a near spur's deep
+    // subtree. Parent-before-child still holds structurally: a child is only enqueued after its
+    // parent is expanded and recorded, independent of class.
     std::vector<WorkItem> pool;
     std::vector<std::size_t> parent_of; // pool id -> parent pool id (for climbing the ancestor path)
     std::unordered_map<std::size_t, std::vector<NodeID>> segment_path; // pool id -> its walked nodes
     std::priority_queue<Pending, std::vector<Pending>, std::greater<>> pq;
     const auto enqueue = [&](WorkItem &&w)
     {
+        // Propagate the spur head: the root has none (-1); a first-level branch (child of the root,
+        // parent_id 0) is its own spur head; deeper items inherit their parent's.
+        if (w.parent_id == NO_PARENT)
+            w.spur_head_offset = -1.0;
+        else if (w.parent_id == 0)
+            w.spur_head_offset = w.start_offset;
+        else
+            w.spur_head_offset = pool[w.parent_id].spur_head_offset;
         parent_of.push_back(w.parent_id);
-        pq.push({w.start_offset, w.id});
+        pq.push({priorityClass(w), w.start_offset, w.id});
         pool.push_back(std::move(w));
     };
 
@@ -910,7 +1003,7 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     util::json::Array dropped_stubs; // debug-only: parallel-carriageway stubs dropped at rejoin
     while (!pq.empty() && segments.size() < static_cast<std::size_t>(MAX_SEGMENTS))
     {
-        const auto id = pq.top().second;
+        const auto id = std::get<2>(pq.top());
         pq.pop();
         WorkItem item = std::move(pool[id]);
 

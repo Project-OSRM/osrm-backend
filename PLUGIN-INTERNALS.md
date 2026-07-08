@@ -26,13 +26,18 @@ Four layers, all in `tree.cpp`:
   motorway it lands on, so `walkOne` can decide if the branch is a real crossing motorway. Returns
   the landing node + the arms there.
 - **`expandSegment`** — wraps `walkOne` for one WorkItem: runs the primary walk; if it's a bad ramp
-  landing, runs the fork-backtracking retry (keep-longest alternative); then spawns crossing
-  **direction siblings** from `direction_forks` with per-spawn dedup.
+  landing, runs the fork-backtracking retry (keep-longest alternative); spawns crossing **direction
+  siblings** from `direction_forks` with per-spawn dedup; then **probes `parallel_forks`** (same-road
+  parallel carriageways) and lifts the motorway junctions the through carriageway skipped onto the
+  segment (§S3-fix9).
 - **Best-first driver** (bottom of the plugin's `HandleRequest`) — a `priority_queue` keyed on
-  `start_offset` (nearest-first, NOT depth-first — see §S3-fix). Pops WorkItems, calls
-  `expandSegment`, enqueues its children and siblings (`MAX_SEGMENTS=400`, `MAX_DEPTH=10` caps),
-  then reassembles the flat `SegmentResult` list into the nested tree via a `parent_id` map
-  (`assemble` lambda), with the per-parent dedup pass.
+  `(priority_class, start_offset, id)`, **class-weighted** (§S3-fix9): class 0 = the root and every
+  first-level spur head (guaranteed at any distance), class 1 = a spur's subtree within
+  `SPUR_RESERVED_DEPTH_M` of its head, class 2 = deep fill nearest-first (the old behaviour; NOT
+  depth-first — see §S3-fix). Pops WorkItems, calls `expandSegment`, enqueues its children and
+  siblings (`MAX_SEGMENTS=400`, `MAX_DEPTH=10` caps), then reassembles the flat `SegmentResult` list
+  into the nested tree via a `parent_id` map (`assemble` lambda), with the per-parent dedup pass.
+  Parent-before-child holds structurally (a child is only enqueued after its parent is recorded).
 
 Facade: the driver `dynamic_cast`s `BaseDataFacade` → `AlgorithmDataFacade<MLD>` (`MLDFacade`) for
 graph adjacency. **MLD only** — see §3.
@@ -134,6 +139,29 @@ change; extend it for EVERY fix.
   overlap) and are both kept. Start-coordinate dedup is unusable — legit opposite directions share a
   start. Case: `DUP_CASE` part (b).
 
+- **Parallelbaan junction lifting** (§S3-fix9). Where a motorway splits into a through **hoofdbaan**
+  and a **parallelbaan** (both same ref — the NL parallelstructuur at Den Bosch, Eindhoven, Utrecht…),
+  `selectContinuation` follows the hoofdbaan (destination-signed) and the parallelbaan arm is dropped
+  (empty destination → non-qualifying; raw ref same → suppressed). But motorway junctions can sit
+  **only on the parallelbaan** (the A59 at KP Empel/Hintham off the A2 through 's-Hertogenbosch), so
+  they never surfaced from a distance. `walkOne` records a `parallel_fork` for a non-continuation
+  `Fork`/`OffRamp` arm that does NOT qualify as a different motorway, leads to unvisited motorway, and
+  shares the current road on its **raw ref** — gated on `!qualifies` so the "gore ref = mainline ref"
+  stale-edge case (A27 off-ramp reads raw ref `A2` but destination `A27`) is excluded, and limited to
+  **depth ≤ 1** (the current road + first spurs; bounds cost). `expandSegment` probes each from the
+  split, seeded with the through walk's `path_nodes` so it stops at the rejoin (`PARALLELBAAN_PROBE_M`
+  cap), and appends its qualifying **children** to the segment. The parallelbaan itself is NEVER
+  emitted (same road → would break same-ref); only its crossing children are, de-duped at assembly
+  against the through carriageway's own. Case: `HINTHAM_CASE` (A59-east off the A2 at any distance).
+
+- **Class-weighted budget ordering** (§S3-fix9, the 2026-07-08 ruling "prioritise the current road and
+  the first spurs"). The best-first heap orders by `(priority_class, start_offset)` not `start_offset`
+  alone: class 0 = the root chain + every first-level spur head (a slot at ANY distance), class 1 = a
+  spur's subtree within `SPUR_RESERVED_DEPTH_M` (25 km) of its head, class 2 = deep fill nearest-first.
+  WHY: pure nearest-first sinks the 400-segment budget into near spurs' dense subtrees and drops far
+  first-level spurs (A76/A79 in Limburg, ~120-130 km, off the A2 south). Mirrors the BE stage-A prune so
+  the two budget layers agree. Parent-before-child is structural, unaffected. Case: `BUDGET_PRIORITY_CASE`.
+
 Other cases: `RING_CASE` (cycle termination), `OFF_MOTORWAY_CASE` (→ `NoSegment`),
 `run_junction_names` (every junction/branch name is `""`).
 
@@ -174,7 +202,7 @@ cmake --build build --target osrm-routed     # normal iterate: rebuild just the 
 ```
 
 **Test — non-negotiable loop:** after every change, `python3 tools/hm2_spike/regression.py` (must be
-all-green; currently 39 assertions across the `run_*_case` fns). For every bug you fix, ADD a case
+all-green; currently 46 assertions across the `run_*_case` fns). For every bug you fix, ADD a case
 that fails before and passes after — that is how each rule above earned its line. Use `debug=true`
 to inspect `dropped_stubs[]`.
 
@@ -187,7 +215,9 @@ re-deriving.
 `MAX_RAMP_HOPS=15`, `RETRY_MIN_M=5000`, `MAX_LANDING_RETRIES=6`, `MAX_ROOT_CANDIDATES=3`,
 `MAX_CROSSING_DIRECTIONS=3`, `MIN_DIRECTION_M=1500`, `CONNECTOR_M=3000`, `SAME_DIRECTION_M=500`,
 `DIR_MATCH_M=300`, `DIR_OVERLAP_FRAC=0.75` (arc-distance overlap dedup), `DIR_SAMPLE_M`
-(1/2/4/…/64 km fingerprint distances).
+(1/2/4/…/64 km fingerprint distances), `MAX_PARALLEL_FORKS=12` / `PARALLELBAAN_PROBE_M=12000`
+(parallelbaan junction lifting, §S3-fix9), `SPUR_RESERVED_DEPTH_M=25000` (class-weighted budget:
+per-spur reserved subtree depth, §S3-fix9).
 
 **Region note:** the motorway ref regex (`isMotorwayRef`) is tuned for NL/EU (`^[AE]\d+`). UK (`^M\d+`)
 and other launch regions need per-region patterns — make it configurable before those launches

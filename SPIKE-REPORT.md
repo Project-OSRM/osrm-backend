@@ -572,3 +572,114 @@ cap for the richer tree is a separate product call, not part of this root-cause 
 **Files:** `src/engine/plugins/tree.cpp` (`continuation_refs` in `walkOne` — drop the
 `continuation->branch_refs` fold, keep the raw-ref components); `tools/hm2_spike/regression.py`
 (`CLOVERLEAF_CASE` + `run_cloverleaf_case`).
+
+## S3-fix9 — parallelbaan junctions lifted + class-weighted budget (the A59-from-distance ruling)
+
+Two changes for the 2026-07-08 budget-priority ruling (Ray: *"always explore closer branches;
+prioritise the current road and the first spurs"*). The user-visible target: driving the A2
+**southbound ~25 km north of KP Hintham** ('s-Hertogenbosch), the tree must contain the **A59-east**
+branch (toward Oss/Nijmegen). Pre-fix it was absent at every budget from a distance — it appeared only
+when the driver snapped within ~5 km of Hintham, or deep (via A50/A58 at 60 km+).
+
+### The investigation — it is NOT an on-road A2;A59 concurrency suppression
+
+The ruling's hypothesis was that the walk hits an `A2;A59` concurrency, and at the separation the
+departing `A59` arm is same-ref-suppressed (the fix8-adjacent path). An all-arms trace of the root walk
+disproves that: **the followed A2 carriageway never carries A59 in any form** — not in `current_ref`, not
+in any arm's raw ref or destination, at any offset. The real mechanism is the NL **parallelstructuur**:
+
+- At ~16 km the A2 forks into its **hoofdbaan** (through carriageway, arm signed
+  `destination="A2: Maastricht, Eindhoven, Tilburg"`) and its **parallelbaan** (arm with raw ref `A2`
+  but an **empty** destination). Both arms are `Fork`, both ref `A2`. `selectContinuation` picks the
+  hoofdbaan (rank 2, shares the current ref) over the parallelbaan (rank 1, empty `branch_refs`).
+- The **A59 interchanges are only on the parallelbaan**: KP Empel (A59-west, `A59: RING-Noord,
+  Waalwijk`) at +0.5 km, KP Hintham (A59-east, `A59: Nijmegen, Oss`) at +2.9 km, then A65/A50/A58/A67
+  further south, after which the parallelbaan rejoins the hoofdbaan before KP Vught.
+- The far-upstream walk follows the hoofdbaan and never reaches the A59. The parallelbaan arm is then
+  dropped as a **non-qualifying** arm: its destination is empty, so no motorway ref parses and it does
+  not qualify as a branch (and its raw ref `A2` would be same-ref suppressed anyway). Close up, the
+  driver snaps directly onto the parallelbaan and A59 appears — the "what changes with proximity".
+
+This is a recurring pattern (Den Bosch, Eindhoven, Utrecht, Arnhem…). It does **not** conflict with a
+locked design decision: S3-fix5 already establishes that a parallel carriageway *carrying real
+junctions* is kept — the gap was only that the parallelbaan arm was never explored. Confirmed there is
+no `A2;A59`-suppression bug: the concurrency-separation the ruling described happens *on the
+parallelbaan*, which the far walk never traverses.
+
+### Fix A — parallelbaan junction lifting
+
+`walkOne` records a **parallel fork** for a `Fork`/`OffRamp` arm that (a) is not the continuation, (b)
+does **not** qualify as a different motorway, (c) leads to an unvisited motorway node, and (d) shares a
+component with the current road on its **raw ref**. Keying on the raw ref (the parallelbaan entry has no
+destination) is safe *because it is gated on `!qualifies`*: the documented "gore ref = mainline ref"
+stale-edge-ref case (the A27 off-ramp at Everdingen reads raw ref `A2`) carries a real `A27` destination,
+so it qualifies as its own branch and is excluded. Recording is limited to **depth ≤ 1** (the current
+road and the first spurs — where the parallelstructuur matters to the driver, and it bounds cost).
+
+For a primary segment, `expandSegment` **probes** each parallel fork: it walks the parallelbaan arm from
+the split, seeded with the through walk's full `path_nodes` so it stops where the parallelbaan rejoins
+the through carriageway (bounded by `PARALLELBAAN_PROBE_M = 12 km`), and appends the probe's qualifying
+**children** to the segment. The parallelbaan itself is never emitted (same road → would violate the
+same-ref rule); only its crossing children are, and they de-duplicate at assembly against the through
+carriageway's own (same-ref end-coord / arc-overlap) — so a junction the through lane *does* serve (A65)
+collapses to one and only the genuinely-skipped ones (A59) are net-new. `MAX_PARALLEL_FORKS = 12` per
+segment (the A2's parallelbaan entry is the 5th same-ref fork north of Den Bosch — trivial weaving stubs
+occupy the earlier slots; each stub probe rejoins in < 1 km with 0 children, so the cost is negligible).
+
+### Fix B — class-weighted best-first budget
+
+The heap key becomes `(priority_class, start_offset, id)`: class 0 = the root chain and **every
+first-level spur head** (guaranteed a slot at ANY distance); class 1 = a spur's own subtree within
+`SPUR_RESERVED_DEPTH_M = 25 km` of its head (an honest first-charger / desert bound, not a stub); class 2
+= deep fill, nearest-first (the old behaviour). Parent-before-child still holds structurally — a child is
+only enqueued after its parent is expanded and recorded, independent of class. `MAX_SEGMENTS` stays 400.
+This mirrors the BE stage-A prune (root chain → first-level spur heads + first ~25 km → nearest-first
+deep fill) so the two budget layers agree.
+
+### Validation (`tools/hm2_spike/regression.py`, all green — new `HINTHAM_CASE`, `BUDGET_PRIORITY_CASE`)
+
+Before/after at the mandated probe **(5.21045, 51.87636) bearing 148 (A2 SB), 200 km** — first-level
+branch refs:
+
+| build | first-level spurs |
+|---|---|
+| fix8 baseline | `A15, A15, A65, A50, A58, A67, A67` — **no A59, no A76/A79** |
+| fix9, pure nearest-first (Fix A only) | `A15, A15, A59, A59, A65, A50, A58, A67, A67` — A59 appears, A76/A79 still starved |
+| fix9, class-weighted (Fix A + B) | `A15, A15, A59, A59, A65, A50, A58, A67, A67, A76, A76, A79` |
+
+So **Fix A recovers A59** (both directions — A59-west `RING-Noord/Waalwijk` @16.5 km, A59-**east**
+`Nijmegen/Oss` @18.9 km) and **Fix B recovers the far Limburg spurs A76 (~119 km) and A79 (~130 km)** that
+pure nearest-first drops by sinking the 400-segment budget into the near spurs' dense subtrees. Cleanly
+attributed: A59 is near (appears under both orderings), A76/A79 are the ordering (forced-nearest-first
+build drops them, class-weighted keeps them). All prior cases stay green: SAMEREF (no branch shares a ref
+with its parent — the parallelbaan A2 is never emitted, only its A59 children), CONCURRENCY (no
+toward-self, 200 km — lifted children are always a *different* motorway), DUP, cloverleaf (fix8), both
+A12 directions, containment, breadth, ring, root-snap, off-motorway, names.
+
+### Tree cost (fix8 → fix9, standard probes)
+
+| probe | fix8 seg / root / ms | fix9 seg / root / ms |
+|---|---|---|
+| Hintham A2-S 200 km | 400 / 7 / 138 | 400 / 12 / 143 |
+| A2-S Everdingen 200 km | 400 / 8 / 139 | 400 / 13 / 153 |
+| A2-S 90 km | 340 / 8 / 41 | 362 / 10 / 46 |
+| A4-N 200 km | 400 / 6 / 116 | 400 / 6 / 152 |
+
+Root breadth rises by the recovered spurs (A59 ×2 + A76 ×2 + A79 across the A2-south trees); segment
+count is unchanged at the 200 km cap (both truncate at 400 — the class weighting shifts *which* 400) and
+rises modestly below the cap (90 km 340 → 362). The **depth ≤ 1 gate on parallelbaan probing is what
+keeps timing at parity** — without it the probing doubled 200 km trees to ~280 ms; with it they are within
+~10-35 ms of fix8. **Downstream flag (do not touch the api repo):** the class weighting shifts which 400
+segments survive at 200 km and adds near spurs at 90 km, so any committed goldens of the flattened
+64-segment BE prune over these corridors will change — regenerate them when the BE picks up this build.
+
+**Deliberately not done:** parallelbaan lifting is capped at depth ≤ 1 (deeper parallelstructuren — e.g.
+A27→A28, A50→A73 seen while unbounded — are not lifted; they are not "the current road or the first
+spurs" and cost budget/time). `MAX_SEGMENTS`/`SPUR_RESERVED_DEPTH_M`/`PARALLELBAAN_PROBE_M` left at the
+values above; re-tuning for a richer tree is a separate product call.
+
+**Files:** `src/engine/plugins/tree.cpp` (`WalkOutput.parallel_forks` + detection in `walkOne`; probe +
+lift in `expandSegment`; `WorkItem.spur_head_offset`, `Pending` → `(class, offset, id)` tuple,
+`priorityClass`/`SPUR_RESERVED_DEPTH_M`, enqueue spur-head propagation; `MAX_PARALLEL_FORKS`/
+`PARALLELBAAN_PROBE_M`); `tools/hm2_spike/regression.py` (`HINTHAM_CASE`/`run_hintham_case`,
+`BUDGET_PRIORITY_CASE`/`run_budget_priority_case`).

@@ -136,6 +136,28 @@ DUP_CASE = dict(name="A4 north — no duplicate corridor (parallelbaan re-expans
 CLOVERLEAF_CASE = dict(name="A50 north — both directions of each cloverleaf crossing (Beekbergen A1, Hattemerbroek A28)",
                        lng=5.94851, lat=52.08628, bearing=9, cap=70000)
 
+# Same-road parallel carriageway lifts skipped junctions (S3-fix9). Driving the A2 SOUTHBOUND ~25 km
+# north of Knooppunt Hintham ('s-Hertogenbosch), the A2 splits into its hoofdbaan (through, signed
+# "A2: Eindhoven") and its parallelbaan (empty destination) at KP Empel. The walk follows the
+# hoofdbaan; the A59 interchanges (KP Empel A59-west, KP Hintham A59-east toward Oss/Nijmegen) sit
+# only on the parallelbaan, so pre-fix A59 never appeared from a distance (it showed only when the
+# driver snapped onto the parallelbaan within ~5 km, or deep via A50/A58 at 60 km+). The plugin now
+# probes the parallelbaan and lifts its motorway junctions onto the mainline, so the A59-east group
+# (toward Oss/Nijmegen) is a first-level branch at ANY distance. Pre-fix first-level was
+# A15x2/A65/A50/A58/A67x2 with NO A59; post-fix A59 appears at ~16-19 km.
+HINTHAM_CASE = dict(name="A2 south, 25 km north of KP Hintham — A59-east lifted off the parallelbaan",
+                    lng=5.21045, lat=51.87636, bearing=148, cap=200000)
+
+# Class-weighted budget keeps far first-level spurs (S3-fix9, the 2026-07-08 budget-priority ruling).
+# Same A2-south probe at the 200 km cap (segment_count = 400, truncated). Pure nearest-first sinks the
+# whole budget into the near spurs' dense subtrees and drops the far first-level spurs A76 (~119 km)
+# and A79 (~130 km) in Limburg entirely. The class-weighted ordering makes every first-level spur head
+# class 0 (guaranteed a slot at any distance), so A76 and A79 survive the truncation. Verified
+# before/after on the same build: pure nearest-first first-level = A15x2/A59x2/A65/A50/A58/A67x2 (no
+# A76/A79); class-weighted adds A76x2/A79.
+BUDGET_PRIORITY_CASE = dict(name="A2 south 200 km — far first-level spurs A76/A79 survive the segment cap",
+                            lng=5.21045, lat=51.87636, bearing=148, cap=200000)
+
 # Off-motorway (Amsterdam centrum local road) -> NoSegment.
 OFF_MOTORWAY_CASE = dict(name="off-motorway -> NoSegment",
                          lng=4.89218, lat=52.37320, bearing=90)
@@ -489,6 +511,41 @@ def run_cloverleaf_case(c):
           f"a28_toward={a28}")
 
 
+def run_hintham_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok" and tree.get("ref") == "A2",
+                 f"{c['name']}: root snaps to A2", f"http={http} ref={tree.get('ref')}"):
+        return
+    # A59 must be a FIRST-LEVEL branch (a direct child of the root), not buried deep via A50/A58.
+    a59 = [b for b in tree.get("branches", []) if b["route"]["ref"] == "A59"]
+    check(bool(a59), f"{c['name']}: A59 is a first-level branch off the A2",
+          f"first_level={[b['route']['ref'] for b in tree.get('branches', [])]}")
+    # ... and the east direction (toward Oss / Nijmegen) is present with its own signage.
+    a59_east = [b for b in a59 if {"Oss", "Nijmegen"} & set(b["junction"].get("toward", []))]
+    check(bool(a59_east),
+          f"{c['name']}: A59-east (toward Oss/Nijmegen) present as a first-level branch",
+          f"a59_toward={[b['junction'].get('toward') for b in a59]}")
+
+
+def run_budget_priority_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok", f"{c['name']}: code Ok", f"http={http}"):
+        return
+    # At the 200 km cap the tree truncates (segment_count == MAX_SEGMENTS). Every first-level spur
+    # head must survive regardless of distance - the far Limburg spurs A76 (~119 km) and A79
+    # (~130 km) are the ones pure nearest-first dropped by sinking the budget into near subtrees.
+    first_level = {b["route"]["ref"]: b["junction"]["at_offset_m"] for b in tree.get("branches", [])}
+    check(tree.get("segment_count") == 400,
+          f"{c['name']}: tree is truncated at the segment cap (so ordering matters)",
+          f"segment_count={tree.get('segment_count')}")
+    for ref in ("A76", "A79"):
+        check(ref in first_level and first_level[ref] > 100000,
+              f"{c['name']}: far first-level spur {ref} (>100 km) survives the cap",
+              f"first_level={ {r: round(o/1000) for r, o in first_level.items()} }")
+
+
 def run_off_motorway_case(c):
     print(f"\n# {c['name']}")
     tree, http = get(f"/tree/v1/driving/{c['lng']},{c['lat']}?bearings={c['bearing']},45")
@@ -526,6 +583,8 @@ def main():
     run_signage_case(SIGNAGE_CASE)
     run_dup_case(DUP_CASE)
     run_cloverleaf_case(CLOVERLEAF_CASE)
+    run_hintham_case(HINTHAM_CASE)
+    run_budget_priority_case(BUDGET_PRIORITY_CASE)
     run_off_motorway_case(OFF_MOTORWAY_CASE)
     run_junction_names()
 
