@@ -549,8 +549,8 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
             // A fork arm sharing a ref component with the road we are on - either the tracked road
             // identity or the arm we are actually following - is a parallel-carriageway split or a
             // concurrency unbundling (e.g. A2;A67 -> A2 + A67), not a branch to a different
-            // motorway. Skip it. The continuation check also catches cases where current_ref has
-            // drifted (it only updates on NewName).
+            // motorway. Skip it. The continuation check also catches cases where current_ref is
+            // stale (it only updates on a NewName/Merge renumber, §S3-fix10).
             if (shareComponent(current_refs, it->branch_refs) ||
                 shareComponent(continuation_refs, it->branch_refs) ||
                 shareComponent(reported_refs, it->branch_refs))
@@ -711,11 +711,21 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
         const NodeID next = chosen->target;
         visited.insert(next);
 
-        // Update the road identity only when OSRM signals a genuine renumbering (NewName). Plain
-        // continuations (NoTurn/Suppressed) through a knooppunt gore carry the *crossing* motorway's
-        // stale ref (Stage 1 finding 7.4); overwriting on those loses the road we branched onto and
-        // makes the same-road fork suppression fail.
-        if (chosen->turn.type == TT::NewName && !chosen->ref.empty())
+        // Update the road identity when OSRM signals a genuine renumbering: a NewName, or a Merge
+        // where the current road ends and joins a differently-numbered motorway (A59 ending at KP
+        // Paalgraven and merging onto the A50 north). Both re-point current_ref at the road we are
+        // now physically on, so the same-ref carriageway-fork suppression downstream matches the
+        // real road (§S3-fix10). Plain continuations (NoTurn/Suppressed) are deliberately NOT
+        // adopted: through a knooppunt gore they carry the *crossing* motorway's stale ref (Stage 1
+        // finding 7.4), and on a branch's first nodes they carry the parent mainline's stale ref
+        // (the A27 off-ramp at Everdingen reads A2) - adopting those loses the road we branched onto
+        // and breaks same-road suppression (§S3-fix8). Merge is a distinct turn type from those, and
+        // gated on the target being a genuinely different motorway number.
+        const auto chosen_refs = refComponents(chosen->ref);
+        const bool renumber_merge =
+            chosen->turn.type == TT::Merge && anyMotorwayRef(chosen_refs) &&
+            !shareComponent(current_refs, chosen_refs);
+        if ((chosen->turn.type == TT::NewName || renumber_merge) && !chosen->ref.empty())
             current_ref = chosen->ref;
 
         auto next_coords = nodeForwardCoordinates(facade, next);

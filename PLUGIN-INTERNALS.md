@@ -162,6 +162,20 @@ change; extend it for EVERY fix.
   first-level spurs (A76/A79 in Limburg, ~120-130 km, off the A2 south). Mirrors the BE stage-A prune so
   the two budget layers agree. Parent-before-child is structural, unaffected. Case: `BUDGET_PRIORITY_CASE`.
 
+- **`current_ref` adopts a Merge-renumber** (§S3-fix10, the ref-update site in `walkOne` ~L714-728). The
+  segment's tracked road identity `current_ref` starts as `item.reported_ref` and is adopted from the
+  continuation arm's RAW ref on **`NewName` OR `Merge`** — a `Merge` is a spur road ending and merging onto a
+  differently-numbered motorway (A59 ending at KP Paalgraven and merging onto the A50 north), gated on the
+  merged-onto ref being a motorway ref not already sharing `current_ref`. WHY: without it `current_ref` stays
+  frozen at the snap ref (`A59`) after the road physically renumbers; guidance-turn continuations
+  (`NoTurn`/`Suppressed`, ref-independent) hide it, but at a downstream same-ref carriageway split (a
+  parallelstructuur/bridge `Fork` with no guidance arm) `selectContinuation`'s rank-2 ref match fails
+  (`A59` ≠ `A50`), the ref "ends", and the driver's own road is demoted to a merged-signage first-level branch
+  while the root dies. **Do NOT extend this to `NoTurn`/`Suppressed`**: those carry the *crossing* road's stale
+  ref at a gore (§S3-fix8) and the *parent* mainline's stale ref on a branch's first nodes (the A27 off-ramp at
+  Everdingen reads `A2`, §S3-fix5) — adopting them re-opens both. `Merge` is a distinct turn type from those.
+  Case: `VALBURG_CASE` (root follows A59→A50 north past KP Valburg; no first-level A50; A15/A12 first-level).
+
 Other cases: `RING_CASE` (cycle termination), `OFF_MOTORWAY_CASE` (→ `NoSegment`),
 `run_junction_names` (every junction/branch name is `""`).
 
@@ -202,7 +216,7 @@ cmake --build build --target osrm-routed     # normal iterate: rebuild just the 
 ```
 
 **Test — non-negotiable loop:** after every change, `python3 tools/hm2_spike/regression.py` (must be
-all-green; currently 46 assertions across the `run_*_case` fns). For every bug you fix, ADD a case
+all-green; currently 51 assertions across the `run_*_case` fns). For every bug you fix, ADD a case
 that fails before and passes after — that is how each rule above earned its line. Use `debug=true`
 to inspect `dropped_stubs[]`.
 

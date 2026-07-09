@@ -158,6 +158,19 @@ HINTHAM_CASE = dict(name="A2 south, 25 km north of KP Hintham — A59-east lifte
 BUDGET_PRIORITY_CASE = dict(name="A2 south 200 km — far first-level spurs A76/A79 survive the segment cap",
                             lng=5.21045, lat=51.87636, bearing=148, cap=200000)
 
+# Spur-terminus root keeps following the driver's road after a Merge-renumber (S3-fix10). Driving the
+# A59 eastbound toward KP Paalgraven, the A59 ends there and MERGES onto the A50 north (Ravenstein ->
+# KP Bankhoef -> KP Ewijk -> Waal bridge -> KP Valburg -> Grijsoord -> Apeldoorn). The merge is a
+# TurnType::Merge, not a NewName, so current_ref used to stay frozen at "A59"; at the same-ref A50
+# carriageway split just past KP Ewijk (~19 km, no guidance-continuation arm) the rank-2 ref match
+# then failed ("A59" != A50), the ref "ended", and the driver's own A50 became a merged-signage
+# first-level branch (toward ["A50","Zwolle","Rotterdam","Arnhem"]) while the root died at 21 km with
+# only one station on it. Post-fix the walk adopts the merged-onto ref, so the root follows the A50
+# far north and the real crossings (A15 at KP Valburg, A12 at KP Grijsoord, ...) are its first-level
+# branches - and there is NO first-level A50 (the driver's own road, same-ref, must never be a branch).
+VALBURG_CASE = dict(name="A59 east -> A50 north — root follows the driver's road past KP Valburg (no A50 demotion)",
+                    lng=5.555818, lat=51.733873, bearing=120, cap=200000)
+
 # Off-motorway (Amsterdam centrum local road) -> NoSegment.
 OFF_MOTORWAY_CASE = dict(name="off-motorway -> NoSegment",
                          lng=4.89218, lat=52.37320, bearing=90)
@@ -546,6 +559,30 @@ def run_budget_priority_case(c):
               f"first_level={ {r: round(o/1000) for r, o in first_level.items()} }")
 
 
+def run_valburg_case(c):
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok" and tree.get("ref") == "A59",
+                 f"{c['name']}: root snaps to A59", f"http={http} ref={tree.get('ref')}"):
+        return
+    # Root must follow the A50 far north, well past the pre-fix death at ~21 km (the demotion point is
+    # the KP Ewijk carriageway split at ~19 km).
+    check(tree.get("length_m", 0) > 40000,
+          f"{c['name']}: root chain extends past the KP Valburg/Ewijk demotion point (>40 km)",
+          f"root_len_km={tree.get('length_m', 0) / 1000:.1f}")
+    first_level = [b["route"]["ref"] for b in tree.get("branches", [])]
+    # The driver's own continuing road (A50, same ref as the root corridor) must NEVER be a first-level
+    # branch - that is exactly the demotion this fix removes.
+    check("A50" not in first_level,
+          f"{c['name']}: the driver's own A50 is not demoted to a first-level branch",
+          f"first_level={first_level}")
+    # The real crossings the root reaches only by continuing north must surface as first-level branches.
+    for ref in ("A15", "A12"):
+        check(ref in first_level,
+              f"{c['name']}: {ref} crossing north of the demotion point is a first-level branch",
+              f"first_level={first_level}")
+
+
 def run_off_motorway_case(c):
     print(f"\n# {c['name']}")
     tree, http = get(f"/tree/v1/driving/{c['lng']},{c['lat']}?bearings={c['bearing']},45")
@@ -585,6 +622,7 @@ def main():
     run_cloverleaf_case(CLOVERLEAF_CASE)
     run_hintham_case(HINTHAM_CASE)
     run_budget_priority_case(BUDGET_PRIORITY_CASE)
+    run_valburg_case(VALBURG_CASE)
     run_off_motorway_case(OFF_MOTORWAY_CASE)
     run_junction_names()
 

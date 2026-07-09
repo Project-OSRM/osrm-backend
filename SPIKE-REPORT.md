@@ -683,3 +683,92 @@ lift in `expandSegment`; `WorkItem.spur_head_offset`, `Pending` → `(class, off
 `priorityClass`/`SPUR_RESERVED_DEPTH_M`, enqueue spur-head propagation; `MAX_PARALLEL_FORKS`/
 `PARALLELBAAN_PROBE_M`); `tools/hm2_spike/regression.py` (`HINTHAM_CASE`/`run_hintham_case`,
 `BUDGET_PRIORITY_CASE`/`run_budget_priority_case`).
+
+## S3-fix10 — root follows the driver's road across a Merge-renumber (A59 → A50 at KP Paalgraven)
+
+**Field report (Ray):** driving the A59 eastbound toward KP Paalgraven, whose route continues A59 → A50
+north (Ravenstein → KP Bankhoef → KP Ewijk → Waal bridge → KP Valburg → Grijsoord → Apeldoorn), "we only
+had De Gagel on that road — we want a few at least." Probe
+`GET /tree/v1/driving/5.555818,51.733873?bearings=120,40&hard_cap_m=200000`.
+
+**Symptom.** The root (ref `A59`) died at **21 km**, ending right where the A50 spawned as a *first-level
+branch* at 19 km with a merged both-directions signage read (`toward = ["A50","Zwolle","Rotterdam",
+"Arnhem"]`, junction name `""` — the fix7 merged-gantry shape). The whole 200 km tree attributed essentially
+one station to the root; De Gagel (3.7 km) was on it, but the "De Slenk" plaza at 36 km — physically on the
+driver's A50 — landed in that A50 *branch*'s subtree, not the root group. First-level was `[A326, A73, A50]`.
+
+### The mechanism — a stale `current_ref` after an un-flagged renumber
+
+An all-arms continuation trace of the root walk (temporary `cont_trace` instrumentation, since removed) was
+decisive:
+
+- At **2.42 km** the walk hits KP Paalgraven as a **`TurnType::Merge`** onto an arm whose raw ref is `A50`
+  (the A59 ends and merges onto the A50). `current_ref` is only updated on `NewName` (S3-fix8), so it stays
+  frozen at **`A59`**.
+- From 2.42 km on, *every* continuation arm's raw ref is `A50`, but `current_ref` never adopts it. KP Bankhoef
+  (`A326`, 12.4 km) and KP Ewijk (`A73`, 16.4 km) continuations are guidance turns (`NoTurn`/`Suppressed`,
+  rank 3 in `selectContinuation`) — **ref-independent**, so they work despite the stale ref.
+- At **~19 km**, just past KP Ewijk approaching the Waal bridge / KP Valburg, the A50 splits into two same-ref
+  carriageways (a parallelstructuur/bridge split). Both arms are `Fork` (no guidance-continuation arm), so
+  `selectContinuation` must fall to **rank 2: match a fork arm's ref to `current_ref`**. `current_refs = {A59}`
+  does not match `A50`, no arm ranks, the ref "genuinely ends", and both A50 arms become children — the driver's
+  own road demoted, root truncated.
+
+Confirmed by snapping directly onto the A50 north of Ewijk (so `current_ref` starts as `A50`): the *identical*
+fork continues cleanly and the root runs A50 for 88 km with the real crossings as first-level branches. The
+stale ref was the whole bug. **Paalgraven itself was principled, not luck** — the A59→A50 continuation there is
+a guidance turn, so De Gagel landed on root regardless of ref; the ref only bites at the downstream same-ref
+*fork*.
+
+### The fix — adopt the continuation ref on a Merge-renumber
+
+`walkOne` now adopts `chosen->ref` when OSRM signals a genuine renumbering by **`NewName` OR `Merge`** (the road
+we are on ends and merges onto a differently-numbered motorway), gated on the merged-onto ref being a motorway
+ref that does not already share `current_ref`. `Merge` is a distinct turn type from the `NoTurn`/`Suppressed`
+gore/branch-start continuations that S3-fix8/fix5 deliberately protect (those carry a *crossing* or *parent*
+stale ref, e.g. the A27 off-ramp at Everdingen reading raw ref `A2`), so the fix cannot re-open them. One-branch,
+root-cause change at the existing ref-update site.
+
+### Validation (`tools/hm2_spike/regression.py`, all green — new `VALBURG_CASE`, 51 checks)
+
+`VALBURG_CASE` (the probe above) asserts: root snaps to A59, root length > 40 km (past the 21 km death), **no
+first-level `A50`** (the driver's own same-ref road must never be a branch), and A15 (KP Valburg) + A12 (KP
+Grijsoord) present as first-level branches. Failing-then-passing verified on the same build (adoption toggled):
+
+- **pre-fix:** root 21.2 km, first-level `[A326, A73, A50]` — 4 of 5 assertions fail.
+- **post-fix:** root **104.7 km**, first-level `[A326, A73, A15×2, A12×2, A1×2, A28×2]`, no A50 — all pass.
+  De Slenk (36 km) is now on the root chain.
+
+### Tree cost (fix9 → fix10, standard probes; seg / root-first-level-count)
+
+| probe | fix9 | fix10 |
+|---|---|---|
+| Valburg A59→A50 200 km | 400 / 3 (`A326,A73,A50`) | 400 / 10 (`A326,A73,A15×2,A12×2,A1×2,A28×2`) |
+| Hintham A2-S 200 km | 400 / 12 | 400 / 12 (identical) |
+| A50-N cloverleaf 70 km | 12 / 4 | 12 / 4 (identical) |
+| A2-S Everdingen 60 km | 59 / 6 | 59 / 6 (identical) |
+| A4 Prins Clausplein 70 km | 98 / 6 | 96 / 6 (−2 deep segments, root/first-level identical) |
+| A4-N dup 200 km | 400 / 6 | 400 / 6 (identical) |
+
+The change is inert everywhere except the spur-terminus shape it targets: only the Valburg root reorganises
+(the A50 corridor is re-parented from a first-level branch onto the root, where it belongs). The −2 segments at
+Prins Clausplein is a benign deep-branch dedup shift (a deep branch now tracks its post-merge ref); the root and
+all first-level branches there are unchanged.
+
+**Class / survey.** The bug is confined to a **root/segment that starts on a motorway which *terminates* onto a
+differently-numbered motorway via a Merge (a spur terminus), where the merged-onto road then has a downstream
+same-ref carriageway split within the cap.** Through-drivers who keep their number across an interchange (A2
+through KP Deil, A16 through KP Zonzeel, A50 from its own start through the cloverleaves) never had a stale ref —
+`current_ref == reported_ref` stays valid — which is why the A2-south (through Deil) and A50-north (cloverleaf)
+regressions were already green and are byte-identical after this fix. The class is therefore small (NL spur
+motorways that merge onto another number: A59→A50 is the exemplar) and the fix covers it generally by keying on
+the `Merge` turn rather than any one interchange.
+
+**Deliberately not done.** The root's `ref` field is left at the snap road (`A59`) even though the corridor runs
+A50 for most of its length — this matches the existing convention (a segment is labelled by the road it starts
+on; the pre-fix root already labelled 18 km of A50 as "A59") and avoids a mid-segment ref change in the single
+`ref`-per-segment schema. Whether a spur-terminus root should relabel to the merged-onto road past the merge is a
+product/schema call, not a routing bug; flagged for the reviewer.
+
+**Files:** `src/engine/plugins/tree.cpp` (the ref-adoption site in `walkOne`: `renumber_merge` on `TT::Merge`);
+`tools/hm2_spike/regression.py` (`VALBURG_CASE` / `run_valburg_case`).
