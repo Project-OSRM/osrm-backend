@@ -396,7 +396,8 @@ jobs:
             CXXCOMPILER: clang++-18
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: linux-arm64-release
+          - name: linux-arm64-release-bindings
+            build_bindings: true
             continue-on-error: false
             node: 24
             runs-on: ubuntu-24.04-arm
