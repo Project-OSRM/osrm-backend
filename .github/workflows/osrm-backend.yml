@@ -400,7 +400,7 @@ jobs:
             build_bindings: true
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04-arm
+            runs-on: ubuntu-26.04-arm
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
