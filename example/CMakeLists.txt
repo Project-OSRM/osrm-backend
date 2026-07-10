@@ -25,13 +25,14 @@ else()
 endif()
 
 find_package(Boost REQUIRED CONFIG COMPONENTS date_time iostreams thread)
+find_package(LibArchive REQUIRED)
 
 link_directories(${LibOSRM_LIBRARY_DIRS})
 add_executable(osrm-example example.cpp)
 
 find_package(LibOSRM REQUIRED)
 
-set(LibOSRM_LINKABLE_LIBRARIES ${LibOSRM_LIBRARIES} ${LibOSRM_DEPENDENT_LIBRARIES})
+set(LibOSRM_LINKABLE_LIBRARIES ${LibOSRM_LIBRARIES} ${LibOSRM_DEPENDENT_LIBRARIES} LibArchive::LibArchive)
 list(REMOVE_DUPLICATES LibOSRM_LINKABLE_LIBRARIES)
 target_link_libraries(osrm-example ${LibOSRM_LINKABLE_LIBRARIES})
 include_directories(SYSTEM ${LibOSRM_INCLUDE_DIRS})
