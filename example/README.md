@@ -48,7 +48,7 @@ You can reliably change the thread pool size of the process by setting the `UV_T
 UV_THREADPOOL_SIZE=16 node example.js
 ```
 
-See https://nodejs.org/docs/latest-v18.x/api/os.html#osavailableparallelism for more info.
+See https://nodejs.org/docs/latest-v20.x/api/os.html#osavailableparallelism for more info.
 
 Then you can test it with:
 
