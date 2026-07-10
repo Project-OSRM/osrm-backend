@@ -23,7 +23,7 @@ cd example/
 mkdir build && cd build/
 cmake ..
 cmake --build .
-./osrm-example ../test/data/mld/monaco.osrm
+./osrm-example ../../test/data/mld/monaco.osrm
 ```
 
 The expected output is the distance and duration of the route set in the `example.cpp`.
