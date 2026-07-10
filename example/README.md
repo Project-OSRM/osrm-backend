@@ -30,7 +30,7 @@ The expected output is the distance and duration of the route set in the `exampl
 
 ### `example.js`
 
-To run this module in Node.js you need to install [node-cmake](https://www.npmjs.com/package/node-cmake) in the project's repo root level and pass the flag `-DENABLE_NODE_BINDINGS=On` when building the main project.
+To run this module in Node.js you need to pass the flag `-DENABLE_NODE_BINDINGS=On` when building the main project.
 
 Refer to the sub-section on preparing test data for the application in this document.
 
