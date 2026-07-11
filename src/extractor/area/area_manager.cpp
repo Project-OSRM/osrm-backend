@@ -210,6 +210,7 @@ void AreaManager::complete_relation(const osmium::Relation &relation)
         osmium::area::Assembler assembler{m_assembler_config};
         assembler(relation, ways, this->buffer());
     }
+    // NOLINTNEXTLINE(bugprone-empty-catch)
     catch (const osmium::invalid_location &)
     {
         // XXX ignore
