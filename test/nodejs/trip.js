@@ -208,13 +208,13 @@ test('trip: trip through Monaco with speed annotations options', (assert) => {
   });
 });
 
-test('trip: trip through Monaco with several (duration, distance, nodes) annotations options', (assert) => {
-  assert.plan(12);
-  const osrm = new OSRM(data_path);
+test('trip: trip through Monaco with several (duration, distance, nodes, way_ids) annotations options', (assert) => {
+  assert.plan(13);
+  const osrm = new OSRM({path: data_path, enable_feature_dataset: ['ROUTE_WAY_IDS']});
   const options = {
     coordinates: two_test_coordinates,
     steps: true,
-    annotations: ['duration', 'distance', 'nodes'],
+    annotations: ['duration', 'distance', 'nodes', 'way_ids'],
     overview: 'false'
   };
   osrm.trip(options, (err, trip) => {
@@ -227,6 +227,7 @@ test('trip: trip through Monaco with several (duration, distance, nodes) annotat
       assert.ok(trip.trips[t].legs.every((l) => { return l.annotation.duration; }), 'every leg has annotations for duration');
       assert.ok(trip.trips[t].legs.every((l) => { return l.annotation.distance; }), 'every leg has annotations for distance');
       assert.ok(trip.trips[t].legs.every((l) => { return l.annotation.nodes; }), 'every leg has annotations for nodes');
+      assert.ok(trip.trips[t].legs.every((l) => { return l.annotation.way_ids; }), 'every leg has annotations for way ids');
       assert.notOk(trip.trips[t].legs.every((l) => { return l.annotation.weight; }), 'has no annotations for weight');
       assert.notOk(trip.trips[t].legs.every((l) => { return l.annotation.datasources; }), 'has no annotations for datasources');
       assert.notOk(trip.trips[t].legs.every((l) => { return l.annotation.speed; }), 'has no annotations for speed');
@@ -236,8 +237,8 @@ test('trip: trip through Monaco with several (duration, distance, nodes) annotat
 });
 
 test('trip: trip through Monaco with options', (assert) => {
-  assert.plan(6);
-  const osrm = new OSRM(data_path);
+  assert.plan(7);
+  const osrm = new OSRM({path: data_path, enable_feature_dataset: ['ROUTE_WAY_IDS']});
   const options = {
     coordinates: two_test_coordinates,
     steps: true,
@@ -251,6 +252,7 @@ test('trip: trip through Monaco with options', (assert) => {
       assert.ok(trip.trips[t]);
       assert.ok(trip.trips[t].legs.every((l) => { return l.steps.length > 0; }), 'every leg has steps');
       assert.ok(trip.trips[t].legs.every((l) => { return l.annotation; }), 'every leg has annotations');
+      assert.ok(trip.trips[t].legs.every((l) => { return l.annotation.way_ids; }), 'every leg has annotations for way ids');
       assert.notOk(trip.trips[t].geometry);
     }
   });

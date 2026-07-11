@@ -23,6 +23,39 @@ namespace osrm::engine
 
 struct PathData
 {
+    PathData() = default;
+
+    PathData(const NodeID from_edge_based_node,
+             const NodeID turn_via_node,
+             const EdgeWeight weight_until_turn,
+             const EdgeWeight weight_of_turn,
+             const EdgeDuration duration_until_turn,
+             const EdgeDuration duration_of_turn,
+             const DatasourceID datasource_id,
+             const std::optional<EdgeID> turn_edge)
+        : from_edge_based_node(from_edge_based_node), turn_via_node(turn_via_node),
+          weight_until_turn(weight_until_turn), weight_of_turn(weight_of_turn),
+          duration_until_turn(duration_until_turn), duration_of_turn(duration_of_turn),
+          datasource_id(datasource_id), way_id(SPECIAL_OSM_WAYID), turn_edge(turn_edge)
+    {
+    }
+
+    PathData(const NodeID from_edge_based_node,
+             const NodeID turn_via_node,
+             const EdgeWeight weight_until_turn,
+             const EdgeWeight weight_of_turn,
+             const EdgeDuration duration_until_turn,
+             const EdgeDuration duration_of_turn,
+             const DatasourceID datasource_id,
+             const OSMWayID way_id,
+             const std::optional<EdgeID> turn_edge)
+        : from_edge_based_node(from_edge_based_node), turn_via_node(turn_via_node),
+          weight_until_turn(weight_until_turn), weight_of_turn(weight_of_turn),
+          duration_until_turn(duration_until_turn), duration_of_turn(duration_of_turn),
+          datasource_id(datasource_id), way_id(way_id), turn_edge(turn_edge)
+    {
+    }
+
     // from edge-based-node id
     NodeID from_edge_based_node;
     // the internal OSRM id of the OSM node id that is the via node of the turn
@@ -41,6 +74,7 @@ struct PathData
     EdgeDuration duration_of_turn;
     // Source of the speed value on this road segment
     DatasourceID datasource_id;
+    OSMWayID way_id;
     // If segment precedes a turn, ID of the turn itself
     std::optional<EdgeID> turn_edge;
 };

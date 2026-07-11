@@ -93,7 +93,8 @@ BOOST_AUTO_TEST_CASE(trim_short_segments)
     geometry.segment_offsets = {0, 2};
     geometry.segment_distances = {1.9076601161280742};
     geometry.node_ids = {NodeID{0}, NodeID{1}, NodeID{2}};
-    geometry.annotations = {{1.9076601161280742, 0.2, 0.2, 0}, {0, 0, 0, 0}};
+    geometry.annotations = {{1.9076601161280742, 0.2, 0.2, 0, SPECIAL_OSM_WAYID},
+                            {0, 0, 0, 0, SPECIAL_OSM_WAYID}};
 
     trimShortSegments(steps, geometry);
 

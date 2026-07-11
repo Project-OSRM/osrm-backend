@@ -154,6 +154,48 @@ class TestRoute:
 
         assert full_res["routes"][0]["geometry"] != simplified_res["routes"][0]["geometry"]
 
+    def test_route_way_id_annotations_disabled_by_default(self):
+        route_params = osrm.RouteParameters(
+            coordinates=two_test_coordinates,
+            continue_straight=False,
+            overview="false",
+            geometries="polyline",
+            steps=True,
+            annotations=["way_ids"],
+        )
+
+        with pytest.raises(Exception, match="DisabledDataset"):
+            self.osrm_py.Route(route_params)
+
+    def test_route_way_id_annotations_enabled(self):
+        engine = osrm.OSRM(
+            storage_config=data_path,
+            use_shared_memory=False,
+            enable_feature_dataset=["ROUTE_WAY_IDS"],
+        )
+        route_params = osrm.RouteParameters(
+            coordinates=two_test_coordinates,
+            continue_straight=False,
+            overview="false",
+            geometries="polyline",
+            steps=True,
+            annotations=["way_ids"],
+        )
+
+        res = engine.Route(route_params)
+        assert res["routes"]
+        assert len(res["routes"]) == 1
+        for l in res["routes"][0]["legs"]:
+            assert len(l["steps"]) > 0 and l["annotation"] and l["annotation"]["way_ids"]
+            assert (
+                "weight" not in l["annotation"]
+                and "datasources" not in l["annotation"]
+                and "speed" not in l["annotation"]
+                and "duration" not in l["annotation"]
+                and "distance" not in l["annotation"]
+                and "nodes" not in l["annotation"]
+            )
+
     def test_route_options(self):
         route_params = osrm.RouteParameters(
             coordinates=two_test_coordinates,

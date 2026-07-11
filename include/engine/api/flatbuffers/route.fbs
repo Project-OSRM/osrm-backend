@@ -13,6 +13,7 @@ table Annotation {
     weight: [uint];
     speed: [float];
     metadata: Metadata;
+    way_ids: [ulong];
 }
 
 enum ManeuverType: byte {

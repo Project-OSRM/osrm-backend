@@ -26,7 +26,8 @@ namespace serialization
 template <storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
-                 detail::SegmentDataContainerImpl<Ownership> &segment_data);
+                 detail::SegmentDataContainerImpl<Ownership> &segment_data,
+                 const bool read_way_ids = true);
 template <storage::Ownership Ownership>
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
@@ -51,6 +52,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     using SegmentWeightVector = PackedVector<SegmentWeight, SEGMENT_WEIGHT_BITS>;
     using SegmentDurationVector = PackedVector<SegmentDuration, SEGMENT_DURATION_BITS>;
     using SegmentDatasourceVector = Vector<DatasourceID>;
+    using SegmentWayIDVector = Vector<OSMWayID>;
 
     SegmentDataContainerImpl() = default;
 
@@ -61,11 +63,14 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
                              SegmentDurationVector fwd_durations_,
                              SegmentDurationVector rev_durations_,
                              SegmentDatasourceVector fwd_datasources_,
-                             SegmentDatasourceVector rev_datasources_)
+                             SegmentDatasourceVector rev_datasources_,
+                             SegmentWayIDVector fwd_way_ids_,
+                             SegmentWayIDVector rev_way_ids_)
         : index(std::move(index_)), nodes(std::move(nodes_)), fwd_weights(std::move(fwd_weights_)),
           rev_weights(std::move(rev_weights_)), fwd_durations(std::move(fwd_durations_)),
           rev_durations(std::move(rev_durations_)), fwd_datasources(std::move(fwd_datasources_)),
-          rev_datasources(std::move(rev_datasources_))
+          rev_datasources(std::move(rev_datasources_)), fwd_way_ids(std::move(fwd_way_ids_)),
+          rev_way_ids(std::move(rev_way_ids_))
     {
     }
 
@@ -120,11 +125,27 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         return std::span<DatasourceID>(ptr, len);
     }
 
+    auto GetForwardWayIDs(const DirectionalGeometryID id)
+    {
+        const auto begin = fwd_way_ids.begin() + index[id] + 1;
+        const auto end = fwd_way_ids.begin() + index[id + 1];
+
+        return std::ranges::subrange(begin, end);
+    }
+
     auto GetReverseDatasources(const DirectionalGeometryID id)
     {
         auto ptr = rev_datasources.data() + index[id];
         auto len = static_cast<std::size_t>((index[id + 1] - 1) - index[id]);
         return std::span<DatasourceID>(ptr, len) | std::views::reverse;
+    }
+
+    auto GetReverseWayIDs(const DirectionalGeometryID id)
+    {
+        const auto begin = rev_way_ids.begin() + index[id];
+        const auto end = rev_way_ids.begin() + index[id + 1] - 1;
+
+        return std::ranges::subrange(begin, end) | std::views::reverse;
     }
 
     auto GetForwardGeometry(const DirectionalGeometryID id) const
@@ -178,11 +199,27 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
         return std::span<const DatasourceID>(ptr, len);
     }
 
+    auto GetForwardWayIDs(const DirectionalGeometryID id) const
+    {
+        const auto begin = fwd_way_ids.cbegin() + index[id] + 1;
+        const auto end = fwd_way_ids.cbegin() + index[id + 1];
+
+        return std::ranges::subrange(begin, end);
+    }
+
     auto GetReverseDatasources(const DirectionalGeometryID id) const
     {
         auto ptr = rev_datasources.data() + index[id];
         auto len = static_cast<std::size_t>((index[id + 1] - 1) - index[id]);
         return std::span<const DatasourceID>(ptr, len) | std::views::reverse;
+    }
+
+    auto GetReverseWayIDs(const DirectionalGeometryID id) const
+    {
+        const auto begin = rev_way_ids.cbegin() + index[id];
+        const auto end = rev_way_ids.cbegin() + index[id + 1] - 1;
+
+        return std::ranges::subrange(begin, end) | std::views::reverse;
     }
 
     auto GetNumberOfGeometries() const { return index.size() - 1; }
@@ -191,7 +228,8 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     friend void
     serialization::read<Ownership>(storage::tar::FileReader &reader,
                                    const std::string &name,
-                                   detail::SegmentDataContainerImpl<Ownership> &segment_data);
+                                   detail::SegmentDataContainerImpl<Ownership> &segment_data,
+                                   const bool read_way_ids);
     friend void serialization::write<Ownership>(
         storage::tar::FileWriter &writer,
         const std::string &name,
@@ -206,6 +244,8 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     SegmentDurationVector rev_durations;
     SegmentDatasourceVector fwd_datasources;
     SegmentDatasourceVector rev_datasources;
+    SegmentWayIDVector fwd_way_ids;
+    SegmentWayIDVector rev_way_ids;
 };
 } // namespace detail
 

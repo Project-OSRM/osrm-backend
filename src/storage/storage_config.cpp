@@ -18,6 +18,8 @@ std::istream &operator>>(std::istream &in, FeatureDataset &datasets)
         datasets = FeatureDataset::ROUTE_STEPS;
     else if (token == "route_geometry")
         datasets = FeatureDataset::ROUTE_GEOMETRY;
+    else if (token == "route_way_ids")
+        datasets = FeatureDataset::ROUTE_WAY_IDS;
     else
         throw util::RuntimeError(token, ErrorCode::UnknownFeatureDataset, SOURCE_REF);
     return in;

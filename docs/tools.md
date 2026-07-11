@@ -146,7 +146,7 @@ osrm-routed <base.osrm> [options]
 | `--shared-memory` | `-s` | off | Load data from a shared memory region managed by `osrm-datastore`. |
 | `--mmap` | `-m` | off | Memory-map the data files instead of loading them into RAM. |
 | `--dataset-name <name>` | | | Shared memory dataset name to connect to (used with `--shared-memory`). |
-| `--disable-feature-dataset <name>` | | | Skip loading an optional dataset to save memory. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`. |
+| `--disable-feature-dataset <name>` | | | Skip loading an optional dataset to save memory. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`, `ROUTE_WAY_IDS`. |
 
 ### Query limits
 
@@ -179,7 +179,7 @@ osrm-datastore [options] <base.osrm>
 | `--dataset-name <name>` | | | Name for this dataset in shared memory. Allows multiple datasets to coexist. |
 | `--max-wait <s>` | `-1` (unlimited) | Seconds to wait for a running update to finish before forcibly acquiring the lock. |
 | `--only-metric` | | | Reload only the metric (weights/durations) without replacing the full dataset. Optimized for frequent traffic updates. |
-| `--disable-feature-dataset <name>` | | | Skip loading an optional dataset. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`. |
+| `--disable-feature-dataset <name>` | | | Skip loading an optional dataset. Options: `ROUTE_STEPS`, `ROUTE_GEOMETRY`, `ROUTE_WAY_IDS`. |
 | `--remove-locks` | `-r` | | Remove stale shared-memory locks and exit. |
 | `--spring-clean` | `-s` | | Remove all OSRM shared memory regions and exit. |
 | `--list` | | | List all datasets currently loaded in shared memory. |

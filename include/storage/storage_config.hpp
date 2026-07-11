@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "storage/io_config.hpp"
 #include "osrm/datasets.hpp"
 
+#include <algorithm>
 #include <filesystem>
 #include <istream>
 #include <set>
@@ -41,9 +42,32 @@ namespace osrm::storage
 
 std::istream &operator>>(std::istream &in, FeatureDataset &datasets);
 
-static std::vector<std::filesystem::path>
-GetRequiredFiles(const std::vector<storage::FeatureDataset> &disabled_feature_dataset)
+static bool ContainsFeatureDataset(const std::vector<storage::FeatureDataset> &feature_datasets,
+                                   const storage::FeatureDataset feature_dataset)
 {
+    return std::find(feature_datasets.begin(), feature_datasets.end(), feature_dataset) !=
+           feature_datasets.end();
+}
+
+static std::vector<storage::FeatureDataset> GetEffectiveDisabledFeatureDatasets(
+    const std::vector<storage::FeatureDataset> &disabled_feature_datasets,
+    const std::vector<storage::FeatureDataset> &enabled_feature_datasets)
+{
+    auto effective_disabled_feature_datasets = disabled_feature_datasets;
+    if (!ContainsFeatureDataset(enabled_feature_datasets, FeatureDataset::ROUTE_WAY_IDS) &&
+        !ContainsFeatureDataset(effective_disabled_feature_datasets, FeatureDataset::ROUTE_WAY_IDS))
+    {
+        effective_disabled_feature_datasets.push_back(FeatureDataset::ROUTE_WAY_IDS);
+    }
+    return effective_disabled_feature_datasets;
+}
+
+static std::vector<std::filesystem::path>
+GetRequiredFiles(const std::vector<storage::FeatureDataset> &disabled_feature_datasets,
+                 const std::vector<storage::FeatureDataset> &enabled_feature_datasets = {})
+{
+    const auto effective_disabled_feature_datasets =
+        GetEffectiveDisabledFeatureDatasets(disabled_feature_datasets, enabled_feature_datasets);
     std::set<std::filesystem::path> required{
         ".osrm.datasource_names",
         ".osrm.ebg_nodes",
@@ -63,7 +87,7 @@ GetRequiredFiles(const std::vector<storage::FeatureDataset> &disabled_feature_da
         ".osrm.turn_weight_penalties",
     };
 
-    for (const auto &to_disable : disabled_feature_dataset)
+    for (const auto &to_disable : effective_disabled_feature_datasets)
     {
         switch (to_disable)
         {
@@ -79,6 +103,8 @@ GetRequiredFiles(const std::vector<storage::FeatureDataset> &disabled_feature_da
             {
                 required.erase(dataset);
             }
+            break;
+        case FeatureDataset::ROUTE_WAY_IDS:
             break;
         }
     }
@@ -96,19 +122,25 @@ struct StorageConfig final : IOConfig
 {
 
     StorageConfig(const std::filesystem::path &base,
-                  const std::vector<storage::FeatureDataset> &disabled_feature_datasets_ = {})
-        : StorageConfig(disabled_feature_datasets_)
+                  const std::vector<storage::FeatureDataset> &disabled_feature_datasets_ = {},
+                  const std::vector<storage::FeatureDataset> &enabled_feature_datasets_ = {})
+        : StorageConfig(disabled_feature_datasets_, enabled_feature_datasets_)
     {
         IOConfig::UseDefaultOutputNames(base);
     }
 
-    StorageConfig(const std::vector<storage::FeatureDataset> &disabled_feature_datasets_ = {})
+    StorageConfig(const std::vector<storage::FeatureDataset> &disabled_feature_datasets_ = {},
+                  const std::vector<storage::FeatureDataset> &enabled_feature_datasets_ = {})
         : IOConfig(
-              GetRequiredFiles(disabled_feature_datasets_),
+              GetRequiredFiles(disabled_feature_datasets_, enabled_feature_datasets_),
               {".osrm.hsgr", ".osrm.cells", ".osrm.cell_metrics", ".osrm.mldgr", ".osrm.partition"},
-              {})
+              {}),
+          disabled_feature_datasets(GetEffectiveDisabledFeatureDatasets(disabled_feature_datasets_,
+                                                                        enabled_feature_datasets_))
     {
     }
+
+    std::vector<storage::FeatureDataset> disabled_feature_datasets;
 };
 } // namespace osrm::storage
 

@@ -24,6 +24,7 @@
 #include <chrono>
 #include <thread>
 
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -165,9 +166,26 @@ bool swapData(Monitor &monitor,
 
     return true;
 }
+
+bool isDisabled(const std::vector<storage::FeatureDataset> &disabled_feature_datasets,
+                const storage::FeatureDataset dataset)
+{
+    return std::find(disabled_feature_datasets.begin(), disabled_feature_datasets.end(), dataset) !=
+           disabled_feature_datasets.end();
+}
+
+bool shouldSkipBlock(const std::string &name,
+                     const std::vector<storage::FeatureDataset> &disabled_feature_datasets)
+{
+    return isDisabled(disabled_feature_datasets, storage::FeatureDataset::ROUTE_WAY_IDS) &&
+           (name == "/common/segment_data/forward_way_ids" ||
+            name == "/common/segment_data/reverse_way_ids");
+}
 } // namespace
 
-void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseDataLayout &layout)
+void populateLayoutFromFile(const std::filesystem::path &path,
+                            storage::BaseDataLayout &layout,
+                            const std::vector<storage::FeatureDataset> &disabled_feature_datasets)
 {
     tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
 
@@ -179,6 +197,10 @@ void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseData
         const auto name_end = entry.name.rfind(".meta");
         if (name_end == std::string::npos)
         {
+            if (shouldSkipBlock(entry.name, disabled_feature_datasets))
+            {
+                continue;
+            }
             auto number_of_elements = reader.ReadElementCount64(entry.name);
             layout.SetBlock(entry.name, Block{number_of_elements, entry.size, entry.offset});
         }
@@ -374,7 +396,7 @@ void Storage::PopulateLayout(storage::BaseDataLayout &layout,
     {
         if (std::filesystem::exists(file.second))
         {
-            populateLayoutFromFile(file.second, layout);
+            populateLayoutFromFile(file.second, layout, config.disabled_feature_datasets);
         }
     }
 }
@@ -509,7 +531,10 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
     // load compressed geometry
     {
         auto segment_data = make_segment_data_view(index, "/common/segment_data");
-        extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
+        extractor::files::readSegmentData(
+            config.GetPath(".osrm.geometry"),
+            segment_data,
+            !isDisabled(config.disabled_feature_datasets, storage::FeatureDataset::ROUTE_WAY_IDS));
     }
 
     {

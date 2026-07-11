@@ -33,7 +33,10 @@ void init_EngineConfig(nb::module_ &m)
         .def("IsValid", &EngineConfig::IsValid)
         .def("SetStorageConfig",
              [](EngineConfig &self, const std::string &path)
-             { self.storage_config = osrm::storage::StorageConfig(path); })
+             {
+                 self.storage_config = osrm::storage::StorageConfig(
+                     path, self.disable_feature_dataset, self.enable_feature_dataset);
+             })
         .def_rw("max_locations_trip", &EngineConfig::max_locations_trip)
         .def_rw("max_locations_viaroute", &EngineConfig::max_locations_viaroute)
         .def_rw("max_locations_distance_table", &EngineConfig::max_locations_distance_table)

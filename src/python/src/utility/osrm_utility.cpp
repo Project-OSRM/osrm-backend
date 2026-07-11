@@ -7,7 +7,9 @@
 
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
+#include <nanobind/stl/vector.h>
 
+#include <optional>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -30,6 +32,25 @@ template <typename T> void assign_val(T &to_assign, const std::pair<nb::handle, 
     }
 }
 
+std::vector<osrm::storage::FeatureDataset>
+parse_feature_datasets(const std::vector<std::string> &dataset_names,
+                       const std::string &argument_name)
+{
+    std::vector<osrm::storage::FeatureDataset> feature_datasets;
+    for (const auto &dataset_name : dataset_names)
+    {
+        if (dataset_name == "ROUTE_WAY_IDS")
+        {
+            feature_datasets.push_back(osrm::storage::FeatureDataset::ROUTE_WAY_IDS);
+        }
+        else
+        {
+            throw std::runtime_error(argument_name + " can include 'ROUTE_WAY_IDS'.");
+        }
+    }
+    return feature_datasets;
+}
+
 namespace osrm_nb_util
 {
 
@@ -48,13 +69,22 @@ void check_status(osrm::engine::Status status, osrm::util::json::Object &res)
 
 void populate_cfg_from_kwargs(const nb::kwargs &kwargs, EngineConfig &config)
 {
+    std::optional<std::string> storage_config_path;
     std::unordered_map<std::string, std::function<void(const std::pair<nb::handle, nb::handle> &)>>
         assign_map{{"storage_config",
-                    [&config](const std::pair<nb::handle, nb::handle> &val)
+                    [&storage_config_path](const std::pair<nb::handle, nb::handle> &val)
                     {
                         std::string str;
                         assign_val(str, val);
-                        config.storage_config = osrm::storage::StorageConfig(str);
+                        storage_config_path = std::move(str);
+                    }},
+                   {"enable_feature_dataset",
+                    [&config](const std::pair<nb::handle, nb::handle> &val)
+                    {
+                        std::vector<std::string> feature_datasets;
+                        assign_val(feature_datasets, val);
+                        config.enable_feature_dataset =
+                            parse_feature_datasets(feature_datasets, "enable_feature_dataset");
                     }},
                    {"max_locations_trip",
                     [&config](const std::pair<nb::handle, nb::handle> &val)
@@ -136,6 +166,12 @@ void populate_cfg_from_kwargs(const nb::kwargs &kwargs, EngineConfig &config)
         }
 
         itr->second(kwarg);
+    }
+
+    if (storage_config_path)
+    {
+        config.storage_config = osrm::storage::StorageConfig(
+            *storage_config_path, config.disable_feature_dataset, config.enable_feature_dataset);
     }
 }
 

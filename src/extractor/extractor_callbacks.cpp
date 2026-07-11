@@ -397,12 +397,15 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
          (turn_lane_id_forward != turn_lane_id_backward) || (forward_classes != backward_classes) ||
          (parsed_way.forward_ref != parsed_way.backward_ref));
 
+    const auto way_id = OSMWayID{static_cast<std::uint64_t>(input_way.id())};
+
     if (in_forward_direction)
     { // add (forward) segments or (forward,backward) for non-split edges in backward direction
         const auto annotation_data_id = external_memory.all_edges_annotation_data_list.size();
         external_memory.all_edges_annotation_data_list.push_back({forward_name_id,
                                                                   turn_lane_id_forward,
                                                                   forward_classes,
+                                                                  way_id,
                                                                   parsed_way.forward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
         util::for_each_pair(nodes,
@@ -438,6 +441,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
         external_memory.all_edges_annotation_data_list.push_back({backward_name_id,
                                                                   turn_lane_id_backward,
                                                                   backward_classes,
+                                                                  way_id,
                                                                   parsed_way.backward_travel_mode,
                                                                   parsed_way.is_left_hand_driving});
         util::for_each_pair(nodes,
@@ -473,7 +477,6 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                    [](const osmium::NodeRef &ref)
                    { return OSMNodeID{static_cast<std::uint64_t>(ref.ref())}; });
 
-    auto way_id = OSMWayID{static_cast<std::uint64_t>(input_way.id())};
     external_memory.ways_list.push_back(way_id);
     external_memory.way_node_id_offsets.push_back(external_memory.used_node_id_list.size());
 }
