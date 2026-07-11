@@ -41,8 +41,7 @@ process_way(std::initializer_list<std::pair<const char *, const char *>> tags)
     osrm::extractor::ScriptingResults results;
     results.osmium_buffer = std::make_shared<osmium::memory::Buffer>(std::move(buffer));
 
-    scripting_environment.ProcessElements(
-        results, restriction_parser, maneuver_override_parser);
+    scripting_environment.ProcessElements(results, restriction_parser, maneuver_override_parser);
 
     BOOST_REQUIRE_EQUAL(results.resulting_ways.size(), 1);
     return results.resulting_ways.front().second;
