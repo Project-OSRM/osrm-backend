@@ -80,8 +80,7 @@ template <class TPoint> bool collinear(const TPoint *a, const TPoint *b, const T
     const double dx2 = bg::get<0>(*c) - bg::get<0>(*a);
     const double dy2 = bg::get<1>(*c) - bg::get<1>(*a);
     const double scale = (std::fabs(dx1) + std::fabs(dy1)) * (std::fabs(dx2) + std::fabs(dy2));
-    const double eps =
-        std::max(1e-12, std::numeric_limits<double>::epsilon() * scale * 1000.0);
+    const double eps = std::max(1e-12, std::numeric_limits<double>::epsilon() * scale * 1000.0);
     return std::fabs(value) <= eps;
 }
 
