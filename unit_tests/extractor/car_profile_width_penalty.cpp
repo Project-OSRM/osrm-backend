@@ -38,24 +38,14 @@ process_way(std::initializer_list<std::pair<const char *, const char *>> tags)
     osrm::extractor::RestrictionParser restriction_parser(
         false, false, scripting_environment.GetRestrictions());
     osrm::extractor::ManeuverOverrideRelationParser maneuver_override_parser;
-    osrm::extractor::ExtractionRelationContainer relations;
+    osrm::extractor::ScriptingResults results;
+    results.osmium_buffer = std::make_shared<osmium::memory::Buffer>(std::move(buffer));
 
-    std::vector<std::pair<const osmium::Node &, osrm::extractor::ExtractionNode>> resulting_nodes;
-    std::vector<std::pair<const osmium::Way &, osrm::extractor::ExtractionWay>> resulting_ways;
-    std::vector<osrm::extractor::InputTurnRestriction> resulting_restrictions;
-    std::vector<osrm::extractor::InputManeuverOverride> resulting_maneuver_overrides;
+    scripting_environment.ProcessElements(
+        results, restriction_parser, maneuver_override_parser);
 
-    scripting_environment.ProcessElements(buffer,
-                                          restriction_parser,
-                                          maneuver_override_parser,
-                                          relations,
-                                          resulting_nodes,
-                                          resulting_ways,
-                                          resulting_restrictions,
-                                          resulting_maneuver_overrides);
-
-    BOOST_REQUIRE_EQUAL(resulting_ways.size(), 1);
-    return resulting_ways.front().second;
+    BOOST_REQUIRE_EQUAL(results.resulting_ways.size(), 1);
+    return results.resulting_ways.front().second;
 }
 
 double forward_rate_for_width(const char *width)
