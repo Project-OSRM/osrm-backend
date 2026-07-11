@@ -2,6 +2,7 @@
 #include "partitioner/graph_generator.hpp"
 #include "partitioner/recursive_bisection_state.hpp"
 
+#include "../common/random_seed.hpp"
 #include "util/debug.hpp"
 
 #include <algorithm>
@@ -20,8 +21,7 @@ namespace
 {
 void shuffle(std::vector<EdgeWithSomeAdditionalData> &grid_edges)
 {
-    std::random_device rd;
-    std::mt19937 rng(rd());
+    std::mt19937 rng(osrm::test::getTestRandomSeed());
     std::shuffle(grid_edges.begin(), grid_edges.end(), rng);
 }
 } // namespace

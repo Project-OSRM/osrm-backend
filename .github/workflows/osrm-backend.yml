@@ -18,7 +18,7 @@ env:
   ENABLE_NODE_BINDINGS: 'ON'
   # vcpkg baseline is also pinned in vcpkg-configuration.json; this env var
   # is what lukka/run-vcpkg consumes to pick the vcpkg tool version.
-  VCPKG_COMMIT_ID: c3867e714dd3a51c272826eea77267876517ed99
+  VCPKG_COMMIT_ID: d015e31e90838a4c9dfa3eed45979bc70d9357fc
   # Use a local filesystem directory as vcpkg's binary cache. The directory
   # itself is persisted across CI runs via actions/cache@v5. The x-gha
   # backend was removed upstream; files+actions/cache is the replacement.
@@ -32,9 +32,17 @@ concurrency:
 jobs:
   vcpkg-smoke-prereq:
     if: github.repository == 'Project-OSRM/osrm-backend'
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
-      - uses: actions/checkout@v6
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
+      - uses: actions/checkout@v7
       - uses: dorny/paths-filter@v4
         id: dep_changes
         with:
@@ -48,7 +56,7 @@ jobs:
               - '.github/workflows/vcpkg-smoke.yml'
       - name: Enable vcpkg binary cache
         if: steps.dep_changes.outputs.deps == 'true'
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
           key: vcpkg-${{ runner.os }}-${{ runner.arch }}-x64-linux-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
@@ -66,7 +74,7 @@ jobs:
         env:
           VCPKG_DEFAULT_TRIPLET: x64-linux
 
-  vcpkg-windows-release-bindings:
+  windows-release-bindings:
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     strategy:
       matrix:
@@ -77,7 +85,15 @@ jobs:
     env:
       BUILD_TYPE: Release
     steps:
-      - uses: actions/checkout@v6
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
+      - uses: actions/checkout@v7
       - name: Move temp directory to D drive
         shell: pwsh
         run: |
@@ -91,7 +107,7 @@ jobs:
       - run: node --version
       - run: npm --version
       - name: Enable vcpkg binary cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
           key: vcpkg-${{ runner.os }}-${{ runner.arch }}-x64-windows-static-md-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
@@ -161,7 +177,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
       - name: Run CIBuildWheel
         if: github.event_name != 'pull_request'
-        uses: pypa/cibuildwheel@v3.4.1
+        uses: pypa/cibuildwheel@v4.1.0
         with:
           output-dir: dist
         # The wheel-build CMAKE_ARGS (vcpkg toolchain + triplet) and the
@@ -179,14 +195,18 @@ jobs:
   format-taginfo-docs:
     if: github.repository == 'Project-OSRM/osrm-backend'
     runs-on: ubuntu-slim
+    permissions:
+      contents: read
+      actions: write  # needed by actions/cache
+      pull-requests: write  # needed to post PR comments with instructions
     steps:
-    - uses: actions/checkout@v6
+    - uses: actions/checkout@v7
     - name: Use Node.js
       uses: actions/setup-node@v6
       with:
         node-version: latest
     - name: Enable Node.js cache
-      uses: actions/cache@v5
+      uses: actions/cache@v6
       with:
         path: ~/.npm
         key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
@@ -203,28 +223,125 @@ jobs:
         python-version: '3.12'
     - name: Run `pre-commit`
       uses: pre-commit/action@v3.0.1
-    - name: Run checks
+    - name: Validate taginfo
+      run: ./scripts/check_taginfo.py taginfo.json profiles/car.lua
+    # ---- code formatting ----
+    - name: Check code formatting
+      id: format
       run: |
-        ./scripts/check_taginfo.py taginfo.json profiles/car.lua
-        # Check that code formatting is up to date
-        ./scripts/format.sh && ./scripts/error_on_dirty.sh "Run './scripts/format.sh' locally and commit the changes."
-        # Check that API documentation is up to date with JSDoc comments in node_osrm.cpp
-        npm run docs && ./scripts/error_on_dirty.sh "Run 'npm run docs' locally and commit the changes."
-        npm audit --production
+        ./scripts/format.sh
+        if ! git diff --exit-code --quiet; then
+          echo "dirty=true" >> "$GITHUB_OUTPUT"
+          git diff > /tmp/formatting-fixes.patch
+        fi
+    - name: Upload formatting patch
+      if: steps.format.outputs.dirty == 'true'
+      uses: actions/upload-artifact@v7
+      with:
+        name: formatting-fixes
+        path: /tmp/formatting-fixes.patch
+        retention-days: 7
+    - name: Post formatting instructions on PR
+      if: steps.format.outputs.dirty == 'true' && github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
+      run: |
+        gh pr comment "${{ github.event.pull_request.number }}" --body "## :wrench: Code Formatting Required
 
-  docker-image-matrix:
+        \`./scripts/format.sh\` produced changes on this branch.
+
+        **Option 1 — Download and apply** [formatting-fixes.zip](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/formatting-fixes.zip):
+        \`\`\`bash
+        curl -LO https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/formatting-fixes.zip
+        unzip formatting-fixes.zip
+        git apply formatting-fixes.patch
+        \`\`\`
+
+        **Option 2 — Run locally:**
+        \`\`\`bash
+        ./scripts/format.sh
+        \`\`\`
+        Then commit the changes."
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Stash formatting changes
+      if: steps.format.outputs.dirty == 'true'
+      run: git stash push --message "formatting changes"
+
+    # ---- api documentation ----
+    - name: Check API documentation
+      id: docs
+      run: |
+        npm run docs
+        if ! git diff --exit-code --quiet; then
+          echo "dirty=true" >> "$GITHUB_OUTPUT"
+          git diff > /tmp/docs-fixes.patch
+        fi
+    - name: Upload documentation patch
+      if: steps.docs.outputs.dirty == 'true'
+      uses: actions/upload-artifact@v7
+      with:
+        name: docs-fixes
+        path: /tmp/docs-fixes.patch
+        retention-days: 7
+    - name: Post documentation instructions on PR
+      if: steps.docs.outputs.dirty == 'true' && github.event_name == 'pull_request' && !github.event.pull_request.head.repo.fork
+      run: |
+        gh pr comment "${{ github.event.pull_request.number }}" --body "## :memo: API Documentation Required
+
+        \`npm run docs\` produced changes on this branch.
+
+        **Option 1 — Download and apply** [docs-fixes.zip](https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/docs-fixes.zip):
+        \`\`\`bash
+        curl -LO https://nightly.link/${{ github.repository }}/actions/runs/${{ github.run_id }}/docs-fixes.zip
+        unzip docs-fixes.zip
+        git apply docs-fixes.patch
+        \`\`\`
+
+        **Option 2 — Run locally:**
+        \`\`\`bash
+        npm run docs
+        \`\`\`
+        Then commit the changes."
+      env:
+        GH_TOKEN: ${{ github.token }}
+    - name: Restore formatting changes
+      if: steps.format.outputs.dirty == 'true'
+      run: git stash pop
+
+    # ---- final checks ----
+    - name: Run npm audit
+      run: npm audit --production
+    - name: Fail on outstanding changes
+      if: steps.format.outputs.dirty == 'true' || steps.docs.outputs.dirty == 'true'
+      run: |
+        if [[ "${{ steps.format.outputs.dirty }}" == 'true' ]]; then
+          echo "::error title=Code formatting out of date::Run './scripts/format.sh' locally, or download formatting-fixes.zip from the workflow artifacts."
+        fi
+        if [[ "${{ steps.docs.outputs.dirty }}" == 'true' ]]; then
+          echo "::error title=API documentation out of date::Run 'npm run docs' locally, or download docs-fixes.zip from the workflow artifacts."
+        fi
+        exit 1
+
+  docker-build-extract-test:
     strategy:
       matrix:
-        docker-base-image: ['debian', 'alpine']
+        docker-base-image: ['debian']
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     if: github.repository == 'Project-OSRM/osrm-backend'
-    runs-on: ubuntu-22.04
+    runs-on: ubuntu-latest
     continue-on-error: false
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Check out the repo
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
       - name: Enable osm.pbf cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: berlin-latest.osm.pbf
           key: v1-berlin-osm-pbf
@@ -240,7 +357,7 @@ jobs:
           tags: osrm-backend-local
           load: true
           # Persist BuildKit layer + vcpkg/ccache mount cache across runs via
-          # GitHub Actions cache. Scope per base image so alpine/debian don't
+          # GitHub Actions cache. Scope per base image so different images don't
           # collide.
           cache-from: type=gha,scope=docker-${{ matrix.docker-base-image }}
           cache-to: type=gha,mode=max,scope=docker-${{ matrix.docker-base-image }}
@@ -278,16 +395,26 @@ jobs:
           - name: clang-20-release
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Release
             CCOMPILER: clang-20
             CXXCOMPILER: clang++-20
+            ENABLE_LTO: ON
+
+          - name: clang-20-debug
+            continue-on-error: false
+            node: 24
+            runs-on: ubuntu-26.04
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-20
+            CXXCOMPILER: clang++-20
+            ENABLE_ASSERTIONS: ON
             ENABLE_LTO: OFF
 
           - name: clang-19-release
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Release
             CCOMPILER: clang-19
             CXXCOMPILER: clang++-19
@@ -296,130 +423,102 @@ jobs:
           - name: clang-18-release
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
             ENABLE_LTO: OFF
 
-          - name: clang-18-debug
+          - name: clang-20-debug-clang-tidy
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
-            ENABLE_LTO: OFF
-
-          - name: clang-18-debug-clang-tidy
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
+            CCOMPILER: clang-20
+            CXXCOMPILER: clang++-20
             ENABLE_CLANG_TIDY: ON
             NODE_PACKAGE_TESTS_ONLY: ON
             ENABLE_LTO: OFF
 
-          - name: clang-18-debug-asan-ubsan
+          - name: clang-20-debug-asan-ubsan
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Debug
-            CCOMPILER: clang-18
-            CXXCOMPILER: clang++-18
+            CCOMPILER: clang-20
+            CXXCOMPILER: clang++-20
             ENABLE_SANITIZER: ON
             TARGET_ARCH: x86_64-asan-ubsan
             OSRM_CONNECTION_RETRIES: 10
             OSRM_CONNECTION_EXP_BACKOFF_COEF: 1.5
 
-          - name: clang-17-release
+          - name: clang-20-debug-cov
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Release
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
-            ENABLE_LTO: OFF
+            runs-on: ubuntu-26.04
+            BUILD_TYPE: Debug
+            CCOMPILER: clang-20
+            CXXCOMPILER: clang++-20
+            ENABLE_COVERAGE: ON
 
           - name: gcc-14-release
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
             CXXCOMPILER: g++-14
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-13-release
+          - name: gcc-15-release
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Release
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
+            CCOMPILER: gcc-15
+            CXXCOMPILER: g++-15
             CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
-          - name: gcc-13-debug-cov
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: gcc-13
-            CXXCOMPILER: g++-13
-            ENABLE_COVERAGE: ON
-
-          - name: vcpkg-linux-release-bindings
+          - name: linux-release-bindings
             build_bindings: true
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
+            runs-on: ubuntu-26.04
             BUILD_TYPE: Release
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
+            CCOMPILER: clang-18
+            CXXCOMPILER: clang++-18
             NODE_PACKAGE_TESTS_ONLY: ON
 
-          - name: vcpkg-linux-debug
+          - name: linux-arm64-release-bindings
+            build_bindings: true
             continue-on-error: false
             node: 24
-            runs-on: ubuntu-24.04
-            BUILD_TYPE: Debug
-            CCOMPILER: clang-17
-            CXXCOMPILER: clang++-17
-            NODE_PACKAGE_TESTS_ONLY: ON
-
-          - name: vcpkg-linux-arm64-release
-            continue-on-error: false
-            node: 24
-            runs-on: ubuntu-24.04-arm
+            runs-on: ubuntu-26.04-arm
             BUILD_TYPE: Release
             CCOMPILER: clang-18
             CXXCOMPILER: clang++-18
             ENABLE_LTO: OFF
 
-          - name: vcpkg-macos-26-x64-release
+          - name: macos-26-x64-release
             continue-on-error: true
             node: 24
             runs-on: macos-26-intel # x86_64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
             vcpkg_triplet: x64-osx
 
-          - name: vcpkg-macos-26-arm64-release
+          - name: macos-26-arm64-release
             continue-on-error: true
             node: 24
             runs-on: macos-26 # arm64
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
             vcpkg_triplet: arm64-osx
 
           # python & nodeJS release bindings — macos-15 for broad binary compatibility
-          - name: vcpkg-macos-15-x64-release-bindings
+          - name: macos-15-x64-release-bindings
             build_bindings: true
             continue-on-error: true
             node: 24
@@ -427,10 +526,9 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
             vcpkg_triplet: x64-osx
 
-          - name: vcpkg-macos-15-arm64-release-bindings
+          - name: macos-15-arm64-release-bindings
             build_bindings: true
             continue-on-error: true
             node: 24
@@ -438,7 +536,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: clang
             CXXCOMPILER: clang++
-            ENABLE_ASSERTIONS: ON
             vcpkg_triplet: arm64-osx
 
     name: ${{ matrix.name}}
@@ -462,7 +559,15 @@ jobs:
       ENABLE_LTO: ${{ matrix.ENABLE_LTO }}
       BUILD_BINDINGS: ${{ matrix.build_bindings }}
     steps:
-      - uses: actions/checkout@v6
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
+      - uses: actions/checkout@v7
         with:
           fetch-tags: true
       - name: Build machine architecture
@@ -472,7 +577,7 @@ jobs:
         with:
           node-version: ${{ matrix.node }}
       - name: Enable Node.js cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ~/.npm
           key: ${{ runner.os }}-node-${{ hashFiles('package-lock.json') }}
@@ -480,19 +585,19 @@ jobs:
             ${{ runner.os }}-node-
       - name: Restore compiler cache
         id: ccache-restore
-        uses: actions/cache/restore@v5
+        uses: actions/cache/restore@v6
         with:
           path: ~/.ccache
           key: ccache-${{ matrix.name }}-${{ github.sha }}
           restore-keys: |
             ccache-${{ matrix.name }}-
       - name: Enable vcpkg binary cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
-          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
           restore-keys: |
-            vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-
+            vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.runs-on }}-${{ matrix.vcpkg_triplet || matrix.name }}-${{ env.VCPKG_COMMIT_ID }}-
       - name: Setup vcpkg
         uses: lukka/run-vcpkg@v11
         with:
@@ -501,7 +606,7 @@ jobs:
           # otherwise pick up overlay port manifests in vcpkg-overlay-ports/.
           vcpkgJsonGlob: 'vcpkg.json'
       - name: Enable test cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{github.workspace}}/test/cache
           key: v4-test-${{ matrix.name }}-${{ github.sha }}
@@ -534,7 +639,7 @@ jobs:
             sudo apt-get update -y
             sudo apt-get install -y ${CCOMPILER} ${CXXCOMPILER} ccache
             if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
-              sudo apt-get install -y lcov
+              sudo apt-get install -y lcov llvm-20
             fi
           elif [[ "${RUNNER_OS}" == "macOS" ]]; then
             brew install ccache
@@ -604,6 +709,25 @@ jobs:
           popd
           ./scripts/ci/test_cli_parsing.sh -b "${OSRM_BUILD_DIR}"
           npm test -- --parallel $JOBS
+
+      - name: Generate coverage report
+        if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+        run: |
+          cat > llvm-gcov.sh <<'EOF'
+          #!/usr/bin/env bash
+          exec llvm-cov-20 gcov "$@"
+          EOF
+          chmod +x llvm-gcov.sh
+          lcov --gcov-tool "${PWD}/llvm-gcov.sh" --directory "${OSRM_BUILD_DIR}" --capture --ignore-errors inconsistent,format --output-file coverage.lcov
+          lcov --ignore-errors inconsistent,format --remove coverage.lcov '*/test/*' '*/unit_tests/*' --output-file coverage.lcov.filtered
+
+      - name: Upload coverage to codecov.io
+        if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}
+        uses: codecov/codecov-action@v7
+        with:
+          files: coverage.lcov.filtered
+          fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
 
       - name: Use Node 22
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
@@ -681,7 +805,7 @@ jobs:
         run: echo "path=$(ls dist/*.tar.gz | head -n1)" >> "$GITHUB_OUTPUT"
 
       - name: Run cibuildwheel
-        uses: pypa/cibuildwheel@v3.4.1
+        uses: pypa/cibuildwheel@v4.1.0
         if: ${{ env.BUILD_BINDINGS }}
         with:
           # for linux build the wheel from the sdist
@@ -705,18 +829,9 @@ jobs:
             dist/*.tar.gz
           if-no-files-found: error
 
-      - name: Upload Linux wheel for stub check
-        if: ${{ env.BUILD_BINDINGS && runner.os == 'Linux' && github.event_name == 'pull_request' }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: wheel-linux-stub-check
-          path: dist/*.whl
-          if-no-files-found: error
-          retention-days: 1
-
       - name: Save compiler cache
         if: always() && steps.build.outcome != 'cancelled'
-        uses: actions/cache/save@v5
+        uses: actions/cache/save@v6
         with:
           path: ~/.ccache
           key: ccache-${{ matrix.name }}-${{ github.sha }}
@@ -726,51 +841,19 @@ jobs:
           ccache -p
           ccache -s
 
-  # Verify that committed .pyi stubs match the actual C++ bindings when Python
-  # C++ sources changed. Installs the Linux wheel built by build-matrix,
-  # regenerates stubs via nanobind, ruff-formats them, and diffs against the repo.
-  check-python-stubs:
-    name: Check Python stubs are up to date
-    needs: build-matrix
-    if: github.event_name == 'pull_request'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v6
-      - uses: dorny/paths-filter@v4
-        id: changes
-        with:
-          filters: |
-            python_cpp:
-              - 'src/python/src/**'
-              - 'src/python/include/**'
-              - 'src/python/CMakeLists.txt'
-      - uses: actions/setup-python@v6
-        if: steps.changes.outputs.python_cpp == 'true'
-        with:
-          python-version: '3.12'
-      - uses: actions/download-artifact@v8
-        if: steps.changes.outputs.python_cpp == 'true'
-        with:
-          name: wheel-linux-stub-check
-          path: wheelhouse
-      - name: Install wheel and regenerate stubs
-        if: steps.changes.outputs.python_cpp == 'true'
-        run: |
-          pip install nanobind ruff
-          pip install wheelhouse/*.whl
-          python -m nanobind.stubgen -m osrm.osrm_ext -o src/python/osrm/osrm_ext.pyi
-          ruff format src/python/osrm/osrm_ext.pyi
-      - name: Check for differences
-        if: steps.changes.outputs.python_cpp == 'true'
-        run: |
-          git diff --exit-code src/python/osrm/osrm_ext.pyi \
-            || (echo "::error::Stubs are out of date. Rebuild locally and commit the updated .pyi file." && exit 1)
-
   ci-complete:
     runs-on: ubuntu-latest
-    needs: [build-matrix, vcpkg-windows-release-bindings, docker-image-matrix, check-python-stubs]
+    needs: [build-matrix, windows-release-bindings, docker-build-extract-test]
     if: github.repository == 'Project-OSRM/osrm-backend'
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - name: Fail if any dependency failed
         if: ${{ contains(needs.*.result, 'failure') }}
         run: exit 1

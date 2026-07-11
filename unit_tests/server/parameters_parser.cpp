@@ -137,14 +137,11 @@ BOOST_AUTO_TEST_CASE(invalid_table_urls)
 
 BOOST_AUTO_TEST_CASE(valid_route_segment_hint)
 {
-    engine::PhantomNode reference_node;
-    reference_node.input_location =
-        util::Coordinate(util::FloatLongitude{7.432251}, util::FloatLatitude{43.745995});
-    engine::SegmentHint reference_segment_hint{reference_node, 0x1337};
+    // Hints are deprecated; verify that encoding/decoding roundtrip preserves the checksum
+    engine::SegmentHint reference_segment_hint{.data_checksum = 0x1337};
     auto encoded_hint = reference_segment_hint.ToBase64();
     auto seg_hint = engine::SegmentHint::FromBase64(encoded_hint);
-    BOOST_CHECK_EQUAL(seg_hint.phantom.input_location,
-                      reference_segment_hint.phantom.input_location);
+    BOOST_CHECK_EQUAL(seg_hint.data_checksum, reference_segment_hint.data_checksum);
 }
 
 BOOST_AUTO_TEST_CASE(valid_route_urls)
@@ -216,13 +213,9 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
     CHECK_EQUAL_RANGE(reference_3.coordinates, result_3->coordinates);
     CHECK_EQUAL_RANGE_OF_HINTS(reference_3.hints, result_3->hints);
 
-    engine::PhantomNode phantom_1;
-    phantom_1.input_location = coords_1[0];
-    engine::PhantomNode phantom_2;
-    phantom_2.input_location = coords_1[1];
     std::vector<std::optional<engine::Hint>> hints_4 = {
-        engine::Hint{{engine::SegmentHint{phantom_1, 0x1337}}},
-        engine::Hint{{engine::SegmentHint{phantom_2, 0x1337}}}};
+        engine::Hint{{engine::SegmentHint{.data_checksum = 0x1337}}},
+        engine::Hint{{engine::SegmentHint{.data_checksum = 0x1337}}}};
     RouteParameters reference_4{false,
                                 false,
                                 false,
@@ -335,14 +328,10 @@ BOOST_AUTO_TEST_CASE(valid_route_urls)
                                               {util::FloatLongitude{5}, util::FloatLatitude{6}},
                                               {util::FloatLongitude{7}, util::FloatLatitude{8}}};
 
-    engine::PhantomNode phantom_3;
-    phantom_3.input_location = coords_3[0];
-    engine::PhantomNode phantom_4;
-    phantom_4.input_location = coords_3[2];
     std::vector<std::optional<engine::Hint>> hints_10 = {
-        engine::Hint{{engine::SegmentHint{phantom_3, 0x1337}}},
+        engine::Hint{{engine::SegmentHint{.data_checksum = 0x1337}}},
         {},
-        engine::Hint{{engine::SegmentHint{phantom_4, 0x1337}}},
+        engine::Hint{{engine::SegmentHint{.data_checksum = 0x1337}}},
         {}};
 
     RouteParameters reference_10{false,

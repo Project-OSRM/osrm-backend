@@ -50,15 +50,6 @@ sudo dnf install -y \
     tbb-devel libxml2-devel libzip-devel
 ```
 
-**Alpine**
-
-```
-apk add --no-cache \
-    cmake clang make git pkgconf \
-    boost-dev bzip2-dev lua5.4-dev \
-    onetbb-dev libxml2-dev libzip-dev expat-dev
-```
-
 **macOS (Homebrew)**
 
 ```
@@ -66,17 +57,23 @@ brew install cmake lua tbb boost@1.90
 brew link boost@1.90
 ```
 
-**Windows**
+**Windows (vcpkg + MSVC)**
 
-Windows uses [Conan](https://conan.io/) for OSRM's C++ dependencies. Install Conan 2.x and pass `ENABLE_CONAN=ON` to CMake:
+Windows builds use [vcpkg](https://github.com/microsoft/vcpkg) to provide OSRM's C++ dependencies and require a recent MSVC toolset (Visual Studio 2022 or later).
 
+Example steps (PowerShell / Developer Command Prompt):
+
+```powershell
+# Clone & bootstrap vcpkg
+git clone https://github.com/microsoft/vcpkg.git C:\vcpkg
+cd C:\vcpkg
+.\bootstrap-vcpkg.bat
+
+cmake --preset release
+cmake --build buildß
 ```
-pip install conan==2.27.0
-conan profile detect --force
-pip install . -C cmake.define.ENABLE_CONAN=ON
-```
 
-A full Visual Studio 2022 toolchain (or the Build Tools equivalent with the C++ workload) is required.
+If installing from a pip sdist, ensure CMake is configured to use the same vcpkg toolchain file (pass the toolchain via CMake args when building the wheel or use the same environment when running `pip install`).
 
 ## Example
 

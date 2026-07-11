@@ -1,4 +1,7 @@
 #include "server/service/route_service.hpp"
+
+#include <boost/assert.hpp>
+
 #include "server/service/utils.hpp"
 
 #include "server/api/parameters_parser.hpp"

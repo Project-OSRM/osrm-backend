@@ -344,8 +344,8 @@ namespace routing_algorithms::offline
 template <typename PhantomT>
 inline void search(SearchEngineData<Algorithm> &engine_working_data,
                    const datafacade::ContiguousInternalMemoryDataFacade<Algorithm> &facade,
-                   typename SearchEngineData<Algorithm>::QueryHeap &forward_heap,
-                   typename SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
+                   SearchEngineData<Algorithm>::QueryHeap &forward_heap,
+                   SearchEngineData<Algorithm>::QueryHeap &reverse_heap,
                    EdgeWeight &weight,
                    std::vector<NodeID> &packed_leg,
                    const std::vector<NodeID> &loop_nodes,

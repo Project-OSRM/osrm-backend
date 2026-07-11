@@ -4,8 +4,8 @@ namespace osrm::engine::routing_algorithms::mld
 {
 double getNetworkDistance(SearchEngineData<mld::Algorithm> &engine_working_data,
                           const DataFacade<mld::Algorithm> &facade,
-                          typename SearchEngineData<mld::Algorithm>::QueryHeap &forward_heap,
-                          typename SearchEngineData<mld::Algorithm>::QueryHeap &reverse_heap,
+                          SearchEngineData<mld::Algorithm>::QueryHeap &forward_heap,
+                          SearchEngineData<mld::Algorithm>::QueryHeap &reverse_heap,
                           const PhantomNode &source_phantom,
                           const PhantomNode &target_phantom,
                           EdgeWeight weight_upper_bound)

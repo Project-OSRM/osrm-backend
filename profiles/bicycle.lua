@@ -7,6 +7,8 @@ Sequence = require('lib/sequence')
 Handlers = require("lib/way_handlers")
 TrafficSignal = require("lib/traffic_signal")
 find_access_tag = require("lib/access").find_access_tag
+resolve_access = require("lib/access").resolve_access
+Tags = require('lib/tags')
 limit = require("lib/maxspeed").limit
 Measure = require("lib/measure")
 
@@ -197,6 +199,7 @@ function setup()
       ground = 10,
       dirt = 8,
       earth = 6,
+      laterite = 5,
       grass = 6,
       mud = 3,
       sand = 3,
@@ -299,9 +302,16 @@ function handle_bicycle_tags(profile,way,result,data)
     return false
   end
 
-  -- access
+  -- access (supports directional tags like vehicle:forward=agricultural)
   data.access = find_access_tag(way, profile.access_tags_hierarchy)
-  if data.access and profile.access_tag_blacklist[data.access] then
+  data.forward_access, data.backward_access =
+      Tags.get_forward_backward_by_set(way, data, profile.access_tags_hierarchy)
+  data.forward_access = resolve_access(data.forward_access, profile)
+  data.backward_access = resolve_access(data.backward_access, profile)
+  if (data.access and profile.access_tag_blacklist[data.access])
+      or (data.forward_access and data.backward_access
+          and profile.access_tag_blacklist[data.forward_access]
+          and profile.access_tag_blacklist[data.backward_access]) then
     return false
   end
 
@@ -349,6 +359,17 @@ function handle_bicycle_tags(profile,way,result,data)
   end
 
   safety_handler(profile,way,result,data)
+
+  -- Apply per-direction access blacklisting for directional tags
+  -- (e.g. vehicle:forward=agricultural blocks only the forward direction)
+  if data.forward_access and profile.access_tag_blacklist[data.forward_access] then
+    result.forward_mode = mode.inaccessible
+    result.forward_speed = 0
+  end
+  if data.backward_access and profile.access_tag_blacklist[data.backward_access] then
+    result.backward_mode = mode.inaccessible
+    result.backward_speed = 0
+  end
 end
 
 -- Block ways where the cycleway is mapped as a separate parallel way.

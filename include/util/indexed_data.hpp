@@ -11,6 +11,7 @@
 #include <boost/assert.hpp>
 
 #include <array>
+#include <concepts>
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -43,7 +44,7 @@ template <int N, typename T = std::string> struct VariableGroupBlock
     static constexpr std::uint32_t BLOCK_SIZE = N;
 
     using ResultType = T;
-    using ValueType = typename T::value_type;
+    using ValueType = T::value_type;
 
     static_assert(0 <= BLOCK_SIZE && BLOCK_SIZE <= 16, "incorrect block size");
     static_assert(sizeof(ValueType) == 1, "data basic type must char");
@@ -116,8 +117,7 @@ template <int N, typename T = std::string> struct VariableGroupBlock
         {
             const std::uint32_t data_length = *last - *std::prev(last);
             if (data_length >= 0x1000000)
-                throw util::exception(
-                    osrm::util::compat::format("too large data length {}", data_length));
+                throw util::exception(std::format("too large data length {}", data_length));
 
             const std::uint32_t byte_length = log256(data_length);
             refernce.descriptor = (refernce.descriptor << 2) | byte_length;
@@ -183,7 +183,7 @@ template <int N, typename T = std::string> struct FixedGroupBlock
     static constexpr std::uint32_t BLOCK_SIZE = N;
 
     using ResultType = T;
-    using ValueType = typename T::value_type;
+    using ValueType = T::value_type;
 
     static_assert(sizeof(ValueType) == 1, "data basic type must char");
 
@@ -223,8 +223,8 @@ template <int N, typename T = std::string> struct FixedGroupBlock
         {
             const std::uint32_t data_length = *next - *curr;
             if (data_length > MAX_LENGTH)
-                throw util::exception(osrm::util::compat::format(
-                    "too large data length {} > {}", data_length, MAX_LENGTH));
+                throw util::exception(
+                    std::format("too large data length {} > {}", data_length, MAX_LENGTH));
 
             prefix[index++] = data_length;
         }
@@ -265,9 +265,9 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
     using BlocksNumberType = std::uint32_t;
     using DataSizeType = std::uint64_t;
 
-    using BlockReference = typename GroupBlockPolicy::BlockReference;
-    using ResultType = typename GroupBlockPolicy::ResultType;
-    using ValueType = typename GroupBlockPolicy::ValueType;
+    using BlockReference = GroupBlockPolicy::BlockReference;
+    using ResultType = GroupBlockPolicy::ResultType;
+    using ValueType = GroupBlockPolicy::ValueType;
 
     static_assert(sizeof(ValueType) == 1, "data basic type must char");
 
@@ -284,7 +284,7 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
     {
         static_assert(sizeof(typename DataIterator::value_type) == 1, "data basic type must char");
 
-        using diff_type = typename OffsetIterator::difference_type;
+        using diff_type = OffsetIterator::difference_type;
 
         BOOST_ASSERT(first < last);
         const OffsetIterator sentinel = std::prev(last);
@@ -360,24 +360,20 @@ template <typename GroupBlockPolicy, storage::Ownership Ownership> struct Indexe
                                                       const IndexedDataImpl &index_data);
 
   private:
-    template <typename Iter, typename T>
-    using IsValueIterator = std::enable_if_t<
-        std::is_same<T,
-                     std::remove_const_t<typename std::iterator_traits<Iter>::value_type>>::value>;
-
-    template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
-    typename std::enable_if<!std::is_same<T, std::string_view>::value, T>::type
-    adapt(const Iter first, const Iter last) const
+    template <typename T = ResultType, typename Iter>
+        requires std::same_as<std::remove_const_t<typename std::iterator_traits<Iter>::value_type>,
+                              ValueType>
+    T adapt(const Iter first, const Iter last) const
     {
-        return ResultType(first, last);
-    }
-
-    template <typename T = ResultType, typename Iter, typename = IsValueIterator<Iter, ValueType>>
-    typename std::enable_if<std::is_same<T, std::string_view>::value, T>::type
-    adapt(const Iter first, const Iter last) const
-    {
-        auto diff = std::distance(first, last);
-        return diff == 0 ? ResultType() : ResultType(&*first, diff);
+        if constexpr (std::is_same_v<T, std::string_view>)
+        {
+            auto diff = std::distance(first, last);
+            return diff == 0 ? ResultType() : ResultType(&*first, diff);
+        }
+        else
+        {
+            return ResultType(first, last);
+        }
     }
 
     template <typename T> using Vector = util::ViewOrVector<T, Ownership>;

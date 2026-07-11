@@ -12,8 +12,16 @@ permissions:
 
 jobs:
   stale:
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-26.04
     steps:
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
       - uses: actions/stale@v10
         with:
           operations-per-run: 3000
@@ -24,4 +32,3 @@ jobs:
           days-before-pr-stale: 180 # 6 months
           days-before-pr-close: -1 # never close PRs
           exempt-issue-labels: 'Do Not Stale,Feature Request,Performance,Bug Report,CI,Starter Task,Refactor,Guidance'
-

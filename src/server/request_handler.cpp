@@ -1,4 +1,7 @@
 #include "server/request_handler.hpp"
+
+#include <boost/assert.hpp>
+
 #include "server/service_handler.hpp"
 
 #include "server/api/url_parser.hpp"

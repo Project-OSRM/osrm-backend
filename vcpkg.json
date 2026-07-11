@@ -28,7 +28,6 @@
     "bzip2",
     "zlib",
     "lua",
-    "fmt",
     "rapidjson",
     "sol2",
     "protozero",

@@ -28,7 +28,7 @@ template <typename AlgorithmT, typename FacadeT> class DataWatchdogImpl;
 template <typename AlgorithmT>
 class DataWatchdogImpl<AlgorithmT, datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT>> final
 {
-    using mutex_type = typename storage::SharedMonitor<storage::SharedRegionRegister>::mutex_type;
+    using mutex_type = storage::SharedMonitor<storage::SharedRegionRegister>::mutex_type;
     using Facade = datafacade::ContiguousInternalMemoryDataFacade<AlgorithmT>;
 
   public:

@@ -24,14 +24,14 @@ using is_parameter_t =
 } // namespace detail
 
 // Starts parsing and iter and modifies it until iter == end or parsing failed
-template <typename ParameterT,
-          typename std::enable_if<detail::is_parameter_t<ParameterT>::value, int>::type = 0>
+template <typename ParameterT>
+    requires detail::is_parameter_t<ParameterT>::value
 std::optional<ParameterT> parseParameters(std::string::iterator &iter,
                                           const std::string::iterator end);
 
 // Copy on purpose because we need mutability
-template <typename ParameterT,
-          typename std::enable_if<detail::is_parameter_t<ParameterT>::value, int>::type = 0>
+template <typename ParameterT>
+    requires detail::is_parameter_t<ParameterT>::value
 std::optional<ParameterT> parseParameters(std::string options_string)
 {
     auto first = options_string.begin();

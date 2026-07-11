@@ -38,12 +38,12 @@ class OSRMBaseLoader {
 
       this.child.stdout.on('data', (data) => {
         if (data.includes('running and waiting for requests')) {
-          log('Routed running and waiting for requests');
-          resolve();
+            resolve();
         }
+        log(`${data}`.trim());
       });
 
-      this.child.on('exit', (code) => {
+      this.child.on('close', (code) => {
         log(`osrm-routed completed with exit code ${code}`);
         this.child = null;
       });
@@ -209,7 +209,9 @@ export class OSRMDatastoreLoader extends OSRMBaseLoader {
       // we MUST consume stdout and stderr or the osrm-routed process will block eventually
       this.child.stderr.on('data', (data) => this.logSync(`osrm-routed stderr:\n${data}`));
 
-      this.child.on('exit', (code, signal) => {
+      this.child.on('close', (code, signal) => {
+        this.child.stdout.read();
+        this.child.stderr.read();
         this.child = null;
         if (signal != null) {
           const msg = `osrm-routed aborted with signal ${signal}`;

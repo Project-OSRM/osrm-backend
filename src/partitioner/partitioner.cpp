@@ -126,19 +126,27 @@ int Partitioner::Run(const PartitionerConfig &config)
     renumber(partitions, permutation);
     {
         renumber(mapping, permutation);
-        extractor::files::writeNBGMapping(config.GetPath(".osrm.cnbg_to_ebg").string(), mapping);
+        extractor::files::writeNBGMapping(config.GetOutputPath(".osrm.cnbg_to_ebg").string(),
+                                          mapping);
     }
     {
+        // If writing to a different output path, copy the file first since we mmap in-place
+        if (!config.output_path.empty())
+        {
+            std::filesystem::copy_file(config.GetPath(".osrm.fileIndex"),
+                                       config.GetOutputPath(".osrm.fileIndex"),
+                                       std::filesystem::copy_options::overwrite_existing);
+        }
         boost::iostreams::mapped_file segment_region;
         auto segments = util::mmapFile<extractor::EdgeBasedNodeSegment>(
-            config.GetPath(".osrm.fileIndex"), segment_region);
+            config.GetOutputPath(".osrm.fileIndex"), segment_region);
         renumber(segments, permutation);
     }
     {
         extractor::EdgeBasedNodeDataContainer node_data;
         extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
         renumber(node_data, permutation);
-        extractor::files::writeNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
+        extractor::files::writeNodeData(config.GetOutputPath(".osrm.ebg_nodes"), node_data);
     }
     {
         std::vector<EdgeWeight> node_weights;
@@ -151,10 +159,11 @@ int Partitioner::Run(const PartitionerConfig &config)
         util::inplacePermutation(node_durations.begin(), node_durations.end(), permutation);
         util::inplacePermutation(node_distances.begin(), node_distances.end(), permutation);
         extractor::files::writeEdgeBasedNodeWeightsDurationsDistances(
-            config.GetPath(".osrm.enw"), node_weights, node_durations, node_distances);
+            config.GetOutputPath(".osrm.enw"), node_weights, node_durations, node_distances);
     }
     {
         const auto &filename = config.GetPath(".osrm.maneuver_overrides");
+        const auto &output_filename = config.GetOutputPath(".osrm.maneuver_overrides");
         std::vector<extractor::StorageManeuverOverride> maneuver_overrides;
         std::vector<NodeID> node_sequences;
         extractor::files::readManeuverOverrides(filename, maneuver_overrides, node_sequences);
@@ -168,13 +177,14 @@ int Partitioner::Run(const PartitionerConfig &config)
                   maneuver_overrides.end(),
                   [](const auto &a, const auto &b) { return a.start_node < b.start_node; });
 
-        extractor::files::writeManeuverOverrides(filename, maneuver_overrides, node_sequences);
+        extractor::files::writeManeuverOverrides(
+            output_filename, maneuver_overrides, node_sequences);
     }
-    if (std::filesystem::exists(config.GetPath(".osrm.hsgr")))
+    if (std::filesystem::exists(config.GetOutputPath(".osrm.hsgr")))
     {
         util::Log(logWARNING) << "Found existing .osrm.hsgr file, removing. You need to re-run "
                                  "osrm-contract after osrm-partition.";
-        std::filesystem::remove(config.GetPath(".osrm.hsgr"));
+        std::filesystem::remove(config.GetOutputPath(".osrm.hsgr"));
     }
     TIMER_STOP(renumber);
     util::Log() << "Renumbered data in " << TIMER_SEC(renumber) << " seconds";
@@ -190,9 +200,9 @@ int Partitioner::Run(const PartitionerConfig &config)
     util::Log() << "CellStorage constructed in " << TIMER_SEC(cell_storage) << " seconds";
 
     TIMER_START(writing_mld_data);
-    files::writePartition(config.GetPath(".osrm.partition"), mlp);
-    files::writeCells(config.GetPath(".osrm.cells"), storage);
-    extractor::files::writeEdgeBasedGraph(config.GetPath(".osrm.ebg"),
+    files::writePartition(config.GetOutputPath(".osrm.partition"), mlp);
+    files::writeCells(config.GetOutputPath(".osrm.cells"), storage);
+    extractor::files::writeEdgeBasedGraph(config.GetOutputPath(".osrm.ebg"),
                                           edge_based_graph.GetNumberOfNodes(),
                                           graphToEdges(edge_based_graph),
                                           edge_based_graph.connectivity_checksum);

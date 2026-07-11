@@ -23,14 +23,14 @@ cd example/
 mkdir build && cd build/
 cmake ..
 cmake --build .
-./osrm-example ../test/data/mld/monaco.osrm
+./osrm-example ../../test/data/mld/monaco.osrm
 ```
 
 The expected output is the distance and duration of the route set in the `example.cpp`.
 
 ### `example.js`
 
-To run this module in Node.js you need to install [node-cmake](https://www.npmjs.com/package/node-cmake) in the project's repo root level and pass the flag `-DENABLE_NODE_BINDINGS=On` when building the main project.
+To run this module in Node.js you need to pass the flag `-DENABLE_NODE_BINDINGS=On` when building the main project.
 
 Refer to the sub-section on preparing test data for the application in this document.
 
@@ -48,7 +48,7 @@ You can reliably change the thread pool size of the process by setting the `UV_T
 UV_THREADPOOL_SIZE=16 node example.js
 ```
 
-See https://nodejs.org/docs/latest-v18.x/api/os.html#osavailableparallelism for more info.
+See https://nodejs.org/docs/latest-v20.x/api/os.html#osavailableparallelism for more info.
 
 Then you can test it with:
 

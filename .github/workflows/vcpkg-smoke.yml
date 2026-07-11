@@ -31,7 +31,7 @@ concurrency:
 
 env:
   # Keep in sync with vcpkg-configuration.json baseline.
-  VCPKG_COMMIT_ID: c3867e714dd3a51c272826eea77267876517ed99
+  VCPKG_COMMIT_ID: d015e31e90838a4c9dfa3eed45979bc70d9357fc
   # Use a local filesystem directory as vcpkg's binary cache. The directory
   # itself is persisted across CI runs via actions/cache@v5. The x-gha
   # backend was removed upstream; files+actions/cache is the replacement.
@@ -49,13 +49,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { os: ubuntu-24.04,    triplet: x64-linux }
+          - { os: ubuntu-26.04,    triplet: x64-linux }
           - { os: macos-26,        triplet: arm64-osx }
           - { os: macos-26-intel,  triplet: x64-osx }
           - { os: windows-2025,    triplet: x64-windows-static-md }
     runs-on: ${{ matrix.os }}
     steps:
-      - uses: actions/checkout@v6
+      - name: Configure DNS servers
+        if: runner.os == 'Linux'
+        run: |
+          sudo rm -f /etc/resolv.conf
+          {
+            echo "nameserver 1.1.1.1"
+            echo "nameserver 8.8.8.8"
+          } | sudo tee /etc/resolv.conf > /dev/null
+      - uses: actions/checkout@v7
       - name: Move temp directory to D drive
         if: runner.os == 'Windows'
         shell: pwsh
@@ -65,7 +73,7 @@ jobs:
           'TEMP=D:\Temp' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
 
       - name: Enable vcpkg binary cache
-        uses: actions/cache@v5
+        uses: actions/cache@v6
         with:
           path: ${{ github.workspace }}/.vcpkg-bincache
           key: vcpkg-${{ runner.os }}-${{ runner.arch }}-${{ matrix.triplet }}-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}

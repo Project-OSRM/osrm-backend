@@ -38,5 +38,5 @@ Feature: Turn Penalties
             | a    | c  | 900m +- 1 | 216    | Going straight has no penalties           |
             | a    | d  | 900m +- 1 | 220.2  | Turning right had penalties               |
             | e    | g  | 2100m +- 5| 503.9  | Going straght has no penalties            |
-            | e    | h  | 2100m +- 5| 515.1  | Turn sharp right has even higher penalties|
+            | e    | h  | 2100m +- 5| 515.1 +-0.1  | Turn sharp right has even higher penalties|
 

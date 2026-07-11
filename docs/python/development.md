@@ -39,9 +39,9 @@ pre-commit install
 
 ## Platform-specific build requirements
 
-### Linux
+### Linux and macOS
 
-CI wheel builds run inside a custom manylinux image
+CI wheel builds run inside a custom manylinux image on Linux
 ([nilsnolde/manylinux](https://github.com/nilsnolde/manylinux), branch
 `osrm_python`) that ships vcpkg pre-bootstrapped at the SHA pinned in
 `vcpkg-configuration.json`, plus a pre-warmed vcpkg binary cache compiled
@@ -54,7 +54,7 @@ changes — otherwise the wheel build either misses the cache (slow) or
 fails on a missing port. The manylinux repo's `Build` workflow takes an
 `osrmRef` input for that purpose; see its README.
 
-For local source builds outside the manylinux image, install vcpkg
+For local source builds outside the manylinux image, e.g macOS, install vcpkg
 yourself, point CMake at its toolchain, and use the release-only triplet
 to match the cache:
 
@@ -63,19 +63,6 @@ git clone https://github.com/microsoft/vcpkg
 ./vcpkg/bootstrap-vcpkg.sh
 export VCPKG_ROOT=$PWD/vcpkg
 export CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake -DVCPKG_TARGET_TRIPLET=x64-linux-release"
-```
-
-### macOS
-
-Install OSRM's C++ dependencies via Homebrew (the same set the cibuildwheel
-macOS `before-all` uses; all ship CMake config files so the
-`find_package(... CONFIG REQUIRED)` calls in `CMakeLists.txt` resolve
-without a toolchain file):
-
-```bash
-brew install lua tbb boost@1.90 fmt rapidjson sol2 flatbuffers \
-             protozero libosmium
-brew link boost@1.90
 ```
 
 ### Windows

@@ -8,6 +8,7 @@
 #include "util/std_hash.hpp"
 #include "util/typedefs.hpp"
 
+#include "../common/random_seed.hpp"
 #include "../common/temporary_file.hpp"
 #include "mocks/mock_datafacade.hpp"
 
@@ -40,8 +41,7 @@ using TestStaticRTree = StaticRTree<TestData,
 using MiniStaticRTree = StaticRTree<TestData, osrm::storage::Ownership::Container, 2, 128>;
 using TestDataFacade = MockDataFacade<osrm::engine::routing_algorithms::ch::Algorithm>;
 
-// Choosen by a fair W20 dice roll (this value is completely arbitrary)
-constexpr unsigned RANDOM_SEED = 42;
+// Chosen by a fair W20 dice roll (this value is completely arbitrary)
 static const int32_t WORLD_MIN_LAT = -85 * COORDINATE_PRECISION;
 static const int32_t WORLD_MAX_LAT = 85 * COORDINATE_PRECISION;
 static const int32_t WORLD_MIN_LON = -180 * COORDINATE_PRECISION;
@@ -92,7 +92,7 @@ template <unsigned NUM_NODES, unsigned NUM_EDGES> struct RandomGraphFixture
 {
     RandomGraphFixture()
     {
-        std::mt19937 g(RANDOM_SEED);
+        std::mt19937 g(osrm::test::getTestRandomSeed());
 
         std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
         std::uniform_int_distribution<> lon_udist(WORLD_MIN_LON, WORLD_MAX_LON);
@@ -196,7 +196,7 @@ void sampling_verify_rtree(RTreeT &rtree,
                            const std::vector<Coordinate> &coords,
                            unsigned num_samples)
 {
-    std::mt19937 g(RANDOM_SEED);
+    std::mt19937 g(osrm::test::getTestRandomSeed());
     std::uniform_int_distribution<> lat_udist(WORLD_MIN_LAT, WORLD_MAX_LAT);
     std::uniform_int_distribution<> lon_udist(WORLD_MIN_LON, WORLD_MAX_LON);
     std::vector<Coordinate> queries;

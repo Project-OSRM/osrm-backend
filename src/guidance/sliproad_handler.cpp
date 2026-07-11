@@ -373,12 +373,12 @@ Intersection SliproadHandler::operator()(const NodeID /*nid*/,
         {
             const auto index = findObviousTurn(sliproad_edge, target_intersection);
 
-            if (index == 0)
+            if (!index)
             {
                 continue;
             }
 
-            const auto onto = target_intersection[index];
+            const auto onto = target_intersection[*index];
             const auto angle_deviation = angularDeviation(onto.angle, STRAIGHT_ANGLE);
             const auto is_narrow_turn = angle_deviation <= 2 * NARROW_TURN_ANGLE;
 
@@ -643,9 +643,9 @@ std::optional<std::size_t> SliproadHandler::getObviousIndexWithSliproads(
     // If a turn is obvious without taking Sliproads into account use this
     const auto index = findObviousTurn(from, intersection);
 
-    if (index != 0)
+    if (index)
     {
-        return std::make_optional(index);
+        return index;
     }
 
     // Otherwise check if the road is forking into two and one of them is a Sliproad;

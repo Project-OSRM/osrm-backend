@@ -1,9 +1,9 @@
 #ifndef FILTERED_INTEGER_RANGE_HPP
 #define FILTERED_INTEGER_RANGE_HPP
 
+#include <concepts>
 #include <cstddef>
 #include <iterator>
-#include <type_traits>
 
 namespace osrm::util
 {
@@ -80,11 +80,9 @@ template <typename Integer, typename Filter> class filtered_range
 };
 
 template <typename Integer, typename Filter>
-filtered_range<Integer, Filter> filtered_irange(
-    const Integer first,
-    const Integer last,
-    const Filter &filter,
-    typename std::enable_if<std::is_integral<Integer>::value>::type * = nullptr) noexcept
+filtered_range<Integer, Filter>
+filtered_irange(const Integer first, const Integer last, const Filter &filter) noexcept
+    requires std::integral<Integer>
 {
     return filtered_range<Integer, Filter>(first, last, filter);
 }

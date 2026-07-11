@@ -259,8 +259,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
 
     CellStorageImpl() {}
 
-    template <typename GraphT,
-              typename = std::enable_if<Ownership == storage::Ownership::Container>>
+    template <typename GraphT>
+        requires(Ownership == storage::Ownership::Container)
     CellStorageImpl(const partitioner::MultiLevelPartition &partition, const GraphT &base_graph)
     {
         // pre-allocate storge for CellData so we can have random access to it by cell id
@@ -411,11 +411,11 @@ template <storage::Ownership Ownership> class CellStorageImpl
         return metric;
     }
 
-    template <typename = std::enable_if<Ownership == storage::Ownership::View>>
     CellStorageImpl(Vector<NodeID> source_boundary_,
                     Vector<NodeID> destination_boundary_,
                     Vector<CellData> cells_,
                     Vector<std::uint64_t> level_to_cell_offset_)
+        requires(Ownership == storage::Ownership::View)
         : source_boundary(std::move(source_boundary_)),
           destination_boundary(std::move(destination_boundary_)), cells(std::move(cells_)),
           level_to_cell_offset(std::move(level_to_cell_offset_))
@@ -451,8 +451,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
                          destination_boundary.empty() ? nullptr : destination_boundary.data()};
     }
 
-    template <typename = std::enable_if<Ownership == storage::Ownership::Container>>
     Cell GetCell(customizer::CellMetric &metric, LevelID level, CellID id) const
+        requires(Ownership == storage::Ownership::Container)
     {
         const auto level_index = LevelIDToIndex(level);
         BOOST_ASSERT(level_index < level_to_cell_offset.size());

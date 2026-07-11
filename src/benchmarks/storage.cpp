@@ -63,7 +63,7 @@ template <class StorageT> auto bench(const size_t num_entries, const size_t num_
     TIMER_STOP(read);
     dont_optimize_away(sum);
 
-    return osrm::util::compat::format(
+    return std::format(
         "{:9.1f} | {:10.1f} |", (0.001 * TIMER_USEC(read)), (0.001 * TIMER_USEC(write)));
 }
 

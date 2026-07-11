@@ -6,6 +6,7 @@
 
 #include <boost/assert.hpp>
 
+#include <concepts>
 #include <set>
 
 namespace osrm::util::json
@@ -132,9 +133,8 @@ struct Comparator
         return false;
     }
 
-    template <typename T1,
-              typename T2,
-              typename = typename std::enable_if<!std::is_same<T1, T2>::value>::type>
+    template <typename T1, typename T2>
+        requires(!std::same_as<T1, T2>)
     bool operator()(const T1 &, const T2 &)
     {
         reason = lhs_path + " and " + rhs_path + " have different types";
