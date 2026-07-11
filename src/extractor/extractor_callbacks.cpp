@@ -17,6 +17,9 @@
 
 #include "osrm/coordinate.hpp"
 
+#include <algorithm>
+#include <cmath>
+#include <cstdint>
 #include <limits>
 #include <string>
 
@@ -36,6 +39,20 @@ const ByEdgeOrByMeterValue::ValueByMeter ByEdgeOrByMeterValue::by_meter;
 
 namespace osrm::extractor
 {
+namespace
+{
+std::uint16_t encodeRoadWidth(const double road_width)
+{
+    if (!(road_width > 0.))
+    {
+        return 0;
+    }
+
+    return static_cast<std::uint16_t>(
+        std::min<double>(std::round(road_width * 100.), std::numeric_limits<std::uint16_t>::max()));
+}
+} // namespace
+
 ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containers_,
                                        std::unordered_map<std::string, ClassData> &classes_map,
                                        LaneDescriptionMap &lane_description_map,
@@ -400,11 +417,14 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (in_forward_direction)
     { // add (forward) segments or (forward,backward) for non-split edges in backward direction
         const auto annotation_data_id = external_memory.all_edges_annotation_data_list.size();
-        external_memory.all_edges_annotation_data_list.push_back({forward_name_id,
-                                                                  turn_lane_id_forward,
-                                                                  forward_classes,
-                                                                  parsed_way.forward_travel_mode,
-                                                                  parsed_way.is_left_hand_driving});
+        external_memory.all_edges_annotation_data_list.push_back(
+            {forward_name_id,
+             turn_lane_id_forward,
+             forward_classes,
+             road_classification.GetNumberOfLanes(),
+             encodeRoadWidth(parsed_way.road_width),
+             parsed_way.forward_travel_mode,
+             parsed_way.is_left_hand_driving});
         util::for_each_pair(nodes,
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
@@ -435,11 +455,14 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
     if (in_backward_direction && (!in_forward_direction || split_edge))
     { // add (backward) segments for split edges or not in forward direction
         const auto annotation_data_id = external_memory.all_edges_annotation_data_list.size();
-        external_memory.all_edges_annotation_data_list.push_back({backward_name_id,
-                                                                  turn_lane_id_backward,
-                                                                  backward_classes,
-                                                                  parsed_way.backward_travel_mode,
-                                                                  parsed_way.is_left_hand_driving});
+        external_memory.all_edges_annotation_data_list.push_back(
+            {backward_name_id,
+             turn_lane_id_backward,
+             backward_classes,
+             road_classification.GetNumberOfLanes(),
+             encodeRoadWidth(parsed_way.road_width),
+             parsed_way.backward_travel_mode,
+             parsed_way.is_left_hand_driving});
         util::for_each_pair(nodes,
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {

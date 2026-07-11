@@ -41,6 +41,40 @@ using TestStaticRTree = StaticRTree<TestData,
 using MiniStaticRTree = StaticRTree<TestData, osrm::storage::Ownership::Container, 2, 128>;
 using TestDataFacade = MockDataFacade<osrm::engine::routing_algorithms::ch::Algorithm>;
 
+struct RoadSurfaceDataFacade final
+    : MockBaseDataFacade,
+      MockAlgorithmDataFacade<osrm::engine::routing_algorithms::ch::Algorithm>
+{
+    double GetRoadWidth(const NodeID id) const override final
+    {
+        return id < road_widths.size() ? road_widths[id] : 0.;
+    }
+
+    std::uint8_t GetNumberOfLanes(const NodeID id) const override final
+    {
+        return id < lane_counts.size() ? lane_counts[id] : 0;
+    }
+
+    double GetMaxRoadHalfWidth() const override final
+    {
+        double max_road_half_width = 0.;
+        for (const auto road_width : road_widths)
+        {
+            max_road_half_width = std::max(max_road_half_width, 0.5 * road_width);
+        }
+        for (const auto lane_count : lane_counts)
+        {
+            max_road_half_width =
+                std::max(max_road_half_width,
+                         0.5 * lane_count * extractor::intersection::ASSUMED_LANE_WIDTH);
+        }
+        return max_road_half_width;
+    }
+
+    std::vector<double> road_widths;
+    std::vector<std::uint8_t> lane_counts;
+};
+
 // Chosen by a fair W20 dice roll (this value is completely arbitrary)
 static const int32_t WORLD_MIN_LAT = -85 * COORDINATE_PRECISION;
 static const int32_t WORLD_MAX_LAT = 85 * COORDINATE_PRECISION;
@@ -341,6 +375,66 @@ BOOST_AUTO_TEST_CASE(radius_regression_test)
             input, osrm::engine::Approach::UNRESTRICTED, 1, 0.01, std::nullopt, true);
         BOOST_CHECK_EQUAL(results.size(), 0);
     }
+}
+
+BOOST_AUTO_TEST_CASE(radius_search_accounts_for_road_width)
+{
+    using Coord = std::pair<FloatLongitude, FloatLatitude>;
+    using Edge = std::tuple<unsigned, unsigned, bool>;
+    GraphFixture fixture(
+        {
+            Coord(FloatLongitude{0.0}, FloatLatitude{0.0}),
+            Coord(FloatLongitude{0.001}, FloatLatitude{0.0}),
+        },
+        {Edge(0, 1, true), Edge(1, 0, true)});
+
+    TemporaryFile tmp;
+    auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
+    RoadSurfaceDataFacade facade;
+    facade.road_widths.resize(2);
+    facade.road_widths[1] = 50.;
+    engine::GeospatialQuery<MiniStaticRTree, RoadSurfaceDataFacade> query(
+        rtree, fixture.coords, facade);
+
+    Coordinate input(FloatLongitude{0.0005}, FloatLatitude{0.0002});
+
+    {
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 0.01, std::nullopt, true);
+        BOOST_CHECK_EQUAL(results.size(), 1);
+    }
+
+    {
+        auto results = query.NearestPhantomNodes(
+            input, osrm::engine::Approach::UNRESTRICTED, 1, 0.01, std::nullopt, true);
+        BOOST_CHECK_EQUAL(results.size(), 0);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(radius_search_falls_back_to_lane_count)
+{
+    using Coord = std::pair<FloatLongitude, FloatLatitude>;
+    using Edge = std::tuple<unsigned, unsigned, bool>;
+    GraphFixture fixture(
+        {
+            Coord(FloatLongitude{0.0}, FloatLatitude{0.0}),
+            Coord(FloatLongitude{0.001}, FloatLatitude{0.0}),
+        },
+        {Edge(0, 1, true), Edge(1, 0, true)});
+
+    TemporaryFile tmp;
+    auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
+    RoadSurfaceDataFacade facade;
+    facade.lane_counts.resize(2);
+    facade.lane_counts[1] = 16;
+    engine::GeospatialQuery<MiniStaticRTree, RoadSurfaceDataFacade> query(
+        rtree, fixture.coords, facade);
+
+    Coordinate input(FloatLongitude{0.0005}, FloatLatitude{0.0002});
+
+    auto results = query.NearestPhantomNodes(
+        input, osrm::engine::Approach::UNRESTRICTED, 0.01, std::nullopt, true);
+    BOOST_CHECK_EQUAL(results.size(), 1);
 }
 
 BOOST_AUTO_TEST_CASE(permissive_edge_snapping)

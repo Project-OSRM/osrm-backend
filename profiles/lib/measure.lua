@@ -1,4 +1,5 @@
 local Sequence = require('lib/sequence')
+local Set = require('lib/set')
 
 Measure = {}
 

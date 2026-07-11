@@ -450,6 +450,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         &ExtractionWay::duration,
         "weight",
         &ExtractionWay::weight,
+        "road_width",
+        &ExtractionWay::road_width,
         "road_classification",
         &ExtractionWay::road_classification,
         "forward_classes",

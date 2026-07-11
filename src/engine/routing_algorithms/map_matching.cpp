@@ -6,6 +6,8 @@
 #include "engine/map_matching/matching_confidence.hpp"
 #include "engine/map_matching/sub_matching.hpp"
 
+#include "extractor/intersection/constants.hpp"
+
 #include "util/coordinate_calculation.hpp"
 #include "util/for_each_pair.hpp"
 
@@ -61,6 +63,39 @@ inline void initializeHeap<mld::Algorithm>(SearchEngineData<mld::Algorithm> &eng
     engine_working_data.InitializeOrClearMapMatchingThreadLocalStorage(nodes_number,
                                                                        border_nodes_number);
 }
+
+template <typename Algorithm>
+double getDistanceOutsideRoadSurface(const DataFacade<Algorithm> &facade,
+                                     const PhantomNodeWithDistance &candidate)
+{
+    const auto get_road_half_width = [&facade](const NodeID node_id)
+    {
+        const double road_width =
+            std::min(facade.GetRoadWidth(node_id), extractor::intersection::MAX_ROAD_SURFACE_WIDTH);
+        if (road_width > 0.)
+        {
+            return 0.5 * road_width;
+        }
+
+        return 0.5 * std::min<double>(facade.GetNumberOfLanes(node_id) *
+                                          extractor::intersection::ASSUMED_LANE_WIDTH,
+                                      extractor::intersection::MAX_ROAD_SURFACE_WIDTH);
+    };
+
+    const auto &phantom = candidate.phantom_node;
+    double road_half_width = 0.;
+    if (phantom.forward_segment_id.enabled && phantom.forward_segment_id.id != SPECIAL_SEGMENTID)
+    {
+        road_half_width = get_road_half_width(phantom.forward_segment_id.id);
+    }
+    else if (phantom.reverse_segment_id.enabled &&
+             phantom.reverse_segment_id.id != SPECIAL_SEGMENTID)
+    {
+        road_half_width = get_road_half_width(phantom.reverse_segment_id.id);
+    }
+
+    return std::max(0., candidate.distance - road_half_width);
+}
 } // namespace
 
 template <typename Algorithm>
@@ -105,8 +140,10 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             std::transform(candidates_list[t].begin(),
                            candidates_list[t].end(),
                            emission_log_probabilities[t].begin(),
-                           [&](const PhantomNodeWithDistance &candidate)
-                           { return default_emission_log_probability(candidate.distance); });
+                           [&](const PhantomNodeWithDistance &candidate) {
+                               return default_emission_log_probability(
+                                   getDistanceOutsideRoadSurface(facade, candidate));
+                           });
         }
     }
     else
@@ -121,16 +158,20 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 std::transform(candidates_list[t].begin(),
                                candidates_list[t].end(),
                                emission_log_probabilities[t].begin(),
-                               [&emission_log_probability](const PhantomNodeWithDistance &candidate)
-                               { return emission_log_probability(candidate.distance); });
+                               [&](const PhantomNodeWithDistance &candidate) {
+                                   return emission_log_probability(
+                                       getDistanceOutsideRoadSurface(facade, candidate));
+                               });
             }
             else
             {
                 std::transform(candidates_list[t].begin(),
                                candidates_list[t].end(),
                                emission_log_probabilities[t].begin(),
-                               [&](const PhantomNodeWithDistance &candidate)
-                               { return default_emission_log_probability(candidate.distance); });
+                               [&](const PhantomNodeWithDistance &candidate) {
+                                   return default_emission_log_probability(
+                                       getDistanceOutsideRoadSurface(facade, candidate));
+                               });
             }
         }
     }
