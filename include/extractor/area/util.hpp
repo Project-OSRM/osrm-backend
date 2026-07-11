@@ -5,6 +5,7 @@
 #include <boost/geometry/geometries/polygon.hpp>
 #include <cmath>
 #include <functional>
+#include <limits>
 #include <ranges>
 
 namespace osrm::extractor::area
@@ -59,10 +60,29 @@ template <class TPoint> bool rightOrOn(const TPoint *a, const TPoint *b, const T
 }
 /**
  * @brief Return true if points a, b, and c are collinear.
+ *
+ * Uses a tolerance proportional to the edge lengths to account for floating-point
+ * differences across platforms (e.g., x86_64 80-bit extended precision vs. ARM64 64-bit).
+ *
+ * The tolerance combines an absolute floor (for very small coordinates) with a
+ * scale-dependent term (for real-world coordinates).  The multiplier of 1000× is
+ * deliberately conservative to cover the worst-case error from coordinate precision
+ * limits and cross-platform floating-point differences.
  */
 template <class TPoint> bool collinear(const TPoint *a, const TPoint *b, const TPoint *c)
 {
-    return area2(a, b, c) == 0;
+    double value = area2(a, b, c);
+    if (value == 0.0)
+        return true;
+
+    const double dx1 = bg::get<0>(*b) - bg::get<0>(*a);
+    const double dy1 = bg::get<1>(*b) - bg::get<1>(*a);
+    const double dx2 = bg::get<0>(*c) - bg::get<0>(*a);
+    const double dy2 = bg::get<1>(*c) - bg::get<1>(*a);
+    const double scale = (std::fabs(dx1) + std::fabs(dy1)) * (std::fabs(dx2) + std::fabs(dy2));
+    const double eps =
+        std::max(1e-12, std::numeric_limits<double>::epsilon() * scale * 1000.0);
+    return std::fabs(value) <= eps;
 }
 
 /**
