@@ -323,9 +323,10 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
                 }
             };
             // insert pending edges into tau in the correct order
-            while (!pending_edges.empty())
+            auto it = pending_edges.begin();
+            while (it != pending_edges.end())
             {
-                Segment &s = pending_edges[0];
+                Segment &s = *it;
                 util::Log(logDEBUG) << "  Pending edge unstashed: id:" << s.first->ref()
                                     << " -> id:" << s.second->ref();
                 util::Log(logDEBUG)
@@ -338,12 +339,13 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
                     util::Log(logDEBUG)
                         << "               and inserted into tau at pos "
                         << std::distance(tau.begin(), at) << " and distance " << s.distance;
+                    it = pending_edges.erase(it);
                 }
                 else
                 {
-                    util::Log(logDEBUG) << "               and dropped";
+                    util::Log(logDEBUG) << "               and kept for later";
+                    ++it;
                 }
-                pending_edges.pop_front();
             }
         }
 
@@ -381,6 +383,14 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
                                           << "  Edge erased from tau: id:" << u->ref()
                                           << " -> id:" << v->ref();
                                   return delendus;
+                              });
+                // Also remove from pending_edges in case it was never inserted
+                // into tau (e.g., because a previous intersection test failed
+                // due to the ray passing through an endpoint).
+                std::erase_if(pending_edges,
+                              [u, v](const Segment &s)
+                              {
+                                  return (*s.first == *u) && (*s.second == *v);
                               });
             }
             else
