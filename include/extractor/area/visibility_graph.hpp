@@ -400,18 +400,14 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
                     << "  Pending edge stashed: id:" << u->ref() << " -> id:" << v->ref();
             }
         };
-        // When the observer, w, and the ring-neighbor are nearly collinear,
-        // leftOrOn() can return opposite results across compilers (GCC 80-bit
-        // extended precision vs Clang 64-bit).  Treat the edge as CW (add to
-        // pending) in that case — erring on the side of keeping edges in tau
-        // is harmless (they eventually get removed at the CCW endpoint),
-        // while losing them produces incorrect visibility results.
-        const bool prev_is_left = !collinear(&observer, w, w->prev) &&
-                                  leftOrOn(&observer, w, w->prev);
-        const bool next_is_left = !collinear(&observer, w, w->next) &&
-                                  leftOrOn(&observer, w, w->next);
-        update_tau(w->prev, w, prev_is_left);
-        update_tau(w, w->next, next_is_left);
+        // Use rightOrOn (with its tolerant collinear guard) instead of
+        // leftOrOn: when the observer, w, and the ring-neighbor are nearly
+        // collinear the sign of area2 can flip across compilers (GCC 80-bit
+        // vs Clang 64-bit).  rightOrOn returns true for the ambiguous case,
+        // which means the edge is added to pending rather than removed —
+        // keeping it available to block visibility at later sweep angles.
+        update_tau(w->prev, w, !rightOrOn(&observer, w, w->prev));
+        update_tau(w, w->next, !rightOrOn(&observer, w, w->next));
     }
     return vertices_cw; // visible vertices have "visible" set
 }

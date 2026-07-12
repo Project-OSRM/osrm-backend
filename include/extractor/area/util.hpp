@@ -53,9 +53,15 @@ template <class TPoint> bool right(const TPoint *a, const TPoint *b, const TPoin
 /**
  * @brief Return true if the point c is to the right of the line formed by points a and
  * b or on that line.
+ *
+ * Uses the tolerant collinear() check so that nearly-collinear triples (whose area2
+ * sign can differ across compilers due to 80-bit vs 64-bit FP) are consistently
+ * treated as "on the line".
  */
 template <class TPoint> bool rightOrOn(const TPoint *a, const TPoint *b, const TPoint *c)
 {
+    if (collinear(a, b, c))
+        return true;
     return area2(a, b, c) <= 0;
 }
 /**
