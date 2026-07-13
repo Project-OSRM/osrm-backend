@@ -5,7 +5,6 @@
 #include <boost/geometry/geometries/polygon.hpp>
 #include <cmath>
 #include <functional>
-#include <limits>
 #include <ranges>
 
 namespace osrm::extractor::area
@@ -53,15 +52,9 @@ template <class TPoint> bool right(const TPoint *a, const TPoint *b, const TPoin
 /**
  * @brief Return true if the point c is to the right of the line formed by points a and
  * b or on that line.
- *
- * Uses the tolerant collinear() check so that nearly-collinear triples (whose area2
- * sign can differ across compilers due to 80-bit vs 64-bit FP) are consistently
- * treated as "on the line".
  */
 template <class TPoint> bool rightOrOn(const TPoint *a, const TPoint *b, const TPoint *c)
 {
-    if (collinear(a, b, c))
-        return true;
     return area2(a, b, c) <= 0;
 }
 /**
@@ -85,8 +78,18 @@ template <class TPoint> bool collinear(const TPoint *a, const TPoint *b, const T
     const double dy1 = bg::get<1>(*b) - bg::get<1>(*a);
     const double dx2 = bg::get<0>(*c) - bg::get<0>(*a);
     const double dy2 = bg::get<1>(*c) - bg::get<1>(*a);
-    const double scale = (std::fabs(dx1) + std::fabs(dy1)) * (std::fabs(dx2) + std::fabs(dy2));
-    const double eps = std::max(1e-12, std::numeric_limits<double>::epsilon() * scale * 1000.0);
+    const double edge1 = std::fabs(dx1) + std::fabs(dy1);
+    const double edge2 = std::fabs(dx2) + std::fabs(dy2);
+    const double scale = edge1 * edge2;
+
+    // The tolerance must work for both Mercator-projected meters (Vertex,
+    // resolution ~0.01 m → area2 error ~0.01 × edge) and geographic degrees
+    // (NodeRef, resolution ~1e-7° → area2 error ~1e-7 × edge).  Using
+    // scale × 1e-9 gives eps ≈ 2.5e-5 m² for 50 m edges (meters) and
+    // eps ≈ 1e-15 deg² for 0.00045° edges (degrees) — both safely below
+    // their respective coordinate-precision thresholds while absorbing the
+    // sub-ULP differences that GCC FMA contraction can introduce.
+    const double eps = std::max(1e-15, scale * 1e-9);
     return std::fabs(value) <= eps;
 }
 
