@@ -389,9 +389,7 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
                 // due to the ray passing through an endpoint).
                 std::erase_if(pending_edges,
                               [u, v](const Segment &s)
-                              {
-                                  return (*s.first == *u) && (*s.second == *v);
-                              });
+                              { return (*s.first == *u) && (*s.second == *v); });
             }
             else
             {
@@ -400,14 +398,8 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
                     << "  Pending edge stashed: id:" << u->ref() << " -> id:" << v->ref();
             }
         };
-        // Use rightOrOn (with its tolerant collinear guard) instead of
-        // leftOrOn: when the observer, w, and the ring-neighbor are nearly
-        // collinear the sign of area2 can flip across compilers (GCC 80-bit
-        // vs Clang 64-bit).  rightOrOn returns true for the ambiguous case,
-        // which means the edge is added to pending rather than removed —
-        // keeping it available to block visibility at later sweep angles.
-        update_tau(w->prev, w, !rightOrOn(&observer, w, w->prev));
-        update_tau(w, w->next, !rightOrOn(&observer, w, w->next));
+        update_tau(w->prev, w, leftOrOn(&observer, w, w->prev));
+        update_tau(w, w->next, leftOrOn(&observer, w, w->next));
     }
     return vertices_cw; // visible vertices have "visible" set
 }
