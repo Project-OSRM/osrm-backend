@@ -13,16 +13,12 @@ namespace osrm::partitioner
 
 RecursiveBisectionState::RecursiveBisectionState(BisectionGraph &bisection_graph_)
     : scc_levels(0), bisection_graph(bisection_graph_)
-{
-    bisection_ids.resize(bisection_graph.NumberOfNodes(), BisectionID{0});
-}
+{ bisection_ids.resize(bisection_graph.NumberOfNodes(), BisectionID{0}); }
 
 RecursiveBisectionState::~RecursiveBisectionState() {}
 
 BisectionID RecursiveBisectionState::GetBisectionID(const NodeID node) const
-{
-    return bisection_ids[node];
-}
+{ return bisection_ids[node]; }
 
 RecursiveBisectionState::NodeIterator
 RecursiveBisectionState::ApplyBisection(const NodeIterator const_begin,
@@ -185,9 +181,7 @@ RecursiveBisectionState::PrePartitionWithSCC(const std::size_t small_component_s
 }
 
 const std::vector<BisectionID> &RecursiveBisectionState::BisectionIDs() const
-{
-    return bisection_ids;
-}
+{ return bisection_ids; }
 
 std::uint32_t RecursiveBisectionState::SCCDepth() const { return scc_levels; }
 

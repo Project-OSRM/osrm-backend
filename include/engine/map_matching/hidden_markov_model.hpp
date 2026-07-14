@@ -30,9 +30,7 @@ struct EmissionLogProbability
     }
 
     double operator()(const double distance) const
-    {
-        return -0.5 * (log_2_pi + (distance / sigma_z) * (distance / sigma_z)) - log_sigma_z;
-    }
+    { return -0.5 * (log_2_pi + (distance / sigma_z) * (distance / sigma_z)) - log_sigma_z; }
 };
 
 struct TransitionLogProbability

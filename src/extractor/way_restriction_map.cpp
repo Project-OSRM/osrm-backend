@@ -9,14 +9,10 @@ WayRestrictionMap::WayRestrictionMap(const RestrictionGraph &restriction_graph)
 }
 
 std::size_t WayRestrictionMap::NumberOfDuplicatedNodes() const
-{
-    return restriction_graph.num_via_nodes;
-}
+{ return restriction_graph.num_via_nodes; }
 
 bool WayRestrictionMap::IsViaWayEdge(const NodeID from, const NodeID to) const
-{
-    return restriction_graph.via_edge_to_node.contains({from, to});
-}
+{ return restriction_graph.via_edge_to_node.contains({from, to}); }
 
 std::vector<DuplicatedNodeID> WayRestrictionMap::DuplicatedNodeIDs(const NodeID from,
                                                                    const NodeID to) const

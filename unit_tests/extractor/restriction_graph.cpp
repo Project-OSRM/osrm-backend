@@ -38,9 +38,7 @@ std::ostream &operator<<(std::ostream &os, const instruction &in)
 }
 
 bool operator==(const instruction &lhs, const instruction &rhs) noexcept
-{
-    return lhs.to == rhs.to && lhs.is_only == rhs.is_only;
-}
+{ return lhs.to == rhs.to && lhs.is_only == rhs.is_only; }
 
 bool operator!=(const instruction &lhs, const instruction &rhs) noexcept { return !(lhs == rhs); }
 
@@ -48,12 +46,12 @@ void checkInstructions(RestrictionGraph::RestrictionRange restrictions,
                        std::vector<instruction> expected_instructions)
 {
     std::vector<instruction> actual_instructions;
-    std::transform(restrictions.begin(),
-                   restrictions.end(),
-                   std::back_inserter(actual_instructions),
-                   [](const auto &restriction) {
-                       return instruction{restriction->turn_path.To(), bool(restriction->is_only)};
-                   });
+    std::transform(
+        restrictions.begin(),
+        restrictions.end(),
+        std::back_inserter(actual_instructions),
+        [](const auto &restriction)
+        { return instruction{restriction->turn_path.To(), bool(restriction->is_only)}; });
     std::sort(actual_instructions.begin(),
               actual_instructions.end(),
               [](const auto &lhs, const auto &rhs)

@@ -75,9 +75,7 @@ inline double reverse(const double bearing)
 // All other cases are handled by first rotating both bearings to an
 // entry_bearing of 0.
 inline double angleBetween(const double entry_bearing, const double exit_bearing)
-{
-    return std::fmod(entry_bearing - exit_bearing + 540., 360.);
-}
+{ return std::fmod(entry_bearing - exit_bearing + 540., 360.); }
 
 } // namespace bearing
 

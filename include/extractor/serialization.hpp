@@ -46,9 +46,7 @@ inline void write(storage::tar::FileWriter &writer,
 // read/write for properties file
 inline void
 read(storage::tar::FileReader &reader, const std::string &name, ProfileProperties &properties)
-{
-    reader.ReadInto(name, properties);
-}
+{ reader.ReadInto(name, properties); }
 
 inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
@@ -60,9 +58,7 @@ inline void write(storage::tar::FileWriter &writer,
 
 // read/write for datasources file
 inline void read(storage::tar::FileReader &reader, const std::string &name, Datasources &sources)
-{
-    reader.ReadInto(name, sources);
-}
+{ reader.ReadInto(name, sources); }
 
 inline void write(storage::tar::FileWriter &writer, const std::string &name, Datasources &sources)
 {
@@ -212,9 +208,7 @@ template <storage::Ownership Ownership>
 inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  detail::StringTableImpl<Ownership> &string_table)
-{
-    util::serialization::read(reader, name, string_table.indexed_data);
-}
+{ util::serialization::read(reader, name, string_table.indexed_data); }
 } // namespace osrm::extractor::serialization
 
 #endif

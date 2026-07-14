@@ -71,7 +71,7 @@ class BasePlugin
         std::string message;
 
         ErrorRenderer(std::string code, std::string message)
-            : code(std::move(code)), message(std::move(message)){};
+            : code(std::move(code)), message(std::move(message)) {};
 
         void operator()(util::json::Object &json_result)
         {
@@ -87,9 +87,7 @@ class BasePlugin
             fb_result.Finish(response.Finish());
         };
         void operator()(std::string &str_result)
-        {
-            str_result = std::format("code={} message={}", code, message);
-        };
+        { str_result = std::format("code={} message={}", code, message); };
     };
 
     Status Error(const std::string &code,

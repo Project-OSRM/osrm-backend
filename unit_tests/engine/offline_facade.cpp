@@ -80,14 +80,10 @@ struct ExternalCellStorage
     struct CellImpl
     {
         auto GetOutWeight(NodeID /*node*/) const
-        {
-            return std::ranges::subrange((EdgeWeight *)0, (EdgeWeight *)0);
-        }
+        { return std::ranges::subrange((EdgeWeight *)0, (EdgeWeight *)0); }
 
         auto GetInWeight(NodeID /*node*/) const
-        {
-            return std::ranges::subrange((EdgeWeight *)0, (EdgeWeight *)0);
-        }
+        { return std::ranges::subrange((EdgeWeight *)0, (EdgeWeight *)0); }
 
         auto GetSourceNodes() const { return std::ranges::subrange((NodeID *)0, (NodeID *)0); }
 
@@ -134,9 +130,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     const auto &GetCellMetric() const { return external_cell_metric; }
 
     auto GetBorderEdgeRange(const LevelID /*level*/, const NodeID /*node*/) const
-    {
-        return util::irange<EdgeID>(0, 0);
-    }
+    { return util::irange<EdgeID>(0, 0); }
 
     EdgeID FindEdge(const NodeID /*from*/, const NodeID /*to*/) const { return SPECIAL_EDGEID; }
 
@@ -144,84 +138,54 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     // node and edge information access
     util::Coordinate GetCoordinateOfNode(const NodeID /*id*/) const override
-    {
-        return {osrm::util::FloatLongitude{7.437069}, osrm::util::FloatLatitude{43.749249}};
-    }
+    { return {osrm::util::FloatLongitude{7.437069}, osrm::util::FloatLatitude{43.749249}}; }
 
     OSMNodeID GetOSMNodeIDOfNode(const NodeID /*id*/) const override { return OSMNodeID(); }
 
     GeometryID GetGeometryIndex(const NodeID /*id*/) const override { return GeometryID{0, false}; }
 
     NodeForwardRange GetUncompressedForwardGeometry(const EdgeID /*id*/) const override
-    {
-        return {};
-    }
+    { return {}; }
 
     NodeReverseRange GetUncompressedReverseGeometry(const EdgeID /*id*/) const override
-    {
-        return NodeReverseRange(NodeForwardRange());
-    }
+    { return NodeReverseRange(NodeForwardRange()); }
 
     TurnPenalty GetWeightPenaltyForEdgeID(const unsigned /*id*/) const override
-    {
-        return INVALID_TURN_PENALTY;
-    }
+    { return INVALID_TURN_PENALTY; }
 
     TurnPenalty GetDurationPenaltyForEdgeID(const unsigned /*id*/) const override
-    {
-        return INVALID_TURN_PENALTY;
-    }
+    { return INVALID_TURN_PENALTY; }
 
     WeightForwardRange GetUncompressedForwardWeights(const EdgeID /*id*/) const override
-    {
-        return {};
-    }
+    { return {}; }
 
     WeightReverseRange GetUncompressedReverseWeights(const EdgeID /*id*/) const override
-    {
-        return WeightReverseRange(WeightForwardRange());
-    }
+    { return WeightReverseRange(WeightForwardRange()); }
 
     DurationForwardRange GetUncompressedForwardDurations(const EdgeID /*geomID*/) const override
-    {
-        return {};
-    }
+    { return {}; }
 
     DurationReverseRange GetUncompressedReverseDurations(const EdgeID /*geomID*/) const override
-    {
-        return DurationReverseRange(DurationForwardRange());
-    }
+    { return DurationReverseRange(DurationForwardRange()); }
 
     DatasourceForwardRange GetUncompressedForwardDatasources(const EdgeID /*id*/) const override
-    {
-        return {};
-    }
+    { return {}; }
 
     DatasourceReverseRange GetUncompressedReverseDatasources(const EdgeID /*id*/) const override
-    {
-        return DatasourceReverseRange(DatasourceForwardRange());
-    }
+    { return DatasourceReverseRange(DatasourceForwardRange()); }
 
     std::string_view GetDatasourceName(const DatasourceID /*id*/) const override
-    {
-        return std::string_view{};
-    }
+    { return std::string_view{}; }
 
     guidance::TurnInstruction GetTurnInstructionForEdgeID(const EdgeID /*id*/) const override
-    {
-        return guidance::TurnInstruction{};
-    }
+    { return guidance::TurnInstruction{}; }
 
     extractor::TravelMode GetTravelMode(const NodeID /*id*/) const override
-    {
-        return extractor::TRAVEL_MODE_DRIVING;
-    }
+    { return extractor::TRAVEL_MODE_DRIVING; }
 
     std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate /*south_west*/,
                                          const util::Coordinate /*north_east*/) const override
-    {
-        return {};
-    }
+    { return {}; }
 
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate /*input_coordinate*/,
@@ -229,9 +193,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
                                const std::optional<engine::Bearing> /*bearing*/,
                                const engine::Approach /*approach*/,
                                const bool /*use_all_edges*/) const override
-    {
-        return {};
-    };
+    { return {}; };
 
     std::vector<engine::PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate /*input_coordinate*/,
@@ -239,9 +201,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
                         const std::optional<double> /*max_distance*/,
                         const std::optional<engine::Bearing> /*bearing*/,
                         const engine::Approach /*approach*/) const override
-    {
-        return {};
-    };
+    { return {}; };
 
     engine::PhantomCandidateAlternatives NearestCandidatesWithAlternativeFromBigComponent(
         const util::Coordinate /*input_coordinate*/,
@@ -249,20 +209,14 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
         const std::optional<engine::Bearing> /*bearing*/,
         const engine::Approach /*approach*/,
         const bool /*use_all_edges*/) const override
-    {
-        return {};
-    };
+    { return {}; };
 
     util::guidance::LaneTupleIdPair GetLaneData(const EdgeID /*id*/) const override
-    {
-        return util::guidance::LaneTupleIdPair{};
-    }
+    { return util::guidance::LaneTupleIdPair{}; }
 
     extractor::TurnLaneDescription
     GetTurnDescription(const LaneDescriptionID /*laneDescriptionID*/) const override
-    {
-        return {};
-    }
+    { return {}; }
 
     EdgeWeight GetNodeWeight(const NodeID /*node*/) const { return {0}; }
 
@@ -273,25 +227,15 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     bool HasLaneData(const EdgeID /*id*/) const override { return false; }
     StringViewID GetNameIndex(const NodeID /*nodeID*/) const override { return EMPTY_STRINGVIEWID; }
     std::string_view GetNameForID(const StringViewID /*id*/) const override
-    {
-        return std::string_view{};
-    }
+    { return std::string_view{}; }
     std::string_view GetRefForID(const StringViewID /*id*/) const override
-    {
-        return std::string_view{};
-    }
+    { return std::string_view{}; }
     std::string_view GetPronunciationForID(const StringViewID /*id*/) const override
-    {
-        return std::string_view{};
-    }
+    { return std::string_view{}; }
     std::string_view GetDestinationsForID(const StringViewID /*id*/) const override
-    {
-        return std::string_view{};
-    }
+    { return std::string_view{}; }
     std::string_view GetExitsForID(const StringViewID /*id*/) const override
-    {
-        return std::string_view{};
-    }
+    { return std::string_view{}; }
     bool GetContinueStraightDefault() const override { return false; }
     std::string GetTimestamp() const override { return ""; }
     double GetMapMatchingMaxSpeed() const override { return 0; }
@@ -303,26 +247,18 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
     bool ExcludeNode(const NodeID) const override { return false; }
 
     guidance::TurnBearing PreTurnBearing(const EdgeID /*eid*/) const override
-    {
-        return guidance::TurnBearing(0);
-    }
+    { return guidance::TurnBearing(0); }
 
     guidance::TurnBearing PostTurnBearing(const EdgeID /*eid*/) const override
-    {
-        return guidance::TurnBearing(0);
-    }
+    { return guidance::TurnBearing(0); }
 
     util::guidance::BearingClass
     GetBearingClass(const BearingClassID /*bearing_class_id*/) const override
-    {
-        return util::guidance::BearingClass{};
-    }
+    { return util::guidance::BearingClass{}; }
 
     osrm::extractor::ClassData GetClassData(const NodeID /*id*/) const override { return 0; }
     std::vector<std::string> GetClasses(const extractor::ClassData /*class_data*/) const override
-    {
-        return {};
-    }
+    { return {}; }
 
     util::guidance::EntryClass GetEntryClass(const EdgeID /*turn_id*/) const override { return {}; }
     bool IsLeftHandDriving(const NodeID /*id*/) const override { return false; }
@@ -330,9 +266,7 @@ class ContiguousInternalMemoryDataFacade<routing_algorithms::offline::Algorithm>
 
     std::vector<extractor::ManeuverOverride>
     GetOverridesThatStartAt(const NodeID /* edge_based_node_id */) const override
-    {
-        return {};
-    }
+    { return {}; }
 };
 
 } // namespace datafacade
@@ -369,9 +303,7 @@ void unpackPath(const FacadeT &facade,
                 RandomIter packed_path_end,
                 const PhantomEndpoints &endpoints,
                 std::vector<PathData> &unpacked_path)
-{
-    mld::unpackPath(facade, packed_path_begin, packed_path_end, endpoints, unpacked_path);
-}
+{ mld::unpackPath(facade, packed_path_begin, packed_path_end, endpoints, unpacked_path); }
 
 } // namespace routing_algorithms::offline
 

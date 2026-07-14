@@ -155,9 +155,7 @@ class Server : public std::enable_shared_from_this<Server>
     }
 
     void RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
-    {
-        request_handler.RegisterServiceHandler(std::move(service_handler_));
-    }
+    { request_handler.RegisterServiceHandler(std::move(service_handler_)); }
 
   private:
     void DoAccept()

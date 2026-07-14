@@ -45,14 +45,10 @@ struct LegGeometry
     std::vector<Annotation> annotations;
 
     std::size_t FrontIndex(std::size_t segment_index) const
-    {
-        return segment_offsets[segment_index];
-    }
+    { return segment_offsets[segment_index]; }
 
     std::size_t BackIndex(std::size_t segment_index) const
-    {
-        return segment_offsets[segment_index + 1];
-    }
+    { return segment_offsets[segment_index + 1]; }
 
     std::size_t GetNumberOfSegments() const
     {

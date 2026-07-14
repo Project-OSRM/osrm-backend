@@ -63,24 +63,18 @@ mmapFile(const std::filesystem::path &file, MmapContainerT &mmap_container, cons
 template <typename T>
 util::vector_view<const T> mmapFile(const std::filesystem::path &file,
                                     boost::iostreams::mapped_file_source &mmap_container)
-{
-    return detail::mmapFile<const T>(file, mmap_container);
-}
+{ return detail::mmapFile<const T>(file, mmap_container); }
 
 template <typename T>
 util::vector_view<T> mmapFile(const std::filesystem::path &file,
                               boost::iostreams::mapped_file &mmap_container)
-{
-    return detail::mmapFile<T>(file, mmap_container);
-}
+{ return detail::mmapFile<T>(file, mmap_container); }
 
 template <typename T>
 util::vector_view<T> mmapFile(const std::filesystem::path &file,
                               boost::iostreams::mapped_file &mmap_container,
                               std::size_t size)
-{
-    return detail::mmapFile<T>(file, mmap_container, size);
-}
+{ return detail::mmapFile<T>(file, mmap_container, size); }
 } // namespace osrm::util
 
 #endif

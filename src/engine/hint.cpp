@@ -45,16 +45,12 @@ SegmentHint SegmentHint::FromBase64(const std::string &base64Hint)
 }
 
 bool operator==(const SegmentHint &lhs, const SegmentHint &rhs)
-{
-    return lhs.deprecated_data == rhs.deprecated_data && lhs.data_checksum == rhs.data_checksum;
-}
+{ return lhs.deprecated_data == rhs.deprecated_data && lhs.data_checksum == rhs.data_checksum; }
 
 bool operator!=(const SegmentHint &lhs, const SegmentHint &rhs) { return !(lhs == rhs); }
 
 std::ostream &operator<<(std::ostream &out, const SegmentHint &hint)
-{
-    return out << hint.ToBase64();
-}
+{ return out << hint.ToBase64(); }
 
 std::string Hint::ToBase64() const
 {

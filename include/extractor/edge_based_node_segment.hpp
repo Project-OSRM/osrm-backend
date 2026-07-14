@@ -34,9 +34,7 @@ struct EdgeBasedNodeSegment
                                   bool is_startpoint_)
         : forward_segment_id(forward_segment_id_), reverse_segment_id(reverse_segment_id_), u(u),
           v(v), fwd_segment_position(fwd_segment_position), is_startpoint(is_startpoint_)
-    {
-        BOOST_ASSERT(forward_segment_id.enabled || reverse_segment_id.enabled);
-    }
+    { BOOST_ASSERT(forward_segment_id.enabled || reverse_segment_id.enabled); }
 
     SegmentID forward_segment_id; // edge-based graph node ID in forward direction (u->v)
     SegmentID reverse_segment_id; // edge-based graph node ID in reverse direction (v->u if exists)

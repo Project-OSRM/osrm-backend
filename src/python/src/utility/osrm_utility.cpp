@@ -121,9 +121,9 @@ void populate_cfg_from_kwargs(const nb::kwargs &kwargs, EngineConfig &config)
                    {"verbosity",
                     [&config](const std::pair<nb::handle, nb::handle> &val)
                     { assign_val(config.verbosity, val); }},
-                   {"dataset_name", [&config](const std::pair<nb::handle, nb::handle> &val) {
-                        assign_val(config.dataset_name, val);
-                    }}};
+                   {"dataset_name",
+                    [&config](const std::pair<nb::handle, nb::handle> &val)
+                    { assign_val(config.dataset_name, val); }}};
 
     for (auto kwarg : kwargs)
     {

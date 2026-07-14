@@ -86,14 +86,10 @@ void EdgeBasedGraphFactory::GetEdgeBasedNodeDistances(
 }
 
 std::uint32_t EdgeBasedGraphFactory::GetConnectivityChecksum() const
-{
-    return m_connectivity_checksum;
-}
+{ return m_connectivity_checksum; }
 
 std::uint64_t EdgeBasedGraphFactory::GetNumberOfEdgeBasedNodes() const
-{
-    return m_number_of_edge_based_nodes;
-}
+{ return m_number_of_edge_based_nodes; }
 
 NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const NodeID node_v)
 {

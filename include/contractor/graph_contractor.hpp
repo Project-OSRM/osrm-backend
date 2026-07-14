@@ -23,17 +23,13 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
 
 // Overload for contracting all nodes
 inline auto contractGraph(ContractorGraph &graph, double core_factor = 1.0)
-{
-    return contractGraph(graph, {}, {}, core_factor);
-}
+{ return contractGraph(graph, {}, {}, core_factor); }
 
 // Overload no contracted nodes
 inline auto contractGraph(ContractorGraph &graph,
                           std::vector<bool> node_is_contractible,
                           double core_factor = 1.0)
-{
-    return contractGraph(graph, {}, std::move(node_is_contractible), core_factor);
-}
+{ return contractGraph(graph, {}, std::move(node_is_contractible), core_factor); }
 
 } // namespace osrm::contractor
 

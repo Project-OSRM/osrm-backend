@@ -140,9 +140,7 @@ template <typename T> void write(io::BufferWriter &writer, const std::vector<T> 
 }
 
 template <typename T> inline void write(io::BufferWriter &writer, const T &data)
-{
-    writer.WriteFrom(data);
-}
+{ writer.WriteFrom(data); }
 
 template <typename T> inline void read(io::BufferReader &reader, T &data) { reader.ReadInto(data); }
 
@@ -209,29 +207,21 @@ void write(tar::FileWriter &writer, const std::string &name, const util::vector_
 template <>
 inline void
 read<bool>(tar::FileReader &reader, const std::string &name, util::vector_view<bool> &data)
-{
-    detail::readBoolVector(reader, name, data);
-}
+{ detail::readBoolVector(reader, name, data); }
 
 template <>
 inline void
 write<bool>(tar::FileWriter &writer, const std::string &name, const util::vector_view<bool> &data)
-{
-    detail::writeBoolVector(writer, name, data);
-}
+{ detail::writeBoolVector(writer, name, data); }
 
 template <>
 inline void read<bool>(tar::FileReader &reader, const std::string &name, std::vector<bool> &data)
-{
-    detail::readBoolVector(reader, name, data);
-}
+{ detail::readBoolVector(reader, name, data); }
 
 template <>
 inline void
 write<bool>(tar::FileWriter &writer, const std::string &name, const std::vector<bool> &data)
-{
-    detail::writeBoolVector(writer, name, data);
-}
+{ detail::writeBoolVector(writer, name, data); }
 
 template <typename K, typename V> void read(io::BufferReader &reader, std::map<K, V> &data)
 {
@@ -260,9 +250,7 @@ template <typename K, typename V> void write(io::BufferWriter &writer, const std
 inline void read(io::BufferReader &reader, BaseDataLayout &layout) { read(reader, layout.blocks); }
 
 inline void write(io::BufferWriter &writer, const BaseDataLayout &layout)
-{
-    write(writer, layout.blocks);
-}
+{ write(writer, layout.blocks); }
 } // namespace osrm::storage::serialization
 
 #endif

@@ -44,9 +44,7 @@ SliproadHandler::SliproadHandler(const util::NodeBasedDynamicGraph &node_based_g
 bool SliproadHandler::canProcess(const NodeID /*nid*/,
                                  const EdgeID /*via_eid*/,
                                  const Intersection &intersection) const
-{
-    return intersection.size() > 2;
-}
+{ return intersection.size() > 2; }
 
 // Detect sliproad b-d in the following example:
 //

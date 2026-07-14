@@ -27,9 +27,7 @@ struct PartitionerConfig final : storage::IOConfig
     }
 
     void UseDefaultOutputNames(const std::filesystem::path &base)
-    {
-        IOConfig::UseDefaultOutputNames(base);
-    }
+    { IOConfig::UseDefaultOutputNames(base); }
 
     std::filesystem::path GetOutputPath(const std::string &ext) const
     {

@@ -123,28 +123,18 @@ struct PhantomNode
     }
 
     bool IsValid(const unsigned number_of_nodes, const util::Coordinate queried_coordinate) const
-    {
-        return queried_coordinate == input_location && IsValid(number_of_nodes);
-    }
+    { return queried_coordinate == input_location && IsValid(number_of_nodes); }
 
     bool IsValid() const { return location.IsValid(); }
 
     bool IsValidForwardSource() const
-    {
-        return forward_segment_id.enabled && is_valid_forward_source;
-    }
+    { return forward_segment_id.enabled && is_valid_forward_source; }
     bool IsValidForwardTarget() const
-    {
-        return forward_segment_id.enabled && is_valid_forward_target;
-    }
+    { return forward_segment_id.enabled && is_valid_forward_target; }
     bool IsValidReverseSource() const
-    {
-        return reverse_segment_id.enabled && is_valid_reverse_source;
-    }
+    { return reverse_segment_id.enabled && is_valid_reverse_source; }
     bool IsValidReverseTarget() const
-    {
-        return reverse_segment_id.enabled && is_valid_reverse_target;
-    }
+    { return reverse_segment_id.enabled && is_valid_reverse_target; }
     short GetBearing(const bool traversed_in_reverse) const
     {
         if (traversed_in_reverse)

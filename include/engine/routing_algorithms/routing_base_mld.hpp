@@ -48,9 +48,7 @@ template <typename MultiLevelPartition>
 inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  NodeID node,
                                  const PhantomEndpoints &endpoints)
-{
-    return getNodeQueryLevel(partition, node, endpoints.source_phantom, endpoints.target_phantom);
-}
+{ return getNodeQueryLevel(partition, node, endpoints.source_phantom, endpoints.target_phantom); }
 
 template <typename MultiLevelPartition>
 inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
@@ -86,7 +84,8 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                 std::accumulate(endpoint_candidates.target_phantoms.begin(),
                                 endpoint_candidates.target_phantoms.end(),
                                 level_1,
-                                [&](LevelID level_2, const PhantomNode &target) {
+                                [&](LevelID level_2, const PhantomNode &target)
+                                {
                                     return std::min(
                                         level_2,
                                         getNodeQueryLevel(partition, node, source, target));
@@ -97,23 +96,17 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
 
 template <typename PhantomCandidateT>
 inline bool checkParentCellRestriction(CellID, const PhantomCandidateT &)
-{
-    return true;
-}
+{ return true; }
 
 // Restricted search (Args is LevelID, CellID):
 //   * use the fixed level for queries
 //   * check if the node cell is the same as the specified parent
 template <typename MultiLevelPartition>
 inline LevelID getNodeQueryLevel(const MultiLevelPartition &, NodeID, LevelID level, CellID)
-{
-    return level;
-}
+{ return level; }
 
 inline bool checkParentCellRestriction(CellID cell, LevelID, CellID parent)
-{
-    return cell == parent;
-}
+{ return cell == parent; }
 
 // Unrestricted search with a single phantom node (Args is const PhantomNode &):
 //   * use partition.GetQueryLevel to find the node query level

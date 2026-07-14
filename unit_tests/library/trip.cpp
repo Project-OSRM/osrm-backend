@@ -70,13 +70,9 @@ void test_roundtrip_response_for_locations_in_small_component(bool use_json_only
     }
 }
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component_old_api)
-{
-    test_roundtrip_response_for_locations_in_small_component(true);
-}
+{ test_roundtrip_response_for_locations_in_small_component(true); }
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_small_component_new_api)
-{
-    test_roundtrip_response_for_locations_in_small_component(false);
-}
+{ test_roundtrip_response_for_locations_in_small_component(false); }
 
 void test_roundtrip_response_for_locations_in_small_component_skip_waypoints(bool use_json_only_api)
 {
@@ -102,14 +98,10 @@ void test_roundtrip_response_for_locations_in_small_component_skip_waypoints(boo
 }
 BOOST_AUTO_TEST_CASE(
     test_roundtrip_response_for_locations_in_small_component_skip_waypoints_old_api)
-{
-    test_roundtrip_response_for_locations_in_small_component_skip_waypoints(true);
-}
+{ test_roundtrip_response_for_locations_in_small_component_skip_waypoints(true); }
 BOOST_AUTO_TEST_CASE(
     test_roundtrip_response_for_locations_in_small_component_skip_waypoints_new_api)
-{
-    test_roundtrip_response_for_locations_in_small_component_skip_waypoints(false);
-}
+{ test_roundtrip_response_for_locations_in_small_component_skip_waypoints(false); }
 
 void test_roundtrip_response_for_locations_in_big_component(bool use_json_only_api)
 {
@@ -153,13 +145,9 @@ void test_roundtrip_response_for_locations_in_big_component(bool use_json_only_a
     }
 }
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component_old_api)
-{
-    test_roundtrip_response_for_locations_in_big_component(true);
-}
+{ test_roundtrip_response_for_locations_in_big_component(true); }
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_in_big_component_new_api)
-{
-    test_roundtrip_response_for_locations_in_big_component(false);
-}
+{ test_roundtrip_response_for_locations_in_big_component(false); }
 
 void test_roundtrip_response_for_locations_across_components(bool use_json_only_api)
 {
@@ -207,13 +195,9 @@ void test_roundtrip_response_for_locations_across_components(bool use_json_only_
     }
 }
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components_old_api)
-{
-    test_roundtrip_response_for_locations_across_components(true);
-}
+{ test_roundtrip_response_for_locations_across_components(true); }
 BOOST_AUTO_TEST_CASE(test_roundtrip_response_for_locations_across_components_new_api)
-{
-    test_roundtrip_response_for_locations_across_components(false);
-}
+{ test_roundtrip_response_for_locations_across_components(false); }
 
 void test_tfse_1(bool use_json_only_api)
 {

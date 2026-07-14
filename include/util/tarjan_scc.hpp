@@ -49,9 +49,7 @@ template <typename GraphT> class TarjanSCC
     TarjanSCC(const GraphT &graph)
         : components_index(graph.GetNumberOfNodes(), SPECIAL_NODEID), m_graph(graph),
           size_one_counter(0)
-    {
-        BOOST_ASSERT(m_graph.GetNumberOfNodes() > 0);
-    }
+    { BOOST_ASSERT(m_graph.GetNumberOfNodes() > 0); }
 
     void Run()
     {
@@ -170,9 +168,7 @@ template <typename GraphT> class TarjanSCC
     std::size_t GetSizeOneCount() const { return size_one_counter; }
 
     unsigned GetComponentSize(const unsigned component_id) const
-    {
-        return component_size_vector[component_id];
-    }
+    { return component_size_vector[component_id]; }
 
     unsigned GetComponentID(const NodeID node) const { return components_index[node]; }
 };

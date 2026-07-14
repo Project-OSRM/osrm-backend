@@ -298,9 +298,7 @@ double signedArea(const Coordinate first_coordinate,
 bool isCCW(const Coordinate first_coordinate,
            const Coordinate second_coordinate,
            const Coordinate third_coordinate)
-{
-    return signedArea(first_coordinate, second_coordinate, third_coordinate) > 0;
-}
+{ return signedArea(first_coordinate, second_coordinate, third_coordinate) > 0; }
 
 // find the closest distance between a coordinate and a segment
 double findClosestDistance(const Coordinate coordinate,
