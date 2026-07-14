@@ -204,9 +204,7 @@ template <typename Data> struct SharedMonitor
         }
 
         void invalidate_semaphore(void *semaphore) const
-        {
-            std::memset(semaphore, 0xff, sizeof(bi::interprocess_semaphore));
-        }
+        { std::memset(semaphore, 0xff, sizeof(bi::interprocess_semaphore)); }
 
         bool is_semaphore_valid(void *semaphore) const
         {
@@ -228,9 +226,7 @@ template <typename Data> struct SharedMonitor
                   "Data and internal data need to fit into shared memory");
 
     InternalData &internal() const
-    {
-        return *reinterpret_cast<InternalData *>(reinterpret_cast<char *>(region.get_address()));
-    }
+    { return *reinterpret_cast<InternalData *>(reinterpret_cast<char *>(region.get_address())); }
 
     bi::shared_memory_object shmem;
     bi::mapped_region region;

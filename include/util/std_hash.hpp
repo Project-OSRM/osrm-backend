@@ -10,9 +10,7 @@
 // "The C++ Standard Library" 2nd Edition. Nicolai M. Josuttis. 2012.
 
 template <typename T> void hash_combine(std::size_t &seed, const T &val)
-{
-    seed ^= std::hash<T>()(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
-}
+{ seed ^= std::hash<T>()(val) + 0x9e3779b9 + (seed << 6) + (seed >> 2); }
 
 template <typename It> void hash_range(std::size_t &seed, It first, const It last)
 {
@@ -50,17 +48,13 @@ template <typename... T> struct hash<std::tuple<T...>>
     }
 
     auto operator()(const std::tuple<T...> &t) const
-    {
-        return apply_tuple(t, std::make_index_sequence<sizeof...(T)>());
-    }
+    { return apply_tuple(t, std::make_index_sequence<sizeof...(T)>()); }
 };
 
 template <typename T1, typename T2> struct hash<std::pair<T1, T2>>
 {
     std::size_t operator()(const std::pair<T1, T2> &pair) const
-    {
-        return hash_val(pair.first, pair.second);
-    }
+    { return hash_val(pair.first, pair.second); }
 };
 
 template <typename T> struct hash<std::vector<T>>

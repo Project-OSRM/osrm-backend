@@ -40,13 +40,9 @@ BisectionGraph::ConstNodeIterator BisectionGraphView::Begin() const { return beg
 BisectionGraph::ConstNodeIterator BisectionGraphView::End() const { return end; }
 
 const BisectionGraphView::NodeT &BisectionGraphView::Node(const NodeID nid) const
-{
-    return *(begin + nid);
-}
+{ return *(begin + nid); }
 
 const BisectionGraphView::EdgeT &BisectionGraphView::Edge(const EdgeID eid) const
-{
-    return bisection_graph.Edge(eid);
-}
+{ return bisection_graph.Edge(eid); }
 
 } // namespace osrm::partitioner

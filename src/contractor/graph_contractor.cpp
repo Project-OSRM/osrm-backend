@@ -657,10 +657,10 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
         TIMER_START(update_priorities);
         if (remaining_nodes.size() > number_of_core_nodes)
         {
-            tbb::parallel_for_each(independent_nodes,
-                                   [&](const NodeID v) {
-                                       UpdateNeighbourPriorities(graph, v, node_data, thread_data);
-                                   });
+            tbb::parallel_for_each(
+                independent_nodes,
+                [&](const NodeID v)
+                { UpdateNeighbourPriorities(graph, v, node_data, thread_data); });
         }
         TIMER_STOP(update_priorities);
 
@@ -733,12 +733,11 @@ GraphAndFilter contractExcludableGraph(ContractorGraph contractor_graph_,
         // Add all non-core edges to container
         {
             auto non_core_edges = toEdges<QueryEdge>(contractor_graph);
-            auto new_end = std::remove_if(non_core_edges.begin(),
-                                          non_core_edges.end(),
-                                          [&](const auto &edge) {
-                                              return is_shared_core[edge.source] &&
-                                                     is_shared_core[edge.target];
-                                          });
+            auto new_end = std::remove_if(
+                non_core_edges.begin(),
+                non_core_edges.end(),
+                [&](const auto &edge)
+                { return is_shared_core[edge.source] && is_shared_core[edge.target]; });
             non_core_edges.resize(new_end - non_core_edges.begin());
             edge_container.Insert(std::move(non_core_edges));
 

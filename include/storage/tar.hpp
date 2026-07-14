@@ -95,9 +95,7 @@ class FileReader
     }
 
     template <typename T> void ReadInto(const std::string &name, T &tmp)
-    {
-        ReadInto(name, &tmp, 1);
-    }
+    { ReadInto(name, &tmp, 1); }
 
     template <typename T, typename OutIter> void ReadStreaming(const std::string &name, OutIter out)
     {
@@ -350,14 +348,10 @@ class FileWriter
     FileWriter &operator=(const FileWriter &) = delete;
 
     void WriteElementCount64(const std::string &name, const std::uint64_t count)
-    {
-        WriteFrom(name + ".meta", count);
-    }
+    { WriteFrom(name + ".meta", count); }
 
     template <typename T> void WriteFrom(const std::string &name, const T &data)
-    {
-        WriteFrom(name, &data, 1);
-    }
+    { WriteFrom(name, &data, 1); }
 
     template <typename T, typename Iter>
     void WriteStreaming(const std::string &name, Iter iter, const std::uint64_t number_of_elements)

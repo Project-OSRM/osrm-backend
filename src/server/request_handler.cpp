@@ -81,9 +81,7 @@ void SendResponse(ServiceHandler::ResultT &result,
 
 void RequestHandler::RegisterServiceHandler(
     std::unique_ptr<ServiceHandlerInterface> service_handler_)
-{
-    service_handler = std::move(service_handler_);
-}
+{ service_handler = std::move(service_handler_); }
 
 void RequestHandler::HandleRequest(const Request &current_request,
                                    Response &current_reply,

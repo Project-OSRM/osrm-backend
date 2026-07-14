@@ -53,9 +53,7 @@ struct NodeBasedTurn
     NodeID to;
 
     bool operator==(const NodeBasedTurn &other) const
-    {
-        return other.from == from && other.via == via && other.to == to;
-    }
+    { return other.from == from && other.via == via && other.to == to; }
 };
 
 // Internal representation of maneuvers during graph extraction phase

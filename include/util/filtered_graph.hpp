@@ -61,9 +61,7 @@ class FilteredGraphImpl<util::StaticGraph<EdgeDataT, Ownership>, Ownership>
     }
 
     auto GetAdjacentEdgeRange(const NodeIterator n) const
-    {
-        return EdgeRange{graph.BeginEdges(n), graph.EndEdges(n), edge_filter};
-    }
+    { return EdgeRange{graph.BeginEdges(n), graph.EndEdges(n), edge_filter}; }
 
     // searches for a specific edge
     EdgeIterator FindEdge(const NodeIterator from, const NodeIterator to) const
@@ -125,9 +123,7 @@ class FilteredGraphImpl<util::StaticGraph<EdgeDataT, Ownership>, Ownership>
 
     FilteredGraphImpl(Graph graph_, Vector<bool> edge_filter_)
         : graph(std::move(graph_)), edge_filter(std::move(edge_filter_))
-    {
-        BOOST_ASSERT(edge_filter.empty() || edge_filter.size() == graph.GetNumberOfEdges());
-    }
+    { BOOST_ASSERT(edge_filter.empty() || edge_filter.size() == graph.GetNumberOfEdges()); }
 
     // Takes a graph and a function that maps EdgeID to true
     // if the edge should be included in the graph.

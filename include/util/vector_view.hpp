@@ -73,9 +73,7 @@ template <typename DataT> class VectorViewIterator
     reference operator*() const { return *m_value; }
 
     friend difference_type operator-(const VectorViewIterator &a, const VectorViewIterator &b)
-    {
-        return a.m_value - b.m_value;
-    }
+    { return a.m_value - b.m_value; }
 
     friend VectorViewIterator operator+(VectorViewIterator it, difference_type n)
     {
@@ -216,14 +214,10 @@ template <> class vector_view<bool>
         operator bool() const { return (*m_ptr) & mask; }
 
         bool operator==(const reference &other) const
-        {
-            return other.m_ptr == m_ptr && other.mask == mask;
-        }
+        { return other.m_ptr == m_ptr && other.mask == mask; }
 
         friend std::ostream &operator<<(std::ostream &os, const reference &rhs)
-        {
-            return os << static_cast<bool>(rhs);
-        }
+        { return os << static_cast<bool>(rhs); }
 
         Word *m_ptr;
         const Word mask;

@@ -50,36 +50,22 @@ template <typename From, typename Tag> struct Alias final
     explicit operator From &() { return __value; }
     explicit operator From() const { return __value; }
     inline Alias operator+(const Alias rhs_) const
-    {
-        return Alias{__value + static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value + static_cast<const From>(rhs_)}; }
     inline Alias operator-(const Alias rhs_) const
-    {
-        return Alias{__value - static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value - static_cast<const From>(rhs_)}; }
     inline Alias operator-() const
         requires(std::is_signed_v<From> || std::is_floating_point_v<From>)
-    {
-        return Alias{-__value};
-    }
+    { return Alias{-__value}; }
     inline Alias operator*(const Alias rhs_) const
-    {
-        return Alias{__value * static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value * static_cast<const From>(rhs_)}; }
     inline Alias operator*(const double rhs_) const { return Alias{__value * rhs_}; }
     inline Alias operator/(const Alias rhs_) const
-    {
-        return Alias{__value / static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value / static_cast<const From>(rhs_)}; }
     inline Alias operator/(const double rhs_) const { return Alias{__value / rhs_}; }
     inline Alias operator|(const Alias rhs_) const
-    {
-        return Alias{__value | static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value | static_cast<const From>(rhs_)}; }
     inline Alias operator&(const Alias rhs_) const
-    {
-        return Alias{__value & static_cast<const From>(rhs_)};
-    }
+    { return Alias{__value & static_cast<const From>(rhs_)}; }
     auto operator<=>(const Alias &) const = default;
 
     inline Alias operator++()
@@ -159,9 +145,7 @@ template <typename ToAlias> inline ToAlias to_alias(const ToAlias &from) { retur
 
 template <typename From, typename Tag>
 inline std::ostream &operator<<(std::ostream &stream, const Alias<From, Tag> &inst)
-{
-    return stream << inst.__value;
-}
+{ return stream << inst.__value; }
 } // namespace osrm
 
 namespace std
@@ -171,9 +155,7 @@ template <typename From, typename Tag> struct hash<osrm::Alias<From, Tag>>
     using argument_type = osrm::Alias<From, Tag>;
     using result_type = std::size_t;
     result_type operator()(argument_type const &s) const
-    {
-        return std::hash<From>()(static_cast<const From>(s));
-    }
+    { return std::hash<From>()(static_cast<const From>(s)); }
 };
 } // namespace std
 

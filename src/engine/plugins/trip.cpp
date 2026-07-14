@@ -24,9 +24,7 @@ bool IsStronglyConnectedComponent(const util::DistTableWrapper<EdgeDuration> &re
 bool IsSupportedParameterCombination(const bool fixed_start,
                                      const bool fixed_end,
                                      const bool roundtrip)
-{
-    return roundtrip || fixed_start || fixed_end;
-}
+{ return roundtrip || fixed_start || fixed_end; }
 
 // given the node order in which to visit, compute the actual route (with geometry, travel time and
 // so on) and return the result

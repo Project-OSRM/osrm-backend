@@ -56,9 +56,7 @@ struct InternalRouteResult
     bool is_valid() const { return INVALID_EDGE_WEIGHT != shortest_path_weight; }
 
     bool is_via_leg(const std::size_t leg) const
-    {
-        return (leg != unpacked_path_segments.size() - 1);
-    }
+    { return (leg != unpacked_path_segments.size() - 1); }
 
     // Note: includes duration for turns, except for at start and end node.
     EdgeDuration duration() const

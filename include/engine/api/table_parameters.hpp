@@ -153,16 +153,17 @@ inline bool operator&(TableParameters::AnnotationsType lhs, TableParameters::Ann
 inline TableParameters::AnnotationsType operator|(TableParameters::AnnotationsType lhs,
                                                   TableParameters::AnnotationsType rhs)
 {
-    return (TableParameters::AnnotationsType)(
-        static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(lhs) |
-        static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(rhs));
+    return (
+        TableParameters::
+            AnnotationsType)(static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(
+                                 lhs) |
+                             static_cast<std::underlying_type_t<TableParameters::AnnotationsType>>(
+                                 rhs));
 }
 
 inline TableParameters::AnnotationsType &operator|=(TableParameters::AnnotationsType &lhs,
                                                     TableParameters::AnnotationsType rhs)
-{
-    return lhs = lhs | rhs;
-}
+{ return lhs = lhs | rhs; }
 } // namespace osrm::engine::api
 
 #endif // ENGINE_API_TABLE_PARAMETERS_HPP

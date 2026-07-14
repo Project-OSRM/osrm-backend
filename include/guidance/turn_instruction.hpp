@@ -75,9 +75,7 @@ struct TurnInstruction
     DirectionModifier::Enum direction_modifier : 3;
 
     bool IsUTurn() const
-    {
-        return type != TurnType::NoTurn && direction_modifier == DirectionModifier::UTurn;
-    }
+    { return type != TurnType::NoTurn && direction_modifier == DirectionModifier::UTurn; }
 
     static TurnInstruction INVALID() { return {TurnType::Invalid, DirectionModifier::UTurn}; }
 
@@ -85,9 +83,7 @@ struct TurnInstruction
 
     static TurnInstruction REMAIN_ROUNDABOUT(const RoundaboutType,
                                              const DirectionModifier::Enum modifier)
-    {
-        return {TurnType::StayOnRoundabout, modifier};
-    }
+    { return {TurnType::StayOnRoundabout, modifier}; }
 
     static TurnInstruction ENTER_ROUNDABOUT(const RoundaboutType roundabout_type,
                                             const DirectionModifier::Enum modifier)
@@ -133,22 +129,16 @@ struct TurnInstruction
     }
 
     static TurnInstruction SUPPRESSED(const DirectionModifier::Enum modifier)
-    {
-        return {TurnType::Suppressed, modifier};
-    }
+    { return {TurnType::Suppressed, modifier}; }
 };
 
 static_assert(sizeof(TurnInstruction) == 1, "TurnInstruction does not fit a byte");
 
 inline bool operator!=(const TurnInstruction lhs, const TurnInstruction rhs)
-{
-    return lhs.type != rhs.type || lhs.direction_modifier != rhs.direction_modifier;
-}
+{ return lhs.type != rhs.type || lhs.direction_modifier != rhs.direction_modifier; }
 
 inline bool operator==(const TurnInstruction lhs, const TurnInstruction rhs)
-{
-    return lhs.type == rhs.type && lhs.direction_modifier == rhs.direction_modifier;
-}
+{ return lhs.type == rhs.type && lhs.direction_modifier == rhs.direction_modifier; }
 
 // check if a instruction is associated in any form with a roundabout
 inline bool hasRoundaboutType(const TurnInstruction instruction)

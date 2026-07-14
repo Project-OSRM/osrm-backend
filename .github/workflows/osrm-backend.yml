@@ -194,7 +194,7 @@ jobs:
 
   format-taginfo-docs:
     if: github.repository == 'Project-OSRM/osrm-backend'
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       actions: write  # needed by actions/cache
@@ -214,10 +214,10 @@ jobs:
           ${{ runner.os }}-node-
     - name: Prepare environment
       run: |
-        sudo apt-get update -y
-        sudo apt-get install -y clang-format-18
+        # sudo apt-get update -y
+        sudo apt-get install -y clang-format-22
         npm ci --ignore-scripts
-        clang-format-18 --version
+        clang-format-22 --version
     - uses: actions/setup-python@v6
       with:
         python-version: '3.12'
@@ -233,6 +233,7 @@ jobs:
         if ! git diff --exit-code --quiet; then
           echo "dirty=true" >> "$GITHUB_OUTPUT"
           git diff > /tmp/formatting-fixes.patch
+          cat /tmp/formatting-fixes.patch
         fi
     - name: Upload formatting patch
       if: steps.format.outputs.dirty == 'true'

@@ -41,13 +41,9 @@ template <typename Integer, typename Filter> class filtered_integer_iterator
     }
 
     friend bool operator==(const filtered_integer_iterator &a, const filtered_integer_iterator &b)
-    {
-        return a.value == b.value;
-    }
+    { return a.value == b.value; }
     friend bool operator!=(const filtered_integer_iterator &a, const filtered_integer_iterator &b)
-    {
-        return !(a == b);
-    }
+    { return !(a == b); }
 
   private:
     value_type value;
@@ -83,9 +79,7 @@ template <typename Integer, typename Filter>
 filtered_range<Integer, Filter>
 filtered_irange(const Integer first, const Integer last, const Filter &filter) noexcept
     requires std::integral<Integer>
-{
-    return filtered_range<Integer, Filter>(first, last, filter);
-}
+{ return filtered_range<Integer, Filter>(first, last, filter); }
 
 } // namespace osrm::util
 

@@ -74,9 +74,7 @@ template <typename EdgeDataT> class DynamicGraph
         }
 
         bool operator<(const InputEdge &rhs) const
-        {
-            return std::tie(source, target) < std::tie(rhs.source, rhs.target);
-        }
+        { return std::tie(source, target) < std::tie(rhs.source, rhs.target); }
     };
 
     DynamicGraph() : DynamicGraph(0) {}
@@ -249,19 +247,13 @@ template <typename EdgeDataT> class DynamicGraph
     const EdgeDataT &GetEdgeData(const EdgeIterator e) const { return edge_list[e].data; }
 
     EdgeIterator BeginEdges(const NodeIterator n) const
-    {
-        return EdgeIterator(node_array[n].first_edge);
-    }
+    { return EdgeIterator(node_array[n].first_edge); }
 
     EdgeIterator EndEdges(const NodeIterator n) const
-    {
-        return EdgeIterator(node_array[n].first_edge + node_array[n].edges);
-    }
+    { return EdgeIterator(node_array[n].first_edge + node_array[n].edges); }
 
     EdgeRange GetAdjacentEdgeRange(const NodeIterator node) const
-    {
-        return irange(BeginEdges(node), EndEdges(node));
-    }
+    { return irange(BeginEdges(node), EndEdges(node)); }
 
     NodeIterator InsertNode()
     {
@@ -463,14 +455,10 @@ template <typename EdgeDataT> class DynamicGraph
 
   protected:
     bool isDummy(const EdgeIterator edge) const
-    {
-        return edge_list[edge].target == (std::numeric_limits<NodeIterator>::max)();
-    }
+    { return edge_list[edge].target == (std::numeric_limits<NodeIterator>::max)(); }
 
     void makeDummy(const EdgeIterator edge)
-    {
-        edge_list[edge].target = (std::numeric_limits<NodeIterator>::max)();
-    }
+    { edge_list[edge].target = (std::numeric_limits<NodeIterator>::max)(); }
 
     NodeIterator number_of_nodes;
     std::atomic_uint number_of_edges;
