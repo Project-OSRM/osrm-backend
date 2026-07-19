@@ -294,8 +294,8 @@ Feature: Car - Handle traffic lights
 
         When I route I should get
           | from | to | route   | speed   | weights | time  | distances | a:datasources | a:nodes | a:speed | a:duration |  a:weight |
-          | a    | c  | abc,abc | 60 km/h | 24.2,0  | 24.2s | 400m,0m   |           1:0 |  1:2:3  |   18:18 |  11.1:11.1 | 11.1:11.1 |
-          | c    | a  | abc,abc | 60 km/h | 24.2,0  | 24.2s | 400m,0m   |           0:1 |  3:2:1  |   18:18 |  11.1:11.1 | 11.1:11.1 |
+          | a    | c  | abc,abc | 60 km/h | 24.2,0  | 24.2s | 400m,0m   |           1:0 | abc     |   18:18 |  11.1:11.1 | 11.1:11.1 |
+          | c    | a  | abc,abc | 60 km/h | 24.2,0  | 24.2s | 400m,0m   |           0:1 | cba     |   18:18 |  11.1:11.1 | 11.1:11.1 |
 
 
     @traffic
@@ -326,8 +326,8 @@ Feature: Car - Handle traffic lights
 
         When I route I should get
           | from | to | route   | speed   | weights | time  | distances | a:datasources | a:nodes | a:speed | a:duration |  a:weight |
-          | a    | c  | abc,abc | 60 km/h | 24.2,0  | 24.2s | 400m,0m   |           1:0 |  1:2:3  |   18:18 |  11.1:11.1 | 11.1:11.1 |
-          | c    | a  | abc,abc | 65 km/h | 22.2,0  | 22.2s | 400m,0m   |           0:1 |  3:2:1  |   18:18 |  11.1:11.1 | 11.1:11.1 |
+          | a    | c  | abc,abc | 60 km/h | 24.2,0  | 24.2s | 400m,0m   |           1:0 | abc     |   18:18 |  11.1:11.1 | 11.1:11.1 |
+          | c    | a  | abc,abc | 65 km/h | 22.2,0  | 22.2s | 400m,0m   |           0:1 | cba     |   18:18 |  11.1:11.1 | 11.1:11.1 |
 
 
     @traffic
@@ -358,8 +358,8 @@ Feature: Car - Handle traffic lights
 
         When I route I should get
           | from | to | route   | speed   | weights | time  | distances | a:datasources | a:nodes | a:speed | a:duration |  a:weight |
-          | a    | c  | abc,abc | 65 km/h | 22.2,0  | 22.2s | 400m,0m   |           1:0 |  1:2:3  |   18:18 |  11.1:11.1 | 11.1:11.1 |
-          | c    | a  | abc,abc | 60 km/h | 24.2,0  | 24.2s | 400m,0m   |           0:1 |  3:2:1  |   18:18 |  11.1:11.1 | 11.1:11.1 |
+          | a    | c  | abc,abc | 65 km/h | 22.2,0  | 22.2s | 400m,0m   |           1:0 | abc     |   18:18 |  11.1:11.1 | 11.1:11.1 |
+          | c    | a  | abc,abc | 60 km/h | 24.2,0  | 24.2s | 400m,0m   |           0:1 | cba     |   18:18 |  11.1:11.1 | 11.1:11.1 |
 
 
     Scenario: Car - Traffic signal straight direction with edge compression

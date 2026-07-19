@@ -154,6 +154,7 @@ export default class Data {
     );
     this.OSMDB.addNode(node);
     this.nameNodeHash[name] = node;
+    this.idNodeHash[id] = node;
   }
 
   // Adds named location for test coordinate references
@@ -180,6 +181,16 @@ export default class Data {
     }
 
     return fromNode;
+  }
+
+  findNodeById(id) {
+    return this.idNodeHash[id.toString()];
+  }
+
+  nodeNameById(id) {
+    const fromNode = this.findNodeById(id) || {};
+    const tags = fromNode.tags || {};
+    return tags.name || '?';
   }
 
   // find a node based on an array containing lon/lat
@@ -228,6 +239,7 @@ export default class Data {
   resetOSM() {
     this.OSMDB.clear();
     this.nameNodeHash = {};
+    this.idNodeHash = {};
     this.locationHash = {};
     this.shortcutsHash = {};
     this.nameWayHash = {};

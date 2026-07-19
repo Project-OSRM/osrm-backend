@@ -101,10 +101,16 @@ struct StorageConfig final : IOConfig
     { IOConfig::UseDefaultOutputNames(base); }
 
     StorageConfig(const std::vector<storage::FeatureDataset> &disabled_feature_datasets_ = {})
-        : IOConfig(
-              GetRequiredFiles(disabled_feature_datasets_),
-              {".osrm.hsgr", ".osrm.cells", ".osrm.cell_metrics", ".osrm.mldgr", ".osrm.partition"},
-              {})
+        : IOConfig(GetRequiredFiles(disabled_feature_datasets_),
+                   {".osrm.hsgr",
+                    ".osrm.cells",
+                    ".osrm.cell_metrics",
+                    ".osrm.mldgr",
+                    ".osrm.partition",
+                    ".osrm.openareas",
+                    ".osrm.openareas.ramIndex",
+                    ".osrm.openareas.fileIndex"},
+                   {})
     {
     }
 };

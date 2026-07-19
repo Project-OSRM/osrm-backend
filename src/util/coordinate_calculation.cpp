@@ -1,4 +1,5 @@
 #include "util/coordinate_calculation.hpp"
+#include "util/alias.hpp"
 #include "util/cheap_ruler.hpp"
 #include "util/coordinate.hpp"
 #include "util/trigonometry_table.hpp"
@@ -55,15 +56,13 @@ static CheapRulerContainer cheap_ruler_container(1800);
 // Does not project the coordinates!
 std::uint64_t squaredEuclideanDistance(const Coordinate lhs, const Coordinate rhs)
 {
-    std::int64_t d_lon = static_cast<std::int32_t>(lhs.lon - rhs.lon);
-    std::int64_t d_lat = static_cast<std::int32_t>(lhs.lat - rhs.lat);
+    std::int64_t d_lon = from_alias<int64_t>(lhs.lon) - from_alias<int64_t>(rhs.lon);
+    std::int64_t d_lat = from_alias<int64_t>(lhs.lat) - from_alias<int64_t>(rhs.lat);
 
-    std::int64_t sq_lon = d_lon * d_lon;
-    std::int64_t sq_lat = d_lat * d_lat;
+    std::uint64_t sq_lon = d_lon * d_lon;
+    std::uint64_t sq_lat = d_lat * d_lat;
 
-    std::uint64_t result = static_cast<std::uint64_t>(sq_lon + sq_lat);
-
-    return result;
+    return sq_lon + sq_lat;
 }
 
 double greatCircleDistance(const Coordinate coordinate_1, const Coordinate coordinate_2)
