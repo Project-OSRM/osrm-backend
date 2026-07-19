@@ -413,14 +413,10 @@ inline auto findEdge(const IntersectionEdgeGeometries &geometries, const EdgeID 
 }
 
 double findEdgeBearing(const IntersectionEdgeGeometries &geometries, const EdgeID &edge)
-{
-    return findEdge(geometries, edge)->perceived_bearing;
-}
+{ return findEdge(geometries, edge)->perceived_bearing; }
 
 double findEdgeLength(const IntersectionEdgeGeometries &geometries, const EdgeID &edge)
-{
-    return findEdge(geometries, edge)->segment_length;
-}
+{ return findEdge(geometries, edge)->segment_length; }
 
 template <typename RestrictionsRange>
 bool isTurnRestricted(RestrictionsRange restrictions, const NodeID to)

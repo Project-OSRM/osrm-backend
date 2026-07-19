@@ -38,9 +38,7 @@ struct RankedCandidateNode
     EdgeWeight sharing;
 
     bool operator<(const RankedCandidateNode &other) const
-    {
-        return (EdgeWeight{2} * weight + sharing) < (EdgeWeight{2} * other.weight + other.sharing);
-    }
+    { return (EdgeWeight{2} * weight + sharing) < (EdgeWeight{2} * other.weight + other.sharing); }
 };
 
 // todo: reorder parameters

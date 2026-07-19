@@ -24,9 +24,7 @@ namespace osrm::engine
 
 inline std::pair<bool, bool> operator&&(const std::pair<bool, bool> &a,
                                         const std::pair<bool, bool> &b)
-{
-    return {a.first && b.first, a.second && b.second};
-}
+{ return {a.first && b.first, a.second && b.second}; }
 
 // Implements complex queries on top of an RTree and builds PhantomNodes from it.
 //
@@ -44,9 +42,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     }
 
     std::vector<EdgeData> Search(const util::RectangleInt2D &bbox)
-    {
-        return rtree.SearchInBox(bbox);
-    }
+    { return rtree.SearchInBox(bbox); }
 
     std::vector<PhantomNodeWithDistance>
     NearestPhantomNodes(const util::Coordinate input_coordinate,
@@ -498,9 +494,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
     bool CheckSegmentDistance(const Coordinate input_coordinate,
                               const CandidateSegment &segment,
                               const double max_distance) const
-    {
-        return GetSegmentDistance(input_coordinate, segment) > max_distance;
-    }
+    { return GetSegmentDistance(input_coordinate, segment) > max_distance; }
 
     std::pair<bool, bool> CheckSegmentExclude(const CandidateSegment &segment) const
     {

@@ -46,21 +46,21 @@ inline const auto annotations_type = []()
 
 // --- Route-specific parameter rules ---
 
-inline const auto alternatives_rule = x3::lit("alternatives=") >
-                                      (x3::uint_[(
-                                           [](auto &ctx)
-                                           {
-                                               auto &p = x3::get<params_tag>(ctx).get();
-                                               p.number_of_alternatives = x3::_attr(ctx);
-                                               p.alternatives = x3::_attr(ctx) > 0;
-                                           })] |
-                                       x3::bool_[(
-                                           [](auto &ctx)
-                                           {
-                                               auto &p = x3::get<params_tag>(ctx).get();
-                                               p.number_of_alternatives = x3::_attr(ctx);
-                                               p.alternatives = x3::_attr(ctx);
-                                           })]);
+inline const auto alternatives_rule =
+    x3::lit("alternatives=") > (x3::uint_[(
+                                    [](auto &ctx)
+                                    {
+                                        auto &p = x3::get<params_tag>(ctx).get();
+                                        p.number_of_alternatives = x3::_attr(ctx);
+                                        p.alternatives = x3::_attr(ctx) > 0;
+                                    })] |
+                                x3::bool_[(
+                                    [](auto &ctx)
+                                    {
+                                        auto &p = x3::get<params_tag>(ctx).get();
+                                        p.number_of_alternatives = x3::_attr(ctx);
+                                        p.alternatives = x3::_attr(ctx);
+                                    })]);
 
 inline const auto continue_straight_rule =
     x3::lit("continue_straight=") >
@@ -90,11 +90,11 @@ inline const auto add_annotation = [](auto &ctx)
     p.annotations = p.annotations_type != AnnotationsType::None;
 };
 
-inline const auto
-    annotations_rule = x3::lit("annotations=") >
-                       ((x3::lit("true") >> x3::attr(AnnotationsType::All))[add_annotation] |
-                        (x3::lit("false") >> x3::attr(AnnotationsType::None))[add_annotation] |
-                        annotations_type[add_annotation] % ',');
+inline const auto annotations_rule =
+    x3::lit("annotations=") >
+    ((x3::lit("true") >> x3::attr(AnnotationsType::All))[add_annotation] |
+     (x3::lit("false") >> x3::attr(AnnotationsType::None))[add_annotation] |
+     annotations_type[add_annotation] % ',');
 
 inline const auto waypoints_rule =
     x3::lit("waypoints=") >

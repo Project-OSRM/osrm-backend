@@ -47,7 +47,8 @@ class BaseAPI
     util::json::Object MakeWaypoint(const PhantomNodeCandidates &candidates) const
     {
         // TODO: check forward/reverse
-        const auto toName = [this](const auto &phantom) {
+        const auto toName = [this](const auto &phantom)
+        {
             return std::string(
                 facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)));
         };
@@ -116,7 +117,8 @@ class BaseAPI
             static_cast<float>(static_cast<double>(util::toFloating(snapped_location.lon))),
             static_cast<float>(static_cast<double>(util::toFloating(snapped_location.lat))));
 
-        const auto toName = [this](const auto &phantom) {
+        const auto toName = [this](const auto &phantom)
+        {
             return std::string(
                 facade.GetNameForID(facade.GetNameIndex(phantom.forward_segment_id.id)));
         };

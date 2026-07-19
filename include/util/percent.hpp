@@ -15,9 +15,7 @@ class Percent
 
   public:
     explicit Percent(Log &log_, unsigned max_value, unsigned step = 5) : log{log_}
-    {
-        Reinit(max_value, step);
-    }
+    { Reinit(max_value, step); }
 
     // Reinitializes
     void Reinit(unsigned max_value, unsigned step = 5)

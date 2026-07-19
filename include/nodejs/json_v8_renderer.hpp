@@ -12,14 +12,10 @@ struct V8Renderer
     explicit V8Renderer(const Napi::Env &env, Napi::Value &out) : env(env), out(out) {}
 
     void operator()(const osrm::json::String &string) const
-    {
-        out = Napi::String::New(env, string.value);
-    }
+    { out = Napi::String::New(env, string.value); }
 
     void operator()(const osrm::json::Number &number) const
-    {
-        out = Napi::Number::New(env, number.value);
-    }
+    { out = Napi::Number::New(env, number.value); }
 
     void operator()(const osrm::json::Object &object) const
     {

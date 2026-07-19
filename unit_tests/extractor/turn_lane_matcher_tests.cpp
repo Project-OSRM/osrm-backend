@@ -18,9 +18,7 @@ namespace IntersectionDetail = osrm::extractor::intersection;
 
 // Helper to create a TurnInstruction with given type and direction modifier.
 TurnInstruction makeInstruction(TurnType::Enum type, DirectionModifier::Enum modifier)
-{
-    return {type, modifier};
-}
+{ return {type, modifier}; }
 
 // Helper to create a ConnectedRoad.
 // eid, entry_allowed, angle, instruction, lane_data_id
@@ -100,9 +98,7 @@ makeGraph(const std::vector<std::tuple<NodeID, NodeID, bool>> &edges, NodeID num
 BOOST_AUTO_TEST_SUITE(TurnLaneMatcherGetMatchingModifier)
 
 BOOST_AUTO_TEST_CASE(uturn_tag_maps_to_uturn)
-{
-    BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::uturn), DirectionModifier::UTurn);
-}
+{ BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::uturn), DirectionModifier::UTurn); }
 
 BOOST_AUTO_TEST_CASE(sharp_right_tag_maps_to_sharp_right)
 {
@@ -111,9 +107,7 @@ BOOST_AUTO_TEST_CASE(sharp_right_tag_maps_to_sharp_right)
 }
 
 BOOST_AUTO_TEST_CASE(right_tag_maps_to_right)
-{
-    BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::right), DirectionModifier::Right);
-}
+{ BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::right), DirectionModifier::Right); }
 
 BOOST_AUTO_TEST_CASE(slight_right_tag_maps_to_slight_right)
 {
@@ -122,9 +116,7 @@ BOOST_AUTO_TEST_CASE(slight_right_tag_maps_to_slight_right)
 }
 
 BOOST_AUTO_TEST_CASE(straight_tag_maps_to_straight)
-{
-    BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::straight), DirectionModifier::Straight);
-}
+{ BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::straight), DirectionModifier::Straight); }
 
 BOOST_AUTO_TEST_CASE(slight_left_tag_maps_to_slight_left)
 {
@@ -133,14 +125,10 @@ BOOST_AUTO_TEST_CASE(slight_left_tag_maps_to_slight_left)
 }
 
 BOOST_AUTO_TEST_CASE(left_tag_maps_to_left)
-{
-    BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::left), DirectionModifier::Left);
-}
+{ BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::left), DirectionModifier::Left); }
 
 BOOST_AUTO_TEST_CASE(sharp_left_tag_maps_to_sharp_left)
-{
-    BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::sharp_left), DirectionModifier::SharpLeft);
-}
+{ BOOST_CHECK_EQUAL(getMatchingModifier(TurnLaneType::sharp_left), DirectionModifier::SharpLeft); }
 
 BOOST_AUTO_TEST_CASE(merge_to_left_tag_maps_to_straight)
 {

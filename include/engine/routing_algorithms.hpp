@@ -105,44 +105,28 @@ class RoutingAlgorithms final : public RoutingAlgorithmsInterface
     const DataFacadeBase &GetFacade() const final override { return *facade; }
 
     bool HasAlternativePathSearch() const final override
-    {
-        return routing_algorithms::HasAlternativePathSearch<Algorithm>::value;
-    }
+    { return routing_algorithms::HasAlternativePathSearch<Algorithm>::value; }
 
     bool HasShortestPathSearch() const final override
-    {
-        return routing_algorithms::HasShortestPathSearch<Algorithm>::value;
-    }
+    { return routing_algorithms::HasShortestPathSearch<Algorithm>::value; }
 
     bool HasDirectShortestPathSearch() const final override
-    {
-        return routing_algorithms::HasDirectShortestPathSearch<Algorithm>::value;
-    }
+    { return routing_algorithms::HasDirectShortestPathSearch<Algorithm>::value; }
 
     bool HasMapMatching() const final override
-    {
-        return routing_algorithms::HasMapMatching<Algorithm>::value;
-    }
+    { return routing_algorithms::HasMapMatching<Algorithm>::value; }
 
     bool HasManyToManySearch() const final override
-    {
-        return routing_algorithms::HasManyToManySearch<Algorithm>::value;
-    }
+    { return routing_algorithms::HasManyToManySearch<Algorithm>::value; }
 
     bool SupportsDistanceAnnotationType() const final override
-    {
-        return routing_algorithms::SupportsDistanceAnnotationType<Algorithm>::value;
-    }
+    { return routing_algorithms::SupportsDistanceAnnotationType<Algorithm>::value; }
 
     bool HasGetTileTurns() const final override
-    {
-        return routing_algorithms::HasGetTileTurns<Algorithm>::value;
-    }
+    { return routing_algorithms::HasGetTileTurns<Algorithm>::value; }
 
     bool HasExcludeFlags() const final override
-    {
-        return routing_algorithms::HasExcludeFlags<Algorithm>::value;
-    }
+    { return routing_algorithms::HasExcludeFlags<Algorithm>::value; }
 
     bool IsValid() const final override { return static_cast<bool>(facade); }
 
@@ -171,9 +155,7 @@ InternalRouteResult RoutingAlgorithms<Algorithm>::ShortestPathSearch(
 template <routing_algorithms::RoutingAlgorithm Algorithm>
 InternalRouteResult RoutingAlgorithms<Algorithm>::DirectShortestPathSearch(
     const PhantomEndpointCandidates &endpoint_candidates) const
-{
-    return routing_algorithms::directShortestPathSearch(heaps, *facade, endpoint_candidates);
-}
+{ return routing_algorithms::directShortestPathSearch(heaps, *facade, endpoint_candidates); }
 
 template <routing_algorithms::RoutingAlgorithm Algorithm>
 inline routing_algorithms::SubMatchingList RoutingAlgorithms<Algorithm>::MapMatching(
@@ -228,9 +210,7 @@ template <routing_algorithms::RoutingAlgorithm Algorithm>
 inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::GetTileTurns(
     const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
     const std::vector<std::size_t> &sorted_edge_indexes) const
-{
-    return routing_algorithms::getTileTurns(*facade, edges, sorted_edge_indexes);
-}
+{ return routing_algorithms::getTileTurns(*facade, edges, sorted_edge_indexes); }
 
 } // namespace osrm::engine
 

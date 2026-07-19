@@ -72,15 +72,11 @@ inline std::string encodeBase64(const unsigned char *first, std::size_t size)
 
 // Overload for signed char catches (not only but also) C-string literals.
 inline std::string encodeBase64(const signed char *first, std::size_t size)
-{
-    return encodeBase64(reinterpret_cast<const unsigned char *>(first), size);
-}
+{ return encodeBase64(reinterpret_cast<const unsigned char *>(first), size); }
 
 // Overload for char catches (not only but also) C-string literals.
 inline std::string encodeBase64(const char *first, std::size_t size)
-{
-    return encodeBase64(reinterpret_cast<const unsigned char *>(first), size);
-}
+{ return encodeBase64(reinterpret_cast<const unsigned char *>(first), size); }
 
 // Convenience specialization, encoding from string instead of byte-dumping it.
 inline std::string encodeBase64(const std::string &x) { return encodeBase64(x.data(), x.size()); }

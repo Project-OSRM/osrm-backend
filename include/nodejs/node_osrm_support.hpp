@@ -55,9 +55,7 @@ using ObjectOrString = typename std::variant<osrm::json::Object, std::string>;
 template <typename ResultT> inline Napi::Value render(const Napi::Env &env, const ResultT &result);
 
 template <> Napi::Value inline render(const Napi::Env &env, const std::string &result)
-{
-    return Napi::Buffer<char>::Copy(env, result.data(), result.size());
-}
+{ return Napi::Buffer<char>::Copy(env, result.data(), result.size()); }
 
 template <> Napi::Value inline render(const Napi::Env &env, const ObjectOrString &result)
 {
@@ -120,14 +118,10 @@ inline void ParseResult(const osrm::Status &result_status,
 }
 
 inline void ThrowError(const Napi::Env &env, const char *message)
-{
-    Napi::Error::New(env, message).ThrowAsJavaScriptException();
-}
+{ Napi::Error::New(env, message).ThrowAsJavaScriptException(); }
 
 inline void ThrowTypeError(const Napi::Env &env, const char *message)
-{
-    Napi::TypeError::New(env, message).ThrowAsJavaScriptException();
-}
+{ Napi::TypeError::New(env, message).ThrowAsJavaScriptException(); }
 
 inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
 {

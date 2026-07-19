@@ -53,9 +53,7 @@ class LinearHashStorage
 
   public:
     explicit LinearHashStorage(std::size_t size) : cells(size), mask{size - 1}
-    {
-        BOOST_ASSERT_MSG((size & mask) == 0, "size must be a power of 2");
-    }
+    { BOOST_ASSERT_MSG((size & mask) == 0, "size must be a power of 2"); }
 
     ValueType &operator[](const KeyType key)
     {

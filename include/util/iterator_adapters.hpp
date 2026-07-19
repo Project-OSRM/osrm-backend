@@ -41,9 +41,7 @@ template <typename Func> class function_output_iterator
 };
 
 template <typename Func> inline auto make_function_output_iterator(Func f)
-{
-    return function_output_iterator<Func>(std::move(f));
-}
+{ return function_output_iterator<Func>(std::move(f)); }
 
 // function_input_iterator: returns value from callable on deref, ++ is a no-op
 template <typename Func> class function_input_iterator
@@ -66,9 +64,7 @@ template <typename Func> class function_input_iterator
 };
 
 template <typename Func> inline auto make_function_input_iterator(Func f)
-{
-    return function_input_iterator<Func>(std::move(f));
-}
+{ return function_input_iterator<Func>(std::move(f)); }
 
 // permutation_iterator: iterates over underlying container in order specified by index iterator
 template <typename BaseIt, typename IndexIt> class permutation_iterator
@@ -134,23 +130,15 @@ template <typename BaseIt, typename IndexIt> class permutation_iterator
     }
 
     friend difference_type operator-(const permutation_iterator &a, const permutation_iterator &b)
-    {
-        return a.index_it - b.index_it;
-    }
+    { return a.index_it - b.index_it; }
 
     reference operator[](difference_type n) const
-    {
-        return *(base + static_cast<std::size_t>(*(index_it + n)));
-    }
+    { return *(base + static_cast<std::size_t>(*(index_it + n))); }
 
     friend bool operator==(const permutation_iterator &a, const permutation_iterator &b)
-    {
-        return a.index_it == b.index_it;
-    }
+    { return a.index_it == b.index_it; }
     friend bool operator!=(const permutation_iterator &a, const permutation_iterator &b)
-    {
-        return !(a == b);
-    }
+    { return !(a == b); }
 
   private:
     BaseIt base{};
@@ -159,9 +147,7 @@ template <typename BaseIt, typename IndexIt> class permutation_iterator
 
 template <typename BaseIt, typename IndexIt>
 inline auto make_permutation_iterator(BaseIt base, IndexIt index_it)
-{
-    return permutation_iterator<BaseIt, IndexIt>(base, index_it);
-}
+{ return permutation_iterator<BaseIt, IndexIt>(base, index_it); }
 
 } // namespace osrm::util
 

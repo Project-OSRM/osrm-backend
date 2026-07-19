@@ -21,13 +21,9 @@ const double constexpr STRAIGHT_ANGLE = 180.;
 
 // check if a step is completely without turn type
 inline bool hasTurnType(const RouteStep &step)
-{
-    return step.maneuver.instruction.type != osrm::guidance::TurnType::NoTurn;
-}
+{ return step.maneuver.instruction.type != osrm::guidance::TurnType::NoTurn; }
 inline bool hasWaypointType(const RouteStep &step)
-{
-    return step.maneuver.waypoint_type != WaypointType::None;
-}
+{ return step.maneuver.waypoint_type != WaypointType::None; }
 
 // skip backwards through possibly disabled turns until we find a turn type (or the first step)
 inline RouteStepIterator findPreviousTurn(RouteStepIterator current_step)
@@ -60,25 +56,17 @@ inline RouteStepIterator findNextTurn(RouteStepIterator current_step)
 
 // alias for comparisons
 inline bool hasTurnType(const RouteStep &step, const osrm::guidance::TurnType::Enum type)
-{
-    return type == step.maneuver.instruction.type;
-}
+{ return type == step.maneuver.instruction.type; }
 // alias for comparisons
 inline bool hasModifier(const RouteStep &step,
                         const osrm::guidance::DirectionModifier::Enum modifier)
-{
-    return modifier == step.maneuver.instruction.direction_modifier;
-}
+{ return modifier == step.maneuver.instruction.direction_modifier; }
 inline bool hasLanes(const RouteStep &step)
-{
-    return step.intersections.front().lanes.lanes_in_turn != 0;
-}
+{ return step.intersections.front().lanes.lanes_in_turn != 0; }
 
 // alias for detectors, gives the number of connected roads
 inline std::size_t numberOfAvailableTurns(const RouteStep &step)
-{
-    return step.intersections.front().entry.size();
-}
+{ return step.intersections.front().entry.size(); }
 // alias for detectors, counts only the allowed turns
 inline std::size_t numberOfAllowedTurns(const RouteStep &step)
 {
@@ -95,27 +83,19 @@ inline bool isTrafficLightStep(const RouteStep &step)
 
 // alias for readability
 inline void setInstructionType(RouteStep &step, const osrm::guidance::TurnType::Enum type)
-{
-    step.maneuver.instruction.type = type;
-}
+{ step.maneuver.instruction.type = type; }
 
 // alias for readability
 inline void setModifier(RouteStep &step, const osrm::guidance::DirectionModifier::Enum modifier)
-{
-    step.maneuver.instruction.direction_modifier = modifier;
-}
+{ step.maneuver.instruction.direction_modifier = modifier; }
 
 // alias for readability
 inline bool haveSameMode(const RouteStep &lhs, const RouteStep &rhs)
-{
-    return lhs.mode == rhs.mode;
-}
+{ return lhs.mode == rhs.mode; }
 
 // alias for readability
 inline bool haveSameMode(const RouteStep &first, const RouteStep &second, const RouteStep &third)
-{
-    return haveSameMode(first, second) && haveSameMode(second, third);
-}
+{ return haveSameMode(first, second) && haveSameMode(second, third); }
 
 // alias for readability
 inline bool haveSameName(const RouteStep &lhs, const RouteStep &rhs)
@@ -235,9 +215,7 @@ inline bool bearingsAreReversed(const double bearing_in, const double bearing_ou
 
 // Returns true if the specified step has only one intersection
 inline bool hasSingleIntersection(const RouteStep &step)
-{
-    return (step.intersections.size() == 1);
-}
+{ return (step.intersections.size() == 1); }
 
 // Returns true if the specified angle is a wider straight turn
 inline bool isWiderStraight(const double angle) { return (angle >= 125 && angle <= 235); }

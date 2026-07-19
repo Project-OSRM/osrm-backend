@@ -56,14 +56,10 @@ class BaseDataLayout
     inline void SetBlock(const std::string &name, const Block &block) { blocks[name] = block; }
 
     inline std::uint64_t GetBlockEntries(const std::string &name) const
-    {
-        return GetBlock(name).num_entries;
-    }
+    { return GetBlock(name).num_entries; }
 
     inline std::uint64_t GetBlockSize(const std::string &name) const
-    {
-        return GetBlock(name).byte_size;
-    }
+    { return GetBlock(name).byte_size; }
 
     inline bool HasBlock(const std::string &name) const { return blocks.contains(name); }
 
@@ -200,9 +196,7 @@ struct SharedRegion
     SharedRegion() : name{0}, timestamp{0} {}
     SharedRegion(const std::string &name_, std::uint64_t timestamp, ProjID proj_id)
         : name{0}, timestamp{timestamp}, proj_id{proj_id}
-    {
-        std::copy_n(name_.begin(), std::min<std::size_t>(MAX_NAME_LENGTH, name_.size()), name);
-    }
+    { std::copy_n(name_.begin(), std::min<std::size_t>(MAX_NAME_LENGTH, name_.size()), name); }
 
     bool IsEmpty() const { return timestamp == 0; }
 
@@ -224,7 +218,8 @@ struct SharedRegionRegister
         auto iter = std::find_if(
             regions.begin(),
             regions.end(),
-            [&](const auto &region) {
+            [&](const auto &region)
+            {
                 return std::strncmp(region.name, name.c_str(), SharedRegion::MAX_NAME_LENGTH) == 0;
             });
 

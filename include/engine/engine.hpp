@@ -89,40 +89,26 @@ class Engine final : public EngineInterface
     virtual ~Engine() override = default;
 
     Status Route(const api::RouteParameters &params, api::ResultT &result) const override final
-    {
-        return route_plugin.HandleRequest(GetAlgorithms(params), params, result);
-    }
+    { return route_plugin.HandleRequest(GetAlgorithms(params), params, result); }
 
     Status Table(const api::TableParameters &params, api::ResultT &result) const override final
-    {
-        return table_plugin.HandleRequest(GetAlgorithms(params), params, result);
-    }
+    { return table_plugin.HandleRequest(GetAlgorithms(params), params, result); }
 
     Status Nearest(const api::NearestParameters &params, api::ResultT &result) const override final
-    {
-        return nearest_plugin.HandleRequest(GetAlgorithms(params), params, result);
-    }
+    { return nearest_plugin.HandleRequest(GetAlgorithms(params), params, result); }
 
     Status Trip(const api::TripParameters &params, api::ResultT &result) const override final
-    {
-        return trip_plugin.HandleRequest(GetAlgorithms(params), params, result);
-    }
+    { return trip_plugin.HandleRequest(GetAlgorithms(params), params, result); }
 
     Status Match(const api::MatchParameters &params, api::ResultT &result) const override final
-    {
-        return match_plugin.HandleRequest(GetAlgorithms(params), params, result);
-    }
+    { return match_plugin.HandleRequest(GetAlgorithms(params), params, result); }
 
     Status Tile(const api::TileParameters &params, api::ResultT &result) const override final
-    {
-        return tile_plugin.HandleRequest(GetAlgorithms(params), params, result);
-    }
+    { return tile_plugin.HandleRequest(GetAlgorithms(params), params, result); }
 
   private:
     template <typename ParametersT> auto GetAlgorithms(const ParametersT &params) const
-    {
-        return RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get(params)};
-    }
+    { return RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get(params)}; }
     std::unique_ptr<DataFacadeProvider<Algorithm>> facade_provider;
     mutable SearchEngineData<Algorithm> heaps;
 

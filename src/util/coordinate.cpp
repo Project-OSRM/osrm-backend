@@ -22,13 +22,9 @@ bool FloatCoordinate::IsValid() const
 }
 
 bool operator==(const Coordinate lhs, const Coordinate rhs)
-{
-    return lhs.lat == rhs.lat && lhs.lon == rhs.lon;
-}
+{ return lhs.lat == rhs.lat && lhs.lon == rhs.lon; }
 bool operator==(const FloatCoordinate lhs, const FloatCoordinate rhs)
-{
-    return lhs.lat == rhs.lat && lhs.lon == rhs.lon;
-}
+{ return lhs.lat == rhs.lat && lhs.lon == rhs.lon; }
 
 bool operator!=(const Coordinate lhs, const Coordinate rhs) { return !(lhs == rhs); }
 bool operator!=(const FloatCoordinate lhs, const FloatCoordinate rhs) { return !(lhs == rhs); }

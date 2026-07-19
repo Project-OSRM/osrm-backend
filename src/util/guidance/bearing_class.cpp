@@ -44,9 +44,7 @@ bool BearingClass::operator<(const BearingClass &other) const
 void BearingClass::add(const DiscreteBearing bearing) { available_bearings.push_back(bearing); }
 
 const std::vector<DiscreteBearing> &BearingClass::getAvailableBearings() const
-{
-    return available_bearings;
-}
+{ return available_bearings; }
 
 DiscreteBearing BearingClass::getDiscreteBearing(const double bearing)
 {
@@ -65,7 +63,8 @@ std::size_t BearingClass::findMatchingBearing(const double bearing) const
     auto max_element =
         std::max_element(available_bearings.begin(),
                          available_bearings.end(),
-                         [&](const DiscreteBearing first, const DiscreteBearing second) {
+                         [&](const DiscreteBearing first, const DiscreteBearing second)
+                         {
                              return angularDeviation(first, discrete_bearing) >
                                     angularDeviation(second, discrete_bearing);
                          });

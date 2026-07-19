@@ -101,7 +101,7 @@ jobs:
           'TMP=D:\Temp' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
           'TEMP=D:\Temp' | Out-File -FilePath $env:GITHUB_ENV -Encoding utf8 -Append
       - run: cmake --version
-      - uses: actions/setup-node@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
       - run: node --version
@@ -194,7 +194,7 @@ jobs:
 
   format-taginfo-docs:
     if: github.repository == 'Project-OSRM/osrm-backend'
-    runs-on: ubuntu-slim
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       actions: write  # needed by actions/cache
@@ -202,7 +202,7 @@ jobs:
     steps:
     - uses: actions/checkout@v7
     - name: Use Node.js
-      uses: actions/setup-node@v6
+      uses: actions/setup-node@v7
       with:
         node-version: latest
     - name: Enable Node.js cache
@@ -214,10 +214,10 @@ jobs:
           ${{ runner.os }}-node-
     - name: Prepare environment
       run: |
-        sudo apt-get update -y
-        sudo apt-get install -y clang-format-18
+        # sudo apt-get update -y
+        sudo apt-get install -y clang-format-22
         npm ci --ignore-scripts
-        clang-format-18 --version
+        clang-format-22 --version
     - uses: actions/setup-python@v6
       with:
         python-version: '3.12'
@@ -233,6 +233,7 @@ jobs:
         if ! git diff --exit-code --quiet; then
           echo "dirty=true" >> "$GITHUB_OUTPUT"
           git diff > /tmp/formatting-fixes.patch
+          cat /tmp/formatting-fixes.patch
         fi
     - name: Upload formatting patch
       if: steps.format.outputs.dirty == 'true'
@@ -573,7 +574,7 @@ jobs:
       - name: Build machine architecture
         run: uname -m
       - name: Use Node.js
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: ${{ matrix.node }}
       - name: Enable Node.js cache
@@ -731,7 +732,7 @@ jobs:
 
       - name: Use Node 22
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 22
       - name: Run Node package tests on Node 22
@@ -741,7 +742,7 @@ jobs:
           npm run nodejs-tests
       - name: Use Node 24
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: 24
       - name: Run Node package tests on Node 24
@@ -751,7 +752,7 @@ jobs:
           npm run nodejs-tests
       - name: Use Node latest
         if: ${{ matrix.NODE_PACKAGE_TESTS_ONLY == 'ON' }}
-        uses: actions/setup-node@v6
+        uses: actions/setup-node@v7
         with:
           node-version: latest
       - name: Run Node package tests on Node-latest

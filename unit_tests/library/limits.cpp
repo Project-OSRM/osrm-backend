@@ -15,9 +15,7 @@
 namespace
 {
 osrm::util::Coordinate getZeroCoordinate()
-{
-    return {osrm::util::FloatLongitude{0}, osrm::util::FloatLatitude{0}};
-}
+{ return {osrm::util::FloatLongitude{0}, osrm::util::FloatLatitude{0}}; }
 } // namespace
 
 BOOST_AUTO_TEST_SUITE(limits)
