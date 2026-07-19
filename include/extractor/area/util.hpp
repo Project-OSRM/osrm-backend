@@ -30,33 +30,25 @@ template <class TPoint> double area2(const TPoint *a, const TPoint *b, const TPo
  * points a and b.
  */
 template <class TPoint> bool left(const TPoint *a, const TPoint *b, const TPoint *c)
-{
-    return area2(a, b, c) > 0;
-}
+{ return area2(a, b, c) > 0; }
 /**
  * @brief Return true if the point c is to the left of the line formed by points a and b
  * or on that line.
  */
 template <class TPoint> bool leftOrOn(const TPoint *a, const TPoint *b, const TPoint *c)
-{
-    return area2(a, b, c) >= 0;
-}
+{ return area2(a, b, c) >= 0; }
 /**
  * @brief Return true if the point c is strictly to the right of the line formed by
  * points a and b.
  */
 template <class TPoint> bool right(const TPoint *a, const TPoint *b, const TPoint *c)
-{
-    return area2(a, b, c) < 0;
-}
+{ return area2(a, b, c) < 0; }
 /**
  * @brief Return true if the point c is to the right of the line formed by points a and
  * b or on that line.
  */
 template <class TPoint> bool rightOrOn(const TPoint *a, const TPoint *b, const TPoint *c)
-{
-    return area2(a, b, c) <= 0;
-}
+{ return area2(a, b, c) <= 0; }
 /**
  * @brief Return true if points a, b, and c are collinear.
  *
@@ -184,9 +176,7 @@ bool intersect_closed(const TPoint *a,
                       const TPoint *d,
                       TPoint *i = nullptr,
                       bool ray_segment = false)
-{
-    return intersect<TPoint, std::less<>>(a, b, c, d, i, ray_segment);
-}
+{ return intersect<TPoint, std::less<>>(a, b, c, d, i, ray_segment); }
 
 /**
  * @brief Return true if a -> b lies in the closed cone clockwise determined by a -> a0

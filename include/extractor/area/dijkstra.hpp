@@ -35,14 +35,10 @@ template <class vertex_t> class Dijkstra
     std::vector<std::vector<Edge>> adj;
 
     bool significantly_shorter(double lhs, double rhs) const
-    {
-        return lhs + distance_epsilon < rhs;
-    }
+    { return lhs + distance_epsilon < rhs; }
 
     bool approximately_equal(double lhs, double rhs) const
-    {
-        return std::fabs(lhs - rhs) <= distance_epsilon;
-    }
+    { return std::fabs(lhs - rhs) <= distance_epsilon; }
 
     bool has_higher_priority(size_t lhs, size_t rhs) const
     {

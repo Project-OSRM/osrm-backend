@@ -60,13 +60,9 @@ class RelationMember
     const string &role() const noexcept { return m_role; }
 
     friend bool operator==(const RelationMember &m, const RelationMember &o)
-    {
-        return m.ref() == o.ref() && m.type() == o.type();
-    }
+    { return m.ref() == o.ref() && m.type() == o.type(); }
     friend bool operator<(const RelationMember &m, const RelationMember &o)
-    {
-        return m.ref() < o.ref() || (m.ref() == o.ref() && m.type() < o.type());
-    }
+    { return m.ref() < o.ref() || (m.ref() == o.ref() && m.type() < o.type()); }
 };
 
 /**
@@ -135,9 +131,7 @@ class Relation
      * @return const char* The tag value, or nullptr if the tag does not exist
      */
     const char *get_value_by_key(const char *key) const
-    {
-        return get_value_by_key_default(key, nullptr);
-    }
+    { return get_value_by_key_default(key, nullptr); }
 
     /**
      * @brief Return the role that the given object has in the relation
@@ -147,9 +141,7 @@ class Relation
      * @return const char* The role, eg. "outer"
      */
     template <class T> const char *get_member_role(const T &o)
-    {
-        return get_member_role(RelationMember(o.id(), o.type()));
-    }
+    { return get_member_role(RelationMember(o.id(), o.type())); }
 
     const char *get_member_role(const RelationMember &m);
     const members_t &members() { return m_members; };
@@ -181,7 +173,7 @@ class ExtractionRelationContainer
   public:
     ExtractionRelationContainer(ExtractionRelationContainer &&) = delete;
     ExtractionRelationContainer(const ExtractionRelationContainer &) = delete;
-    ExtractionRelationContainer() : parents(4){};
+    ExtractionRelationContainer() : parents(4) {};
 
     /**
      * @brief Add a relation to the container
@@ -211,9 +203,7 @@ class ExtractionRelationContainer
     void add_relation_member(rel_id_type relation_id,
                              member_id_type member_id,
                              osmium::item_type member_type)
-    {
-        p(member_type)[member_id].push_back(relation_id);
-    }
+    { p(member_type)[member_id].push_back(relation_id); }
 
     /**
      * @brief Return the number of relations in the container
@@ -230,9 +220,7 @@ class ExtractionRelationContainer
      * @return The ids of the relations
      */
     template <class T> const rel_ids_t &get_relations_for(const T &member) const
-    {
-        return _get_relations_for(member.id(), member.type());
-    }
+    { return _get_relations_for(member.id(), member.type()); }
 
     /**
      * @brief Get the Relation object for the given relation id

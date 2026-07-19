@@ -67,14 +67,10 @@ template <class T> bool has_tag(const T &object, const char *key, const char *va
 }
 
 template <class T> bool has_true_tag(const T &object, const char *key)
-{
-    return is_true_value(object.get_value_by_key(key));
-}
+{ return is_true_value(object.get_value_by_key(key)); }
 
 template <class T> bool has_false_tag(const T &object, const char *key)
-{
-    return is_false_value(object.get_value_by_key(key));
-}
+{ return is_false_value(object.get_value_by_key(key)); }
 
 template <class T> double latToDouble(T const &object)
 { return static_cast<double>(util::toFloating(object.lat)); }

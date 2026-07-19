@@ -118,9 +118,7 @@ void AreaManager::prepare_for_lookup()
  * @brief Return true if the given id belongs to a registered way.
  */
 inline bool AreaManager::is_registered_closed_way(osmium::object_id_type osm_id) const
-{
-    return std::binary_search(registered_closed_ways.begin(), registered_closed_ways.end(), osm_id);
-}
+{ return std::binary_search(registered_closed_ways.begin(), registered_closed_ways.end(), osm_id); }
 
 /**
  * @brief Return the registered relations for the given way.

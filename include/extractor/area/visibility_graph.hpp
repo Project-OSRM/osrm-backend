@@ -88,9 +88,7 @@ class VisibilityGraph
             return a.ref() < b.ref();
         };
         friend bool operator==(const Vertex &a, const Vertex &b) noexcept
-        {
-            return a.ref() == b.ref();
-        }
+        { return a.ref() == b.ref(); }
     };
 
     /** An edge of the visibilty graph */
@@ -115,9 +113,7 @@ class VisibilityGraph
             return std::tie(a_u, a_v) < std::tie(b_u, b_v);
         };
         friend inline bool operator==(const Segment &a, const Segment &b) noexcept
-        {
-            return (a.first == b.first && a.second == b.second);
-        }
+        { return (a.first == b.first && a.second == b.second); }
     };
 
     // An open polygon of Vertex
@@ -163,9 +159,7 @@ template <std::size_t K> struct access<VisibilityGraph::Vertex, K>
 {
     static inline double get(const VisibilityGraph::Vertex &v) { return v.point[K] / COEFF; }
     static inline void set(VisibilityGraph::Vertex &v, const double &value)
-    {
-        v.point[K] = value * COEFF;
-    }
+    { v.point[K] = value * COEFF; }
 };
 
 } // namespace boost::geometry::traits

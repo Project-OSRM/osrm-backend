@@ -56,7 +56,7 @@ struct ScriptingResults
 class ScriptingEnvironment
 {
   public:
-    ScriptingEnvironment() : m_area_manager(m_relations_stash){};
+    ScriptingEnvironment() : m_area_manager(m_relations_stash) {};
     ScriptingEnvironment(const ScriptingEnvironment &) = delete;
     ScriptingEnvironment &operator=(const ScriptingEnvironment &) = delete;
     virtual ~ScriptingEnvironment() = default;
