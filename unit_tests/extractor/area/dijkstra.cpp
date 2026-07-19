@@ -72,4 +72,51 @@ BOOST_AUTO_TEST_CASE(area_dijkstra_test)
     CHECK_EQUAL_RANGES(d.get_predecessors(), expected);
 }
 
+BOOST_AUTO_TEST_CASE(area_dijkstra_stable_tie_break_test)
+{
+    auto build = [](bool z_first)
+    {
+        Dijkstra<int> d;
+        d.add_edge(0, 1, 1.0); // g-a
+        d.add_edge(5, 6, 1.0); // c-i
+        d.add_edge(7, 8, 1.0); // d-j
+
+        // Equal-cost alternatives from a to c/d.
+        if (z_first)
+        {
+            d.add_edge(1, 3, 1.0); // a-z
+            d.add_edge(1, 2, 1.0); // a-u
+            d.add_edge(1, 4, 1.0); // a-y
+        }
+        else
+        {
+            d.add_edge(1, 2, 1.0); // a-u
+            d.add_edge(1, 4, 1.0); // a-y
+            d.add_edge(1, 3, 1.0); // a-z
+        }
+
+        d.add_edge(2, 5, 1.0); // u-c
+        d.add_edge(3, 5, 1.0); // z-c
+        d.add_edge(4, 7, 2.0); // y-d
+        d.add_edge(3, 7, 2.0); // z-d
+
+        return d;
+    };
+
+    auto d1 = build(false);
+    auto d2 = build(true);
+
+    BOOST_CHECK_NO_THROW(d1.run(d1.index_of(0)));
+    BOOST_CHECK_NO_THROW(d2.run(d2.index_of(0)));
+
+    const auto &p1 = d1.get_predecessors();
+    const auto &p2 = d2.get_predecessors();
+
+    // Stable predecessor selection must not depend on edge insertion order.
+    BOOST_CHECK_EQUAL(p1[d1.index_of(5)], d1.index_of(2)); // c <- u
+    BOOST_CHECK_EQUAL(p1[d1.index_of(7)], d1.index_of(3)); // d <- z
+    BOOST_CHECK_EQUAL(p2[d2.index_of(5)], d2.index_of(2)); // c <- u
+    BOOST_CHECK_EQUAL(p2[d2.index_of(7)], d2.index_of(3)); // d <- z
+}
+
 BOOST_AUTO_TEST_SUITE_END()

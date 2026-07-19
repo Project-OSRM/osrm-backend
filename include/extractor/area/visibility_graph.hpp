@@ -15,6 +15,7 @@
 #include <cstddef>
 #include <iterator>
 #include <set>
+#include <tuple>
 
 namespace osrm::extractor::area
 {
@@ -50,6 +51,8 @@ srs::projection<srs::static_epsg<3857>> osm_mercator;
 class VisibilityGraph
 {
   public:
+    static constexpr double comparison_epsilon = 1e-12;
+
     /** A Vertex of the visibility graph */
     struct Vertex
     {
@@ -76,8 +79,13 @@ class VisibilityGraph
 
         friend bool operator<(const Vertex &a, const Vertex &b) noexcept
         {
-            // sort in clockwise order, shorter distance breaks ties
-            return a.angle > b.angle || (a.angle == b.angle && a.distance < b.distance);
+            // Sort in clockwise order, shorter distance breaks ties, then node-id.
+            // Node-id makes the order deterministic when angle/distance are numerically equal.
+            if (std::fabs(a.angle - b.angle) > comparison_epsilon)
+                return a.angle > b.angle;
+            if (std::fabs(a.distance - b.distance) > comparison_epsilon)
+                return a.distance < b.distance;
+            return a.ref() < b.ref();
         };
         friend bool operator==(const Vertex &a, const Vertex &b) noexcept
         {
@@ -97,7 +105,14 @@ class VisibilityGraph
 
         friend bool operator<(const Segment &a, const Segment &b) noexcept
         {
-            return a.distance < b.distance;
+            if (std::fabs(a.distance - b.distance) > comparison_epsilon)
+                return a.distance < b.distance;
+
+            const auto a_u = std::min(a.first->ref(), a.second->ref());
+            const auto a_v = std::max(a.first->ref(), a.second->ref());
+            const auto b_u = std::min(b.first->ref(), b.second->ref());
+            const auto b_v = std::max(b.first->ref(), b.second->ref());
+            return std::tie(a_u, a_v) < std::tie(b_u, b_v);
         };
         friend inline bool operator==(const Segment &a, const Segment &b) noexcept
         {

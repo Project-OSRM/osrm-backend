@@ -18,6 +18,8 @@ namespace osrm::extractor::area
  */
 template <class vertex_t> class Dijkstra
 {
+    static constexpr double distance_epsilon = 1e-12;
+
     struct Edge
     {
         Edge(size_t other, double weight)
@@ -31,6 +33,25 @@ template <class vertex_t> class Dijkstra
     std::vector<double> distances;
     std::vector<size_t> predecessors;
     std::vector<std::vector<Edge>> adj;
+
+    bool significantly_shorter(double lhs, double rhs) const
+    {
+        return lhs + distance_epsilon < rhs;
+    }
+
+    bool approximately_equal(double lhs, double rhs) const
+    {
+        return std::fabs(lhs - rhs) <= distance_epsilon;
+    }
+
+    bool has_higher_priority(size_t lhs, size_t rhs) const
+    {
+        if (significantly_shorter(distances[lhs], distances[rhs]))
+            return true;
+        if (significantly_shorter(distances[rhs], distances[lhs]))
+            return false;
+        return vertices[lhs] < vertices[rhs];
+    }
 
     /**
      * @brief Initialize the data structures before each run.
@@ -121,7 +142,7 @@ template <class vertex_t> class Dijkstra
 
         IndexPriorityQueue pq(vertices.size(),
                               [this](size_t u, size_t v) -> bool
-                              { return distances[u] < distances[v]; });
+                              { return has_higher_priority(u, v); });
 
         distances[s] = 0;
         pq.insert(s);
@@ -133,9 +154,16 @@ template <class vertex_t> class Dijkstra
             for (Edge e : adj[u])
             {
                 size_t v = e.other;
-                if (dist_u + e.weight < distances[v])
+                const double candidate = dist_u + e.weight;
+                if (significantly_shorter(candidate, distances[v]))
                 {
-                    distances[v] = dist_u + e.weight;
+                    distances[v] = candidate;
+                    predecessors[v] = u;
+                    pq.insert_or_decrease(v);
+                }
+                else if (approximately_equal(candidate, distances[v]) &&
+                         vertices[u] < vertices[predecessors[v]])
+                {
                     predecessors[v] = u;
                     pq.insert_or_decrease(v);
                 }
