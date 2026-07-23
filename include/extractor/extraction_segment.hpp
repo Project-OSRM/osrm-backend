@@ -14,9 +14,12 @@ struct ExtractionSegment
                       double distance_,
                       double weight_,
                       double duration_,
-                      const NodeBasedEdgeClassification flags_)
+                      const NodeBasedEdgeClassification flags_,
+                      const OSMNodeID osm_source_id_,
+                      const OSMNodeID osm_target_id_)
         : source(source_), target(target_), distance(distance_), weight(weight_),
-          duration(duration_), flags(flags_)
+          duration(duration_), flags(flags_), osm_source_id(osm_source_id_),
+          osm_target_id(osm_target_id_)
     {
     }
 
@@ -26,6 +29,8 @@ struct ExtractionSegment
     double weight;
     double duration;
     const NodeBasedEdgeClassification flags;
+    const OSMNodeID osm_source_id;
+    const OSMNodeID osm_target_id;
 };
 } // namespace osrm::extractor
 

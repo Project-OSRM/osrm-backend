@@ -571,7 +571,11 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                   "duration",
                                                   &ExtractionSegment::duration,
                                                   "flags",
-                                                  &ExtractionSegment::flags);
+                                                  &ExtractionSegment::flags,
+                                                  "osm_source_id",
+                                                  &ExtractionSegment::osm_source_id,
+                                                  "osm_target_id",
+                                                  &ExtractionSegment::osm_target_id);
 
     // Keep in mind .location is available only if .pbf is preprocessed to set the location with the
     // ref using osmium command "osmium add-locations-to-ways"
