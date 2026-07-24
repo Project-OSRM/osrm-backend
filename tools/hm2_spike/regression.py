@@ -158,18 +158,37 @@ HINTHAM_CASE = dict(name="A2 south, 25 km north of KP Hintham — A59-east lifte
 BUDGET_PRIORITY_CASE = dict(name="A2 south 200 km — far first-level spurs A76/A79 survive the segment cap",
                             lng=5.21045, lat=51.87636, bearing=148, cap=200000)
 
-# Spur-terminus root keeps following the driver's road after a Merge-renumber (S3-fix10). Driving the
-# A59 eastbound toward KP Paalgraven, the A59 ends there and MERGES onto the A50 north (Ravenstein ->
-# KP Bankhoef -> KP Ewijk -> Waal bridge -> KP Valburg -> Grijsoord -> Apeldoorn). The merge is a
-# TurnType::Merge, not a NewName, so current_ref used to stay frozen at "A59"; at the same-ref A50
-# carriageway split just past KP Ewijk (~19 km, no guidance-continuation arm) the rank-2 ref match
-# then failed ("A59" != A50), the ref "ended", and the driver's own A50 became a merged-signage
-# first-level branch (toward ["A50","Zwolle","Rotterdam","Arnhem"]) while the root died at 21 km with
-# only one station on it. Post-fix the walk adopts the merged-onto ref, so the root follows the A50
-# far north and the real crossings (A15 at KP Valburg, A12 at KP Grijsoord, ...) are its first-level
-# branches - and there is NO first-level A50 (the driver's own road, same-ref, must never be a branch).
-VALBURG_CASE = dict(name="A59 east -> A50 north — root follows the driver's road past KP Valburg (no A50 demotion)",
-                    lng=5.555818, lat=51.733873, bearing=120, cap=200000)
+# Spur-terminus renumber → continuation child (S3-fix11, productising S3-fix10). Driving the A59
+# eastbound toward KP Paalgraven, the A59 ends there and MERGES onto the A50 north (Ravenstein -> KP
+# Bankhoef -> KP Ewijk -> Waal bridge -> KP Valburg -> Grijsoord -> Apeldoorn). A segment's emitted
+# ref must be the road it is physically on, so at the merge the A59 root ENDS and the drive continues
+# as an A50 continuation child carrying the real crossings (A15 at KP Valburg, A12 at KP Grijsoord,
+# ...) as its own first-level branches. (S3-fix10 kept the root on the driver's road but left the
+# whole corridor mislabelled "A59"; S3-fix11 relabels it via the split.) The pre-fix10 bug this still
+# guards against: the A50 corridor must NOT reappear as a mis-signed both-directions branch, and the
+# root must NOT die at ~21 km - the A50 continuation reaches far north.
+VALBURG_CASE = dict(name="A59 east -> A50 north — A59 root ends at KP Paalgraven, A50 continuation carries the corridor",
+                    lng=5.555818, lat=51.733873, bearing=120, cap=200000,
+                    root_ref="A59", max_root_m=12000, cont_ref="A50", min_cont_m=40000,
+                    cont_crossings=("A15", "A12"))
+
+# Universal label relabel — the emitted ref is always the road physically driven (S3-fix11, defect A).
+# Driving the A5 south toward KP De Hoek, the A5 (a short spur near Schiphol) MERGES onto the A4; the
+# root used to emit ref "A5" for its whole 70.6 km (≈60 km of physical A4 mislabelled A5). Post-fix
+# the A5 root is short and an A4 continuation child carries the rest of the corridor.
+DEHOEK_CASE = dict(name="A5 south -> A4 at KP De Hoek — A5 root is short, A4 continuation carries the corridor",
+                   lng=4.774, lat=52.392, bearing=209, cap=200000,
+                   root_ref="A5", max_root_m=20000, cont_ref="A4", min_cont_m=30000,
+                   cont_crossings=("A44", "A13"))
+
+# Concurrency un-bundle follows the driver's ref component (S3-fix12, defect B). Driving the A58 west
+# near Breda, the A58 merges onto the A16 north as a signed concurrency (A16;A58) then peels off west
+# to Vlissingen. The geometric mainline is the A16 north; the root used to follow it ~33 km to
+# Moerdijk still labelled A58, and the real A58 peel-off died under same-ref suppression. Post-fix the
+# root follows the driver's A58 component to the Vlissingen side, and BOTH A16 directions emit as
+# branches (A16 south at the merge, A16 north at the peel).
+GALDER_CASE = dict(name="A58 west @ Breda — root follows A58 to Vlissingen, both A16 directions branch",
+                   lng=5.04984, lat=51.53935, bearing=279, cap=200000)
 
 # Off-motorway (Amsterdam centrum local road) -> NoSegment.
 OFF_MOTORWAY_CASE = dict(name="off-motorway -> NoSegment",
@@ -442,6 +461,38 @@ def _frac_within(a, b, thr=150.0):
     return sum(1 for x in a if min(_haversine(x, y) for y in b) < thr) / len(a)
 
 
+_DIR_SAMPLE_M = (1000, 2000, 4000, 8000, 16000, 32000, 64000)
+
+
+def _sample_along(coords):
+    """Points at each _DIR_SAMPLE_M arc distance (mirrors the plugin's sampleAlong)."""
+    out, acc, nxt = [], 0.0, 0
+    for i in range(1, len(coords)):
+        acc += _haversine(coords[i - 1], coords[i])
+        while nxt < len(_DIR_SAMPLE_M) and acc >= _DIR_SAMPLE_M[nxt]:
+            out.append(coords[i])
+            nxt += 1
+    return out
+
+
+def _same_direction(a, b, thr=350.0, frac=0.75):
+    """Do two branches from a shared start run the SAME way (not opposite directions)?
+
+    Compares their coordinates at equal arc distances (the plugin's dir_samples test). Two ways
+    around a ring, or the two opposite directions of a crossing, share a start yet their same-arc
+    points sit km apart within the first km - so this is False for them. A twin ramp / parallel
+    carriageway duplicate runs together, so it is True. This is the discriminator the pure spatial
+    overlap (_frac_within) lacks: on a ring the two directions trace the same loop and so overlap
+    spatially, but they are not the same directed corridor.
+    """
+    sa, sb = _sample_along(a), _sample_along(b)
+    n = min(len(sa), len(sb))
+    if n < 1:
+        return False
+    matched = sum(1 for i in range(n) if _haversine(sa[i], sb[i]) < thr)
+    return matched >= frac * n
+
+
 def run_signage_case(c):
     print(f"\n# {c['name']}")
     tree, http = get(tree_url(c))
@@ -481,7 +532,13 @@ def run_dup_case(c):
           f"{c['name']}: no root branch re-expands the root corridor (parallelbaan drop)",
           f"offenders={reexpanders[:5]}")
 
-    # (b) no two same-ref children of one parent are the same physical corridor.
+    # (b) no two same-ref children of one parent are the same physical corridor. A duplicate both
+    # overlaps spatially AND runs the same direction: the twin entry ramps / parallel carriageways
+    # this guards against share a start and run together. Two genuinely different directions from one
+    # junction - the two ways around the A10 ring at KP Watergraafsmeer (Ring Noord vs Ring Oost),
+    # surfaced once the spur-terminus splits (§S3-fix11) let a branch reach the ring - overlap
+    # spatially on the loop but diverge in direction, so they are NOT duplicates (the plugin's own
+    # arc-distance dedup keeps them, exactly as it keeps both directions of any crossing).
     dups = []
     for parent in iter_routes(tree):
         kids = parent.get("branches", [])
@@ -490,7 +547,8 @@ def run_dup_case(c):
             for j in range(i + 1, len(kids)):
                 if kids[i]["route"]["ref"] != kids[j]["route"]["ref"]:
                     continue
-                if _frac_within(decoded[i], decoded[j]) > 0.75:
+                if _frac_within(decoded[i], decoded[j]) > 0.75 and _same_direction(
+                        decoded[i], decoded[j]):
                     dups.append((parent["ref"], kids[i]["route"]["ref"]))
     check(not dups,
           f"{c['name']}: no same-ref sibling duplicates a corridor (overlap de-dup)",
@@ -559,28 +617,115 @@ def run_budget_priority_case(c):
               f"first_level={ {r: round(o/1000) for r, o in first_level.items()} }")
 
 
-def run_valburg_case(c):
+def _continuation_child(route, ref):
+    """A direct child branch of `route` that is a renumber continuation onto `ref`: it carries that
+    ref and attaches by a continuation junction (exit_ref null, no ramp connector), not a diverge.
+    Returns the whole branch ({junction, route}) so callers can inspect the junction marker."""
+    for b in route.get("branches", []):
+        j = b["junction"]
+        if (b["route"]["ref"] == ref and j.get("exit_ref") is None and
+                (j.get("connector_length_m") or 0) == 0):
+            return b
+    return None
+
+
+def run_renumber_split_case(c):
+    """Defect A (S3-fix11): the root's emitted ref is only the road physically driven up to the
+    renumber; the rest of the corridor is an equal-or-longer continuation child on the new ref."""
     print(f"\n# {c['name']}")
     tree, http = get(tree_url(c))
-    if not check(tree.get("code") == "Ok" and tree.get("ref") == "A59",
-                 f"{c['name']}: root snaps to A59", f"http={http} ref={tree.get('ref')}"):
+    if not check(tree.get("code") == "Ok" and tree.get("ref") == c["root_ref"],
+                 f"{c['name']}: root snaps to {c['root_ref']}",
+                 f"http={http} ref={tree.get('ref')}"):
         return
-    # Root must follow the A50 far north, well past the pre-fix death at ~21 km (the demotion point is
-    # the KP Ewijk carriageway split at ~19 km).
-    check(tree.get("length_m", 0) > 40000,
-          f"{c['name']}: root chain extends past the KP Valburg/Ewijk demotion point (>40 km)",
-          f"root_len_km={tree.get('length_m', 0) / 1000:.1f}")
-    first_level = [b["route"]["ref"] for b in tree.get("branches", [])]
-    # The driver's own continuing road (A50, same ref as the root corridor) must NEVER be a first-level
-    # branch - that is exactly the demotion this fix removes.
-    check("A50" not in first_level,
-          f"{c['name']}: the driver's own A50 is not demoted to a first-level branch",
-          f"first_level={first_level}")
-    # The real crossings the root reaches only by continuing north must surface as first-level branches.
-    for ref in ("A15", "A12"):
-        check(ref in first_level,
-              f"{c['name']}: {ref} crossing north of the demotion point is a first-level branch",
-              f"first_level={first_level}")
+    # The mislabel bug emitted the snap ref for the whole corridor; the root segment must now be short.
+    check(tree.get("length_m", 0) < c["max_root_m"],
+          f"{c['name']}: {c['root_ref']} root segment is short (< {c['max_root_m']/1000:.0f} km), not the whole corridor",
+          f"root_len_km={tree.get('length_m', 0)/1000:.1f}")
+    cont_branch = _continuation_child(tree, c["cont_ref"])
+    if not check(cont_branch is not None,
+                 f"{c['name']}: a {c['cont_ref']} continuation child carries the corridor past the renumber",
+                 f"first_level={[b['route']['ref'] for b in tree.get('branches', [])]}"):
+        return
+    cont = cont_branch["route"]
+    # The continuation junction carries the explicit marker the BE keys kRoot/quota off (it is the
+    # same drive relabelled, not a diverge - its ref differs from the parent's).
+    check(cont_branch["junction"].get("continuation") is True,
+          f"{c['name']}: the {c['cont_ref']} continuation junction carries continuation==true",
+          f"junction={ {k: v for k, v in cont_branch['junction'].items() if k != 'toward'} }")
+    check(cont.get("length_m", 0) > c["min_cont_m"],
+          f"{c['name']}: the {c['cont_ref']} continuation reaches far (> {c['min_cont_m']/1000:.0f} km)",
+          f"cont_len_km={cont.get('length_m', 0)/1000:.1f}")
+    # The real crossings past the renumber hang off the continuation (its own first-level branches),
+    # and the continuation's own ref is never re-emitted as a diverge off it (same-road suppression).
+    cont_first_level = [b["route"]["ref"] for b in cont.get("branches", [])]
+    check(c["cont_ref"] not in cont_first_level,
+          f"{c['name']}: the driver's own {c['cont_ref']} is not a branch off its own continuation",
+          f"cont_first_level={cont_first_level}")
+    for ref in c["cont_crossings"]:
+        check(ref in cont_first_level,
+              f"{c['name']}: {ref} crossing is a first-level branch off the {c['cont_ref']} continuation",
+              f"cont_first_level={cont_first_level}")
+
+
+def run_galder_case(c):
+    """Defect B (S3-fix12): at a concurrency un-bundle the root follows the driver's ref component,
+    not the geometric mainline, and both directions of the abandoned mainline emit as branches."""
+    print(f"\n# {c['name']}")
+    tree, http = get(tree_url(c))
+    if not check(tree.get("code") == "Ok" and tree.get("ref") == "A58",
+                 f"{c['name']}: root snaps to A58", f"http={http} ref={tree.get('ref')}"):
+        return
+    # The whole root chain (A58 + any continuation) must carry the A58 component to the Vlissingen
+    # side, not run off north to Moerdijk on the A16 mislabelled A58. The Vlissingen end is far west
+    # (lng < 3.9); the pre-fix bug ran the root to ~4.65,51.80 (Moerdijk, well east).
+    def chain_refs_and_west(route):
+        refs = {x.strip() for x in route["ref"].split(";")}
+        west = min((x[0] for x in _decode_polyline(route["polyline"])), default=99)
+        for b in route.get("branches", []):
+            if b["junction"].get("exit_ref") is None and (b["junction"].get("connector_length_m") or 0) == 0 \
+                    and "A58" in {x.strip() for x in b["route"]["ref"].split(";")}:
+                r2, w2 = chain_refs_and_west(b["route"])
+                refs |= r2
+                west = min(west, w2)
+        return refs, west
+    refs, west = chain_refs_and_west(tree)
+    check("A58" in refs and west < 3.9,
+          f"{c['name']}: root chain holds the A58 component to the Vlissingen side (lng < 3.9)",
+          f"chain_refs={sorted(refs)} westmost_lng={west:.3f}")
+    # Both A16 directions must appear as branches: south (toward Antwerpen) and north (toward
+    # Rotterdam) - the north one is the abandoned mainline the fix now spawns.
+    a16_toward = [b["junction"].get("toward", []) for _, b in iter_branches(tree)
+                  if b["route"]["ref"] == "A16"]
+    a16_north = any("Rotterdam" in t for t in a16_toward)
+    a16_south = any("Antwerpen" in t for t in a16_toward)
+    check(a16_north and a16_south,
+          f"{c['name']}: both A16 directions branch (north toward Rotterdam + south toward Antwerpen)",
+          f"a16_toward={a16_toward[:6]}")
+
+
+def run_continuation_marker_case():
+    """The `continuation:true` junction marker (S3-fix11) is additive and continuation-only: it
+    appears only on renumber continuations (never emitted as false, never on a diverge). A diverge
+    is reached by a ramp connector or carries an exit_ref; a continuation has neither."""
+    print("\n# continuation marker only on renumber continuations")
+    seen = 0
+    offenders = []
+    for c in QUALIFY_CASES + [VALBURG_CASE, DEHOEK_CASE, GALDER_CASE, DUP_CASE, HINTHAM_CASE]:
+        tree, _ = get(tree_url(c))
+        for _, b in iter_branches(tree):
+            j = b["junction"]
+            if "continuation" not in j:
+                continue
+            seen += 1
+            # Present ⇒ exactly True, and on a continuation-shaped junction (no exit, no connector).
+            if (j["continuation"] is not True or j.get("exit_ref") is not None or
+                    (j.get("connector_length_m") or 0) != 0):
+                offenders.append((c["name"], j.get("continuation"), j.get("exit_ref"),
+                                  j.get("connector_length_m")))
+    check(seen > 0 and not offenders,
+          f"continuation marker seen ({seen}) and only ever true on a continuation junction",
+          f"offenders={offenders[:3]}")
 
 
 def run_off_motorway_case(c):
@@ -622,7 +767,10 @@ def main():
     run_cloverleaf_case(CLOVERLEAF_CASE)
     run_hintham_case(HINTHAM_CASE)
     run_budget_priority_case(BUDGET_PRIORITY_CASE)
-    run_valburg_case(VALBURG_CASE)
+    run_renumber_split_case(VALBURG_CASE)
+    run_renumber_split_case(DEHOEK_CASE)
+    run_galder_case(GALDER_CASE)
+    run_continuation_marker_case()
     run_off_motorway_case(OFF_MOTORWAY_CASE)
     run_junction_names()
 

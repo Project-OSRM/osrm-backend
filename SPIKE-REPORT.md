@@ -772,3 +772,97 @@ product/schema call, not a routing bug; flagged for the reviewer.
 
 **Files:** `src/engine/plugins/tree.cpp` (the ref-adoption site in `walkOne`: `renumber_merge` on `TT::Merge`);
 `tools/hm2_spike/regression.py` (`VALBURG_CASE` / `run_valburg_case`).
+
+## S3-fix11 — the emitted ref is always the road physically driven (spur-terminus split, defect A)
+
+**Field report / productisation.** S3-fix10 kept the root ON the driver's road across a Merge-renumber but left
+the whole corridor labelled with the *snap* ref — the A59→A50 root ran 104.7 km still called "A59", and it flagged
+"whether a spur-terminus root should relabel to the merged-onto road" as a product call. A directed-probe survey of
+NL termini then measured the scope: **41 of 47** probes carried a stale label past the terminus — the A5 root at KP
+De Hoek emitted "A5" for 70.6 km (~60 km of physical A4), A59→A50 at Paalgraven 104.7 km, A6→A7 Joure 59.9 km,
+A9→A1 Diemen 167 km, A13→A4 Ypenburg 53.7 km, A32→A28 Lankhorst 129.4 km, A50→A2 Batadorp 108.5 km, etc.
+
+**Ruling (normative).** A segment's emitted `ref` must be the road it is physically on. Where the walk crosses a
+genuine renumber the segment ENDS and the drive continues as a **continuation child** carrying the new ref, parented
+to the segment it continues (junction: renumber point, `toward` from the merge signage, `exit_ref` null). No wire
+change — the app renders nested branches generically; a continuation is just a branch whose junction is the renumber.
+
+**Mechanism** (`walkOne`, next-node selection). At each node we now ask two questions before advancing:
+- *Does our road continue?* `road_continues` = any usable outgoing arm still carries a component of this segment's
+  ref. This is the pivot that keeps the split off gores and ring concurrencies (where a crossing road's arm is
+  mis-classified as the geometric continuation but our own road plainly continues on another arm).
+- *Is this a spur terminus?* `renumber` = our road does **not** continue **and** the continuation is a
+  differently-numbered motorway via a **`TT::Merge`**. When true, `walkOne` pushes a continuation child
+  (`makeDirectChild(next, new_ref, …, is_continuation=true)`) and `break`s the segment.
+
+**Merge, not NewName.** S3-fix10's ref-adoption keyed on "NewName OR Merge". The *split* is far more sensitive to
+noise than adoption was (it manufactures segments), and an all-arms trace showed why: in NL a `NewName` between two
+motorway *numbers* is overwhelmingly a **concurrency relabel flip-flop** at a ring/interchange — near the A10
+Amsterdam ring the co-sign re-tags the same physical road A10→A4→A10 within ~800 m, and splitting on each shattered
+one road into 0.1–1.5 km stub segments (and, via the reshuffled tree, surfaced duplicate-looking siblings). **Every
+real terminus in the survey is a `Merge`** (A5→A4, A59→A50, A6→A7, A9→A1, A13→A4, A32→A28, A50→A2 — all `TurnType::Merge`).
+Keying the split on `Merge` (plus `!road_continues`) keeps every terminus and drops the flip-flop noise. A NewName
+between motorway numbers now simply carries its label through (correct for the A10-ring co-sign — it is one ring).
+S3-fix10's mid-segment `current_ref` drift is therefore **removed**: a segment never physically changes road now, so
+its ref is constant (`current_refs == reported_refs` throughout) and the drift machinery is dead.
+
+**Budget.** The class-weighted heap (§S3-fix9) now follows the **root chain** through continuations: `on_root_chain`
+(the root plus its renumber continuations) is class 0, and a diverge off the chain is a first-level spur head (class
+0) — so the A50 continuation and its crossings (A15 at KP Valburg, A12 at KP Grijsoord) survive the 200 km cap exactly
+as the pre-split A2-south spurs do. For a tree with **no** root renumber (A2-south, A4-north) the classing is
+byte-identical to fix9/fix10 — HINTHAM/BUDGET_PRIORITY are unchanged.
+
+**Validation.** `VALBURG_CASE` rewritten to the continuation model, new `DEHOEK_CASE` (both via
+`run_renumber_split_case`): root ref = snap road, root segment short, an equal-or-longer continuation child on the
+new ref carrying the crossings, and the continuation's own ref never re-emitted as a diverge off itself. Both fail on
+the fix10 build (root 104.7/70.6 km, no continuation) and pass here (A59 root 2.5 km + A50 cont 102 km; A5 root 12.5
+km + A4 cont 58 km). Survey spot-check (before → after root segment): Joure A6 59.9→2.4 km (+A7 cont), Diemen A9
+167→13 km (+A1 cont), Ypenburg A13 53.7→7.1 km (+A4 cont), Lankhorst A32 129.4→22.4 km (+A28 cont), Batadorp A50
+108.5→3.0 km (+A2 cont). Timing on the five 200 km corridors is flat-to-~10 %-faster vs fix10, all at the 400-segment
+cap (continuations keep the parent's depth, so no walk blow-up).
+
+**Dedup gap fixed.** A very short same-ref sibling (the 1.2 km "A2 Ring Utrecht" spur hugging the through A2 at KP
+Oudenrijn) has only one arc-distance sample, and `same_corridor` bailed on `n < 2`, so it escaped de-dup. One sample
+still discriminates (it sits within `DIR_MATCH_M` of a corridor it duplicates, km from a genuine opposite direction);
+the guard is now `n < 1`.
+
+**Files:** `src/engine/plugins/tree.cpp` (`walkOne` next-node: `road_continues`, `renumber`, `makeDirectChild`
+continuation; `WorkItem::is_continuation`/`on_root_chain`; `priorityClass`/`enqueue` root-chain classing;
+`same_corridor` `n<1`); `tools/hm2_spike/regression.py` (`run_renumber_split_case`, `VALBURG_CASE`, `DEHOEK_CASE`).
+
+## S3-fix12 — identity follows the driver's ref component through a concurrency un-bundle (defect B)
+
+**Field report.** Driving the A58 west near Breda (probe `5.04984,51.53935` bearing 279), the A58 merges onto the
+A16 north as a signed concurrency (`A16;A58`) then peels off west toward Vlissingen. Pre-fix the root followed the
+A16 mainline **33 km to Moerdijk still labelled A58** (end ≈ 4.65,51.80), the A16-north direction never emitted, and
+the real A58 peel-off was killed by same-ref suppression — the driver's actual onward road appeared only as distant
+wrong-parent copies.
+
+**Ruling (normative).** Root/branch identity follows the **driver's ref component**, not the geometric mainline. At
+an un-bundle where the continuation drops our component while another arm still carries it, the walk follows that arm
+(the A58 peel — root continues to Vlissingen), and the abandoned mainline direction(s) spawn as branches.
+
+**Mechanism** (`walkOne`, same block). When the geometric continuation is usable but does **not** share our ref while
+`road_continues` (another usable arm does), we **steer** onto the best usable arm carrying our ref. Steering is broad
+(it also stops the walk wandering onto a crossing road whose arm was mis-picked as the continuation at a gore); the
+**abandoned mainline is spawned as a branch only where the current node is a signed concurrency** (`current_is_concurrency`,
+the current edge ref has >1 component) — a genuine un-bundle. Off a concurrency the dropped continuation is a gore
+artifact, so we steer silently (no spurious branch — this is what kept the A10-ring `keep=A10 abandon=A5` steers from
+emitting junk A5 stubs).
+
+**The A2;A67 discriminator (the reviewer will attack this first).** The rule is symmetric — "follow your component" —
+so the existing `CONCURRENCY_CASE` is the *same* rule from the other seat and is untouched. Driving the A2 through the
+A2;A67 concurrency, at the un-bundle the geometric continuation is the A2 mainline, which **still carries our component
+A2** → the steering predicate `!shareComponent(current_refs, continuation_refs)` is false, no override fires, and the
+A67 peel branches exactly as before (zero toward-self junctions to the 200 km cap, verified green). Only when the
+continuation *abandons* our component (Galder: A16 drops A58) does the override engage. Even if OSRM had labelled the
+A67 arm the "continuation", the override would self-correct to A2 and still branch A67 — it can only ever add
+correctness, never point a junction back at the driver's own road.
+
+**Validation.** New `GALDER_CASE`: the root chain holds the A58 component to the Vlissingen side (westmost lng < 3.9;
+pre-fix stopped at 4.63/Moerdijk) and **both** A16 directions branch (south toward Antwerpen at the merge, north
+toward Rotterdam at the peel — the latter is the abandoned mainline). Fails on the fix10 build (chain westmost 4.63,
+no A16-north), passes here (root A58 123.5 km ending ≈ 3.60,51.46/Vlissingen).
+
+**Files:** `src/engine/plugins/tree.cpp` (`walkOne`: the steering + `abandoned_mainline` spawn, `current_is_concurrency`);
+`tools/hm2_spike/regression.py` (`run_galder_case`, `GALDER_CASE`).

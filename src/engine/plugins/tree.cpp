@@ -404,9 +404,18 @@ struct WorkItem
     NodeID override_node = SPECIAL_NODEID;
     NodeID override_target = SPECIAL_NODEID;
     // The start_offset of this item's FIRST-LEVEL ancestor (the spur head it hangs off), for the
-    // class-weighted budget ordering (§S3-fix9). -1 on the root; == start_offset on a first-level
-    // branch (it is its own spur head); inherited from the parent deeper down.
+    // class-weighted budget ordering (§S3-fix9). -1 on the root chain; == start_offset on a
+    // first-level spur head; inherited from the parent deeper down.
     double spur_head_offset = -1.0;
+    // A continuation child: the same physical drive resumed after the road ends and merges onto a
+    // differently-numbered motorway (the A5->A4 at KP De Hoek, the A59->A50 at KP Paalgraven). It
+    // carries the new ref, and stays on the root chain for the budget so the current road and its
+    // first spurs survive the segment cap across the renumber (§S3-fix11).
+    bool is_continuation = false;
+    // Whether this item belongs to the root's continuation chain (the root plus its renumber
+    // continuations). Set by the driver's enqueue from the parent; drives the class-0 budget
+    // priority. A diverge (non-continuation) off the root chain is a first-level spur head.
+    bool on_root_chain = false;
     util::json::Object junction; // how this segment attaches to its parent (empty for the root)
 };
 
@@ -434,11 +443,15 @@ using Pending = std::tuple<int, double, std::size_t>;
 // stub. Mirrors the BE stage-A SPUR_RESERVED_DEPTH_M.
 constexpr double SPUR_RESERVED_DEPTH_M = 25000.0;
 
-// The budget priority class of a pending work item (see Pending). parent_id 0 is the root's id.
-int priorityClass(const WorkItem &w)
+// The budget priority class of a pending work item (see Pending). Class 0 is the root chain (the
+// root and its renumber continuations) plus every first-level spur head diverging off that chain -
+// guaranteed a slot at any distance; class 1 is a spur's reserved near subtree; class 2 is deep
+// fill. `parent_on_root_chain` is whether this item's parent is on the root chain (so a diverge off
+// it is a first-level spur head); the driver supplies it from the pool at enqueue time.
+int priorityClass(const WorkItem &w, const bool parent_on_root_chain)
 {
-    if (w.parent_id == NO_PARENT || w.parent_id == 0)
-        return 0; // the root chain and every first-level spur head
+    if (w.on_root_chain || parent_on_root_chain)
+        return 0;
     return (w.start_offset - w.spur_head_offset) <= SPUR_RESERVED_DEPTH_M ? 1 : 2;
 }
 
@@ -501,13 +514,12 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
     bool ended_by_cycle = false;
 
     NodeID current = item.start_node;
-    // Initialise from the ref we branched onto, not the start node's own ref: at a gore the first
-    // segment still carries the mainline ref (Stage 1 finding 7.4), which would defeat the
-    // same-road suppression on the child's very first node.
-    std::string current_ref = item.reported_ref;
-    // The committed road identity for this whole segment; unlike current_ref it never drifts, so
-    // it is the stable backstop for same-road suppression at depth.
+    // This segment's road identity. It is the ref we branched onto (not the start node's own ref:
+    // at a gore the first node still carries the mainline ref, Stage 1 finding 7.4), and it is
+    // constant for the whole segment - the walk ends and spawns a continuation child at any genuine
+    // renumber (§S3-fix11), so a segment never physically changes road.
     const auto reported_refs = refComponents(item.reported_ref);
+    const auto &current_refs = reported_refs; // alias: the road this segment is on, throughout
     double offset = item.start_offset;
     // Diagnostic: metres walked on non-motorway-class nodes. Should always be 0 - a non-zero value
     // means the walk escaped the motorway network (see the motorway-class continuation guard below).
@@ -520,7 +532,6 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
         const double node_end_offset = offset + node_len;
         if (!isMotorwayNode(facade, current))
             non_motorway_len += node_len;
-        const auto current_refs = refComponents(current_ref);
         // Set when this node forks off a same-ref direction (the crossing road's other way): the
         // signage captured at the parent's junction is then the pre-split slip-road union, so the
         // arm we take here carries this direction's refined destinations.
@@ -546,11 +557,12 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
                 continue;
             if (it->turn.type != TT::OffRamp && it->turn.type != TT::Fork)
                 continue;
-            // A fork arm sharing a ref component with the road we are on - either the tracked road
-            // identity or the arm we are actually following - is a parallel-carriageway split or a
-            // concurrency unbundling (e.g. A2;A67 -> A2 + A67), not a branch to a different
-            // motorway. Skip it. The continuation check also catches cases where current_ref is
-            // stale (it only updates on a NewName/Merge renumber, §S3-fix10).
+            // A fork arm sharing a ref component with the road we are on - either this segment's
+            // road identity or the arm we are actually following - is a parallel-carriageway split
+            // or a concurrency unbundling (e.g. A2;A67 -> A2 + A67), not a branch to a different
+            // motorway. Skip it. (The driver's own onward road at a real un-bundle is followed, not
+            // suppressed - the continuation override in the next-node selection handles that,
+            // §S3-fix12 - so a same-ref arm here is genuinely a parallel/duplicate carriageway.)
             if (shareComponent(current_refs, it->branch_refs) ||
                 shareComponent(continuation_refs, it->branch_refs) ||
                 shareComponent(reported_refs, it->branch_refs))
@@ -664,6 +676,86 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
         const auto usable = [&](const Outgoing &o)
         { return isMotorwayNode(facade, o.target) && !visited.count(o.target); };
 
+        // Build a child WorkItem reached directly from `current` (no ramp): a renumber continuation
+        // (§S3-fix11) or the abandoned mainline of a concurrency un-bundle (§S3-fix12). Junction at
+        // this node's end offset, connector 0; a continuation's exit_ref is null (it is not an exit).
+        const auto makeDirectChild = [&](const NodeID target,
+                                         const std::string &ref,
+                                         const std::string &destinations,
+                                         const bool is_continuation) -> WorkItem
+        {
+            util::json::Object junction;
+            junction.values["name"] = "";
+            if (is_continuation)
+            {
+                junction.values["exit_ref"] = util::json::Value(util::json::Null());
+                // A renumber continuation is the same drive relabelled, not a diverge - so the
+                // consumer's kRoot/quota keeps treating it as the root chain even though its ref
+                // differs from the parent's (§S3-fix11). Additive and continuation-only: never
+                // emitted (not even false) on any other junction.
+                junction.values["continuation"] = util::json::Value(util::json::True());
+            }
+            else
+            {
+                const auto exits = facade.GetExitsForID(facade.GetNameIndex(target));
+                junction.values["exit_ref"] = exits.empty()
+                                                  ? util::json::Value(util::json::Null())
+                                                  : util::json::Value(std::string(exits));
+            }
+            junction.values["at_offset_m"] = node_end_offset;
+            junction.values["connector_length_m"] = 0.0;
+            junction.values["toward"] = towardArray(destinations);
+
+            WorkItem child;
+            child.parent_id = item.id;
+            child.start_node = target;
+            child.reported_ref = ref;
+            child.start_coords = nodeForwardCoordinates(facade, target);
+            child.start_offset = node_end_offset;
+            child.visited = visited;
+            child.visited.insert(target);
+            // A continuation is the same drive, kept at the parent's depth (a long relabelled
+            // corridor must not exhaust MAX_DEPTH); an abandoned mainline is a genuine diverge.
+            child.depth = is_continuation ? item.depth : item.depth + 1;
+            child.is_continuation = is_continuation;
+            child.junction = std::move(junction);
+            return child;
+        };
+
+        // Does the road we are on continue on some usable arm (an arm still carrying our ref)?
+        // This is the pivot for both fixes: while the road continues we stay on it (§S3-fix12
+        // steering); only where it does NOT does a genuine renumber terminus occur (§S3-fix11). It
+        // keeps both fixes off ordinary gores and ring concurrencies, where a NewName/guidance arm
+        // for a *crossing* road is mis-classified as the continuation but our own road plainly
+        // continues on another arm (the A2 through KP Oudenrijn; the A10-ring relabels).
+        bool road_continues = false;
+        for (const auto &o : outgoing)
+            if (usable(o) && shareComponent(current_refs, refComponents(o.ref)))
+            {
+                road_continues = true;
+                break;
+            }
+
+        // A genuine spur-terminus renumber: our road ENDS (no arm carries our ref) and MERGES onto a
+        // differently-numbered motorway (A5->A4 at KP De Hoek, A59->A50 at KP Paalgraven, A9->A1 at
+        // KP Diemen, A6->A7 at KP Joure - all TurnType::Merge). Keyed on Merge, NOT NewName: in NL a
+        // NewName between motorway numbers is overwhelmingly a concurrency relabel flip-flop at a
+        // ring/interchange (the A10<->A4<->A10 co-sign near Amsterdam re-tags the same road every few
+        // hundred metres), which would shatter one road into stub segments; every real terminus in
+        // the survey is a Merge. `!road_continues` additionally excludes a gore where a crossing
+        // road's Merge arm is mis-picked as the continuation while our road plainly continues.
+        const bool renumber =
+            continuation != outgoing.end() && !road_continues &&
+            continuation->turn.type == TT::Merge && anyMotorwayRef(continuation_refs) &&
+            !shareComponent(current_refs, continuation_refs);
+
+        // Is the road we are physically on a signed concurrency (a multi-component ref, "A16;A58")?
+        // Only there can a genuine un-bundle spawn the abandoned mainline as a branch (§S3-fix12);
+        // elsewhere a continuation that drops our ref is a gore artifact, so we steer back onto our
+        // road silently rather than emit a spurious branch.
+        const bool current_is_concurrency =
+            refComponents(std::string(facade.GetRefForID(facade.GetNameIndex(current)))).size() > 1;
+
         auto chosen = (continuation != outgoing.end() && usable(*continuation)) ? continuation
                                                                                 : outgoing.end();
 
@@ -675,6 +767,45 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
                     chosen = it;
                     break;
                 }
+
+        // Driver's-component following through a concurrency un-bundle (§S3-fix12). Where a road
+        // merges into a signed concurrency then peels back out (the A58 onto the A16 north through
+        // Breda, then off west to Vlissingen), OSRM's geometric continuation follows the *mainline*
+        // (A16 north) while the driver's own road (A58) peels off as a Fork/OffRamp - which same-ref
+        // suppression would then kill. Identity must follow the driver's ref component, not the
+        // stale geometric mainline: when the continuation drops our ref while the road continues on
+        // another arm, steer back onto our road. On a signed concurrency that is a genuine un-bundle,
+        // so also spawn the abandoned mainline direction as a branch (both directions show); off a
+        // concurrency it is a gore artifact, so steer silently. The A2;A67 un-bundle from the A2 seat
+        // never triggers this: A2 is the through arm, so the continuation still carries our ref.
+        const Outgoing *abandoned_mainline = nullptr;
+        if (chosen == continuation && chosen != outgoing.end() && !renumber && road_continues &&
+            !shareComponent(current_refs, continuation_refs))
+        {
+            auto driver = outgoing.end();
+            int driver_rank = 0;
+            for (auto it = outgoing.begin(); it != outgoing.end(); ++it)
+            {
+                if (it == continuation || !usable(*it))
+                    continue;
+                if (!shareComponent(current_refs, refComponents(it->ref)))
+                    continue;
+                const int rank = isContinuationTurn(it->turn.type) ? 3
+                                 : (it->turn.type == TT::Fork || it->turn.type == TT::OffRamp) ? 2
+                                                                                               : 1;
+                if (rank > driver_rank)
+                {
+                    driver_rank = rank;
+                    driver = it;
+                }
+            }
+            if (driver != outgoing.end())
+            {
+                if (current_is_concurrency)
+                    abandoned_mainline = &(*continuation);
+                chosen = driver;
+            }
+        }
 
         // At a same-ref direction split, the arm we take carries this direction's own refined
         // signage (the parent-junction signage was the shared pre-split union). Capture the first
@@ -709,24 +840,35 @@ WalkOutput walkOne(const datafacade::BaseDataFacade &facade,
         }
 
         const NodeID next = chosen->target;
+
+        // §S3-fix12: the geometric mainline we turned away from becomes a branch, so both directions
+        // of the interchange are present (the A16 north alongside the A58 continuation). Reached
+        // directly (it was the continuation), so no ramp. Bounded by cap/depth like any diverge.
+        if (abandoned_mainline != nullptr && item.depth < MAX_DEPTH &&
+            node_end_offset < hard_cap && !visited.count(abandoned_mainline->target))
+        {
+            const auto abandoned_refs = refComponents(abandoned_mainline->ref);
+            std::string abandoned_ref = firstMotorwayRef(abandoned_refs);
+            if (abandoned_ref.empty())
+                abandoned_ref = firstMotorwayRef(abandoned_mainline->branch_refs);
+            if (!abandoned_ref.empty())
+                children.push_back(makeDirectChild(abandoned_mainline->target, abandoned_ref,
+                                                   abandoned_mainline->destinations, false));
+        }
+
         visited.insert(next);
 
-        // Update the road identity when OSRM signals a genuine renumbering: a NewName, or a Merge
-        // where the current road ends and joins a differently-numbered motorway (A59 ending at KP
-        // Paalgraven and merging onto the A50 north). Both re-point current_ref at the road we are
-        // now physically on, so the same-ref carriageway-fork suppression downstream matches the
-        // real road (§S3-fix10). Plain continuations (NoTurn/Suppressed) are deliberately NOT
-        // adopted: through a knooppunt gore they carry the *crossing* motorway's stale ref (Stage 1
-        // finding 7.4), and on a branch's first nodes they carry the parent mainline's stale ref
-        // (the A27 off-ramp at Everdingen reads A2) - adopting those loses the road we branched onto
-        // and breaks same-road suppression (§S3-fix8). Merge is a distinct turn type from those, and
-        // gated on the target being a genuinely different motorway number.
-        const auto chosen_refs = refComponents(chosen->ref);
-        const bool renumber_merge =
-            chosen->turn.type == TT::Merge && anyMotorwayRef(chosen_refs) &&
-            !shareComponent(current_refs, chosen_refs);
-        if ((chosen->turn.type == TT::NewName || renumber_merge) && !chosen->ref.empty())
-            current_ref = chosen->ref;
+        // §S3-fix11: at a genuine renumber this segment ends here and the drive continues as a
+        // continuation child carrying the new ref, so the emitted ref is always the physical road.
+        if (renumber)
+        {
+            std::string new_ref = firstMotorwayRef(continuation_refs);
+            if (new_ref.empty())
+                new_ref = continuation->ref;
+            children.push_back(
+                makeDirectChild(next, new_ref, continuation->destinations, true));
+            break;
+        }
 
         auto next_coords = nodeForwardCoordinates(facade, next);
         // The shared junction vertex is the last point of `current` and the first of `next`.
@@ -994,16 +1136,20 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     std::priority_queue<Pending, std::vector<Pending>, std::greater<>> pq;
     const auto enqueue = [&](WorkItem &&w)
     {
-        // Propagate the spur head: the root has none (-1); a first-level branch (child of the root,
-        // parent_id 0) is its own spur head; deeper items inherit their parent's.
-        if (w.parent_id == NO_PARENT)
+        // The root and its renumber continuations form the root chain (class 0). A diverge off the
+        // chain is a first-level spur head (also class 0, its subtree reserved from its own start);
+        // deeper items inherit the spur head and fall to class 1/2 by distance.
+        const bool is_root = (w.parent_id == NO_PARENT);
+        const bool parent_on_root_chain = is_root ? false : pool[w.parent_id].on_root_chain;
+        w.on_root_chain = is_root || (w.is_continuation && parent_on_root_chain);
+        if (w.on_root_chain)
             w.spur_head_offset = -1.0;
-        else if (w.parent_id == 0)
+        else if (parent_on_root_chain)
             w.spur_head_offset = w.start_offset;
         else
             w.spur_head_offset = pool[w.parent_id].spur_head_offset;
         parent_of.push_back(w.parent_id);
-        pq.push({priorityClass(w), w.start_offset, w.id});
+        pq.push({priorityClass(w, parent_on_root_chain), w.start_offset, w.id});
         pool.push_back(std::move(w));
     };
 
@@ -1124,7 +1270,13 @@ Status TreePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
             const auto &sa = segments[a].dir_samples;
             const auto &sb = segments[b].dir_samples;
             const std::size_t n = std::min(sa.size(), sb.size());
-            if (n < 2)
+            // A very short same-ref sibling (a twin entry ramp / parallel carriageway stub, e.g. the
+            // 1.2 km "A2 Ring Utrecht" spur hugging the through A2 at KP Oudenrijn) yields only ONE
+            // arc-distance sample. Its single sample still discriminates: it sits within DIR_MATCH_M
+            // of a corridor it duplicates, and km away from a genuine opposite direction (which
+            // diverges within the first km). So one sample is enough - opposite directions are never
+            // dropped by it.
+            if (n < 1)
                 return false;
             std::size_t matched = 0;
             for (std::size_t i = 0; i < n; ++i)

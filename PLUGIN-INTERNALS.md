@@ -162,19 +162,35 @@ change; extend it for EVERY fix.
   first-level spurs (A76/A79 in Limburg, ~120-130 km, off the A2 south). Mirrors the BE stage-A prune so
   the two budget layers agree. Parent-before-child is structural, unaffected. Case: `BUDGET_PRIORITY_CASE`.
 
-- **`current_ref` adopts a Merge-renumber** (§S3-fix10, the ref-update site in `walkOne` ~L714-728). The
-  segment's tracked road identity `current_ref` starts as `item.reported_ref` and is adopted from the
-  continuation arm's RAW ref on **`NewName` OR `Merge`** — a `Merge` is a spur road ending and merging onto a
-  differently-numbered motorway (A59 ending at KP Paalgraven and merging onto the A50 north), gated on the
-  merged-onto ref being a motorway ref not already sharing `current_ref`. WHY: without it `current_ref` stays
-  frozen at the snap ref (`A59`) after the road physically renumbers; guidance-turn continuations
-  (`NoTurn`/`Suppressed`, ref-independent) hide it, but at a downstream same-ref carriageway split (a
-  parallelstructuur/bridge `Fork` with no guidance arm) `selectContinuation`'s rank-2 ref match fails
-  (`A59` ≠ `A50`), the ref "ends", and the driver's own road is demoted to a merged-signage first-level branch
-  while the root dies. **Do NOT extend this to `NoTurn`/`Suppressed`**: those carry the *crossing* road's stale
-  ref at a gore (§S3-fix8) and the *parent* mainline's stale ref on a branch's first nodes (the A27 off-ramp at
-  Everdingen reads `A2`, §S3-fix5) — adopting them re-opens both. `Merge` is a distinct turn type from those.
-  Case: `VALBURG_CASE` (root follows A59→A50 north past KP Valburg; no first-level A50; A15/A12 first-level).
+- **Spur-terminus renumber → continuation child** (§S3-fix11, the `renumber` block in `walkOne`, next-node
+  selection). A segment's emitted `ref` must be the road physically driven, so where the road **ends and merges onto
+  a differently-numbered motorway** the segment STOPS and the drive continues as a **continuation child**
+  (`makeDirectChild(next, new_ref, …, is_continuation=true)`, `exit_ref` null) carrying the new ref. Two gates:
+  `renumber` fires only when (a) our road does **not** continue — `road_continues` = no usable outgoing arm carries
+  a component of this segment's ref — **and** (b) the continuation is a motorway via **`TT::Merge`**. WHY Merge and
+  not NewName: a `NewName` between motorway numbers in NL is overwhelmingly a **concurrency relabel flip-flop** at a
+  ring/interchange (the A10↔A4↔A10 co-sign near Amsterdam re-tags one road every few hundred metres) — splitting on
+  it shatters one road into stub segments; every real terminus in the survey (A5→A4, A59→A50, A6→A7, A9→A1, A13→A4,
+  A50→A2) is a `Merge`. WHY `!road_continues`: it keeps the split off gores where a *crossing* road's Merge arm is
+  mis-picked as the continuation while our own road plainly continues (KP Oudenrijn). This supersedes S3-fix10's
+  mid-segment `current_ref` drift (now removed — a segment never changes road, so its ref is constant). The budget
+  follows the **root chain** through continuations (`on_root_chain`: root + its continuations = class 0, a diverge
+  off the chain = first-level spur head), so the continuation's crossings survive the cap like any first spur; for a
+  tree with no root renumber the classing is byte-identical to fix9/10. Cases: `VALBURG_CASE` (A59 root ends at KP
+  Paalgraven, A50 continuation carries A15/A12), `DEHOEK_CASE` (A5 root short, A4 continuation).
+
+- **Identity follows the driver's ref component through a concurrency un-bundle** (§S3-fix12, the steering +
+  `abandoned_mainline` block, same place as fix11). When the geometric continuation is usable but does NOT carry our
+  ref while another usable arm does (`road_continues`), **steer** onto the arm carrying our ref — the walk follows the
+  driver's road, not the stale geometric mainline (the A58 peeling west off the `A16;A58` concurrency toward
+  Vlissingen, where OSRM's continuation is the A16 north). Steering is broad (it also stops the walk wandering onto a
+  crossing road mis-picked as the continuation at a gore); the **abandoned mainline is spawned as a branch only when
+  the current node is a signed concurrency** (`current_is_concurrency`, current edge ref has >1 component — a genuine
+  un-bundle), so both directions show (A16 north as a branch at the peel, A16 south already branches at the merge).
+  Off a concurrency the dropped continuation is a gore artifact → steer silently, no spurious branch. The rule is
+  symmetric with `CONCURRENCY_CASE` (A2;A67): from the A2 seat the continuation still carries A2, so no override fires
+  and the A67 peel branches as before — the override only engages when the continuation *abandons* our component.
+  Case: `GALDER_CASE` (root holds A58 to the Vlissingen side, both A16 directions branch).
 
 Other cases: `RING_CASE` (cycle termination), `OFF_MOTORWAY_CASE` (→ `NoSegment`),
 `run_junction_names` (every junction/branch name is `""`).
@@ -191,6 +207,8 @@ Other cases: `RING_CASE` (cycle termination), `OFF_MOTORWAY_CASE` (→ `NoSegmen
 | MLD-only facade cast | The driver `dynamic_cast`s to `AlgorithmDataFacade<MLD>`. Serve with `--algorithm mld`. A CH/other facade → null cast → the plugin can't read adjacency. |
 | Connector = offset gap, not a node | NL connectors are effectively 0-length between edge nodes; a "connector" is an offset window (`CONNECTOR_M`), not a distinct ramp geometry. Direction-fork detection keys on the offset gap. |
 | `hard_cap_m` is segment-granular | The cap stops *new segment expansion*; an in-flight branch that crosses the cap still completes. A branch with `start_offset + length ≈ cap` is cap-truncated, not a bug — exclude it when auditing for stray/rejoin stubs (bit the parallelbaan check once). |
+| `at_offset_m` undercounts `length_m` | A junction's `at_offset_m` / a child's `start_offset_m` accumulates per-node lengths that skip the shared vertex between nodes, so it runs a few % short of the parent's `length_m` (true polyline arc) at the same point. Pre-existing and uniform across all junctions; only became *visible* with §S3-fix11, where a continuation child's `start_offset_m` (e.g. 11.6 km) sits below its parent root's `length_m` (12.5 km) although they meet at the identical coordinate. It is not an overlap — audit seams by coordinate, not by comparing offset to length. |
+| `NewName` between motorway numbers is noisy | At NL ring/interchange concurrencies OSM re-tags one physical road across numbers via `NewName` every few hundred metres (A10↔A4↔A10). `NewName` is a *guidance continuation* (rank 3 in `selectContinuation`) so it can even be picked as the continuation at a gore for a *crossing* road. Never manufacture segments on it — §S3-fix11 splits on `Merge` only. |
 
 ---
 
@@ -216,7 +234,7 @@ cmake --build build --target osrm-routed     # normal iterate: rebuild just the 
 ```
 
 **Test — non-negotiable loop:** after every change, `python3 tools/hm2_spike/regression.py` (must be
-all-green; currently 51 assertions across the `run_*_case` fns). For every bug you fix, ADD a case
+all-green; currently 63 assertions across the `run_*_case` fns). For every bug you fix, ADD a case
 that fails before and passes after — that is how each rule above earned its line. Use `debug=true`
 to inspect `dropped_stubs[]`.
 
