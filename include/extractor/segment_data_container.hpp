@@ -77,7 +77,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     }
 
     auto GetReverseGeometry(const DirectionalGeometryID id)
-    { return GetForwardGeometry(id) | std::views::reverse; }
+    {
+        return GetForwardGeometry(id) | std::views::reverse;
+    }
 
     auto GetForwardDurations(const DirectionalGeometryID id)
     {
@@ -133,7 +135,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     }
 
     auto GetReverseGeometry(const DirectionalGeometryID id) const
-    { return GetForwardGeometry(id) | std::views::reverse; }
+    {
+        return GetForwardGeometry(id) | std::views::reverse;
+    }
 
     auto GetForwardDurations(const DirectionalGeometryID id) const
     {

@@ -16,7 +16,9 @@ struct IntersectionEdge
     EdgeID edge;
 
     bool operator<(const IntersectionEdge &other) const
-    { return std::tie(node, edge) < std::tie(other.node, other.edge); }
+    {
+        return std::tie(node, edge) < std::tie(other.node, other.edge);
+    }
 };
 
 using IntersectionEdges = std::vector<IntersectionEdge>;

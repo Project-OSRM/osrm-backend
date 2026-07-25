@@ -34,10 +34,14 @@ struct TurnRestriction
     }
 
     explicit TurnRestriction()
-    { turn_path = {ViaNodePath{SPECIAL_NODEID, SPECIAL_NODEID, SPECIAL_NODEID}}; }
+    {
+        turn_path = {ViaNodePath{SPECIAL_NODEID, SPECIAL_NODEID, SPECIAL_NODEID}};
+    }
 
     bool IsTurnRestricted(NodeID to) const
-    { return is_only ? turn_path.To() != to : turn_path.To() == to; }
+    {
+        return is_only ? turn_path.To() != to : turn_path.To() == to;
+    }
 
     bool IsUnconditional() const { return condition.empty(); }
 

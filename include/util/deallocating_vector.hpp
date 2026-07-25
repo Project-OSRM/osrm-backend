@@ -110,10 +110,14 @@ template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK> class ConstDealloca
 
     friend bool operator==(ConstDeallocatingVectorIterator const &a,
                            ConstDeallocatingVectorIterator const &b)
-    { return a.current_state.index == b.current_state.index; }
+    {
+        return a.current_state.index == b.current_state.index;
+    }
     friend bool operator!=(ConstDeallocatingVectorIterator const &a,
                            ConstDeallocatingVectorIterator const &b)
-    { return !(a == b); }
+    {
+        return !(a == b);
+    }
 
     friend std::ptrdiff_t operator-(ConstDeallocatingVectorIterator const &a,
                                     ConstDeallocatingVectorIterator const &b)
@@ -201,10 +205,14 @@ template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK> class DeallocatingV
     }
 
     friend bool operator==(DeallocatingVectorIterator const &a, DeallocatingVectorIterator const &b)
-    { return a.current_state.index == b.current_state.index; }
+    {
+        return a.current_state.index == b.current_state.index;
+    }
 
     friend bool operator!=(DeallocatingVectorIterator const &a, DeallocatingVectorIterator const &b)
-    { return !(a == b); }
+    {
+        return !(a == b);
+    }
 
     friend std::ptrdiff_t operator-(DeallocatingVectorIterator const &a,
                                     DeallocatingVectorIterator const &b)
@@ -260,7 +268,9 @@ template <typename ElementT> class DeallocatingVector
     using const_iterator = ConstDeallocatingVectorIterator<ElementT, ELEMENTS_PER_BLOCK>;
 
     DeallocatingVector() : current_size(0)
-    { bucket_list.emplace_back(new ElementT[ELEMENTS_PER_BLOCK]); }
+    {
+        bucket_list.emplace_back(new ElementT[ELEMENTS_PER_BLOCK]);
+    }
 
     // Performs a deep copy of the buckets
     DeallocatingVector(const DeallocatingVector &other)
@@ -381,7 +391,9 @@ template <typename ElementT> class DeallocatingVector
     iterator end() { return iterator(size(), &bucket_list); }
 
     const_iterator begin() const
-    { return const_iterator(static_cast<std::size_t>(0), &bucket_list); }
+    {
+        return const_iterator(static_cast<std::size_t>(0), &bucket_list);
+    }
 
     const_iterator end() const { return const_iterator(size(), &bucket_list); }
 
@@ -418,7 +430,9 @@ template <typename ElementT> class DeallocatingVector
 };
 
 template <typename T> void swap(DeallocatingVector<T> &lhs, DeallocatingVector<T> &rhs) noexcept
-{ lhs.swap(rhs); }
+{
+    lhs.swap(rhs);
+}
 } // namespace osrm::util
 
 #endif /* DEALLOCATING_VECTOR_HPP */

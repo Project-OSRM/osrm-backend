@@ -37,7 +37,9 @@ inline bool isValidModifier(const guidance::StepManeuver maneuver)
 }
 
 inline bool hasValidLanes(const guidance::IntermediateIntersection &intersection)
-{ return intersection.lanes.lanes_in_turn > 0; }
+{
+    return intersection.lanes.lanes_in_turn > 0;
+}
 
 util::json::Value coordinateToLonLat(const util::Coordinate &coordinate);
 
@@ -50,7 +52,9 @@ inline double roundAndClampBearing(double bearing) { return std::fmod(std::round
 
 template <unsigned POLYLINE_PRECISION, typename ForwardIter>
 util::json::String makePolyline(ForwardIter begin, ForwardIter end)
-{ return {encodePolyline<POLYLINE_PRECISION>(begin, end)}; }
+{
+    return {encodePolyline<POLYLINE_PRECISION>(begin, end)};
+}
 
 template <typename ForwardIter>
 util::json::Object makeGeoJSONGeometry(ForwardIter begin, ForwardIter end)

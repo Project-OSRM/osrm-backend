@@ -76,7 +76,9 @@ inline std::ostream &operator<<(std::ostream &stream, const OpeningHours::Time &
 }
 
 inline std::ostream &operator<<(std::ostream &stream, const OpeningHours::TimeSpan &value)
-{ return stream << value.from << "-" << value.to; }
+{
+    return stream << value.from << "-" << value.to;
+}
 
 inline std::ostream &operator<<(std::ostream &stream, const OpeningHours::Monthday &value)
 {
@@ -105,7 +107,9 @@ inline std::ostream &operator<<(std::ostream &stream, const OpeningHours::Weekda
 }
 
 inline std::ostream &operator<<(std::ostream &stream, const OpeningHours::MonthdayRange &value)
-{ return stream << value.from << "-" << value.to; }
+{
+    return stream << value.from << "-" << value.to;
+}
 
 inline std::ostream &operator<<(std::ostream &stream, const OpeningHours &value)
 {

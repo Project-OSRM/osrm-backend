@@ -77,9 +77,13 @@ void test_nearest_response_skip_waypoints(bool use_json_only_api)
     BOOST_CHECK(!json_result.values.contains("waypoints"));
 }
 BOOST_AUTO_TEST_CASE(test_nearest_response_skip_waypoints_old_api)
-{ test_nearest_response_skip_waypoints(true); }
+{
+    test_nearest_response_skip_waypoints(true);
+}
 BOOST_AUTO_TEST_CASE(test_nearest_response_skip_waypoints_new_api)
-{ test_nearest_response_skip_waypoints(false); }
+{
+    test_nearest_response_skip_waypoints(false);
+}
 
 void test_nearest_response_no_coordinates(bool use_json_only_api)
 {
@@ -97,9 +101,13 @@ void test_nearest_response_no_coordinates(bool use_json_only_api)
     BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
 BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates_old_api)
-{ test_nearest_response_no_coordinates(true); }
+{
+    test_nearest_response_no_coordinates(true);
+}
 BOOST_AUTO_TEST_CASE(test_nearest_response_no_coordinates_new_api)
-{ test_nearest_response_no_coordinates(false); }
+{
+    test_nearest_response_no_coordinates(false);
+}
 
 void test_nearest_response_multiple_coordinates(bool use_json_only_api)
 {
@@ -119,9 +127,13 @@ void test_nearest_response_multiple_coordinates(bool use_json_only_api)
     BOOST_CHECK_EQUAL(code, "InvalidOptions");
 }
 BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates_old_api)
-{ test_nearest_response_multiple_coordinates(true); }
+{
+    test_nearest_response_multiple_coordinates(true);
+}
 BOOST_AUTO_TEST_CASE(test_nearest_response_multiple_coordinates_new_api)
-{ test_nearest_response_multiple_coordinates(false); }
+{
+    test_nearest_response_multiple_coordinates(false);
+}
 
 void test_nearest_response_for_location_in_small_component(bool use_json_only_api)
 {
@@ -161,9 +173,13 @@ void test_nearest_response_for_location_in_small_component(bool use_json_only_ap
     }
 }
 BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component_old_api)
-{ test_nearest_response_for_location_in_small_component(true); }
+{
+    test_nearest_response_for_location_in_small_component(true);
+}
 BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component_new_api)
-{ test_nearest_response_for_location_in_small_component(false); }
+{
+    test_nearest_response_for_location_in_small_component(false);
+}
 
 BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization)
 {

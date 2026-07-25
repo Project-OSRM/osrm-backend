@@ -72,7 +72,9 @@ std::vector<util::Coordinate> douglasPeucker(std::vector<util::Coordinate>::cons
 // Convenience range-based function
 inline std::vector<util::Coordinate> douglasPeucker(const std::vector<util::Coordinate> &geometry,
                                                     const unsigned zoom_level)
-{ return douglasPeucker(begin(geometry), end(geometry), zoom_level); }
+{
+    return douglasPeucker(begin(geometry), end(geometry), zoom_level);
+}
 } // namespace osrm::engine
 
 #endif /* DOUGLAS_PEUCKER_HPP_ */

@@ -36,7 +36,9 @@ struct IOConfig
     }
 
     bool IsRequiredConfiguredInput(const std::string &fileName) const
-    { return IsConfigured(fileName, required_input_files); }
+    {
+        return IsConfigured(fileName, required_input_files);
+    }
 
     std::filesystem::path base_path;
 

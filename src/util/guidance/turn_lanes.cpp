@@ -24,6 +24,8 @@ bool LaneTuple::operator==(const LaneTuple other) const
 bool LaneTuple::operator!=(const LaneTuple other) const { return !(*this == other); }
 
 bool LaneTupleIdPair::operator==(const LaneTupleIdPair &other) const
-{ return other.first == first && other.second == second; }
+{
+    return other.first == first && other.second == second;
+}
 
 } // namespace osrm::util::guidance

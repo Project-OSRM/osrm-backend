@@ -158,7 +158,9 @@ class QueryHeap
     };
 
     template <typename... StorageArgs> explicit QueryHeap(StorageArgs... args) : node_index(args...)
-    { Clear(); }
+    {
+        Clear();
+    }
 
     void Clear()
     {
