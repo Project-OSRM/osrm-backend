@@ -86,8 +86,7 @@ function setup()
       'vehicle',
       'permissive',
       'designated',
-      'hov',
-      'unknown'
+      'hov'
     },
 
     access_tag_blacklist = Set {
@@ -125,6 +124,7 @@ function setup()
       'customers',
       'permit',
       'residents',
+      'unknown',
     },
 
     access_tags_hierarchy = Sequence {

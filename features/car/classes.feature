@@ -82,6 +82,23 @@ Feature: Car - Mode flag
             | from | to | route | turns        | classes                                      |
             | a    | d  | ab,cd | depart,arrive| [(restricted),(motorway,restricted),()],[()] |
 
+    Scenario: Car - We tag access=unknown with a restricted class
+        Given the node map
+            """
+            a b
+              c d
+            """
+
+        And the ways
+            | nodes | highway | access   |
+            | ab    | primary | unknown  |
+            | bc    | motorway| unknown  |
+            | cd    | primary |          |
+
+        When I route I should get
+            | from | to | route | turns        | classes                                      |
+            | a    | d  | ab,cd | depart,arrive| [(restricted),(motorway,restricted),()],[()] |
+
     Scenario: Car - We tag toll with a class
         Given the node map
             """
