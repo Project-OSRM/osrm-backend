@@ -72,4 +72,17 @@ BOOST_AUTO_TEST_CASE(area_dijkstra_test)
     CHECK_EQUAL_RANGES(d.get_predecessors(), expected);
 }
 
+BOOST_AUTO_TEST_CASE(area_dijkstra_equal_distance_tie_break_test)
+{
+    Dijkstra<unsigned> d;
+    d.add_edge(0, 2, 1.);
+    d.add_edge(0, 1, 1.);
+    d.add_edge(1, 3, 1.);
+    d.add_edge(2, 3, 1.);
+
+    std::vector<size_t> expected{0, 0, 0, 1};
+    BOOST_CHECK_NO_THROW(d.run(d.index_of(0)));
+    CHECK_EQUAL_RANGES(d.get_predecessors(), expected);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

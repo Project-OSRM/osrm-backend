@@ -121,7 +121,13 @@ template <class vertex_t> class Dijkstra
 
         IndexPriorityQueue pq(vertices.size(),
                               [this](size_t u, size_t v) -> bool
-                              { return distances[u] < distances[v]; });
+                              {
+                                  if (distances[u] < distances[v])
+                                      return true;
+                                  if (distances[v] < distances[u])
+                                      return false;
+                                  return u < v;
+                              });
 
         distances[s] = 0;
         pq.insert(s);
