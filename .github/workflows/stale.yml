@@ -22,7 +22,7 @@ jobs:
             echo "nameserver 1.1.1.1"
             echo "nameserver 8.8.8.8"
           } | sudo tee /etc/resolv.conf > /dev/null
-      - uses: actions/stale@v10
+      - uses: actions/stale@v11
         with:
           operations-per-run: 3000
           stale-issue-message: 'This issue seems to be stale. It will be closed in 30 days if no further activity occurs.'
