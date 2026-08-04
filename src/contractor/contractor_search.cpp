@@ -9,7 +9,11 @@ namespace osrm::contractor
 
 namespace
 {
-void relaxNode(ContractorHeap &heap,
+// Returns true if the search must stop because the heap's fixed-capacity storage is
+// running out of room. Callers must abort the search immediately in that case: further
+// insertions risk filling the hash table completely, which turns its linear probing into
+// an infinite loop.
+bool relaxNode(ContractorHeap &heap,
                const ContractorGraph &graph,
                const std::vector<bool> &contractible,
                const NodeID node,
@@ -39,6 +43,10 @@ void relaxNode(ContractorHeap &heap,
             {
                 continue;
             }
+            if (heap.Occupancy() >= RELAXED_NODE_LIMIT)
+            {
+                return true; // stop search
+            }
             heap.Insert(to, to_weight, false);
         }
         // Found a shorter Path -> Update weight
@@ -48,6 +56,7 @@ void relaxNode(ContractorHeap &heap,
             heap.DecreaseKey(*toHeapNode);
         }
     }
+    return false;
 }
 } // namespace
 
@@ -62,7 +71,10 @@ void search(ContractorHeap &heap,
 {
     int nodes = 0;
     unsigned number_of_targets_found = 0;
-    relaxNode(heap, graph, contractible, start, EdgeWeight{0}, forbidden_node);
+    if (relaxNode(heap, graph, contractible, start, EdgeWeight{0}, forbidden_node))
+    {
+        return;
+    }
     while (!heap.Empty())
     {
         const NodeID node = heap.DeleteMin();
@@ -87,7 +99,10 @@ void search(ContractorHeap &heap,
             }
         }
 
-        relaxNode(heap, graph, contractible, node, node_weight, forbidden_node);
+        if (relaxNode(heap, graph, contractible, node, node_weight, forbidden_node))
+        {
+            return;
+        }
     }
 }
 } // namespace osrm::contractor
