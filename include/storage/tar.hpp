@@ -279,6 +279,22 @@ class FileReader
 
         if (!expected_fingerprint.IsDataCompatible(loaded_fingerprint))
         {
+            if (!expected_fingerprint.IsABICompatible(loaded_fingerprint))
+            {
+                throw util::RuntimeError(
+                    std::string(path.string()) + " was prepared on " +
+                        loaded_fingerprint.GetOperatingSystemString() + " (" +
+                        std::to_string(loaded_fingerprint.GetPointerBytes() * 8) + "-bit, " +
+                        loaded_fingerprint.GetEndiannessString() + ") but this is " +
+                        expected_fingerprint.GetOperatingSystemString() + " (" +
+                        std::to_string(expected_fingerprint.GetPointerBytes() * 8) + "-bit, " +
+                        expected_fingerprint.GetEndiannessString() +
+                        "); OSRM datasets are not portable across platforms and must be "
+                        "re-processed on the target platform",
+                    ErrorCode::IncompatibleFileVersion,
+                    SOURCE_REF);
+            }
+
             const std::string fileversion =
                 std::to_string(loaded_fingerprint.GetMajorVersion()) + "." +
                 std::to_string(loaded_fingerprint.GetMinorVersion()) + "." +
