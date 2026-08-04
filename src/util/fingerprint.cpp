@@ -1,16 +1,48 @@
 #include "util/fingerprint.hpp"
-#include "util/exception.hpp"
-#include "util/exception_utils.hpp"
 #include "util/version.hpp"
 
 #include <boost/crc.hpp>
 
-#include <cstring>
-
-#include <algorithm>
+#include <bit>
+#include <cstddef>
 
 namespace osrm::util
 {
+
+namespace
+{
+// Detect the operating system / ABI family of the build that is running.
+constexpr FingerPrint::OperatingSystem DetectOperatingSystem()
+{
+#if defined(_WIN32)
+    return FingerPrint::OperatingSystem::Windows;
+#elif defined(__APPLE__)
+    return FingerPrint::OperatingSystem::macOS;
+#elif defined(__linux__)
+    return FingerPrint::OperatingSystem::Linux;
+#elif defined(__FreeBSD__)
+    return FingerPrint::OperatingSystem::FreeBSD;
+#else
+    return FingerPrint::OperatingSystem::Other;
+#endif
+}
+
+constexpr FingerPrint::Endianness DetectEndianness()
+{
+    if constexpr (std::endian::native == std::endian::little)
+    {
+        return FingerPrint::Endianness::Little;
+    }
+    else if constexpr (std::endian::native == std::endian::big)
+    {
+        return FingerPrint::Endianness::Big;
+    }
+    else
+    {
+        return FingerPrint::Endianness::Unknown;
+    }
+}
+} // namespace
 
 /**
  * Constructs a valid fingerprint for the current (running) version of OSRM.
@@ -21,14 +53,18 @@ FingerPrint FingerPrint::GetValid()
 {
     FingerPrint fingerprint;
 
-    // 4 chars, 'O','S','R','N' - note the N instead of M, v1 of the fingerprint
-    // used M, so we add one and use N to indicate the newer fingerprint magic number.
-    // Bump this value if the fingerprint format ever changes.
-    // Changed to force incompatibility for updated packed storage layout (packed_osm_ids.hpp).
-    fingerprint.magic_number = {{'O', 'S', 'R', 'O'}};
+    // 4 chars magic number. Bump the final char whenever the fingerprint format
+    // or on-disk data layout changes, to force incompatibility with datasets
+    // produced by older code.
+    //   'M' -> v1, 'N' -> semver scheme, 'O' -> packed_osm_ids layout,
+    //   'P' -> added ABI descriptor (os / endianness / pointer size).
+    fingerprint.magic_number = {{'O', 'S', 'R', 'P'}};
     fingerprint.major_version = OSRM_VERSION_MAJOR;
     fingerprint.minor_version = OSRM_VERSION_MINOR;
     fingerprint.patch_version = OSRM_VERSION_PATCH;
+    fingerprint.os = DetectOperatingSystem();
+    fingerprint.endianness = DetectEndianness();
+    fingerprint.pointer_bytes = static_cast<std::uint8_t>(sizeof(void *));
     fingerprint.checksum = fingerprint.CalculateChecksum();
 
     return fingerprint;
@@ -37,6 +73,43 @@ FingerPrint FingerPrint::GetValid()
 int FingerPrint::GetMajorVersion() const { return major_version; }
 int FingerPrint::GetMinorVersion() const { return minor_version; }
 int FingerPrint::GetPatchVersion() const { return patch_version; }
+
+FingerPrint::OperatingSystem FingerPrint::GetOperatingSystem() const { return os; }
+int FingerPrint::GetPointerBytes() const { return pointer_bytes; }
+
+const char *FingerPrint::GetOperatingSystemString() const
+{
+    switch (os)
+    {
+    case OperatingSystem::Linux:
+        return "Linux";
+    case OperatingSystem::Windows:
+        return "Windows";
+    case OperatingSystem::macOS:
+        return "macOS";
+    case OperatingSystem::FreeBSD:
+        return "FreeBSD";
+    case OperatingSystem::Other:
+        return "other";
+    case OperatingSystem::Unknown:
+    default:
+        return "unknown";
+    }
+}
+
+const char *FingerPrint::GetEndiannessString() const
+{
+    switch (endianness)
+    {
+    case Endianness::Little:
+        return "little-endian";
+    case Endianness::Big:
+        return "big-endian";
+    case Endianness::Unknown:
+    default:
+        return "unknown-endian";
+    }
+}
 
 /**
  * Calculates the CRC8 of the FingerPrint struct, using all bytes except the
@@ -78,14 +151,23 @@ bool FingerPrint::IsValid() const
 }
 
 /**
+ * Determines whether `other` was produced by a binary-compatible OS/ABI, i.e.
+ * its raw data image can be interpreted by the platform running this code.
+ * The .osrm.* files are a raw image of in-memory structures, so any difference
+ * in the producing platform's struct layout makes the data unusable here.
+ */
+bool FingerPrint::IsABICompatible(const FingerPrint &other) const
+{ return other.os == os && other.endianness == endianness && other.pointer_bytes == pointer_bytes; }
+
+/**
  * Determines whether two fingerprints are data compatible.
  * Our compatibility rules say that we maintain data compatibility for all PATCH versions.
  * A difference in either the MAJOR or MINOR version fields means the data is considered
- * incompatible.
+ * incompatible, as does a difference in the producing platform's ABI.
  */
 bool FingerPrint::IsDataCompatible(const FingerPrint &other) const
 {
     return IsValid() && other.major_version == major_version &&
-           other.minor_version == minor_version;
+           other.minor_version == minor_version && IsABICompatible(other);
 }
 } // namespace osrm::util
