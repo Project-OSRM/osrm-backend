@@ -48,7 +48,10 @@ inline std::string HeaderOrEmpty(const Request &req, bhttp::field f)
 // "; charset=utf-8"). Comparison is case-insensitive on the media type.
 bool IsJsonContentType(std::string content_type)
 {
-    std::transform(content_type.begin(), content_type.end(), content_type.begin(), ::tolower);
+    std::transform(content_type.begin(),
+                   content_type.end(),
+                   content_type.begin(),
+                   [](unsigned char c) { return std::tolower(c); });
     return content_type.rfind("application/json", 0) == 0;
 }
 
@@ -167,7 +170,7 @@ void RequestHandler::HandleRequest(const Request &current_request,
         json_result.values["code"] = "InvalidMethod";
         json_result.values["message"] = "Method not allowed. Use GET or POST.";
         SendResponse(result, current_reply, bhttp::status::method_not_allowed);
-        current_reply.set(bhttp::field::allow, "GET, POST, OPTIONS");
+        current_reply.set(bhttp::field::allow, "GET, HEAD, POST, OPTIONS");
         return;
     }
 
@@ -186,7 +189,9 @@ void RequestHandler::HandleRequest(const Request &current_request,
         // in the URL; POST additionally gets its JSON body appended (compacted to one line) so both
         // request types are logged identically and can be replayed from the log alone.
         util::Log() << "[req][" << tid << "] " << request_string
-                    << (is_post ? " " + CompactJsonForLog(current_request.body()) : std::string());
+                    << (is_post && !util::LogPolicy::GetInstance().IsMute()
+                            ? " " + CompactJsonForLog(current_request.body())
+                            : std::string());
 
         ServiceHandler::ResultT result;
         bhttp::status response_status = bhttp::status::ok;
@@ -266,8 +271,9 @@ void RequestHandler::HandleRequest(const Request &current_request,
                         << request_string
                         // POST: append the JSON body (compacted to one line) so the request
                         // can be replayed from the log alone.
-                        << (is_post ? " " + CompactJsonForLog(current_request.body())
-                                    : std::string());
+                        << (is_post && !util::LogPolicy::GetInstance().IsMute()
+                                ? " " + CompactJsonForLog(current_request.body())
+                                : std::string());
         }
     }
     catch (const util::DisabledDatasetException &e)

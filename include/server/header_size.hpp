@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "engine/engine_config.hpp"
 
 #include <algorithm>
+#include <cstddef>
 
 namespace osrm::server
 {

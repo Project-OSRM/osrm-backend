@@ -15,7 +15,7 @@ using Response = boost::beast::http::response<boost::beast::http::vector_body<ch
 inline void SetCorsHeaders(Response &res)
 {
     res.set("Access-Control-Allow-Origin", "*");
-    res.set("Access-Control-Allow-Methods", "GET, POST, OPTIONS");
+    res.set("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
     res.set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
 }
 
