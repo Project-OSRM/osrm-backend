@@ -1,9 +1,11 @@
 #include "server/api/url_parser.hpp"
 
+#include <boost/fusion/adapted/std_tuple.hpp>
 #include <boost/fusion/include/adapt_struct.hpp>
 #include <boost/spirit/home/x3.hpp>
 
 #include <string>
+#include <tuple>
 
 BOOST_FUSION_ADAPT_STRUCT(osrm::server::api::ParsedURL, service, version, profile, query)
 
@@ -30,6 +32,12 @@ const auto query = x3::rule<struct query_tag, std::string>{"query"} = +all_chars
 const auto url_parser = x3::rule<struct url_parser_tag, osrm::server::api::ParsedURL>{"url"} =
     x3::lit('/') > service > x3::lit('/') > x3::lit('v') > version > x3::lit('/') > profile
     > x3::lit('/') > query;
+
+// Example input: /table/v1/driving  (POST: coordinates and options come from the body)
+using PrefixTuple = std::tuple<std::string, unsigned, std::string>;
+const auto url_prefix_parser = x3::rule<struct url_prefix_parser_tag, PrefixTuple>{"url_prefix"} =
+    x3::lit('/') > service > x3::lit('/') > x3::lit('v') > version > x3::lit('/') > profile >
+    -x3::lit('/');
 
 std::size_t countDigits(unsigned v)
 {
@@ -67,6 +75,37 @@ std::optional<ParsedURL> parseURL(std::string::iterator &iter, const std::string
     {
         // The grammar above using expectation parsers ">" does not automatically increment the
         // iterator to the failing position. Extract the position from the exception ourselves.
+        iter = failure.where();
+    }
+
+    return std::nullopt;
+}
+
+std::optional<ParsedURL> parseURLPrefix(std::string::iterator &iter,
+                                        const std::string::iterator end)
+{
+    PrefixTuple prefix;
+
+    try
+    {
+        const auto ok = x3::parse(iter, end, url_prefix_parser, prefix);
+
+        if (ok && iter == end)
+        {
+            ParsedURL out;
+            out.service = std::get<0>(prefix);
+            out.version = std::get<1>(prefix);
+            out.profile = std::get<2>(prefix);
+            // No query in the URL: coordinates and options are supplied in the request body.
+            out.query.clear();
+            // prefix = /{service}/v{version}/{profile}/
+            out.prefix_length =
+                1 + out.service.size() + 2 + countDigits(out.version) + 1 + out.profile.size() + 1;
+            return std::make_optional(std::move(out));
+        }
+    }
+    catch (const x3::expectation_failure<std::string::iterator> &failure)
+    {
         iter = failure.where();
     }
 

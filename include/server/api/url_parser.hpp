@@ -18,6 +18,18 @@ inline std::optional<ParsedURL> parseURL(std::string url_string)
     auto iter = url_string.begin();
     return parseURL(iter, url_string.end());
 }
+
+// Parses only the "/{service}/v{version}/{profile}" prefix (with an optional trailing
+// slash) and leaves the query empty. Used for POST requests where coordinates and options
+// are supplied in the request body instead of the URL.
+std::optional<ParsedURL> parseURLPrefix(std::string::iterator &iter,
+                                        const std::string::iterator end);
+
+inline std::optional<ParsedURL> parseURLPrefix(std::string url_string)
+{
+    auto iter = url_string.begin();
+    return parseURLPrefix(iter, url_string.end());
+}
 } // namespace osrm::server::api
 
 #endif

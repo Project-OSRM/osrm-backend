@@ -75,6 +75,57 @@ curl 'http://router.project-osrm.org/route/v1/driving/13.388860,52.517037;13.397
 curl 'http://router.project-osrm.org/route/v1/driving/polyline(ofp_Ik_vpAilAyu@te@g`E)?overview=false'
 ```
 
+### POST requests with a JSON body
+
+In addition to encoding coordinates and options in the URL (`GET`), the `route` and `table`
+services accept a `POST` request whose body is a JSON object. This avoids URL/header length
+limits for requests with many coordinates.
+
+```endpoint
+POST /{service}/{version}/{profile}
+Content-Type: application/json
+```
+
+The URL carries only `service`, `version` and `profile`; all coordinates and options go in
+the body. The JSON keys mirror the URL option names above:
+
+| Key | Type | Description |
+| --- | --- | --- |
+| `coordinates` | array of `[longitude, latitude]`, or a `"polyline(...)"` / `"polyline6(...)"` string | Required. The locations to route through. |
+| `bearings` | array of `[value, range]` or `null` | Per-coordinate, as in the URL API. |
+| `radiuses` | array of number, `"unlimited"` or `null` | Per-coordinate. |
+| `hints` | array of base64 string or `null` | Per-coordinate. |
+| `approaches` | array of `"curb"` / `"opposite"` / `"unrestricted"` or `null` | Per-coordinate. |
+| `exclude` | array of string | Classes to avoid. |
+| `generate_hints` | boolean | |
+| `skip_waypoints` | boolean | |
+| `snapping` | `"default"` / `"any"` | |
+| `format` | `"json"` / `"flatbuffers"` | |
+
+`route` additionally accepts `steps` (bool), `alternatives` (bool or integer), `geometries`,
+`overview`, `continue_straight` (bool or `"default"`), `waypoints` (array of indices), and
+`annotations` (bool or an array such as `["duration","distance"]`). `table` additionally
+accepts `sources`/`destinations` (arrays of indices), `annotations` (bool or
+`["duration","distance"]`), `fallback_speed`, `fallback_coordinate` (`"input"`/`"snapped"`)
+and `scale_factor`. Services that do not support `POST` return a `NotImplemented` error.
+
+The maximum request body size defaults to a value derived from the configured coordinate
+limits and can be overridden with the `--max-request-body-size` option of `osrm-routed`.
+
+#### Example Requests
+
+```bash
+# Route with three coordinates, no overview geometry:
+curl -X POST 'http://router.project-osrm.org/route/v1/driving' \
+  -H 'Content-Type: application/json' \
+  -d '{"coordinates":[[13.388860,52.517037],[13.397634,52.529407],[13.428555,52.523219]],"overview":"false"}'
+
+# 1x3 duration+distance matrix:
+curl -X POST 'http://router.project-osrm.org/table/v1/driving' \
+  -H 'Content-Type: application/json' \
+  -d '{"coordinates":[[13.388860,52.517037],[13.397634,52.529407],[13.428555,52.523219]],"sources":[0],"annotations":["duration","distance"]}'
+```
+
 ### Responses
 
 #### Code

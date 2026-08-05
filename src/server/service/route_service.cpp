@@ -4,6 +4,7 @@
 
 #include "server/service/utils.hpp"
 
+#include "server/api/json_parameters_parser.hpp"
 #include "server/api/parameters_parser.hpp"
 #include "engine/api/route_parameters.hpp"
 
@@ -36,6 +37,27 @@ std::string getWrongOptionHelp(const engine::api::RouteParameters &parameters)
 
     return help;
 }
+
+// Shared tail for the GET and POST paths: validate the parsed parameters and run the query.
+// `result` must hold a util::json::Object on entry (for error messages).
+engine::Status runRoute(OSRM &routing_machine,
+                        const engine::api::RouteParameters &parameters,
+                        osrm::engine::api::ResultT &result)
+{
+    if (!parameters.IsValid())
+    {
+        auto &json_result = std::get<util::json::Object>(result);
+        json_result.values["code"] = "InvalidOptions";
+        json_result.values["message"] = getWrongOptionHelp(parameters);
+        return engine::Status::Error;
+    }
+
+    if (parameters.format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
+    {
+        result = flatbuffers::FlatBufferBuilder();
+    }
+    return routing_machine.Route(parameters, result);
+}
 } // namespace
 
 engine::Status RouteService::RunQuery(std::size_t prefix_length,
@@ -58,21 +80,24 @@ engine::Status RouteService::RunQuery(std::size_t prefix_length,
     }
     BOOST_ASSERT(parameters);
 
-    if (!parameters->IsValid())
+    return runRoute(BaseService::routing_machine, *parameters, result);
+}
+
+engine::Status RouteService::RunJSONQuery(const std::string &json_body,
+                                          osrm::engine::api::ResultT &result)
+{
+    result = util::json::Object();
+    auto &json_result = std::get<util::json::Object>(result);
+
+    std::string error;
+    auto parameters = api::parseJSONParameters<engine::api::RouteParameters>(json_body, error);
+    if (!parameters)
     {
-        json_result.values["code"] = "InvalidOptions";
-        json_result.values["message"] = getWrongOptionHelp(*parameters);
+        json_result.values["code"] = "InvalidQuery";
+        json_result.values["message"] = error;
         return engine::Status::Error;
     }
-    BOOST_ASSERT(parameters->IsValid());
 
-    if (parameters->format)
-    {
-        if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
-        {
-            result = flatbuffers::FlatBufferBuilder();
-        }
-    }
-    return BaseService::routing_machine.Route(*parameters, result);
+    return runRoute(BaseService::routing_machine, *parameters, result);
 }
 } // namespace osrm::server::service

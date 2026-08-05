@@ -176,6 +176,8 @@ struct RouteParameters : public BaseParameters
     std::optional<bool> continue_straight;
     std::vector<std::size_t> waypoints;
 
+    bool operator==(const RouteParameters &) const = default;
+
     bool IsValid() const
     {
         const auto coordinates_ok = coordinates.size() >= 2;

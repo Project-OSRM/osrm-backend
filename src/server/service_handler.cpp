@@ -22,17 +22,23 @@ ServiceHandler::ServiceHandler(osrm::EngineConfig &config) : routing_machine(con
     service_map["tile"] = std::make_unique<service::TileService>(routing_machine);
 }
 
-engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
-                                        osrm::engine::api::ResultT &result)
+namespace
 {
-    const auto &service_iter = service_map.find(parsed_url.service);
+// Resolves the service for a parsed URL. On failure writes a JSON error into `result` and
+// returns nullptr.
+service::BaseService *
+resolveService(std::unordered_map<std::string, std::unique_ptr<service::BaseService>> &service_map,
+               const api::ParsedURL &parsed_url,
+               osrm::engine::api::ResultT &result)
+{
+    const auto service_iter = service_map.find(parsed_url.service);
     if (service_iter == service_map.end())
     {
         result = util::json::Object();
         auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "InvalidService";
         json_result.values["message"] = "Service " + parsed_url.service + " not found!";
-        return engine::Status::Error;
+        return nullptr;
     }
     auto &service = service_iter->second;
 
@@ -42,9 +48,31 @@ engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
         auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "InvalidVersion";
         json_result.values["message"] = "Service " + parsed_url.service + " not found!";
-        return engine::Status::Error;
+        return nullptr;
     }
 
+    return service.get();
+}
+} // namespace
+
+engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
+                                        osrm::engine::api::ResultT &result)
+{
+    auto *service = resolveService(service_map, parsed_url, result);
+    if (!service)
+        return engine::Status::Error;
+
     return service->RunQuery(parsed_url.prefix_length, parsed_url.query, result);
+}
+
+engine::Status ServiceHandler::RunQuery(api::ParsedURL parsed_url,
+                                        const std::string &json_body,
+                                        osrm::engine::api::ResultT &result)
+{
+    auto *service = resolveService(service_map, parsed_url, result);
+    if (!service)
+        return engine::Status::Error;
+
+    return service->RunJSONQuery(json_body, result);
 }
 } // namespace osrm::server

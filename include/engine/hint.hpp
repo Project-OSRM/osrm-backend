@@ -74,6 +74,8 @@ struct Hint
 
     std::string ToBase64() const;
     static Hint FromBase64(const std::string &base64Hint);
+
+    bool operator==(const Hint &) const = default;
 };
 
 static_assert(sizeof(SegmentHint) == 80 + 4, "SegmentHint size must stay at 84 bytes");

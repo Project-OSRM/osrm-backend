@@ -21,6 +21,9 @@ class RouteService final : public BaseService
                             std::string &query,
                             osrm::engine::api::ResultT &result) final override;
 
+    engine::Status RunJSONQuery(const std::string &json_body,
+                                osrm::engine::api::ResultT &result) final override;
+
     unsigned GetVersion() final override { return 1; }
 };
 } // namespace osrm::server::service

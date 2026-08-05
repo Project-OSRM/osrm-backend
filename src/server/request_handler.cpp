@@ -16,9 +16,14 @@
 
 #include <boost/iostreams/copy.hpp>
 
+#include <rapidjson/document.h>
+#include <rapidjson/stringbuffer.h>
+#include <rapidjson/writer.h>
+
 #include <ctime>
 
 #include <algorithm>
+#include <cctype>
 #include <iomanip>
 #include <string>
 #include <thread>
@@ -39,15 +44,62 @@ inline std::string HeaderOrEmpty(const Request &req, bhttp::field f)
     return std::string(it->value());
 }
 
+// True if the Content-Type header denotes JSON (optionally with parameters such as
+// "; charset=utf-8"). Comparison is case-insensitive on the media type.
+bool IsJsonContentType(std::string content_type)
+{
+    std::transform(content_type.begin(), content_type.end(), content_type.begin(), ::tolower);
+    return content_type.rfind("application/json", 0) == 0;
+}
+
+// Renders a POST body as compact, single-line JSON for the access log so the request can be
+// replayed verbatim from the log later. Falls back to collapsing raw newlines when the body
+// is not valid JSON (e.g. wrong Content-Type), so the log line still stays on one line.
+std::string CompactJsonForLog(const std::string &body)
+{
+    rapidjson::Document doc;
+    if (!doc.Parse(body.c_str(), body.size()).HasParseError())
+    {
+        rapidjson::StringBuffer buffer;
+        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+        doc.Accept(writer);
+        return std::string(buffer.GetString(), buffer.GetSize());
+    }
+
+    std::string collapsed = body;
+    std::replace(collapsed.begin(), collapsed.end(), '\n', ' ');
+    std::replace(collapsed.begin(), collapsed.end(), '\r', ' ');
+    return collapsed;
+}
+
+// Builds the JSON error returned when the request path cannot be parsed. `iter` points at
+// the position where parsing failed within `request_string`.
+util::json::Object MakeInvalidUrlError(std::string &request_string,
+                                       const std::string::iterator iter)
+{
+    const auto position = std::distance(request_string.begin(), iter);
+    BOOST_ASSERT(position >= 0);
+    const auto context_begin = request_string.begin() + ((position < 3) ? 0 : (position - 3UL));
+    BOOST_ASSERT(context_begin >= request_string.begin());
+    const auto context_end =
+        request_string.begin() + std::min<std::size_t>(position + 3UL, request_string.size());
+    BOOST_ASSERT(context_end <= request_string.end());
+    std::string context(context_begin, context_end);
+
+    util::json::Object json_result;
+    json_result.values["code"] = "InvalidUrl";
+    json_result.values["message"] = "URL string malformed close to position " +
+                                    std::to_string(position) + ": \"" + context + "\"";
+    return json_result;
+}
+
 void SendResponse(ServiceHandler::ResultT &result,
                   Response &current_reply,
                   const bhttp::status status)
 {
 
     current_reply.result(status);
-    current_reply.set("Access-Control-Allow-Origin", "*");
-    current_reply.set("Access-Control-Allow-Methods", "GET");
-    current_reply.set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
+    SetCorsHeaders(current_reply);
     if (std::holds_alternative<util::json::Object>(result))
     {
         current_reply.set(bhttp::field::content_type, "application/json; charset=UTF-8");
@@ -97,6 +149,30 @@ void RequestHandler::HandleRequest(const Request &current_request,
         return;
     }
 
+    const auto method = current_request.method();
+
+    // CORS preflight: answer with the allowed methods/headers and no body.
+    if (method == bhttp::verb::options)
+    {
+        current_reply.result(bhttp::status::no_content);
+        SetCorsHeaders(current_reply);
+        return;
+    }
+
+    // Only GET (URL query) and POST (JSON body) carry OSRM queries. HEAD is treated like GET.
+    if (method != bhttp::verb::get && method != bhttp::verb::head && method != bhttp::verb::post)
+    {
+        ServiceHandler::ResultT result = util::json::Object();
+        auto &json_result = std::get<util::json::Object>(result);
+        json_result.values["code"] = "InvalidMethod";
+        json_result.values["message"] = "Method not allowed. Use GET or POST.";
+        SendResponse(result, current_reply, bhttp::status::method_not_allowed);
+        current_reply.set(bhttp::field::allow, "GET, POST, OPTIONS");
+        return;
+    }
+
+    const bool is_post = method == bhttp::verb::post;
+
     const auto tid = std::this_thread::get_id();
 
     // parse command
@@ -106,47 +182,71 @@ void RequestHandler::HandleRequest(const Request &current_request,
         std::string request_string;
         util::URIDecode(std::string(current_request.target()), request_string);
 
-        util::Log(logDEBUG) << "[req][" << tid << "] " << request_string;
+        // Echo every incoming request to the console as a single line. GET carries its full query
+        // in the URL; POST additionally gets its JSON body appended (compacted to one line) so both
+        // request types are logged identically and can be replayed from the log alone.
+        util::Log() << "[req][" << tid << "] " << request_string
+                    << (is_post ? " " + CompactJsonForLog(current_request.body()) : std::string());
 
-        auto api_iterator = request_string.begin();
-        auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
         ServiceHandler::ResultT result;
         bhttp::status response_status = bhttp::status::ok;
 
-        // check if there was an error with the request
-        if (maybe_parsed_url && api_iterator == request_string.end())
-        {
+        auto api_iterator = request_string.begin();
 
-            const engine::Status status =
-                service_handler->RunQuery(*std::move(maybe_parsed_url), result);
-            if (status != engine::Status::Ok)
+        if (is_post)
+        {
+            // POST: the URL only carries "/{service}/v{version}/{profile}"; coordinates and
+            // options are supplied as a JSON body.
+            const auto content_type = HeaderOrEmpty(current_request, bhttp::field::content_type);
+            auto maybe_parsed_url = api::parseURLPrefix(api_iterator, request_string.end());
+
+            if (!IsJsonContentType(content_type))
             {
-                // 4xx bad request return code
-                response_status = bhttp::status::bad_request;
+                response_status = bhttp::status::unsupported_media_type;
+                result = util::json::Object();
+                auto &json_result = std::get<util::json::Object>(result);
+                json_result.values["code"] = "InvalidContentType";
+                json_result.values["message"] =
+                    "POST requests require a Content-Type of application/json.";
+            }
+            else if (maybe_parsed_url && api_iterator == request_string.end())
+            {
+                const engine::Status status = service_handler->RunQuery(
+                    *std::move(maybe_parsed_url), current_request.body(), result);
+                if (status != engine::Status::Ok)
+                {
+                    response_status = bhttp::status::bad_request;
+                }
             }
             else
             {
-                BOOST_ASSERT(status == engine::Status::Ok);
+                response_status = bhttp::status::bad_request;
+                result = MakeInvalidUrlError(request_string, api_iterator);
             }
         }
         else
         {
-            const auto position = std::distance(request_string.begin(), api_iterator);
-            BOOST_ASSERT(position >= 0);
-            const auto context_begin =
-                request_string.begin() + ((position < 3) ? 0 : (position - 3UL));
-            BOOST_ASSERT(context_begin >= request_string.begin());
-            const auto context_end = request_string.begin() +
-                                     std::min<std::size_t>(position + 3UL, request_string.size());
-            BOOST_ASSERT(context_end <= request_string.end());
-            std::string context(context_begin, context_end);
-
-            response_status = bhttp::status::bad_request;
-            result = util::json::Object();
-            auto &json_result = std::get<util::json::Object>(result);
-            json_result.values["code"] = "InvalidUrl";
-            json_result.values["message"] = "URL string malformed close to position " +
-                                            std::to_string(position) + ": \"" + context + "\"";
+            // GET/HEAD: the whole query lives in the URL.
+            auto maybe_parsed_url = api::parseURL(api_iterator, request_string.end());
+            if (maybe_parsed_url && api_iterator == request_string.end())
+            {
+                const engine::Status status =
+                    service_handler->RunQuery(*std::move(maybe_parsed_url), result);
+                if (status != engine::Status::Ok)
+                {
+                    // 4xx bad request return code
+                    response_status = bhttp::status::bad_request;
+                }
+                else
+                {
+                    BOOST_ASSERT(status == engine::Status::Ok);
+                }
+            }
+            else
+            {
+                response_status = bhttp::status::bad_request;
+                result = MakeInvalidUrlError(request_string, api_iterator);
+            }
         }
 
         SendResponse(result, current_reply, response_status);
@@ -163,7 +263,11 @@ void RequestHandler::HandleRequest(const Request &current_request,
                         << " " << (referrer.empty() ? "-" : referrer) << " "
                         << (agent.empty() ? "-" : agent) << " " << current_reply.result_int()
                         << " " //
-                        << request_string;
+                        << request_string
+                        // POST: append the JSON body (compacted to one line) so the request
+                        // can be replayed from the log alone.
+                        << (is_post ? " " + CompactJsonForLog(current_request.body())
+                                    : std::string());
         }
     }
     catch (const util::DisabledDatasetException &e)

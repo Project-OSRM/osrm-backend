@@ -1,7 +1,13 @@
 // Route response validation and geometry processing utilities
+import assert from 'node:assert';
+
 import { ensureDecimal } from '../lib/utils.js';
 import { env } from './env.js';
-import { sendRequest } from './http.js';
+import { sendRequest, sendPostRequest } from './http.js';
+
+// Services that support the JSON POST API. Requests to these are additionally issued as a
+// POST and checked for equivalence with the GET response (see requestPath).
+const POST_SUPPORTED_SERVICES = new Set(['route', 'table']);
 
 export default class Route {
   constructor(world) {
@@ -28,11 +34,165 @@ export default class Route {
     return query;
   }
 
+  // Converts the URL-style `params` object (string encodings) into the JSON body accepted by
+  // the POST API. Read-only: does not mutate `params` (paramsToQuery still needs it).
+  paramsToJSONBody(params) {
+    const toBool = (v) => (v === 'true' ? true : v === 'false' ? false : v);
+    const splitList = (v, mapper) => v.split(';').map((e) => (e === '' ? null : mapper(e)));
+    const toIndexArray = (v) =>
+      v.split(';').map((i) => {
+        const n = Number(i);
+        // Pass invalid entries through unchanged so the backend errors just like GET does.
+        return Number.isInteger(n) ? n : i;
+      });
+
+    const body = {};
+    for (const key of Object.keys(params)) {
+      const value = params[key];
+      switch (key) {
+      case 'coordinates':
+        if (Array.isArray(value) && value.length === 1 && /^polyline6?\(/.test(value[0])) {
+          body.coordinates = value[0];
+        } else {
+          body.coordinates = value.map((c) => c.split(',').map(Number));
+        }
+        break;
+      case 'output':
+        if (value && value !== 'json') body.format = value;
+        break;
+      case 'steps':
+      case 'generate_hints':
+      case 'skip_waypoints':
+        body[key] = toBool(value);
+        break;
+      case 'alternatives':
+        body.alternatives = /^\d+$/.test(value) ? Number(value) : toBool(value);
+        break;
+      case 'continue_straight':
+        body.continue_straight = value === 'default' ? 'default' : toBool(value);
+        break;
+      case 'annotations':
+        body.annotations =
+          value === 'true' || value === 'false' ? toBool(value) : value.split(',');
+        break;
+      case 'exclude':
+        body.exclude = value.split(',');
+        break;
+      case 'bearings':
+        body.bearings = splitList(value, (b) => b.split(',').map(Number));
+        break;
+      case 'radiuses':
+        body.radiuses = splitList(value, (r) => (r === 'unlimited' ? 'unlimited' : Number(r)));
+        break;
+      case 'hints':
+        body.hints = splitList(value, (h) => h);
+        break;
+      case 'approaches':
+        body.approaches = splitList(value, (a) => a);
+        break;
+      case 'sources':
+      case 'destinations':
+      case 'waypoints':
+        body[key] = toIndexArray(value);
+        break;
+      case 'fallback_speed':
+      case 'scale_factor':
+        body[key] = Number(value);
+        break;
+      case 'geometries':
+      case 'overview':
+      case 'snapping':
+      case 'fallback_coordinate':
+        body[key] = value;
+        break;
+      default:
+        // Unknown / service-specific param: pass through unchanged. The backend ignores
+        // unknown keys, and success-only comparison surfaces any real divergence.
+        body[key] = value;
+      }
+    }
+    return body;
+  }
+
+  getRequest(url) {
+    return new Promise((resolve, reject) => {
+      sendRequest(url, this.log, (err, res, body) =>
+        err ? reject(err) : resolve({ res, body }));
+    });
+  }
+
+  postRequest(url, jsonBody) {
+    return new Promise((resolve, reject) => {
+      sendPostRequest(url, jsonBody, this.log, (err, res, body) =>
+        err ? reject(err) : resolve({ res, body }));
+    });
+  }
+
+  // Asserts that a POST response is equivalent to the GET response. Successful responses must
+  // be byte/deep-identical; error responses only need to report the same `code` (the GET and
+  // POST paths word their diagnostic messages differently).
+  assertGetPostEquivalent(getResult, postResult) {
+    assert.strictEqual(
+      postResult.res.statusCode,
+      getResult.res.statusCode,
+      `GET/POST status code mismatch: GET=${getResult.res.statusCode} ` +
+        `POST=${postResult.res.statusCode}\nGET body: ${getResult.body}\nPOST body: ${postResult.body}`,
+    );
+
+    const contentType = getResult.res.headers['content-type'] || '';
+    if (!contentType.includes('json')) {
+      // flatbuffers or other binary payloads: compare raw bytes.
+      assert.strictEqual(postResult.body, getResult.body, 'GET and POST binary responses differ');
+      return;
+    }
+
+    const getJson = JSON.parse(getResult.body);
+    let postJson;
+    try {
+      postJson = JSON.parse(postResult.body);
+    } catch {
+      throw new Error(`POST response is not valid JSON: ${postResult.body}`);
+    }
+
+    if (getJson.code && getJson.code !== 'Ok') {
+      assert.strictEqual(
+        postJson.code,
+        getJson.code,
+        `GET/POST error code mismatch: GET=${getJson.code} POST=${postJson.code}`,
+      );
+      return;
+    }
+
+    assert.deepStrictEqual(
+      postJson,
+      getJson,
+      'GET and POST responses differ for equivalent request',
+    );
+  }
+
   requestPath(service, parameters, callback) {
+    const supportsPost = POST_SUPPORTED_SERVICES.has(service);
+
+    // Build the JSON body before paramsToQuery mutates `parameters`.
+    const jsonBody = supportsPost ? this.paramsToJSONBody(parameters) : null;
+
     const baseUrl = new URL(`${service}/v1/${this.profile}/`, env.wp.host);
     const query = this.paramsToQuery(parameters);
     const url = new URL(query, baseUrl);
-    sendRequest(url, this.log, callback);
+
+    if (!supportsPost) {
+      return sendRequest(url, this.log, callback);
+    }
+
+    // Run GET and POST in parallel and verify equivalence, then return the GET result so the
+    // existing expectations keep validating the GET response.
+    const postUrl = new URL(`${service}/v1/${this.profile}`, env.wp.host);
+    Promise.all([this.getRequest(url), this.postRequest(postUrl, jsonBody)])
+      .then(([getResult, postResult]) => {
+        this.assertGetPostEquivalent(getResult, postResult);
+        callback(null, getResult.res, getResult.body);
+      })
+      .catch((err) => callback(err));
   }
 
   requestUrl(path, callback) {
