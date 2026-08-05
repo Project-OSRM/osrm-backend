@@ -3,12 +3,24 @@
 
 local Obstacles = {}
 
+-- Mapping from highway tag values to obstacle types
+local highway_to_obstacle_type = {
+    ["traffic_signals"] = obstacle_type.traffic_signals,
+    ["stop"] = obstacle_type.stop,
+    ["give_way"] = obstacle_type.give_way,
+    ["crossing"] = obstacle_type.crossing,
+    ["traffic_calming"] = obstacle_type.traffic_calming,
+    ["mini_roundabout"] = obstacle_type.mini_roundabout,
+    ["turning_loop"] = obstacle_type.turning_loop,
+    ["turning_circle"] = obstacle_type.turning_circle
+}
+
 -- process the obstacles at the given node
 -- note: does not process barriers
 function Obstacles.process_node(profile, node)
     local highway = node:get_value_by_key("highway")
     if highway then
-        local type = obstacle_type[highway]
+        local type = highway_to_obstacle_type[highway]
         -- barriers already handled in car.lua
         if type and type ~= obstacle_type.barrier then
             local direction = node:get_value_by_key("direction")

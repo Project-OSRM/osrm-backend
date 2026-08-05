@@ -759,6 +759,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                 }),
             "has_traffic_light",
             &ExtractionTurn::has_traffic_light,
+            "has_turning_facility",
+            &ExtractionTurn::has_turning_facility,
             "weight",
             &ExtractionTurn::weight,
             "duration",
@@ -884,6 +886,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::is_u_turn,
             "has_traffic_light",
             &ExtractionTurn::has_traffic_light,
+            "has_turning_facility",
+            &ExtractionTurn::has_turning_facility,
             "is_left_hand_driving",
             &ExtractionTurn::is_left_hand_driving,
 

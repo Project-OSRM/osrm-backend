@@ -416,6 +416,7 @@ angle                              | Read          | Float                     |
 number_of_roads                    | Read          | Integer                   | Number of ways at the intersection of the turn
 is_u_turn                          | Read          | Boolean                   | Is the turn a u-turn?
 has_traffic_light                  | Read          | Boolean                   | Is a traffic light present at this turn?
+has_turning_facility               | Read          | Boolean                   | Is a turning facility (turning_circle, turning_loop, or mini_roundabout) present at this intersection?
 is_left_hand_driving               | Read          | Boolean                   | Is left-hand traffic?
 source_restricted                  | Read          | Boolean                   | Is it from a restricted access road? (See definition in `process_way`)
 source_mode                        | Read          | Enum                      | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
