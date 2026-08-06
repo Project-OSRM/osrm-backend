@@ -1,0 +1,51 @@
+# Doxygen configuration for the generated libosrm C++ API reference.
+#
+# Only ever run by tools/api-docs/build.py, from inside the throwaway tree that script
+# prepares under build/api-docs/src. XML only: Doxygen's own HTML output is not used, the
+# pages are rendered from this XML by Sourcey.
+#
+# INPUT is deliberately the set of headers docs/libosrm.md points embedders at, plus the
+# types those headers expose in their signatures. Widening it to include/ as a whole pulls
+# in the internal engine, extractor, partitioner and customizer trees, which are not part
+# of the libosrm contract.
+
+PROJECT_NAME           = "libosrm"
+PROJECT_BRIEF          = "The C++ library interface to the Open Source Routing Machine"
+
+INPUT                  = include/osrm/osrm.hpp \
+                         include/engine/api \
+                         include/engine/status.hpp \
+                         include/engine/engine_config.hpp \
+                         include/engine/approach.hpp \
+                         include/engine/bearing.hpp \
+                         include/engine/hint.hpp \
+                         include/util/coordinate.hpp \
+                         include/util/json_container.hpp \
+                         include/storage/storage_config.hpp
+RECURSIVE              = YES
+STRIP_FROM_PATH        = .
+FILE_PATTERNS          = *.hpp *.h
+
+EXTRACT_ALL            = NO
+EXTRACT_PRIVATE        = NO
+EXTRACT_STATIC         = NO
+EXTRACT_LOCAL_CLASSES  = NO
+HIDE_UNDOC_MEMBERS     = YES
+HIDE_UNDOC_CLASSES     = YES
+INTERNAL_DOCS          = NO
+
+JAVADOC_AUTOBRIEF      = YES
+QT_AUTOBRIEF           = YES
+MARKDOWN_SUPPORT       = YES
+AUTOLINK_SUPPORT       = YES
+BUILTIN_STL_SUPPORT    = YES
+
+GENERATE_XML           = YES
+GENERATE_HTML          = NO
+GENERATE_LATEX         = NO
+XML_OUTPUT             = ../xml
+XML_PROGRAMLISTING     = NO
+
+QUIET                  = YES
+WARN_IF_UNDOCUMENTED   = NO
+WARN_AS_ERROR          = NO
