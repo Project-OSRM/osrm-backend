@@ -30,6 +30,7 @@ Related [Project-OSRM](https://github.com/Project-OSRM) repositories:
 - [Hosted documentation](http://project-osrm.org)
 - [osrm-routed HTTP API documentation](docs/http.md)
 - [libosrm API documentation](docs/libosrm.md)
+- [libosrm C++ API reference](https://project-osrm.org/libosrm-api/) (generated from the public headers)
 
 ## Contact
 

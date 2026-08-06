@@ -2,6 +2,8 @@
 
 OSRM can be used as a library (libosrm) via C++ instead of using it through the HTTP interface and `osrm-routed`. This allows for fine-tuning OSRM and has much less overhead. Here is a quick introduction into how to use `libosrm` in the current version.
 
+A generated C++ reference for these types --- every class, member and signature, each linked to the line of the header it was read from --- is published at [project-osrm.org/libosrm-api](https://project-osrm.org/libosrm-api/). Regenerate it with `python tools/api-docs/build.py`.
+
 Take a look at the example code that lives in the [example directory](https://github.com/Project-OSRM/osrm-backend/tree/master/example). Here is all you ever wanted to know about `libosrm`, that is a short description of what the types do and where to find documentation on it:
 
 ## Important interface objects
