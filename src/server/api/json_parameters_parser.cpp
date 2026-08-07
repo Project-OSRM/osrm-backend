@@ -1,6 +1,7 @@
 #include "server/api/json_parameters_parser.hpp"
 
 #include "engine/api/base_parameters.hpp"
+#include "engine/api/match_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
 #include "engine/api/table_parameters.hpp"
 
@@ -42,6 +43,15 @@ std::nullopt_t failOpt(std::string &error, std::string message)
 {
     error = std::move(message);
     return std::nullopt;
+}
+
+// Parses the request body into a DOM, reporting syntax errors through `error`.
+bool parseDocument(const std::string &json_body, rj::Document &doc, std::string &error)
+{
+    if (doc.Parse(json_body.c_str(), json_body.size()).HasParseError())
+        return fail(error,
+                    std::string{"invalid JSON: "} + rj::GetParseError_En(doc.GetParseError()));
+    return true;
 }
 
 // --- String -> enum mappings (mirror the symbol tables in base_parameters_grammar.hpp
@@ -321,6 +331,141 @@ bool parseIndexArray(const rj::Value &value,
     return true;
 }
 
+// --- route parameters (shared by /route and /match) ---
+
+// Mirrors how the URL grammar composes route_grammar::route_options into both the route and the
+// match root rule: MatchParameters derives from RouteParameters and accepts the same options.
+bool parseRouteParameters(const rj::Value &doc,
+                          engine::api::RouteParameters &params,
+                          std::string &error)
+{
+    using engine::api::RouteParameters;
+
+    if (!parseBaseParameters(doc, params, error))
+        return false;
+
+    if (const auto it = doc.FindMember("steps"); it != doc.MemberEnd())
+    {
+        if (!it->value.IsBool())
+            return fail(error, "steps must be a boolean");
+        params.steps = it->value.GetBool();
+    }
+
+    if (const auto it = doc.FindMember("alternatives"); it != doc.MemberEnd())
+    {
+        if (it->value.IsBool())
+        {
+            params.alternatives = it->value.GetBool();
+            params.number_of_alternatives = it->value.GetBool() ? 1u : 0u;
+        }
+        else if (it->value.IsUint())
+        {
+            const auto n = it->value.GetUint();
+            params.number_of_alternatives = n;
+            params.alternatives = n > 0;
+        }
+        else
+        {
+            return fail(error, "alternatives must be a boolean or a non-negative integer");
+        }
+    }
+
+    if (const auto it = doc.FindMember("continue_straight"); it != doc.MemberEnd())
+    {
+        if (it->value.IsBool())
+            params.continue_straight = it->value.GetBool();
+        else if (!(it->value.IsString() && std::string_view{it->value.GetString()} == "default"))
+            return fail(error, "continue_straight must be a boolean or \"default\"");
+        // "default" leaves continue_straight unset (std::nullopt).
+    }
+
+    if (const auto it = doc.FindMember("geometries"); it != doc.MemberEnd())
+    {
+        if (!it->value.IsString())
+            return fail(error, "geometries must be a string");
+        const std::string_view v{it->value.GetString(), it->value.GetStringLength()};
+        if (v == "polyline")
+            params.geometries = RouteParameters::GeometriesType::Polyline;
+        else if (v == "polyline6")
+            params.geometries = RouteParameters::GeometriesType::Polyline6;
+        else if (v == "geojson")
+            params.geometries = RouteParameters::GeometriesType::GeoJSON;
+        else
+            return fail(error, "invalid geometries value");
+    }
+
+    if (const auto it = doc.FindMember("overview"); it != doc.MemberEnd())
+    {
+        if (!it->value.IsString())
+            return fail(error, "overview must be a string");
+        const std::string_view v{it->value.GetString(), it->value.GetStringLength()};
+        if (v == "simplified")
+            params.overview = RouteParameters::OverviewType::Simplified;
+        else if (v == "full")
+            params.overview = RouteParameters::OverviewType::Full;
+        else if (v == "false")
+            params.overview = RouteParameters::OverviewType::False;
+        else if (v == "by_legs")
+            params.overview = RouteParameters::OverviewType::ByLegs;
+        else
+            return fail(error, "invalid overview value");
+    }
+
+    if (const auto it = doc.FindMember("annotations"); it != doc.MemberEnd())
+    {
+        using AnnotationsType = RouteParameters::AnnotationsType;
+        const auto to_type = [](std::string_view v) -> std::optional<AnnotationsType>
+        {
+            if (v == "duration")
+                return AnnotationsType::Duration;
+            if (v == "nodes")
+                return AnnotationsType::Nodes;
+            if (v == "distance")
+                return AnnotationsType::Distance;
+            if (v == "weight")
+                return AnnotationsType::Weight;
+            if (v == "datasources")
+                return AnnotationsType::Datasources;
+            if (v == "speed")
+                return AnnotationsType::Speed;
+            return std::nullopt;
+        };
+
+        if (it->value.IsBool())
+        {
+            params.annotations_type =
+                it->value.GetBool() ? AnnotationsType::All : AnnotationsType::None;
+        }
+        else if (it->value.IsArray())
+        {
+            auto type = AnnotationsType::None;
+            for (const auto &a : it->value.GetArray())
+            {
+                if (!a.IsString())
+                    return fail(error, "annotation entries must be strings");
+                const auto parsed = to_type({a.GetString(), a.GetStringLength()});
+                if (!parsed)
+                    return fail(error, "invalid annotation value");
+                type = type | *parsed;
+            }
+            params.annotations_type = type;
+        }
+        else
+        {
+            return fail(error, "annotations must be a boolean or an array of strings");
+        }
+        params.annotations = params.annotations_type != AnnotationsType::None;
+    }
+
+    if (const auto it = doc.FindMember("waypoints"); it != doc.MemberEnd())
+    {
+        if (!parseIndexArray(it->value, "waypoints", params.waypoints, error))
+            return false;
+    }
+
+    return true;
+}
+
 } // namespace
 
 template <>
@@ -330,134 +475,72 @@ std::optional<engine::api::RouteParameters> parseJSONParameters(const std::strin
     using engine::api::RouteParameters;
 
     rj::Document doc;
-    if (doc.Parse(json_body.c_str(), json_body.size()).HasParseError())
-        return failOpt(error,
-                       std::string{"invalid JSON: "} + rj::GetParseError_En(doc.GetParseError()));
+    if (!parseDocument(json_body, doc, error))
+        return std::nullopt;
 
     try
     {
         RouteParameters params;
-        if (!parseBaseParameters(doc, params, error))
+        if (!parseRouteParameters(doc, params, error))
             return std::nullopt;
 
-        if (const auto it = doc.FindMember("steps"); it != doc.MemberEnd())
+        return params;
+    }
+    catch (const std::exception &e)
+    {
+        return failOpt(error, std::string{"failed to parse parameters: "} + e.what());
+    }
+}
+
+template <>
+std::optional<engine::api::MatchParameters> parseJSONParameters(const std::string &json_body,
+                                                                std::string &error)
+{
+    using engine::api::MatchParameters;
+
+    rj::Document doc;
+    if (!parseDocument(json_body, doc, error))
+        return std::nullopt;
+
+    try
+    {
+        MatchParameters params;
+        if (!parseRouteParameters(doc, params, error))
+            return std::nullopt;
+
+        // timestamps: [ non-negative integer, ... ]
+        if (const auto it = doc.FindMember("timestamps"); it != doc.MemberEnd())
+        {
+            if (!it->value.IsArray())
+                return failOpt(error, "timestamps must be an array of integers");
+            for (const auto &t : it->value.GetArray())
+            {
+                if (!t.IsUint())
+                    return failOpt(error, "timestamps entries must be non-negative integers");
+                params.timestamps.push_back(t.GetUint());
+            }
+        }
+
+        // gaps: "split" | "ignore"
+        if (const auto it = doc.FindMember("gaps"); it != doc.MemberEnd())
+        {
+            if (!it->value.IsString())
+                return failOpt(error, "gaps must be a string");
+            const std::string_view v{it->value.GetString(), it->value.GetStringLength()};
+            if (v == "split")
+                params.gaps = MatchParameters::GapsType::Split;
+            else if (v == "ignore")
+                params.gaps = MatchParameters::GapsType::Ignore;
+            else
+                return failOpt(error, "invalid gaps value");
+        }
+
+        // tidy: bool
+        if (const auto it = doc.FindMember("tidy"); it != doc.MemberEnd())
         {
             if (!it->value.IsBool())
-                return failOpt(error, "steps must be a boolean");
-            params.steps = it->value.GetBool();
-        }
-
-        if (const auto it = doc.FindMember("alternatives"); it != doc.MemberEnd())
-        {
-            if (it->value.IsBool())
-            {
-                params.alternatives = it->value.GetBool();
-                params.number_of_alternatives = it->value.GetBool() ? 1u : 0u;
-            }
-            else if (it->value.IsUint())
-            {
-                const auto n = it->value.GetUint();
-                params.number_of_alternatives = n;
-                params.alternatives = n > 0;
-            }
-            else
-            {
-                return failOpt(error, "alternatives must be a boolean or a non-negative integer");
-            }
-        }
-
-        if (const auto it = doc.FindMember("continue_straight"); it != doc.MemberEnd())
-        {
-            if (it->value.IsBool())
-                params.continue_straight = it->value.GetBool();
-            else if (!(it->value.IsString() &&
-                       std::string_view{it->value.GetString()} == "default"))
-                return failOpt(error, "continue_straight must be a boolean or \"default\"");
-            // "default" leaves continue_straight unset (std::nullopt).
-        }
-
-        if (const auto it = doc.FindMember("geometries"); it != doc.MemberEnd())
-        {
-            if (!it->value.IsString())
-                return failOpt(error, "geometries must be a string");
-            const std::string_view v{it->value.GetString(), it->value.GetStringLength()};
-            if (v == "polyline")
-                params.geometries = RouteParameters::GeometriesType::Polyline;
-            else if (v == "polyline6")
-                params.geometries = RouteParameters::GeometriesType::Polyline6;
-            else if (v == "geojson")
-                params.geometries = RouteParameters::GeometriesType::GeoJSON;
-            else
-                return failOpt(error, "invalid geometries value");
-        }
-
-        if (const auto it = doc.FindMember("overview"); it != doc.MemberEnd())
-        {
-            if (!it->value.IsString())
-                return failOpt(error, "overview must be a string");
-            const std::string_view v{it->value.GetString(), it->value.GetStringLength()};
-            if (v == "simplified")
-                params.overview = RouteParameters::OverviewType::Simplified;
-            else if (v == "full")
-                params.overview = RouteParameters::OverviewType::Full;
-            else if (v == "false")
-                params.overview = RouteParameters::OverviewType::False;
-            else if (v == "by_legs")
-                params.overview = RouteParameters::OverviewType::ByLegs;
-            else
-                return failOpt(error, "invalid overview value");
-        }
-
-        if (const auto it = doc.FindMember("annotations"); it != doc.MemberEnd())
-        {
-            using AnnotationsType = RouteParameters::AnnotationsType;
-            const auto to_type = [](std::string_view v) -> std::optional<AnnotationsType>
-            {
-                if (v == "duration")
-                    return AnnotationsType::Duration;
-                if (v == "nodes")
-                    return AnnotationsType::Nodes;
-                if (v == "distance")
-                    return AnnotationsType::Distance;
-                if (v == "weight")
-                    return AnnotationsType::Weight;
-                if (v == "datasources")
-                    return AnnotationsType::Datasources;
-                if (v == "speed")
-                    return AnnotationsType::Speed;
-                return std::nullopt;
-            };
-
-            if (it->value.IsBool())
-            {
-                params.annotations_type =
-                    it->value.GetBool() ? AnnotationsType::All : AnnotationsType::None;
-            }
-            else if (it->value.IsArray())
-            {
-                auto type = AnnotationsType::None;
-                for (const auto &a : it->value.GetArray())
-                {
-                    if (!a.IsString())
-                        return failOpt(error, "annotation entries must be strings");
-                    const auto parsed = to_type({a.GetString(), a.GetStringLength()});
-                    if (!parsed)
-                        return failOpt(error, "invalid annotation value");
-                    type = type | *parsed;
-                }
-                params.annotations_type = type;
-            }
-            else
-            {
-                return failOpt(error, "annotations must be a boolean or an array of strings");
-            }
-            params.annotations = params.annotations_type != AnnotationsType::None;
-        }
-
-        if (const auto it = doc.FindMember("waypoints"); it != doc.MemberEnd())
-        {
-            if (!parseIndexArray(it->value, "waypoints", params.waypoints, error))
-                return std::nullopt;
+                return failOpt(error, "tidy must be a boolean");
+            params.tidy = it->value.GetBool();
         }
 
         return params;
@@ -475,9 +558,8 @@ std::optional<engine::api::TableParameters> parseJSONParameters(const std::strin
     using engine::api::TableParameters;
 
     rj::Document doc;
-    if (doc.Parse(json_body.c_str(), json_body.size()).HasParseError())
-        return failOpt(error,
-                       std::string{"invalid JSON: "} + rj::GetParseError_En(doc.GetParseError()));
+    if (!parseDocument(json_body, doc, error))
+        return std::nullopt;
 
     try
     {

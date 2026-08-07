@@ -3,6 +3,7 @@
 
 #include "parameters_io.hpp"
 
+#include "engine/api/match_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
 #include "engine/api/table_parameters.hpp"
 
@@ -97,6 +98,101 @@ BOOST_AUTO_TEST_CASE(valid_table_json)
                 TableParameters::FallbackCoordinateType::Snapped);
     BOOST_CHECK_EQUAL(result->scale_factor, 2.0);
     BOOST_CHECK(result->IsValid());
+}
+
+BOOST_AUTO_TEST_CASE(valid_match_json)
+{
+    std::string error;
+    auto result = parseJSONParameters<MatchParameters>(
+        "{\"coordinates\": [[1.1,2.2],[3.3,4.4],[5.5,6.6]], "
+        "\"timestamps\": [1424684612,1424684616,1424684620], \"gaps\": \"ignore\", "
+        "\"tidy\": true, \"steps\": true, \"annotations\": [\"duration\"]}",
+        error);
+    BOOST_REQUIRE_MESSAGE(result, error);
+
+    BOOST_CHECK_EQUAL(result->coordinates.size(), 3);
+    BOOST_REQUIRE_EQUAL(result->timestamps.size(), 3);
+    BOOST_CHECK_EQUAL(result->timestamps[0], 1424684612u);
+    BOOST_CHECK_EQUAL(result->timestamps[2], 1424684620u);
+    BOOST_CHECK(result->gaps == MatchParameters::GapsType::Ignore);
+    BOOST_CHECK_EQUAL(result->tidy, true);
+    // Options inherited from RouteParameters are parsed the same way as for /route.
+    BOOST_CHECK_EQUAL(result->steps, true);
+    BOOST_CHECK(result->annotations_type == MatchParameters::AnnotationsType::Duration);
+    BOOST_CHECK(result->IsValid());
+}
+
+BOOST_AUTO_TEST_CASE(match_json_defaults_match_url_defaults)
+{
+    // An otherwise empty body must leave every match-specific default untouched.
+    std::string error;
+    auto json =
+        parseJSONParameters<MatchParameters>("{\"coordinates\": [[1.1,2.2],[3.3,4.4]]}", error);
+    BOOST_REQUIRE_MESSAGE(json, error);
+
+    auto url = parseParameters<MatchParameters>(std::string{"1.1,2.2;3.3,4.4"});
+    BOOST_REQUIRE(url);
+
+    BOOST_CHECK(*json == *url);
+}
+
+BOOST_AUTO_TEST_CASE(match_json_matches_url_parsing)
+{
+    auto url = parseParameters<MatchParameters>(
+        std::string{"1.1,2.2;3.3,4.4?timestamps=1;2&gaps=ignore&tidy=true&overview=false"});
+    BOOST_REQUIRE(url);
+
+    std::string error;
+    auto json = parseJSONParameters<MatchParameters>(
+        "{\"coordinates\": [[1.1,2.2],[3.3,4.4]], \"timestamps\": [1,2], "
+        "\"gaps\": \"ignore\", \"tidy\": true, \"overview\": \"false\"}",
+        error);
+    BOOST_REQUIRE_MESSAGE(json, error);
+
+    BOOST_CHECK(*json == *url);
+
+    // Guard against comparing only the RouteParameters base: flipping a match-specific option
+    // must make the two requests compare unequal.
+    auto different = *json;
+    different.tidy = !different.tidy;
+    BOOST_CHECK(!(different == *url));
+}
+
+BOOST_AUTO_TEST_CASE(invalid_match_values)
+{
+    std::string error;
+    auto result = parseJSONParameters<MatchParameters>(
+        "{\"coordinates\": [[1,2],[3,4]], \"gaps\": \"sometimes\"}", error);
+    BOOST_CHECK(!result);
+    BOOST_CHECK(!error.empty());
+
+    error.clear();
+    result = parseJSONParameters<MatchParameters>(
+        "{\"coordinates\": [[1,2],[3,4]], \"tidy\": \"yes\"}", error);
+    BOOST_CHECK(!result);
+    BOOST_CHECK(!error.empty());
+
+    error.clear();
+    result = parseJSONParameters<MatchParameters>(
+        "{\"coordinates\": [[1,2],[3,4]], \"timestamps\": [-1,2]}", error);
+    BOOST_CHECK(!result);
+    BOOST_CHECK(!error.empty());
+
+    error.clear();
+    result = parseJSONParameters<MatchParameters>(
+        "{\"coordinates\": [[1,2],[3,4]], \"timestamps\": 5}", error);
+    BOOST_CHECK(!result);
+    BOOST_CHECK(!error.empty());
+}
+
+BOOST_AUTO_TEST_CASE(match_timestamps_size_mismatch)
+{
+    std::string error;
+    // One timestamp per coordinate is required: this parses but is not a valid match request.
+    auto result = parseJSONParameters<MatchParameters>(
+        "{\"coordinates\": [[1,2],[3,4]], \"timestamps\": [1,2,3]}", error);
+    BOOST_REQUIRE_MESSAGE(result, error);
+    BOOST_CHECK(!result->IsValid());
 }
 
 BOOST_AUTO_TEST_CASE(polyline_coordinates)

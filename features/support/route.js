@@ -7,7 +7,7 @@ import { sendRequest, sendPostRequest } from './http.js';
 
 // Services that support the JSON POST API. Requests to these are additionally issued as a
 // POST and checked for equivalence with the GET response (see requestPath).
-const POST_SUPPORTED_SERVICES = new Set(['route', 'table']);
+const POST_SUPPORTED_SERVICES = new Set(['route', 'table', 'match']);
 
 export default class Route {
   constructor(world) {
@@ -39,7 +39,9 @@ export default class Route {
   paramsToJSONBody(params) {
     const toBool = (v) => (v === 'true' ? true : v === 'false' ? false : v);
     const splitList = (v, mapper) => v.split(';').map((e) => (e === '' ? null : mapper(e)));
-    const toIndexArray = (v) =>
+    // Semicolon-separated integers (indices for sources/destinations/waypoints, seconds for
+    // match timestamps).
+    const toIntArray = (v) =>
       v.split(';').map((i) => {
         const n = Number(i);
         // Pass invalid entries through unchanged so the backend errors just like GET does.
@@ -63,6 +65,7 @@ export default class Route {
       case 'steps':
       case 'generate_hints':
       case 'skip_waypoints':
+      case 'tidy':
         body[key] = toBool(value);
         break;
       case 'alternatives':
@@ -93,7 +96,8 @@ export default class Route {
       case 'sources':
       case 'destinations':
       case 'waypoints':
-        body[key] = toIndexArray(value);
+      case 'timestamps':
+        body[key] = toIntArray(value);
         break;
       case 'fallback_speed':
       case 'scale_factor':
@@ -103,6 +107,7 @@ export default class Route {
       case 'overview':
       case 'snapping':
       case 'fallback_coordinate':
+      case 'gaps':
         body[key] = value;
         break;
       default:

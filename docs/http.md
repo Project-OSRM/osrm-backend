@@ -77,9 +77,9 @@ curl 'http://router.project-osrm.org/route/v1/driving/polyline(ofp_Ik_vpAilAyu@t
 
 ### POST requests with a JSON body
 
-In addition to encoding coordinates and options in the URL (`GET`), the `route` and `table`
-services accept a `POST` request whose body is a JSON object. This avoids URL/header length
-limits for requests with many coordinates.
+In addition to encoding coordinates and options in the URL (`GET`), the `route`, `table` and
+`match` services accept a `POST` request whose body is a JSON object. This avoids URL/header
+length limits for requests with many coordinates.
 
 ```endpoint
 POST /{service}/{version}/{profile}
@@ -107,7 +107,9 @@ the body. The JSON keys mirror the URL option names above:
 `annotations` (bool or an array such as `["duration","distance"]`). `table` additionally
 accepts `sources`/`destinations` (arrays of indices), `annotations` (bool or
 `["duration","distance"]`), `fallback_speed`, `fallback_coordinate` (`"input"`/`"snapped"`)
-and `scale_factor`. Services that do not support `POST` return a `NotImplemented` error.
+and `scale_factor`. `match` accepts the same keys as `route`, plus `timestamps` (array of
+integers, seconds since the UNIX epoch), `gaps` (`"split"`/`"ignore"`) and `tidy` (bool).
+Services that do not support `POST` return a `NotImplemented` error.
 
 The maximum request body size defaults to a value derived from the configured coordinate
 limits and can be overridden with the `--max-request-body-size` option of `osrm-routed`.
@@ -124,6 +126,11 @@ curl -X POST 'http://router.project-osrm.org/route/v1/driving' \
 curl -X POST 'http://router.project-osrm.org/table/v1/driving' \
   -H 'Content-Type: application/json' \
   -d '{"coordinates":[[13.388860,52.517037],[13.397634,52.529407],[13.428555,52.523219]],"sources":[0],"annotations":["duration","distance"]}'
+
+# Map matching a timestamped trace, without splitting on large timestamp gaps:
+curl -X POST 'http://router.project-osrm.org/match/v1/driving' \
+  -H 'Content-Type: application/json' \
+  -d '{"coordinates":[[13.388860,52.517037],[13.397634,52.529407],[13.428555,52.523219]],"timestamps":[1424684612,1424684616,1424684620],"gaps":"ignore","tidy":true}'
 ```
 
 ### Responses
