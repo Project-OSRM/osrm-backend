@@ -9,7 +9,6 @@
 
 namespace osrm::extractor::area
 {
-namespace bg = boost::geometry;
 
 /**
  * @brief Return twice the area enclosed by the three given points.
@@ -22,8 +21,10 @@ namespace bg = boost::geometry;
  */
 template <class TPoint> double area2(const TPoint *a, const TPoint *b, const TPoint *c)
 {
-    return ((bg::get<0>(*b) - bg::get<0>(*a)) * (bg::get<1>(*c) - bg::get<1>(*a))) -
-           ((bg::get<0>(*c) - bg::get<0>(*a)) * (bg::get<1>(*b) - bg::get<1>(*a)));
+    return ((boost::geometry::get<0>(*b) - boost::geometry::get<0>(*a)) *
+            (boost::geometry::get<1>(*c) - boost::geometry::get<1>(*a))) -
+           ((boost::geometry::get<0>(*c) - boost::geometry::get<0>(*a)) *
+            (boost::geometry::get<1>(*b) - boost::geometry::get<1>(*a)));
 }
 /**
  * @brief Return true if the point c is strictly to the left of the line formed by
@@ -66,10 +67,10 @@ template <class TPoint> bool collinear(const TPoint *a, const TPoint *b, const T
     if (value == 0.0)
         return true;
 
-    const double dx1 = bg::get<0>(*b) - bg::get<0>(*a);
-    const double dy1 = bg::get<1>(*b) - bg::get<1>(*a);
-    const double dx2 = bg::get<0>(*c) - bg::get<0>(*a);
-    const double dy2 = bg::get<1>(*c) - bg::get<1>(*a);
+    const double dx1 = boost::geometry::get<0>(*b) - boost::geometry::get<0>(*a);
+    const double dy1 = boost::geometry::get<1>(*b) - boost::geometry::get<1>(*a);
+    const double dx2 = boost::geometry::get<0>(*c) - boost::geometry::get<0>(*a);
+    const double dy2 = boost::geometry::get<1>(*c) - boost::geometry::get<1>(*a);
     const double edge1 = std::fabs(dx1) + std::fabs(dy1);
     const double edge2 = std::fabs(dx2) + std::fabs(dy2);
     const double scale = edge1 * edge2;
@@ -125,17 +126,17 @@ bool intersect(const TPoint *a,
 
     // clang-format off
 
-    denom = bg::get<0>(*a) * (Coord)(bg::get<1>(*d) - bg::get<1>(*c)) +
-            bg::get<0>(*b) * (Coord)(bg::get<1>(*c) - bg::get<1>(*d)) +
-            bg::get<0>(*d) * (Coord)(bg::get<1>(*b) - bg::get<1>(*a)) +
-            bg::get<0>(*c) * (Coord)(bg::get<1>(*a) - bg::get<1>(*b));
+    denom = boost::geometry::get<0>(*a) * (Coord)(boost::geometry::get<1>(*d) - boost::geometry::get<1>(*c)) +
+            boost::geometry::get<0>(*b) * (Coord)(boost::geometry::get<1>(*c) - boost::geometry::get<1>(*d)) +
+            boost::geometry::get<0>(*d) * (Coord)(boost::geometry::get<1>(*b) - boost::geometry::get<1>(*a)) +
+            boost::geometry::get<0>(*c) * (Coord)(boost::geometry::get<1>(*a) - boost::geometry::get<1>(*b));
 
     // if denom is zero the ray and the segment are parallel
     if (denom == 0) return false;
 
-    num   = bg::get<0>(*a) * (Coord)(bg::get<1>(*d) - bg::get<1>(*c)) +
-            bg::get<0>(*c) * (Coord)(bg::get<1>(*a) - bg::get<1>(*d)) +
-            bg::get<0>(*d) * (Coord)(bg::get<1>(*c) - bg::get<1>(*a));
+    num   = boost::geometry::get<0>(*a) * (Coord)(boost::geometry::get<1>(*d) - boost::geometry::get<1>(*c)) +
+            boost::geometry::get<0>(*c) * (Coord)(boost::geometry::get<1>(*a) - boost::geometry::get<1>(*d)) +
+            boost::geometry::get<0>(*d) * (Coord)(boost::geometry::get<1>(*c) - boost::geometry::get<1>(*a));
 
     // the parameter of the intersection point: a + s * (b - a)
     double s = num / denom;
@@ -146,9 +147,9 @@ bool intersect(const TPoint *a,
     if (!ray_segment && comp(1.0, s))
         return false;
 
-    num = -((bg::get<0>(*a) * (Coord)(bg::get<1>(*c) - bg::get<1>(*b))) +
-            (bg::get<0>(*b) * (Coord)(bg::get<1>(*a) - bg::get<1>(*c))) +
-            (bg::get<0>(*c) * (Coord)(bg::get<1>(*b) - bg::get<1>(*a))));
+    num = -((boost::geometry::get<0>(*a) * (Coord)(boost::geometry::get<1>(*c) - boost::geometry::get<1>(*b))) +
+            (boost::geometry::get<0>(*b) * (Coord)(boost::geometry::get<1>(*a) - boost::geometry::get<1>(*c))) +
+            (boost::geometry::get<0>(*c) * (Coord)(boost::geometry::get<1>(*b) - boost::geometry::get<1>(*a))));
 
     // clang-format on
 
@@ -160,8 +161,12 @@ bool intersect(const TPoint *a,
 
     if (i)
     {
-        bg::set<0>(*i, bg::get<0>(*a) + (s * (bg::get<0>(*b) - bg::get<0>(*a))));
-        bg::set<1>(*i, bg::get<1>(*a) + (s * (bg::get<1>(*b) - bg::get<1>(*a))));
+        boost::geometry::set<0>(*i,
+                                boost::geometry::get<0>(*a) + (s * (boost::geometry::get<0>(*b) -
+                                                                    boost::geometry::get<0>(*a))));
+        boost::geometry::set<1>(*i,
+                                boost::geometry::get<1>(*a) + (s * (boost::geometry::get<1>(*b) -
+                                                                    boost::geometry::get<1>(*a))));
     }
     return true;
 };

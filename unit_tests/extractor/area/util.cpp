@@ -8,7 +8,7 @@
 
 #include <boost/test/unit_test.hpp>
 
-BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(bg::cs::cartesian)
+BOOST_GEOMETRY_REGISTER_BOOST_TUPLE_CS(boost::geometry::cs::cartesian)
 
 BOOST_AUTO_TEST_SUITE(area_util_test)
 
@@ -43,11 +43,11 @@ BOOST_AUTO_TEST_CASE(area_util_test_geometry)
     point_t expected(5, 5);
     point_t i(0, 0);
     BOOST_CHECK(intersect(&o, &d, &x, &y, &i));
-    BOOST_CHECK(bg::equals(i, expected));
+    BOOST_CHECK(boost::geometry::equals(i, expected));
 
     BOOST_CHECK(!intersect(&dd, &d, &x, &y, &i));
     BOOST_CHECK(intersect(&dd, &d, &x, &y, &i, true));
-    BOOST_CHECK(bg::equals(i, expected));
+    BOOST_CHECK(boost::geometry::equals(i, expected));
 
     BOOST_CHECK(!intersect(&o, &x, &x, &d));
     BOOST_CHECK(!intersect(&o, &y, &y, &d));

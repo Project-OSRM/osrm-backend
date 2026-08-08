@@ -14,6 +14,23 @@ namespace osrm::extractor::area
 /**
  * @brief An indexed priority queue with key update operations.
  *
+ * Why not @c util::QueryHeap?  It is a close match -- its weight type is a free template
+ * parameter, it offers @c Insert, @c DecreaseKey and @c DeleteMin, it breaks ties between
+ * equal keys deterministically, and @c WasInserted removes the need for a separate
+ * visited array.  Two things stand in the way, neither of them fundamental:
+ *
+ * - @ref Dijkstra breaks ties between equally long paths by re-inserting an already
+ *   settled vertex with an *unchanged* distance.  @c QueryHeap::DecreaseKey expects a
+ *   strictly decreasing key and has no notion of re-inserting a removed node, so the
+ *   tie-break would have to be restructured rather than merely re-plumbed.
+ * - The two queues break ties differently: this one orders equal keys by the item's own
+ *   index, @c QueryHeap by the order of insertion.  Both are deterministic, but they can
+ *   pick different edges, and tie-breaking in the meshing code has a history of being
+ *   the difference between a correct mesh and one that routes through a wall.
+ *
+ * Switching over is worth doing once the feature has shipped and there is room to change
+ * tie-breaking without it riding along on a larger change.
+ *
  * Usage: Store your data items in a vector external to this class.  Instantiate this
  * class with the size of that vector and a function that compares two items given their
  * indices.  Manipulate items in this queue by their index in the vector.

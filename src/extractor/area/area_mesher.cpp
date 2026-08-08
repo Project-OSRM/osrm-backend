@@ -320,7 +320,16 @@ void AreaMesher::mesh_area(const osmium::Area &area,
         std::filesystem::path path = std::filesystem::temp_directory_path() / strstream.str();
         osmium::io::Writer writer(path, osmium::io::overwrite::allow);
         osmium::memory::Buffer debug_buffer{16 * 1024};
+
+        // The debug file is a side effect and must not be visible in the result: keep
+        // the way id sequence and the way count as they were, so that a debug build
+        // produces the same ids and the same added_ways as a release build.
+        const auto saved_next_way_id = next_way_id;
+        const auto saved_added_ways = added_ways;
         add_to_buffer(segments, debug_buffer);
+        next_way_id = saved_next_way_id;
+        added_ways = saved_added_ways;
+
         debug_buffer.commit();
         writer(std::move(debug_buffer));
         writer.close();
@@ -399,6 +408,12 @@ std::set<OsmiumSegment> AreaMesher::run_dijkstra(const OsmiumPolygon &poly,
 {
     Dijkstra<osmium::NodeRef> d;
 
+    // The edge weights below come from boost::geometry::distance(), which for these
+    // spherical coordinates yields an angle in radians, not a length.  Only the ratios
+    // between the weights matter to Dijkstra, so this is harmless, but see
+    // docs/areas.md before replacing it with coordinate_calculation's haversine: the
+    // rescaling that implies interacts with Dijkstra::distance_epsilon, which is
+    // absolute.
     std::set<OsmiumSegment> poly_segments;
 
     // Add the segments in the polygon.
@@ -409,7 +424,7 @@ std::set<OsmiumSegment> AreaMesher::run_dijkstra(const OsmiumPolygon &poly,
                                             [&](const osmium::NodeRef &u, const osmium::NodeRef &v)
                                             {
                                                 poly_segments.emplace(OsmiumSegment(u, v));
-                                                double weight = bg::distance(u, v);
+                                                double weight = boost::geometry::distance(u, v);
                                                 d.add_edge(u, v, weight);
                                             });
                   });
@@ -422,7 +437,7 @@ std::set<OsmiumSegment> AreaMesher::run_dijkstra(const OsmiumPolygon &poly,
     {
         if (!poly_segments.contains(s))
         {
-            double weight = bg::distance(s.first, s.second);
+            double weight = boost::geometry::distance(s.first, s.second);
             d.add_edge(s.first, s.second, weight);
             util::Log(logDEBUG) << "    " << s.first.ref() << " -> " << s.second.ref() << " "
                                 << weight;

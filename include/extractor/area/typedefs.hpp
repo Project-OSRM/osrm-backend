@@ -16,10 +16,8 @@
 namespace osrm::extractor::area
 {
 
-namespace bg = boost::geometry;
-
-using OsmiumPolygon = bg::model::polygon<osmium::NodeRef, false, false>;
-using OsmiumMultiPolygon = bg::model::multi_polygon<OsmiumPolygon>;
+using OsmiumPolygon = boost::geometry::model::polygon<osmium::NodeRef, false, false>;
+using OsmiumMultiPolygon = boost::geometry::model::multi_polygon<OsmiumPolygon>;
 using NodeRefSet = std::set<osmium::NodeRef>;
 
 /**
@@ -73,7 +71,8 @@ template <> struct coordinate_type<osmium::NodeRef>
 };
 template <> struct coordinate_system<osmium::NodeRef>
 {
-    using type = bg::cs::spherical_equatorial<bg::degree>; // it is spherical
+    using type =
+        boost::geometry::cs::spherical_equatorial<boost::geometry::degree>; // it is spherical
 };
 
 template <> struct access<osmium::NodeRef, 0>
