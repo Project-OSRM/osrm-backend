@@ -15,6 +15,8 @@
 #include <cstddef>
 #include <iterator>
 #include <set>
+#include <unordered_map>
+#include <vector>
 
 namespace osrm::extractor::area
 {
@@ -46,6 +48,19 @@ srs::projection<srs::static_epsg<3857>> osm_mercator;
  * - for each vertex intersected by the ray
  *   - report the vertex if it is visible
  *   - update the status in tau
+ *
+ * Deviation from the textbook: the textbook keeps tau ordered by distance along the
+ * sweep ray and tests only its nearest edge.  We keep tau unordered and test *every*
+ * edge in it instead.  Both answer the same question -- "does observer -> w cross an
+ * obstacle edge that the ray currently passes through" -- but the unordered variant does
+ * not depend on distances that cannot be maintained reliably: whenever the sweep ray
+ * runs exactly through a vertex (which happens at every single sweep step, and again
+ * whenever three vertices are collinear with the observer) the ray/segment intersection
+ * is rejected as an endpoint hit and the edge keeps a stale distance.  A single stale
+ * distance is enough to put a non-blocking edge in front, and the textbook test then
+ * reports a vertex as visible although a farther edge in tau does block it.  tau holds
+ * only the edges the ray currently crosses -- a handful even for large polygons -- so
+ * scanning it is not a meaningful cost.
  */
 class VisibilityGraph
 {
@@ -76,13 +91,21 @@ class VisibilityGraph
 
         friend bool operator<(const Vertex &a, const Vertex &b) noexcept
         {
-            // sort in clockwise order, shorter distance breaks ties
-            return a.angle > b.angle || (a.angle == b.angle && a.distance < b.distance);
+            // Sort in clockwise order, shorter distance breaks ties, then node-id.
+            // Node-id makes the order deterministic when angle and distance are equal.
+            //
+            // The comparisons are exact on purpose.  A tolerant comparison ("equal if
+            // within epsilon") is not transitive and therefore not a strict weak
+            // ordering, which makes std::sort undefined behaviour.  Comparing exactly
+            // and falling back to the node-id yields a total order.
+            if (a.angle != b.angle)
+                return a.angle > b.angle;
+            if (a.distance != b.distance)
+                return a.distance < b.distance;
+            return a.ref() < b.ref();
         };
         friend bool operator==(const Vertex &a, const Vertex &b) noexcept
-        {
-            return a.ref() == b.ref();
-        }
+        { return a.ref() == b.ref(); }
     };
 
     /** An edge of the visibilty graph */
@@ -90,19 +113,11 @@ class VisibilityGraph
     {
         const Vertex *first;
         const Vertex *second;
-        double distance{0};
 
-        Segment(const Vertex *first, const Vertex *second)
-            : first{first}, second{second}, distance{0} {};
+        Segment(const Vertex *first, const Vertex *second) : first{first}, second{second} {};
 
-        friend bool operator<(const Segment &a, const Segment &b) noexcept
-        {
-            return a.distance < b.distance;
-        };
         friend inline bool operator==(const Segment &a, const Segment &b) noexcept
-        {
-            return (a.first == b.first && a.second == b.second);
-        }
+        { return (a.first == b.first && a.second == b.second); }
     };
 
     // An open polygon of Vertex
@@ -148,9 +163,7 @@ template <std::size_t K> struct access<VisibilityGraph::Vertex, K>
 {
     static inline double get(const VisibilityGraph::Vertex &v) { return v.point[K] / COEFF; }
     static inline void set(VisibilityGraph::Vertex &v, const double &value)
-    {
-        v.point[K] = value * COEFF;
-    }
+    { v.point[K] = value * COEFF; }
 };
 
 } // namespace boost::geometry::traits
@@ -195,11 +208,32 @@ std::set<OsmiumSegment> VisibilityGraph::run(const OsmiumPolygon &poly, NodeRefS
                                             });
                   });
 
+    // index the polygon's vertices by node id.  The observer must be one of them: the
+    // sweep compares its address against the ring links to recognize the edges adjacent
+    // to the observer, which only works if we hand it the vertex that is actually part
+    // of the polygon (an implicitly converted copy would compare unequal to all of them).
+    std::unordered_map<osmium::object_id_type, const Vertex *> vertex_by_id;
+    for_each_ring(vpoly,
+                  [&](auto &ring)
+                  {
+                      for (const Vertex &v : ring)
+                      {
+                          vertex_by_id.emplace(v.ref(), &v);
+                      }
+                  });
+
     // for each node in the working set, find the visible vertices
     std::set<OsmiumSegment> result;
     for (const osmium::NodeRef &observer : work_set)
     {
-        for (const Vertex *w : visible_vertices(vpoly, observer))
+        const auto found = vertex_by_id.find(observer.ref());
+        if (found == vertex_by_id.end())
+        {
+            util::Log(logWARNING) << "Observer node " << observer.ref()
+                                  << " is not a vertex of the area, skipping.";
+            continue;
+        }
+        for (const Vertex *w : visible_vertices(vpoly, *found->second))
         {
             if (w->visible && work_set.contains(w->ref()))
             {
@@ -265,38 +299,37 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
     // 2. Initialize the sweep status tau.
     //
     //    Let rho be a ray starting at the observer and going through the first vertex.
-    //    Find all segments that are intersected by rho and store them in tau in the
-    //    same order they are intersected by rho. (Actually store them in pending edges
-    //    from where they will be later transferred into tau.)
+    //    Find all segments that are intersected by rho and store them in tau.
     //
     //    In the textbook the observer lies outside of any obstacles, but our observer
     //    stands on the polygon boundary. So we must take care not to insert edges
-    //    adjacent to the observer vertex because those edges will not obscure anything
-    //    but interfere with distance ordering.
+    //    adjacent to the observer vertex: those cannot obscure anything, they only meet
+    //    the sweep ray in its origin.
 
-    // The sweep status. An ordered collection of edges sorted by increasing distance.
+    // The sweep status: the obstacle edges the sweep ray currently crosses.  Held in no
+    // particular order, see the note on the class.
     std::vector<Segment> tau;
-    // Edges about to be inserted in tau.
-    std::deque<Segment> pending_edges;
 
     const Vertex *q = vertices_cw[0];
     for (const Vertex *v : vertices_cw)
     {
-        if (&observer != v->prev && &observer != v->next &&
-            intersect(&observer, q, v, v->next, (Vertex *)nullptr, true))
+        // The edge under consideration is (v, v->next), so it is adjacent to the
+        // observer exactly when v->next is the observer -- v->prev being the observer
+        // makes v the observer's *successor*, whose outgoing edge does not touch the
+        // observer at all and is a perfectly ordinary obstacle.
+        if (&observer != v->next && intersect(&observer, q, v, v->next, (Vertex *)nullptr, true))
         {
-            pending_edges.emplace_back(v, v->next);
+            tau.emplace_back(v, v->next);
         }
     };
-    util::Log(logDEBUG) << "Starting sweep with " << pending_edges.size() << " pending edges.";
+    util::Log(logDEBUG) << "Starting sweep with " << tau.size() << " edges in tau.";
 
     // 3. Sweep the ray rho clockwise and stop at each vertex.
     //    rho is implicitly defined by: observer -> w -> infinity
     //    At each vertex do:
-    //    - insert pending edges into tau in order of distance
     //    - test the visibility of the vertex
     //    - remove from tau any incident edge to the ccw of the sweep ray
-    //    - add to the pending edges any incident edge to the cw of the sweep ray
+    //    - add to tau any incident edge to the cw of the sweep ray
     //
 
     // The previously visited vertex in CW order.
@@ -306,54 +339,10 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
         util::Log(logDEBUG) << "Now at node id:" << w->ref() << " with " << tau.size()
                             << " edges in tau";
 
-        // update tau with pending edges
-        if (!pending_edges.empty())
-        {
-            // update the distances of the segments in the status (the order of the
-            // segments does not change because segments are not supposed to intersect)
-            Vertex intersection;
-            for (Segment &s : tau)
-            {
-                if (intersect(&observer, w, s.first, s.second, &intersection, true))
-                {
-                    s.distance = bg::comparable_distance(observer, intersection);
-                    util::Log(logDEBUG)
-                        << "  Updated distance of edge id:" << s.first->ref()
-                        << " -> id:" << s.second->ref() << " in tau to: " << s.distance;
-                }
-            };
-            // insert pending edges into tau in the correct order
-            while (!pending_edges.empty())
-            {
-                Segment &s = pending_edges[0];
-                util::Log(logDEBUG) << "  Pending edge unstashed: id:" << s.first->ref()
-                                    << " -> id:" << s.second->ref();
-                util::Log(logDEBUG)
-                    << "               intersection test with: id:" << observer.ref()
-                    << " -> id:" << w->ref();
-                if (intersect(&observer, w, s.first, s.second, &intersection, true))
-                {
-                    s.distance = bg::comparable_distance(observer, intersection);
-                    auto at = tau.insert(std::lower_bound(tau.begin(), tau.end(), s), s);
-                    util::Log(logDEBUG)
-                        << "               and inserted into tau at pos "
-                        << std::distance(tau.begin(), at) << " and distance " << s.distance;
-                }
-                else
-                {
-                    util::Log(logDEBUG) << "               and dropped";
-                }
-                pending_edges.pop_front();
-            }
-        }
-
         // test visibility p -> w
-        util::Log(logDEBUG) << "  Testing visibility of node id:" << w->ref() << " with "
-                            << tau.size() << " edges in tau.";
-        for (Segment &s : tau)
+        for (const Segment &s : tau)
         {
-            util::Log(logDEBUG) << "    Edge id:" << s.first->ref() << " -> id:" << s.second->ref()
-                                << " distance: " << s.distance;
+            util::Log(logDEBUG) << "    Edge id:" << s.first->ref() << " -> id:" << s.second->ref();
         }
         w->visible = visible(&observer, prev_w, w, tau);
         prev_w = w;
@@ -361,12 +350,13 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
 
         // update tau
         //
-        // Delete the old edges to the CCW (left) of the sweep ray. Then insert the new
-        // edges to the CW (right) of the sweep ray. There is a difficulty here that
-        // the textbook elegantly glosses over: tau is supposed to store the intersected
-        // edges in order of increasing distance, but if there are *two* new edges to
-        // insert their order is not apparent yet. Our only choice is to handle those
-        // edges later.
+        // Delete the old edges to the CCW (left) of the sweep ray, then insert the new
+        // edges to the CW (right) of it.  An edge incident to w that leads "to the
+        // right" is crossed by the ray from here until we reach its far endpoint, so it
+        // can go into tau straight away -- we no longer have to defer the insertion
+        // until the ray properly crosses it, which is what the removed pending-edge
+        // queue was for.  Note this runs *after* the visibility test for w, and that
+        // intersect() ignores endpoint hits, so an edge incident to w never hides w.
         auto update_tau = [&](const Vertex *u, const Vertex *v, bool left)
         {
             if (left)
@@ -374,20 +364,13 @@ std::vector<VisibilityGraph::Vertex *> VisibilityGraph::visible_vertices(VertexP
                 util::Log(logDEBUG) << "  Erasing edge: id:" << u->ref() << " -> id:" << v->ref();
                 std::erase_if(tau,
                               [u, v](const Segment &s)
-                              {
-                                  bool delendus = (*s.first == *u) && (*s.second == *v);
-                                  if (delendus)
-                                      util::Log(logDEBUG)
-                                          << "  Edge erased from tau: id:" << u->ref()
-                                          << " -> id:" << v->ref();
-                                  return delendus;
-                              });
+                              { return (*s.first == *u) && (*s.second == *v); });
             }
             else
             {
-                pending_edges.emplace_back(u, v);
+                tau.emplace_back(u, v);
                 util::Log(logDEBUG)
-                    << "  Pending edge stashed: id:" << u->ref() << " -> id:" << v->ref();
+                    << "  Edge inserted into tau: id:" << u->ref() << " -> id:" << v->ref();
             }
         };
         update_tau(w->prev, w, leftOrOn(&observer, w, w->prev));
@@ -409,6 +392,23 @@ bool VisibilityGraph::visible(const Vertex *observer,
                               const Vertex *w,
                               const std::vector<Segment> &tau)
 {
+    // An edge that shares an endpoint with the segment we are testing meets it only in
+    // that endpoint -- two straight segments that share an endpoint can only meet again
+    // if they are collinear, and intersect() rejects the collinear case as parallel --
+    // so such an edge can never obstruct anything and has to be skipped.
+    //
+    // intersect() is meant to ignore endpoint hits by itself, but it cannot be relied on
+    // to do so: it locates the hit by solving for the segment parameters, and for a
+    // shared endpoint the solution comes out at 0.999999999999957 rather than exactly 1.
+    // The endpoint is then mistaken for a proper crossing and a perfectly good line of
+    // sight disappears.  tau legitimately holds edges incident to w (an edge entering
+    // tau at its first endpoint stays there until the sweep reaches the second one), so
+    // this is reached routinely, not just in contrived geometry.
+    const auto same_point = [](const Vertex *a, const Vertex *b)
+    { return a->point[0] == b->point[0] && a->point[1] == b->point[1]; };
+    const auto touches = [&](const Segment &s, const Vertex *p)
+    { return same_point(s.first, p) || same_point(s.second, p); };
+
     // Check if observer -> w is inside the polygon immediately before intersecting the
     // edge.  This condition also checks if the ray falls entirely outside the outer
     // ring.
@@ -426,11 +426,18 @@ bool VisibilityGraph::visible(const Vertex *observer,
     // if prev_w is not on the ray observer -> w
     if (!prev_w || !collinear(observer, prev_w, w))
     {
-        // If there is an edge in tau and observer -> w intersects it, then w is not visible.
-        if (tau.size() > 0 && intersect(observer, w, tau[0].first, tau[0].second))
+        // If observer -> w intersects any edge in tau, then w is not visible.
+        for (const Segment &s : tau)
         {
-            util::Log(logDEBUG) << "    Invisible because obstructed by tau[0]";
-            return false;
+            if (touches(s, observer) || touches(s, w))
+                continue;
+            if (intersect(observer, w, s.first, s.second))
+            {
+                util::Log(logDEBUG)
+                    << "    Invisible because obstructed by edge id:" << s.first->ref()
+                    << " -> id:" << s.second->ref();
+                return false;
+            }
         }
         return true;
     }
@@ -448,6 +455,8 @@ bool VisibilityGraph::visible(const Vertex *observer,
     // if prev_w was visible, search for any edge that obstructs prev_w -> w
     for (const Segment &s : tau)
     {
+        if (touches(s, prev_w) || touches(s, w))
+            continue;
         if (intersect(prev_w, w, s.first, s.second))
             return false;
     }

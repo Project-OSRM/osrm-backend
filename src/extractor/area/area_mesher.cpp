@@ -231,7 +231,17 @@ NodeRefSet AreaMesher::get_obstacle_vertices(const OsmiumPolygon &poly)
                                                    const osmium::NodeRef &n,
                                                    const osmium::NodeRef &next)
                                                {
-                                                   if (right(&prev, &n, &next))
+                                                   // Only count the vertex as an obstacle if it is
+                                                   // a true corner, not merely a collinear point
+                                                   // along a straight edge.  On rectangular rings
+                                                   // some vertices can evaluate to area2 ≈ 0 after
+                                                   // Mercator projection; the sign of that tiny
+                                                   // residual is platform-dependent (x86_64 80-bit
+                                                   // vs. ARM64 64-bit floating-point).  Guarding
+                                                   // with !collinear makes the detection
+                                                   // deterministic.
+                                                   if (right(&prev, &n, &next) &&
+                                                       !collinear(&prev, &n, &next))
                                                    {
                                                        obstacle_vertices.emplace(n);
                                                    }
@@ -253,7 +263,7 @@ void AreaMesher::mesh_area(const osmium::Area &area,
                            osmium::memory::Buffer &out_buffer,
                            ExtractionRelationContainer &relations)
 {
-    util::Log(logDEBUG) << "Meshing area: " << area.get_value_by_key("name", "noname")
+    util::Log(logDEBUG) << "Meshing area: " << area.get_value_by_key("name", "")
                         << " id: " << area_id(area);
 
     auto rel_ids = relations.get_relations_for(area);

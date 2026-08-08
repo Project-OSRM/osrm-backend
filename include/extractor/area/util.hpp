@@ -30,39 +30,59 @@ template <class TPoint> double area2(const TPoint *a, const TPoint *b, const TPo
  * points a and b.
  */
 template <class TPoint> bool left(const TPoint *a, const TPoint *b, const TPoint *c)
-{
-    return area2(a, b, c) > 0;
-}
+{ return area2(a, b, c) > 0; }
 /**
  * @brief Return true if the point c is to the left of the line formed by points a and b
  * or on that line.
  */
 template <class TPoint> bool leftOrOn(const TPoint *a, const TPoint *b, const TPoint *c)
-{
-    return area2(a, b, c) >= 0;
-}
+{ return area2(a, b, c) >= 0; }
 /**
  * @brief Return true if the point c is strictly to the right of the line formed by
  * points a and b.
  */
 template <class TPoint> bool right(const TPoint *a, const TPoint *b, const TPoint *c)
-{
-    return area2(a, b, c) < 0;
-}
+{ return area2(a, b, c) < 0; }
 /**
  * @brief Return true if the point c is to the right of the line formed by points a and
  * b or on that line.
  */
 template <class TPoint> bool rightOrOn(const TPoint *a, const TPoint *b, const TPoint *c)
-{
-    return area2(a, b, c) <= 0;
-}
+{ return area2(a, b, c) <= 0; }
 /**
  * @brief Return true if points a, b, and c are collinear.
+ *
+ * Uses a tolerance proportional to the edge lengths to account for floating-point
+ * differences across platforms (e.g., x86_64 80-bit extended precision vs. ARM64 64-bit).
+ *
+ * The tolerance combines an absolute floor (for very small coordinates) with a
+ * scale-dependent term (for real-world coordinates).  The multiplier of 1000× is
+ * deliberately conservative to cover the worst-case error from coordinate precision
+ * limits and cross-platform floating-point differences.
  */
 template <class TPoint> bool collinear(const TPoint *a, const TPoint *b, const TPoint *c)
 {
-    return area2(a, b, c) == 0;
+    double value = area2(a, b, c);
+    if (value == 0.0)
+        return true;
+
+    const double dx1 = bg::get<0>(*b) - bg::get<0>(*a);
+    const double dy1 = bg::get<1>(*b) - bg::get<1>(*a);
+    const double dx2 = bg::get<0>(*c) - bg::get<0>(*a);
+    const double dy2 = bg::get<1>(*c) - bg::get<1>(*a);
+    const double edge1 = std::fabs(dx1) + std::fabs(dy1);
+    const double edge2 = std::fabs(dx2) + std::fabs(dy2);
+    const double scale = edge1 * edge2;
+
+    // The tolerance must work for both Mercator-projected meters (Vertex,
+    // resolution ~0.01 m → area2 error ~0.01 × edge) and geographic degrees
+    // (NodeRef, resolution ~1e-7° → area2 error ~1e-7 × edge).  Using
+    // scale × 1e-9 gives eps ≈ 2.5e-5 m² for 50 m edges (meters) and
+    // eps ≈ 1e-15 deg² for 0.00045° edges (degrees) — both safely below
+    // their respective coordinate-precision thresholds while absorbing the
+    // sub-ULP differences that GCC FMA contraction can introduce.
+    const double eps = std::max(1e-15, scale * 1e-9);
+    return std::fabs(value) <= eps;
 }
 
 /**
@@ -147,7 +167,7 @@ bool intersect(const TPoint *a,
 };
 
 /**
- * @brief Same as @ref intersect() but includes segmenmt endpoint.
+ * @brief Same as @ref intersect() but includes segment endpoint.
  */
 template <class TPoint, typename comp = std::less_equal<double>>
 bool intersect_closed(const TPoint *a,
@@ -156,9 +176,7 @@ bool intersect_closed(const TPoint *a,
                       const TPoint *d,
                       TPoint *i = nullptr,
                       bool ray_segment = false)
-{
-    return intersect<TPoint, std::less<>>(a, b, c, d, i, ray_segment);
-}
+{ return intersect<TPoint, std::less<>>(a, b, c, d, i, ray_segment); }
 
 /**
  * @brief Return true if a -> b lies in the closed cone clockwise determined by a -> a0

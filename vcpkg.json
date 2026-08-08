@@ -13,6 +13,7 @@
     "boost-config",
     "boost-crc",
     "boost-exception",
+    "boost-flyweight",
     "boost-fusion",
     "boost-geometry",
     "boost-interprocess",

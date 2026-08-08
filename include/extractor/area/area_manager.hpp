@@ -36,9 +36,7 @@ class AreaManager
 
   public:
     AreaManager(ExtractionRelationContainer &c) : relations_stash{c}
-    {
-        m_assembler_config.debug_level = 0;
-    };
+    { m_assembler_config.debug_level = 0; };
 
     void init(const char *algorithm_name);
     void way(const osmium::Way &way);

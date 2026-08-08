@@ -189,14 +189,10 @@ inline std::string canonicalizeStringList(std::string strlist, const std::string
 }
 
 inline bool is_true_value(const char *value)
-{
-    return value && (!strcmp(value, "yes") || !strcmp(value, "true") || !strcmp(value, "1"));
-}
+{ return value && (!strcmp(value, "yes") || !strcmp(value, "true") || !strcmp(value, "1")); }
 
 inline bool is_false_value(const char *value)
-{
-    return value && (!strcmp(value, "no") || !strcmp(value, "false") || !strcmp(value, "0"));
-}
+{ return value && (!strcmp(value, "no") || !strcmp(value, "false") || !strcmp(value, "0")); }
 
 } // namespace osrm::extractor
 

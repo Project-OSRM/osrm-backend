@@ -166,7 +166,7 @@ function process_node(profile, node, result, relations)
   end
 end
 
--- main entry point for processsing a way
+-- main entry point for processing a way
 function process_way(profile, way, result, relations)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways

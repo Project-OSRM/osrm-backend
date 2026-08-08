@@ -10,7 +10,7 @@ namespace osrm::extractor::area
 /**
  * @brief Initialize the area manager
  *
- * @param algorithm_name The alogorithm to use for meshing. At present only one
+ * @param algorithm_name The algorithm to use for meshing. At present only one
  *                       algorithm is supported: 'visgraph+dijkstra'.
  */
 void AreaManager::init(const char *algorithm_name)
@@ -43,7 +43,7 @@ void AreaManager::way(const osmium::Way &way)
         return;
     }
 
-    util::Log(logDEBUG) << "Registering way: " << way.get_value_by_key("name", "noname")
+    util::Log(logDEBUG) << "Registering way: " << way.get_value_by_key("name", "")
                         << " id: " << way.id();
     registered_closed_ways.push_back(way.id());
     ++number_of_ways;
@@ -72,7 +72,7 @@ void AreaManager::relation(const osmium::Relation &relation)
         return;
     }
 
-    util::Log(logDEBUG) << "Registering relation: " << relation.get_value_by_key("name", "noname")
+    util::Log(logDEBUG) << "Registering relation: " << relation.get_value_by_key("name", "")
                         << " id: " << relation.id();
 
     relations_stash.add_relation(relation);
@@ -118,9 +118,7 @@ void AreaManager::prepare_for_lookup()
  * @brief Return true if the given id belongs to a registered way.
  */
 inline bool AreaManager::is_registered_closed_way(osmium::object_id_type osm_id) const
-{
-    return std::binary_search(registered_closed_ways.begin(), registered_closed_ways.end(), osm_id);
-}
+{ return std::binary_search(registered_closed_ways.begin(), registered_closed_ways.end(), osm_id); }
 
 /**
  * @brief Return the registered relations for the given way.
@@ -169,8 +167,6 @@ void AreaManager::after_way(const osmium::Way &way)
 {
     if (is_registered_closed_way(way.id()))
     {
-        const char *name = way.get_value_by_key("name", "noname");
-        util::Log(logDEBUG) << "Completing way: " << name << " id: " << way.id();
         for (const osmium::NodeRef &noderef : way.nodes())
         {
             node_ids.emplace(noderef.ref());
@@ -187,9 +183,6 @@ void AreaManager::after_way(const osmium::Way &way)
  */
 void AreaManager::complete_relation(const osmium::Relation &relation)
 {
-    const char *name = relation.get_value_by_key("name", "noname");
-    util::Log(logDEBUG) << "Completing relation: " << name << " id: " << relation.id();
-
     std::vector<const osmium::Way *> ways;
     ways.reserve(relation.members().size());
     for (const auto &member : relation.members())
@@ -210,6 +203,7 @@ void AreaManager::complete_relation(const osmium::Relation &relation)
         osmium::area::Assembler assembler{m_assembler_config};
         assembler(relation, ways, this->buffer());
     }
+    // NOLINTNEXTLINE(bugprone-empty-catch)
     catch (const osmium::invalid_location &)
     {
         // XXX ignore
