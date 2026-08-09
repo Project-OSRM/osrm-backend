@@ -20,6 +20,9 @@ constexpr double SAME_PLACE_METRES = 0.5;
 //! Nothing is worth replacing for less than this, and rounding alone can produce it.
 constexpr double WORTH_REPLACING_METRES = 1.0;
 
+//! Used only when an area cannot be found to ask; every meshed area carries its own.
+constexpr double DEFAULT_WALKING_SPEED = 1.4;
+
 double metres(const util::Coordinate a, const util::Coordinate b)
 { return util::coordinate_calculation::greatCircleDistance(a, b); }
 
@@ -95,23 +98,6 @@ std::optional<NodeID> nodeAt(const datafacade::BaseDataFacade &facade, const uti
         }
     }
     return std::nullopt;
-}
-
-/** The node assembleGeometry will name as the first of a leg starting at this phantom. */
-NodeID startNode(const datafacade::BaseDataFacade &facade, const PhantomNode &phantom)
-{
-    const auto segment = phantom.forward_segment_id.id;
-    if (segment == SPECIAL_SEGMENTID)
-    {
-        return SPECIAL_NODEID;
-    }
-    const auto geometry =
-        facade.GetUncompressedForwardGeometry(facade.GetGeometryIndex(segment).id);
-    if (phantom.fwd_segment_position >= geometry.size())
-    {
-        return SPECIAL_NODEID;
-    }
-    return geometry[phantom.fwd_segment_position];
 }
 
 } // namespace
@@ -207,28 +193,6 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
             previous = geodesic->bends[i];
         }
 
-        // assembleGeometry names the first node of a leg from the source phantom's own
-        // segment and drops any path point repeating it.  For a leg beginning at a free
-        // point that name is arbitrary, and when it lands on the first bend the bend is
-        // dropped and the drawn line cuts the corner it was there to turn.  Stand the
-        // phantom on a different segment nearby; it supplies only a name and a node id.
-        if (!bends.empty() && startNode(facade, endpoints.source_phantom) == bends.front())
-        {
-            for (const auto &nearby :
-                 facade.NearestPhantomNodes(from, 8, 400.0, std::nullopt, Approach::UNRESTRICTED))
-            {
-                const auto &candidate = nearby.phantom_node;
-                if (candidate.forward_segment_id.id != SPECIAL_SEGMENTID &&
-                    startNode(facade, candidate) != bends.front())
-                {
-                    endpoints.source_phantom.forward_segment_id = candidate.forward_segment_id;
-                    endpoints.source_phantom.reverse_segment_id = candidate.reverse_segment_id;
-                    endpoints.source_phantom.fwd_segment_position = candidate.fwd_segment_position;
-                    break;
-                }
-            }
-        }
-
         // assembleLeg adds the target phantom's own weight on top of the path, and
         // subtracts the source's when the path is empty, so the last stretch goes there
         const auto [last_weight, last_duration] = cost(metres(previous, to));
@@ -253,16 +217,96 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
         replaced = true;
     }
 
-    // TODO: a leg that merely *starts* or *ends* inside an area is still drawn from the
-    // vertex it snapped to, so the walk across the area -- a real leg of the journey, and
-    // sometimes hundreds of metres of it -- is missing from the geometry and the distance.
-    // Moving the endpoint is not enough: the vertex has to become a point of the path, or
-    // a line straight from the request to the far end cuts whatever lies between.  Adding
-    // it as a PathData works only when assembleGeometry does not then discard it, which it
-    // does whenever the source phantom's own segment happens to name that same node -- and
-    // for the mesh's two-node ways there is often no other segment nearby that names
-    // something else.  The fix belongs in assembleGeometry, which should not be comparing
-    // the first point of a leg against a node the leg does not start at.
+    // A leg the geodesic did not take over may still begin or end inside an area,
+    // snapped to a vertex some way off (engine/area_snapping.hpp).  That walk is a leg of
+    // the journey and not a snapping error, so it belongs in the geometry -- otherwise
+    // the route is drawn from a point the traveller never asked about, and its distance
+    // leaves out a stretch they can see on the map.
+    //
+    // The vertex has to become a point of the path and not merely a moved endpoint: the
+    // walk and the ways beyond it run in different directions, and a line straight from
+    // the request to the far end would cut across whatever lies between.
+    for (std::size_t leg = 0; leg < route.leg_endpoints.size(); ++leg)
+    {
+        auto &endpoints = route.leg_endpoints[leg];
+        auto &path = route.unpacked_path_segments[leg];
+
+        const auto walked = [&](const PhantomNode &phantom)
+        {
+            return phantom.input_location.IsValid() && phantom.input_location != phantom.location &&
+                   !facade.GetOpenAreasAt(phantom.input_location).empty();
+        };
+        const auto cost = [&](const util::Coordinate a, const util::Coordinate b)
+        {
+            const auto areas = facade.GetOpenAreasAt(a);
+            const auto speed = areas.empty() ? DEFAULT_WALKING_SPEED : areas.front().walking_speed;
+            const auto stretch = metres(a, b) / speed;
+            return std::pair{to_alias<EdgeWeight>(std::lround(stretch * multiplier)),
+                             to_alias<EdgeDuration>(std::lround(stretch * 10.))};
+        };
+        const auto named = [](const PhantomNode &phantom)
+        {
+            return phantom.forward_segment_id.id != SPECIAL_SEGMENTID
+                       ? phantom.forward_segment_id.id
+                       : phantom.reverse_segment_id.id;
+        };
+
+        if (walked(endpoints.source_phantom))
+        {
+            if (const auto vertex = nodeAt(facade, endpoints.source_phantom.location))
+            {
+                const auto [weight, duration] = cost(endpoints.source_phantom.input_location,
+                                                     endpoints.source_phantom.location);
+                path.insert(path.begin(),
+                            PathData{named(endpoints.source_phantom),
+                                     *vertex,
+                                     weight,
+                                     {0},
+                                     duration,
+                                     {0},
+                                     0,
+                                     std::nullopt});
+                endpoints.source_phantom.location = endpoints.source_phantom.input_location;
+                if (leg < waypoints.size() && !waypoints[leg].empty())
+                {
+                    waypoints[leg].front().location = endpoints.source_phantom.input_location;
+                }
+                replaced = true;
+            }
+        }
+
+        if (walked(endpoints.target_phantom))
+        {
+            if (const auto vertex = nodeAt(facade, endpoints.target_phantom.location))
+            {
+                const auto reversed = route.target_traversed_in_reverse[leg];
+                auto &target_weight = reversed ? endpoints.target_phantom.reverse_weight
+                                               : endpoints.target_phantom.forward_weight;
+                auto &target_duration = reversed ? endpoints.target_phantom.reverse_duration
+                                                 : endpoints.target_phantom.forward_duration;
+                // what the leg already charged for reaching the vertex moves onto the
+                // path, and the phantom is left holding only the walk beyond it
+                path.push_back(PathData{named(endpoints.target_phantom),
+                                        *vertex,
+                                        target_weight,
+                                        {0},
+                                        target_duration,
+                                        {0},
+                                        0,
+                                        std::nullopt});
+                const auto [weight, duration] = cost(endpoints.target_phantom.input_location,
+                                                     endpoints.target_phantom.location);
+                target_weight = weight;
+                target_duration = duration;
+                endpoints.target_phantom.location = endpoints.target_phantom.input_location;
+                if (leg + 1 < waypoints.size() && !waypoints[leg + 1].empty())
+                {
+                    waypoints[leg + 1].front().location = endpoints.target_phantom.input_location;
+                }
+                replaced = true;
+            }
+        }
+    }
 
     if (!replaced)
     {

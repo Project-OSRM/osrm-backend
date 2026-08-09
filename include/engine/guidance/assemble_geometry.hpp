@@ -86,7 +86,15 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
         prev_coordinate = coordinate;
         const auto node_id = path_point.turn_via_node;
 
-        if (node_id != geometry.node_ids.back() ||
+        // Skip a point that repeats the one before it -- in name *and* in position.
+        //
+        // The name alone is not enough.  A leg can begin at a free point, where a
+        // coordinate snapped inside an open area walks to the vertex it sets off from,
+        // and there the first node is a place the line genuinely travels to however the
+        // phantom's own segment happens to be named; dropping it deletes the first turn.
+        // The position alone is not enough either: map matching leans on segments of no
+        // length between distinct nodes to carry their annotations.
+        if (node_id != geometry.node_ids.back() || coordinate != geometry.locations.back() ||
             turn_instruction.type != osrm::guidance::TurnType::NoTurn)
         {
             geometry.annotations.emplace_back(LegGeometry::Annotation{

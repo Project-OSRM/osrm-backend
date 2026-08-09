@@ -397,15 +397,20 @@ BOOST_AUTO_TEST_CASE(area_mesher_can_emit_the_whole_visibility_graph)
     const auto entry_point_mesh = mesh(false);
     const auto whole_graph = mesh(true);
 
-    // the whole graph is a superset, and strictly larger for an area with an obstacle
-    BOOST_CHECK_GT(whole_graph.size(), entry_point_mesh.size());
+    // The whole graph is a superset.  Not necessarily a strict one: the pruning keeps the
+    // shortest-path tree rooted at each entry point, and on an area this small every sight
+    // line lies on one of those trees, so the two coincide.  The saving shows up on larger
+    // areas, where the forest grows as entry points x vertices and the whole graph as
+    // vertices squared -- see plans/open-area-snapping.md, R17.
+    BOOST_CHECK_GE(whole_graph.size(), entry_point_mesh.size());
     for (const auto &edge : entry_point_mesh)
         BOOST_CHECK_MESSAGE(whole_graph.count(edge) == 1,
                             "edge " << edge.first << "-" << edge.second
                                     << " is in the entry-point mesh but not the whole graph");
 
-    // every corner of the obstacle now has at least one edge; in the entry-point mesh
-    // some of them have none, which is what makes a straight line to them a dead end
+    // every corner of the obstacle has at least one edge, in either mesh: the ring edges
+    // are emitted whichever way the visibility graph is pruned, and without them a
+    // straight line to such a corner is a dead end
     const auto degree = [](const auto &edges, osmium::object_id_type node)
     {
         std::size_t count = 0;
@@ -414,8 +419,12 @@ BOOST_AUTO_TEST_CASE(area_mesher_can_emit_the_whole_visibility_graph)
         return count;
     };
     for (osmium::object_id_type corner : {5, 6, 7, 8})
+    {
         BOOST_CHECK_MESSAGE(degree(whole_graph, corner) > 0,
                             "obstacle corner " << corner << " has no onward edge");
+        BOOST_CHECK_MESSAGE(degree(entry_point_mesh, corner) > 0,
+                            "obstacle corner " << corner << " has no onward edge when pruned");
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()
