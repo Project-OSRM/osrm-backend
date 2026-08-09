@@ -198,7 +198,7 @@ Shared parameters inherited by Nearest, Table, Route, Match, and Trip.
 - **`hints`** `list[str | None]` - Base64-encoded hints from previous requests.
 - **`radiuses`** `list[float | None]` - Search radius per coordinate in meters. `None` for unlimited.
 - **`bearings`** `list[tuple[int, int] | None]` - `(bearing, range)` pairs in degrees. `None` for unrestricted.
-- **`approaches`** `list[str | None]` - `"curb"`, `"unrestricted"`, or `None`.
+- **`approaches`** `list[str | None]` - `"curb"`, `"unrestricted"`, `"opposite"`, or `None`.
 - **`generate_hints`** `bool` - Include hints in response. Default: `True`.
 - **`exclude`** `list[str]` - Road classes to avoid (e.g. `["motorway"]`).
 - **`snapping`** `str` - `"default"` or `"any"`. Default: `"default"`.

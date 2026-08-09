@@ -1,4 +1,5 @@
 #include "python/parameters/routeparameter_nb.hpp"
+#include "python/types/approach_nb.hpp"
 #include "python/utility/param_utility.hpp"
 #include "engine/api/route_parameters.hpp"
 
@@ -112,7 +113,7 @@ void init_RouteParameters(nb::module_ &m)
             "hints"_a = std::vector<std::optional<std::string>>(),
             "radiuses"_a = std::vector<std::optional<double>>(),
             "bearings"_a = std::vector<std::optional<osrm::engine::Bearing>>(),
-            "approaches"_a = std::vector<std::string *>(),
+            "approaches"_a = std::vector<std::optional<osrm::engine::Approach>>(),
             "generate_hints"_a = true,
             "exclude"_a = std::vector<std::string>(),
             "snapping"_a = std::string())

@@ -1,4 +1,5 @@
 #include "python/parameters/baseparameter_nb.hpp"
+#include "python/types/approach_nb.hpp"
 #include "python/utility/param_utility.hpp"
 #include "engine/api/base_parameters.hpp"
 #include "engine/hint.hpp"
