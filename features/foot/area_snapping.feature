@@ -6,21 +6,27 @@ Feature: Foot - Snapping inside a pedestrian area
     # walking there in a straight line -- the route the visibility graph would have given
     # if that coordinate had been part of it when it was built.
     #
+    # What is asserted is the geometry: the encoded line the route is actually drawn as.
+    # It is unreadable, but it is the thing this feature is about -- that the route starts
+    # where it was asked to, turns where it has to and nowhere else -- and unlike the node
+    # list it is a property of the route rather than of whichever phantom the search kept,
+    # so it holds for CH and MLD alike.  The distance beside it is there to be read.
+    #
     # These scenarios mirror the fixtures drawn by scripts/debug/area_snapping_report.py,
     # one per shape, covering a route that starts inside an area, one that ends inside
     # one, and one that crosses it.  The interior points are nodes that belong to no way,
     # so the only way to reach them is by snapping into the area.
     #
-    # Several of them assert a route through a corner of an *obstacle*.  Those corners
-    # only carry edges when the whole visibility graph is emitted; with the entry-point
-    # mesh they are dead ends and the routes detour to the plaza's own corners instead.
-    # So these double as a guard on that.
+    # Several of them turn at a corner of an *obstacle*.  Those corners carry edges only
+    # because the ring edges are emitted whichever way the visibility graph is pruned;
+    # without them a line to such a corner is a dead end and the route detours to the
+    # plaza's own corners instead.  So these double as a guard on that.
 
     Background:
         Given the profile "foot_area"
         Given a grid size of 50 meters
         Given the query options
-            | annotations | nodes |
+            | overview | full |
 
     Scenario: Foot - Start or end inside a plaza
         Given the node map
@@ -42,10 +48,10 @@ Feature: Foot - Snapping inside a pedestrian area
         # x leaves by whichever corner is on the way to where it is going, and is
         # arrived at the same way
         When I route I should get
-            | from | to | a:nodes | route |
-            | x    | f  | bbf     | B,B   |
-            | x    | g  | ccg     | D,D   |
-            | e    | x  | aae     | A,A   |
+            | from | to | geometry        | route |
+            | x    | f  | kcbEmqbEsDsD?yA | B,B   |
+            | x    | g  | kcbEmqbEzAsD?yA | D,D   |
+            | e    | x  | _ibE_ibE?yArDsD | A,A   |
 
     Scenario: Foot - Plaza entered by the middle of an edge
         Given the node map
@@ -69,9 +75,9 @@ Feature: Foot - Snapping inside a pedestrian area
 
         # n is nearer than any corner, and is where the route to i should set off from
         When I route I should get
-            | from | to | a:nodes | route |
-            | p    | i  | nni     | E,E   |
-            | e    | p  | aae     | A,A   |
+            | from | to | geometry        | route |
+            | p    | i  | kcbEmqbEzA?rD?  | E,E   |
+            | e    | p  | _ibE_ibE?yArDsD | A,A   |
 
     Scenario: Foot - Route round an obstacle from inside the plaza
         Given the node map
@@ -99,16 +105,13 @@ Feature: Foot - Snapping inside a pedestrian area
         # p is wedged between the plaza's edge and the obstacle, so every route out of it
         # turns a corner of the obstacle -- u going north, x going south
         When I route I should get
-            | from | to | a:nodes | route |
-            | p    | f  | uubf    | ,B    |
-            | p    | g  | xxcg    | ,D    |
+            | from | to | geometry            | route |
+            | p    | f  | kcbEembEyAm@yAaM?wA | ,B    |
+            | p    | g  | kcbEembEzAm@xAaM?wA | ,D    |
 
-        # The node ending the list names the target phantom's own segment, and a leg
-        # that ends at a free point keeps whichever phantom the search settled on --
-        # which differs between CH and MLD.  Assert the distance, which does not.
         When I route I should get
-            | from | to | distance   |
-            | e    | q  | 361m +-6   |
+            | from | to | geometry            | distance |
+            | e    | q  | _ibE_ibE?yAxAaMxAk@ | 361m +-6 |
 
     # Both ends on one plaza is the case the mesh cannot answer: it holds shortest paths
     # *out* of an area, and this journey never leaves.  The route is worked out from the
@@ -132,11 +135,13 @@ Feature: Foot - Snapping inside a pedestrian area
             | cg    | pedestrian |      | D     |
 
         # m and n can see each other, so the answer is the straight line between them --
-        # 100 m, not a detour by way of a corner
+        # 100 m, not a detour by way of a corner.  The step is named after a way meeting
+        # the vertex the search snapped to rather than after the plaza, because a leg
+        # written from the polygon has no way of its own; see #7683.
         When I route I should get
-            | from | to | distance  | route       |
-            | m    | n  | 100m +-3  | Plaza,Plaza |
-            | n    | m  | 100m +-3  | Plaza,Plaza |
+            | from | to | geometry    | distance | route       |
+            | m    | n  | kcbEsnbE?sD | 100m +-3 | D,D         |
+            | n    | m  | kcbEgtbE?rD | 100m +-3 | C,C         |
 
     # With something in the way it has to bend, and bends at a corner of the obstacle.
     Scenario: Foot - Across a plaza with an obstacle in the way
@@ -163,14 +168,10 @@ Feature: Foot - Snapping inside a pedestrian area
             | multipolygon | pedestrian | abcda     | uvwxu     |
 
         # straight across would be 300 m and runs through the obstacle; over the top of
-        # it is 312 m.  The distance is what is asserted, not the node list: a leg between
-        # two free points is written out by the engine, and the nodes naming its two ends
-        # come from whichever phantom the search happened to keep, which differs between
-        # CH and MLD.  The bends in between are the part that matters, and they show up in
-        # the distance.
+        # it is 312 m
         When I route I should get
-            | from | to | distance  |
-            | p    | q  | 312m +-5  |
+            | from | to | geometry            | distance |
+            | p    | q  | kcbEembEyAm@?gJxAk@ | 312m +-5 |
 
     # A journey with only one end on the plaza is not this case, and is left to the mesh.
     Scenario: Foot - One end on the plaza is routed by the mesh
@@ -197,15 +198,12 @@ Feature: Foot - Snapping inside a pedestrian area
             | multipolygon | pedestrian | abcda     | uvwxu     |
 
         When I route I should get
-            | from | to | a:nodes |
-            | p    | f  | uubf    |
+            | from | to | geometry            |
+            | p    | f  | kcbEembEyAm@yAaM?wA |
 
-        # The node ending the list names the target phantom's own segment, and a leg
-        # that ends at a free point keeps whichever phantom the search settled on --
-        # which differs between CH and MLD.  Assert the distance, which does not.
         When I route I should get
-            | from | to | distance   |
-            | e    | q  | 361m +-6   |
+            | from | to | geometry            | distance |
+            | e    | q  | _ibE_ibE?yAxAaMxAk@ | 361m +-6 |
 
     # A via point on the plaza makes two legs, and each is solved the same way.
     Scenario: Foot - Via a point on the plaza
@@ -227,8 +225,8 @@ Feature: Foot - Snapping inside a pedestrian area
 
         # m, k and n are in a line, so going by way of k costs nothing over going direct
         When I route I should get
-            | waypoints | distance  |
-            | m,k,n     | 100m +-3  |
+            | waypoints | distance |
+            | m,k,n     | 100m +-3 |
 
     Scenario: Foot - Obstacle against one side of the plaza
         Given the node map
@@ -257,15 +255,12 @@ Feature: Foot - Snapping inside a pedestrian area
         # the obstacle hides the whole north-west of the plaza from q, so the way out
         # runs under it, by way of its south-west corner
         When I route I should get
-            | from | to | a:nodes | route |
-            | q    | e  | xxae    | ,A,A  |
+            | from | to | geometry            | route |
+            | q    | e  | u}aEg{bEyArKoGxA?xA | ,A,A  |
 
-        # The node ending the list names the target phantom's own segment, and a leg
-        # that ends at a free point keeps whichever phantom the search settled on --
-        # which differs between CH and MLD.  Assert the distance, which does not.
         When I route I should get
-            | from | to | distance   |
-            | e    | q  | 439m +-6   |
+            | from | to | geometry            | distance |
+            | e    | q  | _ibE_ibE?yAnGyAxAsK | 439m +-6 |
 
     Scenario: Foot - Two obstacles with a gap between them
         Given the node map
@@ -294,13 +289,13 @@ Feature: Foot - Snapping inside a pedestrian area
         # p to g leaves the area, so the mesh answers it.  p to s never leaves, so the
         # geodesic does -- over the top of both obstacles rather than round them.
         When I route I should get
-            | from | to | distance   |
-            | p    | s  | 396m +-6   |
+            | from | to | geometry            | distance |
+            | p    | s  | kcbEembEyAm@?aMxAeC | 396m +-6 |
 
-        # p to g leaves the area, so the mesh answers it and the node list is stable
+        # p to g leaves the area, so the mesh answers it
         When I route I should get
-            | from | to | a:nodes | distance   |
-            | p    | g  | xxcg    | 460m +-6   |
+            | from | to | geometry            | distance |
+            | p    | g  | kcbEembEzAm@xAsR?yA | 460m +-6 |
 
     Scenario: Foot - Plaza with two entrances on the same side
         Given the node map
@@ -330,13 +325,10 @@ Feature: Foot - Snapping inside a pedestrian area
         # entrance from behind the obstacle is the case the whole visibility graph exists
         # for.
         When I route I should get
-            | from | to | a:nodes | route     |
-            | p    | t  | xxnt    | ,T,T      |
-            | s    | t  | smnt    | S,,T,T    |
+            | from | to | geometry            | route  |
+            | p    | t  | kcbEmjbEzAk@xAgJrD? | ,T,T   |
+            | s    | t  | axaEsnbEsD??mGrD?   | S,,T,T |
 
-        # The node ending the list names the target phantom's own segment, and a leg
-        # that ends at a free point keeps whichever phantom the search settled on --
-        # which differs between CH and MLD.  Assert the distance, which does not.
         When I route I should get
-            | from | to | distance   |
-            | s    | p  | 227m +-6   |
+            | from | to | geometry            | distance |
+            | s    | p  | axaEsnbEsD?yAxA{Aj@ | 227m +-6 |
