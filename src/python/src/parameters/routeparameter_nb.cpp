@@ -1,4 +1,5 @@
 #include "python/parameters/routeparameter_nb.hpp"
+#include "python/types/approach_nb.hpp"
 #include "python/utility/param_utility.hpp"
 #include "engine/api/route_parameters.hpp"
 

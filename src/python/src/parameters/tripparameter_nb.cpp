@@ -1,5 +1,6 @@
 #include "python/parameters/tripparameter_nb.hpp"
 #include "python/parameters/routeparameter_nb.hpp"
+#include "python/types/approach_nb.hpp"
 #include "python/utility/param_utility.hpp"
 #include "engine/api/trip_parameters.hpp"
 

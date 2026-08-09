@@ -5,8 +5,6 @@
 #include <nanobind/nanobind.h>
 #include <nanobind/stl/string.h>
 
-NB_MAKE_OPAQUE(osrm::engine::Approach)
-
 namespace nb = nanobind;
 
 void init_Approach(nb::module_ &m)
