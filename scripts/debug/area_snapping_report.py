@@ -437,19 +437,22 @@ def render_svg(path, title, subtitle, f, drawing):
 
 
 def visual_proof(port, outdir, f, stamp):
-    """A picture each for a route starting in, ending in, and crossing the area."""
+    """A picture each for a route starting in, ending in, crossing, and staying inside."""
     left, right, top, bottom = f.bounds
+
+    def first_inside(cols, rows):
+        for row in rows:
+            for col in cols:
+                if f.inside(col, row):
+                    return loc(col, row)
+        return None
 
     # an interior point that is inside the plaza and clear of every obstacle; prefer one
     # that an obstacle hides from at least one corner, since that is the hard case
-    interior = None
-    for row in range(top + 1, bottom):
-        for col in range(left + 1, right):
-            if f.inside(col, row):
-                interior = loc(col, row)
-                break
-        if interior:
-            break
+    interior = first_inside(range(left + 1, right), range(top + 1, bottom))
+    # and one as far from it as the area allows, so that whatever stands between them
+    # has to be dealt with
+    far_interior = first_inside(range(right - 1, left, -1), range(bottom - 1, top, -1))
 
     # leave by whichever way the fixture actually has, not by assumption
     west = loc(0, top) if any(n for n in f.nodes.values() if n[1] == 0) else loc(6, bottom + 2)
@@ -458,10 +461,16 @@ def visual_proof(port, outdir, f, stamp):
         ("starts", "route starts inside the area", interior, east),
         ("ends", "route ends inside the area", west, interior),
         ("crosses", "route crosses the area end to end", west, east),
+        # the case the mesh cannot answer: it never leaves the area, so the geodesic
+        # across the polygon is worked out at query time instead
+        ("within", "route starts and ends inside the area", interior, far_interior),
     ]
 
     results = []
     for name, description, origin, destination in cases:
+        if origin is None or destination is None or origin == destination:
+            results.append((name, None))
+            continue
         body = query(port, origin, destination, overview="full")
         if body.get("code") != "Ok":
             results.append((name, None))

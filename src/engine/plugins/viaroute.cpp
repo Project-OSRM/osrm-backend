@@ -1,5 +1,6 @@
 #include "engine/plugins/viaroute.hpp"
 #include "engine/api/route_api.hpp"
+#include "engine/area_route.hpp"
 #include "engine/routing_algorithms.hpp"
 #include "engine/status.hpp"
 
@@ -131,6 +132,19 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
 
     if (routes.routes[0].is_valid())
     {
+        // A leg that begins and ends on one plaza is a case the mesh answers badly, and
+        // the geodesic across the plaza is worked out from the polygon instead.  Done
+        // before the legs are collapsed, so that each leg is still one pair of the
+        // coordinates that were asked for.
+        for (auto &route : routes.routes)
+        {
+            if (route.is_valid())
+            {
+                area::useGeodesicWhereShorter(
+                    facade, route_parameters.coordinates, route, snapped_phantoms);
+            }
+        }
+
         auto collapse_legs = !route_parameters.waypoints.empty();
         if (collapse_legs)
         {

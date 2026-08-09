@@ -104,13 +104,66 @@ Feature: Foot - Snapping inside a pedestrian area
             | p    | g  | xcg     | ,D    |
             | e    | q  | eav     | A,,   |
 
-    # Both ends inside one area: they route by way of a shared vertex rather than
-    # straight across, because neither endpoint inserts an edge to the other.  This is
-    # also the one case the pruned mesh does not serve exactly, since it holds shortest
-    # paths *to entry points* and these two want a path between two arbitrary vertices.
-    # Pinned so that closing that gap is a visible change -- see
-    # plans/open-area-snapping.md.
-    Scenario: Foot - Start and end inside the same plaza
+    # Both ends on one plaza is the case the mesh cannot answer: it holds shortest paths
+    # *out* of an area, and this journey never leaves.  The route is worked out from the
+    # polygon when asked instead -- see engine/area_route.hpp -- so it bends only where it
+    # has to, and starts and ends exactly where it was asked to.
+    Scenario: Foot - Across a plaza from one point on it to another
+        Given the node map
+            """
+            e-a-------b-f
+              |       |
+              | m   n |
+            h-d-------c-g
+            """
+
+        And the ways
+            | nodes | highway    | area | name  |
+            | abcda | pedestrian | yes  | Plaza |
+            | ea    | pedestrian |      | A     |
+            | bf    | pedestrian |      | B     |
+            | hd    | pedestrian |      | C     |
+            | cg    | pedestrian |      | D     |
+
+        # m and n can see each other, so the answer is the straight line between them --
+        # 100 m, not a detour by way of a corner
+        When I route I should get
+            | from | to | distance  | route       |
+            | m    | n  | 100m +-3  | Plaza,Plaza |
+            | n    | m  | 100m +-3  | Plaza,Plaza |
+
+    # With something in the way it has to bend, and bends at a corner of the obstacle.
+    Scenario: Foot - Across a plaza with an obstacle in the way
+        Given the node map
+            """
+            e-a-----------b-f
+              | u-------v |
+              |p|       |q|
+              | x-------w |
+            h-d-----------c-g
+            """
+
+        And the ways
+            | nodes | highway    | name |
+            | abcda | (nil)      |      |
+            | uvwxu | (nil)      |      |
+            | ea    | pedestrian | A    |
+            | bf    | pedestrian | B    |
+            | hd    | pedestrian | C    |
+            | cg    | pedestrian | D    |
+
+        And the relations
+            | type         | highway    | way:outer | way:inner |
+            | multipolygon | pedestrian | abcda     | uvwxu     |
+
+        # straight across would be 300 m and runs through the obstacle; over the top of it
+        # is 312 m, and turns at u and v
+        When I route I should get
+            | from | to | a:nodes | distance  |
+            | p    | q  | auvv    | 312m +-5  |
+
+    # A journey with only one end on the plaza is not this case, and is left to the mesh.
+    Scenario: Foot - One end on the plaza is routed by the mesh
         Given the node map
             """
             e-a-----------b-f
@@ -135,7 +188,31 @@ Feature: Foot - Snapping inside a pedestrian area
 
         When I route I should get
             | from | to | a:nodes |
-            | p    | q  | uv      |
+            | p    | f  | ubf     |
+            | e    | q  | eav     |
+
+    # A via point on the plaza makes two legs, and each is solved the same way.
+    Scenario: Foot - Via a point on the plaza
+        Given the node map
+            """
+            e-a-------b-f
+              |       |
+              | m k n |
+            h-d-------c-g
+            """
+
+        And the ways
+            | nodes | highway    | area | name  |
+            | abcda | pedestrian | yes  | Plaza |
+            | ea    | pedestrian |      | A     |
+            | bf    | pedestrian |      | B     |
+            | hd    | pedestrian |      | C     |
+            | cg    | pedestrian |      | D     |
+
+        # m, k and n are in a line, so going by way of k costs nothing over going direct
+        When I route I should get
+            | waypoints | distance  |
+            | m,k,n     | 100m +-3  |
 
     Scenario: Foot - Obstacle against one side of the plaza
         Given the node map
@@ -192,16 +269,12 @@ Feature: Foot - Snapping inside a pedestrian area
             | type         | highway    | way:outer | way:inner   |
             | multipolygon | pedestrian | abcda     | uvwxu,ijkli |
 
-        # p to g has one end at an entry point, so the mesh holds the shortest way out
-        # of every vertex and the route is the a-priori optimum.  p to s has both ends
-        # inside the area, which the pruned mesh does not promise -- it routes by way of
-        # the obstacles' corners rather than taking the sight line straight across, and
-        # is 112 m longer than the whole visibility graph would be.  See
-        # plans/open-area-snapping.md, R17.
+        # p to g leaves the area, so the mesh answers it.  p to s never leaves, so the
+        # geodesic does -- over the top of both obstacles rather than round them.
         When I route I should get
-            | from | to | a:nodes |
-            | p    | s  | uvlk    |
-            | p    | g  | xcg     |
+            | from | to | a:nodes | distance   |
+            | p    | s  | aujd    | 396m +-6   |
+            | p    | g  | xcg     | 403m +-6   |
 
     Scenario: Foot - Plaza with two entrances on the same side
         Given the node map
