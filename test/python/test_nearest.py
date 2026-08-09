@@ -20,9 +20,8 @@ class TestNearest:
 
     def test_nearest_numberofresults(self):
         osrm_py = osrm.OSRM(storage_config=data_path, use_shared_memory=False)
-        nearest_params = osrm.NearestParameters(
-            coordinates=[three_test_coordinates[0]], number_of_results=3
-        )
+        nearest_params = osrm.NearestParameters(coordinates=[three_test_coordinates[0]])
+        nearest_params.number_of_results = 3
         res = osrm_py.Nearest(nearest_params)
         assert len(res["waypoints"]) == 3
 
@@ -65,7 +64,6 @@ class TestNearest:
             self.osrm_py.Nearest(nearest_params)
 
         with pytest.raises(Exception):
-            nearest_params = osrm.NearestParameters(
-                coordinates=[two_test_coordinates[0]], number_of_results=0
-            )
+            nearest_params = osrm.NearestParameters(coordinates=[two_test_coordinates[0]])
+            nearest_params.number_of_results = 0
             self.osrm_py.Nearest(nearest_params)
