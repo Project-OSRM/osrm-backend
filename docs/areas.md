@@ -7,14 +7,18 @@ travel freely in all directions.
 its lines of sight. This process is called @em meshing. The generated ways avoid obstacles
 and use existing nodes.
 
-By default the whole visibility graph is emitted: every pair of mutually visible vertices
-is joined, and so is every edge of every ring. That is what lets a coordinate *inside* an
-area be snapped to whichever vertex makes its journey shortest, and what makes the
-perimeter of a plaza and the sides of an obstacle walkable in their own right. Set
-`area_emit_visibility_graph = false` in your profile's properties to emit only the
-shortest paths between entry points instead; the routes between entry points are the same
-either way, but coordinates inside the area then have far less to snap to. An entry point
-is where another way connects to the perimeter of the area.
+The mesh is pruned: of the whole visibility graph, %OSRM keeps the shortest-path tree
+rooted at each entry point, plus every edge of every ring. That is enough to be exact.
+A coordinate *inside* the area is snapped to whichever vertex makes its journey shortest,
+and from that vertex the tree already holds the shortest way to every entry point, so the
+route is the one the whole visibility graph would have given -- for a mesh that grows as
+entry points times vertices rather than as vertices squared. The ring edges are what make
+the perimeter of a plaza and the sides of an obstacle walkable in their own right. An
+entry point is where another way connects to the perimeter of the area.
+
+Set `area_emit_visibility_graph = true` in your profile's properties to keep the whole
+graph instead. The only journey that needs it is one that both begins and ends inside the
+same area, which wants a path between two arbitrary vertices rather than a path out.
 
 This feature is still EXPERIMENTAL.
 

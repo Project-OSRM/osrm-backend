@@ -45,7 +45,7 @@ Feature: Foot - Snapping inside a pedestrian area
             | from | to | a:nodes | route |
             | x    | f  | bf      | B,B   |
             | x    | g  | cg      | D,D   |
-            | e    | x  | ea      | A,A   |
+            | e    | x  | ae      | A,A   |
 
     Scenario: Foot - Plaza entered by the middle of an edge
         Given the node map
@@ -71,7 +71,7 @@ Feature: Foot - Snapping inside a pedestrian area
         When I route I should get
             | from | to | a:nodes | route |
             | p    | i  | ni      | E,E   |
-            | e    | p  | ea      | A,A   |
+            | e    | p  | ae      | A,A   |
 
     Scenario: Foot - Route round an obstacle from inside the plaza
         Given the node map
@@ -105,8 +105,11 @@ Feature: Foot - Snapping inside a pedestrian area
             | e    | q  | eav     | A,,   |
 
     # Both ends inside one area: they route by way of a shared vertex rather than
-    # straight across, because neither endpoint inserts an edge to the other.  Pinned so
-    # that closing that gap is a visible change -- see plans/open-area-snapping.md.
+    # straight across, because neither endpoint inserts an edge to the other.  This is
+    # also the one case the pruned mesh does not serve exactly, since it holds shortest
+    # paths *to entry points* and these two want a path between two arbitrary vertices.
+    # Pinned so that closing that gap is a visible change -- see
+    # plans/open-area-snapping.md.
     Scenario: Foot - Start and end inside the same plaza
         Given the node map
             """
@@ -189,15 +192,16 @@ Feature: Foot - Snapping inside a pedestrian area
             | type         | highway    | way:outer | way:inner   |
             | multipolygon | pedestrian | abcda     | uvwxu,ijkli |
 
-        # the sight line from one obstacle's corner to the other's runs over both of
-        # them, which is shorter than going round by the plaza's edge.  Asserted as
-        # geometry: the node ids at the ends of a leg name the way the phantom sits on
-        # rather than the way the route took, and CH and MLD do not always pick the same
-        # one (see #7683).
+        # p to g has one end at an entry point, so the mesh holds the shortest way out
+        # of every vertex and the route is the a-priori optimum.  p to s has both ends
+        # inside the area, which the pruned mesh does not promise -- it routes by way of
+        # the obstacles' corners rather than taking the sight line straight across, and
+        # is 112 m longer than the whole visibility graph would be.  See
+        # plans/open-area-snapping.md, R17.
         When I route I should get
-            | from | to | geometry            |
-            | p    | s  | efbEsnbE?aM         |
-            | p    | g  | o`bEsnbExAsR?yA     |
+            | from | to | a:nodes |
+            | p    | s  | uvlk    |
+            | p    | g  | xcg     |
 
     Scenario: Foot - Plaza with two entrances on the same side
         Given the node map
