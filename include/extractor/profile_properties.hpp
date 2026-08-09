@@ -132,6 +132,14 @@ struct ProfileProperties
     unsigned weight_precision = 1;
     bool force_split_edges = false;
     bool call_tagless_node_function = true;
+    //! emit an open area's whole visibility graph rather than only the shortest paths
+    //! between its entry points, so that a coordinate snapped inside the area can set
+    //! off towards any node it can see.  See docs/areas.md.
+    bool area_emit_visibility_graph = true;
+    //! speed in m/s used to cross the interior of an open area on a straight line.
+    //! Deliberately not called walking_speed: the profiles already use that name for a
+    //! speed in km/h, and mixing the two units would be silent.
+    double area_walking_speed = 1.4;
 };
 } // namespace osrm::extractor
 

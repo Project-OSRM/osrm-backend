@@ -162,6 +162,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     std::unique_ptr<SharedGeospatialQuery> m_geospatial_query;
     std::filesystem::path file_index_path;
 
+    // The meshed open areas.  Optional: only a profile that meshes pedestrian areas
+    // produces them, so every use has to be guarded.
+    using AreaRTree = util::StaticRTree<extractor::AreaPolygonSegment, storage::Ownership::View>;
+    std::optional<AreaRTree> m_open_area_rtree;
+    util::vector_view<extractor::AreaPolygonSegment> m_open_areas;
+    util::vector_view<util::Coordinate> m_open_area_bbox_corners;
+    util::vector_view<util::Coordinate> m_open_area_vertices;
+    util::vector_view<std::uint32_t> m_open_area_ring_lengths;
+
     std::optional<extractor::IntersectionBearingsView> intersection_bearings_view;
 
     std::optional<extractor::StringTableView> m_string_table;
@@ -212,6 +221,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         m_static_rtree = make_search_tree_view(index, "/common/rtree");
         m_geospatial_query.reset(
             new SharedGeospatialQuery(m_static_rtree, m_coordinate_list, *this));
+
+        if (isIndexed(index, "/common/open_areas/areas"))
+        {
+            std::tie(m_open_areas,
+                     m_open_area_bbox_corners,
+                     m_open_area_vertices,
+                     m_open_area_ring_lengths) = make_open_areas_view(index, "/common/open_areas");
+            m_open_area_rtree = make_open_area_tree_view(index, "/common/open_areas/rtree");
+        }
 
         edge_based_node_data = make_ebn_data_view(index, "/common/ebg_node_data");
 
@@ -325,6 +343,35 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         const util::RectangleInt2D bbox{
             south_west.lon, north_east.lon, south_west.lat, north_east.lat};
         return m_geospatial_query->Search(bbox);
+    }
+
+    std::vector<extractor::AreaPolygonSegment>
+    GetOpenAreasAt(const util::Coordinate coordinate) const override final
+    {
+        if (!m_open_area_rtree)
+        {
+            return {};
+        }
+        // a degenerate rectangle: everything whose bounding box covers the point
+        const util::RectangleInt2D box{
+            coordinate.lon, coordinate.lon, coordinate.lat, coordinate.lat};
+        return m_open_area_rtree->SearchInBox(box);
+    }
+
+    std::vector<std::span<const util::Coordinate>>
+    GetOpenAreaRings(const extractor::AreaPolygonSegment &area) const override final
+    {
+        std::vector<std::span<const util::Coordinate>> rings;
+        rings.reserve(area.num_rings);
+
+        const util::Coordinate *vertices = m_open_area_vertices.data() + area.vertices_offset;
+        for (std::uint32_t i = 0; i < area.num_rings; ++i)
+        {
+            const auto length = m_open_area_ring_lengths[area.rings_offset + i];
+            rings.emplace_back(vertices, length);
+            vertices += length;
+        }
+        return rings;
     }
 
     std::vector<PhantomNodeWithDistance>

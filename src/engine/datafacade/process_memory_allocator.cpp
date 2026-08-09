@@ -14,6 +14,7 @@ ProcessMemoryAllocator::ProcessMemoryAllocator(const storage::StorageConfig &con
     std::unique_ptr<storage::BaseDataLayout> layout =
         std::make_unique<storage::ContiguousDataLayout>();
     storage.PopulateLayoutWithRTree(*layout);
+    storage.PopulateLayoutWithOpenAreaRTree(*layout);
     storage.PopulateLayout(*layout, static_files);
     storage.PopulateLayout(*layout, updatable_files);
 

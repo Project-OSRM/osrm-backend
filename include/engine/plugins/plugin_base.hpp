@@ -4,6 +4,7 @@
 #include "engine/api/base_parameters.hpp"
 #include "engine/api/base_result.hpp"
 #include "engine/api/flatbuffers/fbresult_generated.h"
+#include "engine/area_snapping.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/routing_algorithms.hpp"
@@ -240,12 +241,35 @@ class BasePlugin
         BOOST_ASSERT(parameters.IsValid());
         for (const auto i : util::irange<std::size_t>(0UL, parameters.coordinates.size()))
         {
+            const auto approach = use_approaches && parameters.approaches[i]
+                                      ? parameters.approaches[i].value()
+                                      : engine::Approach::UNRESTRICTED;
+
+            // A coordinate inside a meshed open area snaps to the vertices it can see,
+            // one candidate each, rather than to the nearest segment.  The search then
+            // picks whichever vertex makes the whole journey shortest.  See
+            // engine/area_snapping.hpp.
+            // The first coordinate is only ever departed from and the last only ever
+            // arrived at.  Everything in between is both at once and so goes uncharged,
+            // which costs a little accuracy on the legs either side of it.
+            const auto role = (i + 1 == parameters.coordinates.size()) ? area::ApproachRole::Arrival
+                              : (i == 0) ? area::ApproachRole::Departure
+                                         : area::ApproachRole::Via;
+            if (auto in_area =
+                    area::SnapInsideOpenArea(facade, parameters.coordinates[i], approach, role))
+            {
+                // Assign the member rather than the pair: a braced `{}` for the second
+                // element cannot be deduced by pair's forwarding constructor, so the
+                // whole thing would go through `pair(const T1 &, const T2 &)` and copy.
+                alternatives[i].first = std::move(*in_area);
+                continue;
+            }
+
             alternatives[i] = facade.NearestCandidatesWithAlternativeFromBigComponent(
                 parameters.coordinates[i],
                 use_radiuses ? parameters.radiuses[i] : default_radius,
                 use_bearings ? parameters.bearings[i] : std::nullopt,
-                use_approaches && parameters.approaches[i] ? parameters.approaches[i].value()
-                                                           : engine::Approach::UNRESTRICTED,
+                approach,
                 use_all_edges);
 
             // we didn't find a fitting node, return error

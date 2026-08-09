@@ -28,6 +28,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #ifndef EXTRACTOR_HPP
 #define EXTRACTOR_HPP
 
+#include "extractor/area/area_data_collector.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/extractor_config.hpp"
@@ -95,6 +96,12 @@ class Extractor
                         EdgeBasedNodeDataContainer &nodes_container) const;
     void BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_segments,
                     const std::vector<util::Coordinate> &coordinates);
+
+    /**
+     * Write what the engine needs to snap a coordinate that falls inside a meshed area:
+     * the polygons themselves, and an r-tree over their bounding boxes to find them.
+     */
+    void WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons);
 
     void ProcessGuidanceTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                               const EdgeBasedNodeDataContainer &edge_based_node_container,

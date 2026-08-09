@@ -30,6 +30,7 @@ class MMapMemoryAllocator final : public ContiguousBlockAllocator
     storage::SharedDataIndex index;
     std::vector<boost::iostreams::mapped_file_source> mapped_memory_files;
     std::string rtree_filename;
+    std::string open_area_rtree_filename;
 };
 
 } // namespace osrm::engine::datafacade

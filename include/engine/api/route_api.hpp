@@ -111,7 +111,9 @@ class RouteAPI : public BaseAPI
 
         if (!parameters.skip_waypoints)
         {
-            response.values.emplace("waypoints", BaseAPI::MakeWaypoints(waypoint_candidates));
+            response.values.emplace(
+                "waypoints",
+                BaseAPI::MakeWaypoints(waypointsAsRouted(raw_routes, waypoint_candidates)));
         }
         response.values.emplace("routes", std::move(jsRoutes));
         response.values.emplace("code", "Ok");
@@ -123,6 +125,54 @@ class RouteAPI : public BaseAPI
     }
 
   protected:
+    /**
+     * @brief Put the candidate the route actually set off from at the head of its list.
+     *
+     * A waypoint reports `candidates.front()`, which is right when every candidate for a
+     * coordinate sits at the same snapped point -- the usual case, alternatives at one
+     * intersection.  Snapping inside an open area breaks that assumption on purpose: the
+     * candidates are the area's visible vertices, spread right across it, and only the
+     * search knows which one the journey used.  Reporting the first would put the
+     * waypoint somewhere the route never goes.
+     *
+     * The route carries the phantoms it used in `leg_endpoints`, so use those.  The list
+     * is only reordered when it would change the reported location, which leaves every
+     * ordinary route -- including the order names are joined in -- exactly as it was.
+     */
+    std::vector<PhantomNodeCandidates>
+    waypointsAsRouted(const InternalManyRoutesResult &raw_routes,
+                      const std::vector<PhantomNodeCandidates> &waypoint_candidates) const
+    {
+        const auto route = std::find_if(raw_routes.routes.begin(),
+                                        raw_routes.routes.end(),
+                                        [](const auto &r) { return r.is_valid(); });
+        if (route == raw_routes.routes.end() ||
+            route->leg_endpoints.size() + 1 != waypoint_candidates.size())
+        {
+            return waypoint_candidates;
+        }
+
+        auto candidates = waypoint_candidates;
+        for (std::size_t i = 0; i < candidates.size(); ++i)
+        {
+            const auto &used = i == 0 ? route->leg_endpoints.front().source_phantom
+                                      : route->leg_endpoints[i - 1].target_phantom;
+            if (candidates[i].empty() || candidates[i].front().location == used.location)
+            {
+                continue;
+            }
+            auto found = std::find_if(candidates[i].begin(),
+                                      candidates[i].end(),
+                                      [&used](const PhantomNode &candidate)
+                                      { return candidate.location == used.location; });
+            if (found != candidates[i].end())
+            {
+                std::iter_swap(candidates[i].begin(), found);
+            }
+        }
+        return candidates;
+    }
+
     template <typename GetWptsFn>
     std::unique_ptr<fbresult::FBResultBuilder>
     MakeFBResponse(const InternalManyRoutesResult &raw_routes,

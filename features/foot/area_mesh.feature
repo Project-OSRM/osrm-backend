@@ -124,3 +124,49 @@ Feature: Foot - Pedestrian areas
             | k    | h  | kebh     |
             | k    | i  | ketci    |
             | k    | j  | kedj     |
+
+    # Two ways in is the smallest arrangement worth meshing.  A plaza entered twice from
+    # the same side has no other graph in it at all, so refusing to mesh it leaves the
+    # two entrances unconnected except by whatever runs around the outside.
+    Scenario: Foot - Mesh an area with only two entrances
+        Given the node map
+            """
+            a-------b
+            |       |
+            d-x---y-c
+              |   |
+              u   v
+            """
+
+        And the ways
+            | nodes    | highway    | area | name  |
+            | abcyxda  | pedestrian | yes  | Plaza |
+            | ux       | pedestrian |      | U     |
+            | vy       | pedestrian |      | V     |
+
+        # the chord x-y is the mesh; without it the two entrances are not connected
+        When I route I should get
+            | from | to | a:nodes | distance |
+            | u    | v  | uxyv    | 300m +-2 |
+            | v    | u  | vyxu    | 300m +-2 |
+
+    # ... but one way touching the area is not an arrangement at all: there is nothing to
+    # cross to, so the mesh would be dead weight.
+    Scenario: Foot - Do not mesh an area with a single entrance
+        Given the node map
+            """
+            a-------b
+            |       |
+            d-x-----c
+              |
+              u
+            """
+
+        And the ways
+            | nodes   | highway    | area | name  |
+            | abcxda  | pedestrian | yes  | Plaza |
+            | ux      | pedestrian |      | U     |
+
+        When I route I should get
+            | from | to | route |
+            | u    | x  | U,U   |
