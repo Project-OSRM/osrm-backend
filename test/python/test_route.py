@@ -214,9 +214,7 @@ class TestRoute:
 
     def test_route_validapproaches(self):
         # Valid approach strings are "curb", "unrestricted", "opposite", or None.
-        route_params = osrm.RouteParameters(
-            coordinates=two_test_coordinates, approaches=[None, "curb"]
-        )
+        route_params = osrm.RouteParameters(coordinates=two_test_coordinates, approaches=[None, "curb"])
         res = self.osrm_py.Route(route_params)
         assert res["routes"][0]
 

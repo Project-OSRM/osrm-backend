@@ -38,9 +38,7 @@ class TestNearest:
         assert res["waypoints"]
 
     def test_nearest_validradius(self):
-        nearest_params = osrm.NearestParameters(
-            coordinates=[two_test_coordinates[0]], radiuses=[100]
-        )
+        nearest_params = osrm.NearestParameters(coordinates=[two_test_coordinates[0]], radiuses=[100])
         res = self.osrm_py.Nearest(nearest_params)
         assert res["waypoints"]
 
