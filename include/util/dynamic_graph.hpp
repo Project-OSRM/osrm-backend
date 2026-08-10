@@ -41,18 +41,21 @@ template <typename NodeIterator, typename EdgeDataT> struct DynamicEdge
 };
 } // namespace detail
 
-template <typename EdgeDataT> class DynamicGraph
+// EdgeIteratorT is the type every edge slot is addressed by, so its width caps how large the
+// edge list may grow. It is a template parameter so that the limit can be reached in a test;
+// production code uses the default.
+template <typename EdgeDataT, typename EdgeIteratorT = std::uint32_t> class DynamicGraph
 {
   public:
     using EdgeData = EdgeDataT;
     using NodeIterator = std::uint32_t;
-    using EdgeIterator = std::uint32_t;
+    using EdgeIterator = EdgeIteratorT;
     using EdgeRange = range<EdgeIterator>;
 
     using Node = detail::DynamicNode<EdgeIterator>;
     using Edge = detail::DynamicEdge<NodeIterator, EdgeDataT>;
 
-    template <typename E> friend class DynamicGraph;
+    template <typename, typename> friend class DynamicGraph;
 
     class InputEdge
     {
@@ -220,7 +223,13 @@ template <typename EdgeDataT> class DynamicGraph
 
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
 
+    // Number of live edges. Slots vacated by DeleteEdge() or by InsertEdge() relocating a node
+    // do not count towards it.
     unsigned GetNumberOfEdges() const { return number_of_edges; }
+
+    // Number of edge slots, live and dummied out alike. This is what EdgeIterator has to index,
+    // so it is the quantity bounded by 2^32, and it only shrinks back to GetNumberOfEdges() when
+    // Renumber() compacts the list.
     auto GetEdgeCapacity() const { return edge_list.size(); }
 
     unsigned GetOutDegree(const NodeIterator n) const { return node_array[n].edges; }
@@ -282,8 +291,20 @@ template <typename EdgeDataT> class DynamicGraph
             else
             {
                 // we have to move this nodes edges to the end of the edge_list
-                EdgeIterator newFirstEdge = (EdgeIterator)edge_list.size();
                 unsigned newSize = node.edges * 1.1 + 2;
+                // edge_list is indexed by a 32-bit EdgeIterator but sized by std::size_t. Past
+                // 2^32 slots the cast below truncates and EndEdges() wraps, which does not fail
+                // here but much later, as either an out-of-range target node or an inverted
+                // adjacency range whose size() underflows. Stop while the numbers still mean
+                // something.
+                if (edge_list.size() + newSize >= std::numeric_limits<EdgeIterator>::max())
+                {
+                    throw util::exception("There are too many edges, OSRM only supports 2^32 (" +
+                                          std::to_string(number_of_edges) + " of " +
+                                          std::to_string(edge_list.size()) + " slots are live)" +
+                                          SOURCE_REF);
+                }
+                EdgeIterator newFirstEdge = (EdgeIterator)edge_list.size();
                 EdgeIterator requiredCapacity = newSize + edge_list.size();
                 EdgeIterator oldCapacity = edge_list.capacity();
                 // make sure there is enough space at the end
@@ -414,7 +435,7 @@ template <typename EdgeDataT> class DynamicGraph
             util::inplacePermutation(node_array.begin(), node_array.end(), old_to_new_node);
 
         // Build up edge permutation
-        if (edge_list.size() >= std::numeric_limits<EdgeID>::max())
+        if (edge_list.size() >= std::numeric_limits<EdgeIterator>::max())
         {
             throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
         }

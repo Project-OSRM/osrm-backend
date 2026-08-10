@@ -5,6 +5,8 @@
 #include "contractor/contractor_search.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
 #include "contractor/query_edge.hpp"
+#include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
 #include "util/percent.hpp"
@@ -26,6 +28,7 @@
 #include <cstddef>
 #include <iomanip>
 #include <limits>
+#include <string>
 #include <vector>
 
 #define SELF_LOOPS
@@ -512,12 +515,14 @@ bool IsNodeIndependent(const ContractorGraph &graph,
  * @param node_is_contractible_
  * @param edge_weights_
  * @param core_factor
+ * @param edge_list_compaction_threshold
  * @return std::vector<bool>
  */
 std::vector<bool> contractGraph(ContractorGraph &graph,
                                 std::vector<bool> node_is_uncontracted_,
                                 std::vector<bool> node_is_contractible_,
-                                double core_factor)
+                                double core_factor,
+                                std::size_t edge_list_compaction_threshold)
 {
     /** A heap kept in thread-local storage to avoid multiple recreations of it. */
     ContractorHeap heap_exemplar(HASH_MAP_CAPACITY);
@@ -539,6 +544,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     TIMER_DECLARE(update_core);
     TIMER_DECLARE(adjust_remaining);
     TIMER_DECLARE(renumber);
+    TIMER_DECLARE(compaction);
 
     // Update Priorities of all Nodes with Simulated Contractions
     util::Log() << "initializing node priorities...";
@@ -575,12 +581,51 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     util::UnbufferedLog log;
     util::Percent p(log, remaining_nodes.size());
 
+    // Inserting an edge grows the edge list by relocating the whole adjacency of a node to its
+    // end and dummying out the vacated slots. Nothing reclaims those slots while contracting, so
+    // on planet-sized input a quarter of the list went dead and its size crossed the 2^32 that a
+    // 32-bit edge index can address, all while the live edge count was still comfortably below
+    // it. Renumber() with an empty permutation compacts the list without renumbering nodes, so
+    // run it whenever the list approaches that ceiling. It rewrites every node's first edge and
+    // hence has to stay outside of the parallel sections below.
+    //
+    // The default trigger is anchored to the ceiling rather than set to a fixed size: a pass
+    // costs the same no matter how much it frees, since its work is proportional to the size of
+    // the list. A threshold sitting just above the live edge count therefore degenerates into
+    // compacting constantly and reclaiming next to nothing.
+
     // Algo 2: while Remaining Graph not Empty
     //
     // contract a chunk of nodes until a sufficient percentage of all nodes is
     // contracted
     while (remaining_nodes.size() > number_of_core_nodes)
     {
+        if (graph.GetEdgeCapacity() >= edge_list_compaction_threshold)
+        {
+            const auto slots_before = graph.GetEdgeCapacity();
+            TIMER_START(compaction);
+            graph.Renumber(std::vector<NodeID>());
+            TIMER_STOP(compaction);
+            const auto slots_after = graph.GetEdgeCapacity();
+            util::Log() << "compacted edge list from " << slots_before << " to " << slots_after
+                        << " edges in " << TIMER_MSEC(compaction);
+
+            // Every remaining slot now holds a live edge, and the finished hierarchy has to fit
+            // those into the same index. If that alone is above the trigger, there is nothing
+            // left to reclaim and every later iteration would compact for nothing.
+            if (slots_after >= edge_list_compaction_threshold)
+            {
+                throw util::exception(
+                    "There are too many edges: " + std::to_string(slots_after) +
+                    " of them are live and cannot be compacted away, which leaves only " +
+                    std::to_string(EDGE_LIST_LIMIT - slots_after) + " of the " +
+                    std::to_string(EDGE_LIST_LIMIT) +
+                    " slots an edge index can address free. That is not enough headroom to keep "
+                    "contracting, so this graph has to be split into smaller parts" +
+                    SOURCE_REF);
+            }
+        }
+
         /** List of discovered independent nodes */
         tbb::concurrent_vector<NodeID> independent_nodes;
         /** List of new edges to insert into the graph */
