@@ -41,18 +41,21 @@ template <typename NodeIterator, typename EdgeDataT> struct DynamicEdge
 };
 } // namespace detail
 
-template <typename EdgeDataT> class DynamicGraph
+// EdgeIteratorT is the type every edge slot is addressed by, so its width caps how large the
+// edge list may grow. It is a template parameter so that the limit can be reached in a test;
+// production code uses the default.
+template <typename EdgeDataT, typename EdgeIteratorT = std::uint32_t> class DynamicGraph
 {
   public:
     using EdgeData = EdgeDataT;
     using NodeIterator = std::uint32_t;
-    using EdgeIterator = std::uint32_t;
+    using EdgeIterator = EdgeIteratorT;
     using EdgeRange = range<EdgeIterator>;
 
     using Node = detail::DynamicNode<EdgeIterator>;
     using Edge = detail::DynamicEdge<NodeIterator, EdgeDataT>;
 
-    template <typename E> friend class DynamicGraph;
+    template <typename, typename> friend class DynamicGraph;
 
     class InputEdge
     {
@@ -432,7 +435,7 @@ template <typename EdgeDataT> class DynamicGraph
             util::inplacePermutation(node_array.begin(), node_array.end(), old_to_new_node);
 
         // Build up edge permutation
-        if (edge_list.size() >= std::numeric_limits<EdgeID>::max())
+        if (edge_list.size() >= std::numeric_limits<EdgeIterator>::max())
         {
             throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
         }

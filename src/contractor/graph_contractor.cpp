@@ -515,12 +515,14 @@ bool IsNodeIndependent(const ContractorGraph &graph,
  * @param node_is_contractible_
  * @param edge_weights_
  * @param core_factor
+ * @param edge_list_compaction_threshold
  * @return std::vector<bool>
  */
 std::vector<bool> contractGraph(ContractorGraph &graph,
                                 std::vector<bool> node_is_uncontracted_,
                                 std::vector<bool> node_is_contractible_,
-                                double core_factor)
+                                double core_factor,
+                                std::size_t edge_list_compaction_threshold)
 {
     /** A heap kept in thread-local storage to avoid multiple recreations of it. */
     ContractorHeap heap_exemplar(HASH_MAP_CAPACITY);
@@ -587,15 +589,10 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     // run it whenever the list approaches that ceiling. It rewrites every node's first edge and
     // hence has to stay outside of the parallel sections below.
     //
-    // The trigger is anchored to the ceiling rather than set to a fixed size: a pass costs the
-    // same no matter how much it frees, since its work is proportional to the size of the list.
-    // A threshold sitting just above the live edge count therefore degenerates into compacting
-    // constantly and reclaiming next to nothing. The slack covers the growth of one iteration.
-    constexpr std::size_t EDGE_LIST_LIMIT =
-        std::numeric_limits<ContractorGraph::EdgeIterator>::max();
-    constexpr std::size_t EDGE_LIST_COMPACTION_SLACK = 300000000;
-    constexpr std::size_t EDGE_LIST_COMPACTION_THRESHOLD =
-        EDGE_LIST_LIMIT - EDGE_LIST_COMPACTION_SLACK;
+    // The default trigger is anchored to the ceiling rather than set to a fixed size: a pass
+    // costs the same no matter how much it frees, since its work is proportional to the size of
+    // the list. A threshold sitting just above the live edge count therefore degenerates into
+    // compacting constantly and reclaiming next to nothing.
 
     // Algo 2: while Remaining Graph not Empty
     //
@@ -603,7 +600,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     // contracted
     while (remaining_nodes.size() > number_of_core_nodes)
     {
-        if (graph.GetEdgeCapacity() >= EDGE_LIST_COMPACTION_THRESHOLD)
+        if (graph.GetEdgeCapacity() >= edge_list_compaction_threshold)
         {
             const auto slots_before = graph.GetEdgeCapacity();
             TIMER_START(compaction);
@@ -614,17 +611,17 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
                         << " edges in " << TIMER_MSEC(compaction);
 
             // Every remaining slot now holds a live edge, and the finished hierarchy has to fit
-            // those into the same 32-bit index. If that alone is above the trigger, there is
-            // nothing left to reclaim and every later iteration would compact for nothing.
-            if (slots_after >= EDGE_LIST_COMPACTION_THRESHOLD)
+            // those into the same index. If that alone is above the trigger, there is nothing
+            // left to reclaim and every later iteration would compact for nothing.
+            if (slots_after >= edge_list_compaction_threshold)
             {
                 throw util::exception(
                     "There are too many edges: " + std::to_string(slots_after) +
-                    " of them are live and cannot be compacted away, which leaves fewer than " +
-                    std::to_string(EDGE_LIST_COMPACTION_SLACK) +
-                    " of the 2^32 slots an edge index can address free. That is not enough "
-                    "headroom to keep contracting, so this graph has to be split into smaller "
-                    "parts" +
+                    " of them are live and cannot be compacted away, which leaves only " +
+                    std::to_string(EDGE_LIST_LIMIT - slots_after) + " of the " +
+                    std::to_string(EDGE_LIST_LIMIT) +
+                    " slots an edge index can address free. That is not enough headroom to keep "
+                    "contracting, so this graph has to be split into smaller parts" +
                     SOURCE_REF);
             }
         }

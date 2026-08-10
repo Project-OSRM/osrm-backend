@@ -1,10 +1,13 @@
 #include "util/dynamic_graph.hpp"
+#include "util/exception.hpp"
 #include "util/typedefs.hpp"
 
 #include "../common/range_tools.hpp"
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdint>
+#include <limits>
 #include <vector>
 
 BOOST_AUTO_TEST_SUITE(dynamic_graph)
@@ -19,6 +22,10 @@ struct TestData
 
 using TestDynamicGraph = DynamicGraph<TestData>;
 using TestInputEdge = TestDynamicGraph::InputEdge;
+
+// The edge list is addressed by EdgeIterator, so it can never hold more slots than that type can
+// index. Filling 2^32 of them is not testable, so narrow the index instead.
+using NarrowDynamicGraph = DynamicGraph<TestData, std::uint16_t>;
 
 BOOST_AUTO_TEST_CASE(find_test)
 {
@@ -156,6 +163,29 @@ BOOST_AUTO_TEST_CASE(filter_test)
     REQUIRE_SIZE_RANGE(filtered_simple_graph.GetAdjacentEdgeRange(4), 1);
     CHECK_EQUAL_RANGE(filtered_simple_graph.GetAdjacentEdgeRange(4),
                       filtered_simple_graph.FindEdge(4, 1));
+}
+
+BOOST_AUTO_TEST_CASE(edge_list_limit_test)
+{
+    constexpr std::size_t EDGE_LIST_LIMIT = std::numeric_limits<std::uint16_t>::max();
+
+    NarrowDynamicGraph graph(2);
+
+    // InsertEdge moves a node's edges to the end of the edge list whenever it runs out of room
+    // and dummies out the slots it vacates. Nothing reclaims those, so the list outgrows the live
+    // edge count and hits the limit well before as many edges have been inserted.
+    BOOST_CHECK_THROW(
+        {
+            for (auto id : irange<EdgeID>(0, EDGE_LIST_LIMIT))
+            {
+                graph.InsertEdge(0, 1, TestData{id});
+            }
+        },
+        exception);
+
+    // It stops growing while an index into it still means what it says.
+    BOOST_CHECK_LT(graph.GetEdgeCapacity(), EDGE_LIST_LIMIT);
+    BOOST_CHECK_LT(graph.GetNumberOfEdges(), graph.GetEdgeCapacity());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
