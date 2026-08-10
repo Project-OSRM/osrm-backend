@@ -1,4 +1,5 @@
 #include "engine/plugins/table.hpp"
+#include "engine/area_route.hpp"
 
 #include "engine/api/table_api.hpp"
 #include "engine/api/table_parameters.hpp"
@@ -83,6 +84,16 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     {
         return Error("NoTable", "No table found", result);
     }
+
+    // A pair of coordinates on one plaza is a journey the mesh answers badly, the same as
+    // it is for a route -- see engine/area_route.hpp.  Here there is only a number to put
+    // right.
+    area::useGeodesicInTable(facade,
+                             params.coordinates,
+                             params.sources,
+                             params.destinations,
+                             result_tables_pair.first,
+                             result_tables_pair.second);
 
     std::vector<api::TableAPI::TableCellRef> estimated_pairs;
 

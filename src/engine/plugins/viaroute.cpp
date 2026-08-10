@@ -136,12 +136,17 @@ Status ViaRoutePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithm
         // the geodesic across the plaza is worked out from the polygon instead.  Done
         // before the legs are collapsed, so that each leg is still one pair of the
         // coordinates that were asked for.
+        std::vector<PhantomNodeCandidates *> waypoints;
+        waypoints.reserve(snapped_phantoms.size());
+        for (auto &candidates : snapped_phantoms)
+        {
+            waypoints.push_back(&candidates);
+        }
         for (auto &route : routes.routes)
         {
             if (route.is_valid())
             {
-                area::useGeodesicWhereShorter(
-                    facade, route_parameters.coordinates, route, snapped_phantoms);
+                area::useGeodesicWhereShorter(facade, route, waypoints);
             }
         }
 

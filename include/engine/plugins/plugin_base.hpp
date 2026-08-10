@@ -227,9 +227,22 @@ class BasePlugin
         return phantom_nodes;
     }
 
+    /**
+     * Whether a coordinate's place in the list says which end of a journey it is.  It
+     * does for a route.  A trip visits every point and returns to the first, so each of
+     * them is departed from *and* arrived at, which no single approach cost can express;
+     * see area::ApproachRole.
+     */
+    enum class ApproachCharge
+    {
+        ByPosition,
+        NeverCharge
+    };
+
     std::vector<PhantomCandidateAlternatives>
     GetPhantomNodes(const datafacade::BaseDataFacade &facade,
-                    const api::BaseParameters &parameters) const
+                    const api::BaseParameters &parameters,
+                    const ApproachCharge charge = ApproachCharge::ByPosition) const
     {
         std::vector<PhantomCandidateAlternatives> alternatives(parameters.coordinates.size());
 
@@ -252,7 +265,9 @@ class BasePlugin
             // The first coordinate is only ever departed from and the last only ever
             // arrived at.  Everything in between is both at once and so goes uncharged,
             // which costs a little accuracy on the legs either side of it.
-            const auto role = (i + 1 == parameters.coordinates.size()) ? area::ApproachRole::Arrival
+            const auto role = charge == ApproachCharge::NeverCharge ? area::ApproachRole::Via
+                              : (i + 1 == parameters.coordinates.size())
+                                  ? area::ApproachRole::Arrival
                               : (i == 0) ? area::ApproachRole::Departure
                                          : area::ApproachRole::Via;
             if (auto in_area =

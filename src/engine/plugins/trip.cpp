@@ -1,4 +1,5 @@
 #include "engine/plugins/trip.hpp"
+#include "engine/area_route.hpp"
 
 #include "engine/api/trip_api.hpp"
 #include "engine/api/trip_parameters.hpp"
@@ -30,7 +31,7 @@ bool IsSupportedParameterCombination(const bool fixed_start,
 // so on) and return the result
 InternalRouteResult
 TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
-                         const std::vector<PhantomNodeCandidates> &waypoint_candidates,
+                         std::vector<PhantomNodeCandidates> &waypoint_candidates,
                          const std::vector<NodeID> &trip,
                          const bool roundtrip) const
 {
@@ -56,6 +57,21 @@ TripPlugin::ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
 
     auto min_route = algorithms.ShortestPathSearch(trip_candidates, {false});
     BOOST_ASSERT_MSG(min_route.shortest_path_weight < INVALID_EDGE_WEIGHT, "unroutable route");
+
+    // The legs run in tour order, so the waypoints they answer to are the original
+    // candidates picked out in that order -- the response reports those, not the copies
+    // ShortestPathSearch was handed.
+    std::vector<PhantomNodeCandidates *> waypoints;
+    waypoints.reserve(trip_candidates.size());
+    for (const auto node : trip)
+    {
+        waypoints.push_back(&waypoint_candidates[node]);
+    }
+    if (roundtrip)
+    {
+        waypoints.push_back(&waypoint_candidates[trip.front()]);
+    }
+    area::useGeodesicWhereShorter(algorithms.GetFacade(), min_route, waypoints);
     return min_route;
 }
 
@@ -190,7 +206,7 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Status::Error;
 
     const auto &facade = algorithms.GetFacade();
-    auto phantom_node_pairs = GetPhantomNodes(facade, parameters);
+    auto phantom_node_pairs = GetPhantomNodes(facade, parameters, ApproachCharge::NeverCharge);
     if (phantom_node_pairs.size() != number_of_locations)
     {
         return Error("NoSegment",
@@ -211,9 +227,13 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     BOOST_ASSERT(snapped_phantoms.size() == number_of_locations);
 
     // compute the duration table of all phantom nodes
-    auto result_duration_table = util::DistTableWrapper<EdgeDuration>(
-        algorithms.ManyToManySearch(snapped_phantoms, {}, {}, /*requestDistance*/ false).first,
-        number_of_locations);
+    auto durations = algorithms.ManyToManySearch(snapped_phantoms, {}, {}, false).first;
+    // a pair on one plaza is a journey the mesh answers badly, and the tour is chosen from
+    // these numbers -- see engine/area_route.hpp
+    std::vector<EdgeDistance> no_distances;
+    area::useGeodesicInTable(facade, parameters.coordinates, {}, {}, durations, no_distances);
+    auto result_duration_table =
+        util::DistTableWrapper<EdgeDuration>(std::move(durations), number_of_locations);
 
     if (result_duration_table.size() == 0)
     {
