@@ -34,6 +34,31 @@ struct SolvedArea
     std::vector<std::vector<std::pair<std::size_t, double>>> adjacency;
 
     std::size_t size() const { return coordinates.size(); }
+
+    /** Is this the area those rings describe, and not merely one filed under its name? */
+    bool describes(const std::vector<std::span<const util::Coordinate>> &rings) const
+    {
+        if (rings.size() != projected.size())
+        {
+            return false;
+        }
+        std::size_t at = 0;
+        for (std::size_t ring = 0; ring < rings.size(); ++ring)
+        {
+            if (rings[ring].size() != projected[ring].size())
+            {
+                return false;
+            }
+            for (const auto coordinate : rings[ring])
+            {
+                if (coordinate != coordinates[at++])
+                {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
 };
 
 double metres(const util::Coordinate a, const util::Coordinate b)
@@ -288,6 +313,15 @@ geodesic_between(std::uint32_t dataset,
 
     const Cache::Key key{dataset, area_key};
     const SolvedArea *area = cache().find(key);
+    if (area != nullptr && !area->describes(rings))
+    {
+        // The key is not proof of identity.  A checksum says what a dataset contains, not
+        // which dataset it is, and one process can serve several in turn -- osrm-datastore
+        // swaps them under a running server -- so two areas from two datasets can arrive
+        // wearing the same key.  Comparing the vertices settles it, and costs a walk over
+        // at most GEODESIC_MAX_VERTICES coordinates against building the graph again.
+        area = nullptr;
+    }
     if (area == nullptr)
     {
         // build it before deciding the points are inside, so that a run of queries

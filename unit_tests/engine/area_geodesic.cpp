@@ -363,4 +363,35 @@ BOOST_AUTO_TEST_CASE(geodesic_length_matches_the_path_it_reports)
     }
 }
 
+// A key is not proof of identity: a checksum says what a dataset holds, not which one it
+// is, and one process can serve several in turn.  Two different areas arriving under the
+// same key must not be confused for each other.
+BOOST_AUTO_TEST_CASE(geodesic_does_not_confuse_two_areas_filed_under_one_key)
+{
+    forget_cached_geodesics();
+
+    Plaza open_plaza{1000.0};     // nothing in the way
+    Plaza blocked{1000.0, 600.0}; // a block straddling the middle
+    const auto from = at(100, 500), to = at(900, 500);
+
+    // the same dataset and the same area key for both, as a swapped dataset would give
+    const auto straight = geodesic_between(1, 42, open_plaza.rings, from, to);
+    BOOST_REQUIRE(straight);
+    BOOST_CHECK(straight->bends.empty());
+
+    const auto around = geodesic_between(1, 42, blocked.rings, from, to);
+    BOOST_REQUIRE(around);
+    BOOST_CHECK_MESSAGE(!around->bends.empty(),
+                        "the second area was answered from the first area's graph");
+    BOOST_CHECK_GT(around->length, straight->length);
+
+    // and back again, to show it is not simply the last one that wins
+    const auto again = geodesic_between(1, 42, open_plaza.rings, from, to);
+    BOOST_REQUIRE(again);
+    BOOST_CHECK(again->bends.empty());
+    BOOST_CHECK_CLOSE(again->length, straight->length, 1e-6);
+
+    forget_cached_geodesics();
+}
+
 BOOST_AUTO_TEST_SUITE_END()
