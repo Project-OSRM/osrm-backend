@@ -5,6 +5,8 @@
 #include "contractor/contractor_search.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
 #include "contractor/query_edge.hpp"
+#include "util/exception.hpp"
+#include "util/exception_utils.hpp"
 #include "util/integer_range.hpp"
 #include "util/log.hpp"
 #include "util/percent.hpp"
@@ -26,6 +28,7 @@
 #include <cstddef>
 #include <iomanip>
 #include <limits>
+#include <string>
 #include <vector>
 
 #define SELF_LOOPS
@@ -539,6 +542,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     TIMER_DECLARE(update_core);
     TIMER_DECLARE(adjust_remaining);
     TIMER_DECLARE(renumber);
+    TIMER_DECLARE(compaction);
 
     // Update Priorities of all Nodes with Simulated Contractions
     util::Log() << "initializing node priorities...";
@@ -575,12 +579,54 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     util::UnbufferedLog log;
     util::Percent p(log, remaining_nodes.size());
 
+    // Inserting an edge grows the edge list by relocating the whole adjacency of a node to its
+    // end and dummying out the vacated slots. Nothing reclaims those slots while contracting, so
+    // on planet-sized input a quarter of the list went dead and its size crossed the 2^32 that a
+    // 32-bit edge index can address, all while the live edge count was still comfortably below
+    // it. Renumber() with an empty permutation compacts the list without renumbering nodes, so
+    // run it whenever the list approaches that ceiling. It rewrites every node's first edge and
+    // hence has to stay outside of the parallel sections below.
+    //
+    // The trigger is anchored to the ceiling rather than set to a fixed size: a pass costs the
+    // same no matter how much it frees, since its work is proportional to the size of the list.
+    // A threshold sitting just above the live edge count therefore degenerates into compacting
+    // constantly and reclaiming next to nothing. The slack covers the growth of one iteration.
+    constexpr std::size_t EDGE_LIST_LIMIT =
+        std::numeric_limits<ContractorGraph::EdgeIterator>::max();
+    constexpr std::size_t EDGE_LIST_COMPACTION_SLACK = 300000000;
+    constexpr std::size_t EDGE_LIST_COMPACTION_THRESHOLD =
+        EDGE_LIST_LIMIT - EDGE_LIST_COMPACTION_SLACK;
+
     // Algo 2: while Remaining Graph not Empty
     //
     // contract a chunk of nodes until a sufficient percentage of all nodes is
     // contracted
     while (remaining_nodes.size() > number_of_core_nodes)
     {
+        if (graph.GetEdgeCapacity() >= EDGE_LIST_COMPACTION_THRESHOLD)
+        {
+            const auto slots_before = graph.GetEdgeCapacity();
+            TIMER_START(compaction);
+            graph.Renumber(std::vector<NodeID>());
+            TIMER_STOP(compaction);
+            const auto slots_after = graph.GetEdgeCapacity();
+            util::Log() << "compacted edge list from " << slots_before << " to " << slots_after
+                        << " edges in " << TIMER_MSEC(compaction);
+
+            // Every remaining slot now holds a live edge, and the finished hierarchy has to fit
+            // those into the same 32-bit index. If that alone is above the trigger, there is
+            // nothing left to reclaim and every later iteration would compact for nothing.
+            if (slots_after >= EDGE_LIST_COMPACTION_THRESHOLD)
+            {
+                throw util::exception(
+                    "There are too many edges, OSRM only supports 2^32: " +
+                    std::to_string(slots_after) +
+                    " of them are live and cannot be compacted away, so this graph has to be "
+                    "split into smaller parts" +
+                    SOURCE_REF);
+            }
+        }
+
         /** List of discovered independent nodes */
         tbb::concurrent_vector<NodeID> independent_nodes;
         /** List of new edges to insert into the graph */
