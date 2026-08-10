@@ -406,13 +406,55 @@ void PostProcess(ContractorGraph &graph, const NodeID v, ContractorNodeData &nod
 }
 
 /**
+ * @brief Find an existing shortcut that duplicates a candidate edge.
+ *
+ * The contractor stores each logical shortcut u->w as a forward edge at u and a
+ * backward copy at w, so a node pair legitimately carries one edge per direction;
+ * only a shortcut with identical direction flags duplicates the candidate.
+ * Non-shortcut edges are never considered: their id is an original-edge id, not
+ * a middle node, so they cannot be updated in place. The same restriction holds
+ * for the candidate (asserted): contraction only ever generates shortcuts, and
+ * updating a shortcut in place from a non-shortcut candidate would turn its
+ * middle node into an original-edge id.
+ *
+ * @param graph
+ * @param edge the candidate edge
+ * @return the duplicate's edge id, or SPECIAL_EDGEID
+ */
+EdgeID FindDuplicateShortcut(const ContractorGraph &graph, const ContractorEdge &edge)
+{
+    BOOST_ASSERT(edge.data.shortcut);
+    for (const auto e : graph.GetAdjacentEdgeRange(edge.source))
+    {
+        if (graph.GetTarget(e) != edge.target)
+        {
+            continue;
+        }
+        const ContractorEdgeData &data = graph.GetEdgeData(e);
+        if (data.shortcut && data.forward == edge.data.forward &&
+            data.backward == edge.data.backward)
+        {
+            return e;
+        }
+    }
+    return SPECIAL_EDGEID;
+}
+
+/**
  * @brief Inserts the edges produced by node contraction into the graph.
  *
  * - Algo 2: Insert E into Remaining graph
  *
+ * A shortcut for a node pair may already exist: several contractions in one batch
+ * can emit the same (source, target, direction) pair, and the bounded witness
+ * search of a later round can regenerate a shortcut instead of finding the copy
+ * an earlier round inserted. Keeping the smaller weight in the existing edge instead of
+ * appending a parallel one bounds the node degrees, which otherwise grow
+ * combinatorially on continental input.
+ *
  * This function is not thread-safe because edge insertion is not thread-safe even for
- * "independent" nodes (but edge erasure curiously is!). If the graph ever gets fixed to
- * be thread-safe, this function can use parallel execution too.
+ * "independent" nodes (but edge erasure curiously is!). The in-place duplicate update
+ * relies on the same serialization.
  *
  * @param graph
  * @param inserted_edges
@@ -423,6 +465,16 @@ void InsertEdges(ContractorGraph &graph,
 {
     for (const ContractorEdge &edge : inserted_edges)
     {
+        const EdgeID existing = FindDuplicateShortcut(graph, edge);
+        if (existing != SPECIAL_EDGEID)
+        {
+            auto &data = graph.GetEdgeData(existing);
+            if (edge.data.weight < data.weight)
+            {
+                data = edge.data;
+            }
+            continue;
+        }
         graph.InsertEdge(edge.source, edge.target, edge.data);
     }
 }
