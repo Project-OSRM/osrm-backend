@@ -619,10 +619,12 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
             if (slots_after >= EDGE_LIST_COMPACTION_THRESHOLD)
             {
                 throw util::exception(
-                    "There are too many edges, OSRM only supports 2^32: " +
-                    std::to_string(slots_after) +
-                    " of them are live and cannot be compacted away, so this graph has to be "
-                    "split into smaller parts" +
+                    "There are too many edges: " + std::to_string(slots_after) +
+                    " of them are live and cannot be compacted away, which leaves fewer than " +
+                    std::to_string(EDGE_LIST_COMPACTION_SLACK) +
+                    " of the 2^32 slots an edge index can address free. That is not enough "
+                    "headroom to keep contracting, so this graph has to be split into smaller "
+                    "parts" +
                     SOURCE_REF);
             }
         }
