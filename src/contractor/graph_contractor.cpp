@@ -147,6 +147,17 @@ struct ContractionStats
     int original_edges_added_count{};
 };
 
+/** Duplicate accounting for InsertEdges(). Only written from its serial insertion loop;
+ *  the totals accumulate over all rounds of one contractGraph() call. */
+struct InsertEdgeStats
+{
+    // std::size_t, not int as in ContractionStats: a single continental-scale
+    // contraction appends on the order of 7e8 edges.
+    std::size_t appended_count{};         // no duplicate existed, edge inserted
+    std::size_t updated_in_place_count{}; // duplicate existed, smaller weight written
+    std::size_t dropped_count{};          // duplicate existed, candidate not better
+};
+
 using ThreadData = tbb::enumerable_thread_specific<ContractorHeap>;
 
 /**
@@ -461,7 +472,8 @@ EdgeID FindDuplicateShortcut(const ContractorGraph &graph, const ContractorEdge 
  */
 
 void InsertEdges(ContractorGraph &graph,
-                 const tbb::concurrent_vector<ContractorEdge> &inserted_edges)
+                 const tbb::concurrent_vector<ContractorEdge> &inserted_edges,
+                 InsertEdgeStats &stats)
 {
     for (const ContractorEdge &edge : inserted_edges)
     {
@@ -472,10 +484,16 @@ void InsertEdges(ContractorGraph &graph,
             if (edge.data.weight < data.weight)
             {
                 data = edge.data;
+                ++stats.updated_in_place_count;
+            }
+            else
+            {
+                ++stats.dropped_count;
             }
             continue;
         }
         graph.InsertEdge(edge.source, edge.target, edge.data);
+        ++stats.appended_count;
     }
 }
 
@@ -597,6 +615,8 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     TIMER_DECLARE(adjust_remaining);
     TIMER_DECLARE(renumber);
     TIMER_DECLARE(compaction);
+
+    InsertEdgeStats insert_stats;
 
     // Update Priorities of all Nodes with Simulated Contractions
     util::Log() << "initializing node priorities...";
@@ -746,7 +766,7 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
         // Algo 2: Insert E into Remaining graph
         TIMER_START(insert_edges);
         tbb::parallel_sort(inserted_edges);
-        InsertEdges(graph, inserted_edges);
+        InsertEdges(graph, inserted_edges, insert_stats);
         TIMER_STOP(insert_edges);
 
         // Algo 2: Update Priority of Neighbors of I with Simulated Contractions
@@ -774,6 +794,9 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
     util::Log() << "nodes contracted in " << TIMER_MSEC(contract);
     util::Log() << "nodes post-processed in " << TIMER_MSEC(post_process);
     util::Log() << "edges inserted in " << TIMER_MSEC(insert_edges);
+    util::Log() << "edges appended: " << insert_stats.appended_count
+                << ", shortcut duplicates: " << insert_stats.updated_in_place_count
+                << " updated in place, " << insert_stats.dropped_count << " dropped";
     util::Log() << "node priorities updated in " << TIMER_MSEC(update_priorities);
     util::Log() << "core flags updated in " << TIMER_MSEC(update_core);
     util::Log() << "adjusted remaining nodes left in " << TIMER_MSEC(adjust_remaining);
