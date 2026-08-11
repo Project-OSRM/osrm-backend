@@ -13,19 +13,15 @@ namespace osrm::engine::area
 {
 
 /**
- * @brief Which end of the journey a coordinate is, which decides the sign of the walk.
+ * @brief Which end of a journey a coordinate is.
  *
- * The search seeds a source with the negation of `GetForwardWeightPlusOffset()` and a
- * target with the value itself, so the walk has to be subtracted from the offset in one
- * case and added in the other.  The stored offset can only hold one of the two, and the
- * plugin is where the role is known.
- */
-/**
- * Which end of a journey a coordinate is, which decides how the walk into the area is
- * charged.  A `Via` point is both ends at once and so cannot be charged at all: the
- * search seeds a source with the negation of the offset and a target with the offset
- * itself, and one number cannot come out positive both ways.  Charging it as a departure
- * makes the leg that arrives there seed a negative key, which CH does not permit.
+ * This decides where the candidate stands, not what it costs.  A candidate departed from
+ * has to stand at the start of an edge-based node, so that travelling it leaves the
+ * vertex; one arrived at has to stand at the node's end, or a leg contained in a single
+ * segment ends before it begins and comes out with a negative weight.
+ *
+ * A via point is both at once and takes the departing shape.  What a coordinate costs
+ * does not depend on its role at all; see `PhantomNode::approach_weight`.
  */
 enum class ApproachRole
 {
