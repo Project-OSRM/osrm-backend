@@ -100,14 +100,24 @@ std::optional<NodeID> nodeAt(const datafacade::BaseDataFacade &facade, const uti
     return std::nullopt;
 }
 
+/** Say that a waypoint is where it was asked for, when the caller is tracking waypoints. */
+void report(const std::vector<PhantomNodeCandidates *> &waypoints,
+            std::size_t which,
+            const util::Coordinate where)
+{
+    if (which < waypoints.size() && waypoints[which] != nullptr && !waypoints[which]->empty())
+    {
+        waypoints[which]->front().location = where;
+    }
+}
+
 } // namespace
 
 void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
-                             const std::vector<util::Coordinate> &coordinates,
                              InternalRouteResult &route,
-                             std::vector<PhantomNodeCandidates> &waypoints)
+                             const std::vector<PhantomNodeCandidates *> &waypoints)
 {
-    if (!route.is_valid() || route.leg_endpoints.size() + 1 != coordinates.size())
+    if (!route.is_valid())
     {
         return;
     }
@@ -116,7 +126,13 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
     bool replaced = false;
     for (std::size_t leg = 0; leg < route.leg_endpoints.size(); ++leg)
     {
-        const auto from = coordinates[leg], to = coordinates[leg + 1];
+        // where the traveller asked to be, which is what the phantoms carry
+        const auto from = route.leg_endpoints[leg].source_phantom.input_location;
+        const auto to = route.leg_endpoints[leg].target_phantom.input_location;
+        if (!from.IsValid() || !to.IsValid())
+        {
+            continue;
+        }
         const auto area = commonArea(facade, from, to);
         if (!area)
         {
@@ -206,14 +222,8 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
         // The journey now starts and ends where it was asked to, so that is what the
         // waypoints report -- and the walk to a snapped vertex, which is no longer part
         // of the story, stops being reported as a snapping error.
-        if (leg < waypoints.size() && !waypoints[leg].empty())
-        {
-            waypoints[leg].front().location = from;
-        }
-        if (leg + 1 < waypoints.size() && !waypoints[leg + 1].empty())
-        {
-            waypoints[leg + 1].front().location = to;
-        }
+        report(waypoints, leg, from);
+        report(waypoints, leg + 1, to);
         replaced = true;
     }
 
@@ -267,10 +277,7 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
                                      0,
                                      std::nullopt});
                 endpoints.source_phantom.location = endpoints.source_phantom.input_location;
-                if (leg < waypoints.size() && !waypoints[leg].empty())
-                {
-                    waypoints[leg].front().location = endpoints.source_phantom.input_location;
-                }
+                report(waypoints, leg, endpoints.source_phantom.input_location);
                 replaced = true;
             }
         }
@@ -299,10 +306,7 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
                 target_weight = weight;
                 target_duration = duration;
                 endpoints.target_phantom.location = endpoints.target_phantom.input_location;
-                if (leg + 1 < waypoints.size() && !waypoints[leg + 1].empty())
-                {
-                    waypoints[leg + 1].front().location = endpoints.target_phantom.input_location;
-                }
+                report(waypoints, leg + 1, endpoints.target_phantom.input_location);
                 replaced = true;
             }
         }
@@ -323,6 +327,57 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
         }
         route.shortest_path_weight =
             route.shortest_path_weight + route.leg_endpoints[leg].target_phantom.forward_weight;
+    }
+}
+
+void useGeodesicInTable(const datafacade::BaseDataFacade &facade,
+                        const std::vector<util::Coordinate> &coordinates,
+                        const std::vector<std::size_t> &sources,
+                        const std::vector<std::size_t> &destinations,
+                        std::vector<EdgeDuration> &durations,
+                        std::vector<EdgeDistance> &distances)
+{
+    const auto rows = sources.empty() ? coordinates.size() : sources.size();
+    const auto columns = destinations.empty() ? coordinates.size() : destinations.size();
+    if (durations.size() != rows * columns)
+    {
+        return;
+    }
+
+    for (std::size_t row = 0; row < rows; ++row)
+    {
+        const auto from = coordinates[sources.empty() ? row : sources[row]];
+        // one lookup for the whole row: a table over one plaza asks about the same area
+        // again and again
+        if (facade.GetOpenAreasAt(from).empty())
+        {
+            continue;
+        }
+
+        for (std::size_t column = 0; column < columns; ++column)
+        {
+            const auto to = coordinates[destinations.empty() ? column : destinations[column]];
+            const auto area = commonArea(facade, from, to);
+            if (!area)
+            {
+                continue;
+            }
+            const auto rings = facade.GetOpenAreaRings(*area);
+            const auto geodesic =
+                geodesic_between(facade.GetCheckSum(), area->vertices_offset, rings, from, to);
+            if (!geodesic)
+            {
+                continue;
+            }
+
+            const auto cell = row * columns + column;
+            durations[cell] =
+                to_alias<EdgeDuration>(std::lround(geodesic->length / area->walking_speed * 10.));
+            if (!distances.empty())
+            {
+                distances[cell] = to_alias<EdgeDistance>(geodesic->length);
+            }
+        }
     }
 }
 

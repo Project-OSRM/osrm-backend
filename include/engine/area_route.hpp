@@ -35,9 +35,25 @@ namespace osrm::engine::area
  * that arises for a profile that meshes plazas.
  */
 void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
-                             const std::vector<util::Coordinate> &coordinates,
                              InternalRouteResult &route,
-                             std::vector<PhantomNodeCandidates> &waypoints);
+                             const std::vector<PhantomNodeCandidates *> &waypoints);
+
+/**
+ * @brief Replace any cell of a table whose two coordinates lie in one open area.
+ *
+ * The same case as above, and for the same reason, but there is no route to write: a
+ * table is numbers.  Durations are in deci-seconds and distances in metres, as the search
+ * leaves them.  @p distances may be empty when none were asked for.
+ *
+ * @p sources and @p destinations map a row and a column onto @p coordinates; either may be
+ * empty, which means every coordinate in order.
+ */
+void useGeodesicInTable(const datafacade::BaseDataFacade &facade,
+                        const std::vector<util::Coordinate> &coordinates,
+                        const std::vector<std::size_t> &sources,
+                        const std::vector<std::size_t> &destinations,
+                        std::vector<EdgeDuration> &durations,
+                        std::vector<EdgeDistance> &distances);
 
 } // namespace osrm::engine::area
 

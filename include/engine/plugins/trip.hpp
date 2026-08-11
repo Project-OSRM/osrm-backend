@@ -21,8 +21,10 @@ class TripPlugin final : public BasePlugin
   private:
     const int max_locations_trip;
 
+    //! Not const: a leg solved inside an open area reports the coordinate that was asked
+    //! for, so the candidates it answers to are corrected too.
     InternalRouteResult ComputeRoute(const RoutingAlgorithmsInterface &algorithms,
-                                     const std::vector<PhantomNodeCandidates> &candidates_list,
+                                     std::vector<PhantomNodeCandidates> &candidates_list,
                                      const std::vector<NodeID> &trip,
                                      const bool roundtrip) const;
 
