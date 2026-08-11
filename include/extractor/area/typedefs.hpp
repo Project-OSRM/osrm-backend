@@ -52,8 +52,6 @@ namespace boost
 namespace geometry::traits
 {
 
-using namespace osrm::extractor::area;
-
 // osmium::NodeRef
 
 template <> struct tag<osmium::NodeRef>
