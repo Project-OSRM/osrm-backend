@@ -492,14 +492,18 @@ std::set<OsmiumSegment> AreaMesher::run_dijkstra(const OsmiumPolygon &poly,
 
         const std::vector<index_t> &predecessors(d.get_predecessors());
 
-        // starting from each exit point report all generated edges that are on the
-        // shortest path from the entry point
-
-        for (const osmium::NodeRef &exit_point : entry_points)
+        // Keep the whole shortest-path tree rooted at this entry point, not just the
+        // paths to the other entry points.
+        //
+        // The extra edges are what a coordinate *inside* the area needs.  Such a
+        // coordinate sets off towards some vertex it can see, and from there wants the
+        // shortest way out -- which the tree holds for every vertex, not only for the
+        // ones another way happens to meet.  Keeping the tree makes that route exactly as
+        // good as the whole visibility graph would, while staying O(entry points x
+        // vertices) rather than O(vertices squared).
+        for (index_t target = 0; target < d.num_vertices(); ++target)
         {
-            util::Log(logDEBUG) << "  Collecting segments from " << entry_point.ref() << " -> "
-                                << exit_point.ref();
-            index_t v = d.index_of(exit_point);
+            index_t v = target;
             while (v != u && v != predecessors.at(v))
             {
                 auto s = OsmiumSegment(d.get_vertex(v), d.get_vertex(predecessors.at(v)));

@@ -126,3 +126,18 @@ else()
 	json-render-bench
 	alias-bench)
 endif()
+
+file(GLOB AreaGeodesicBenchmarkSources area_geodesic.cpp)
+
+add_executable(area-geodesic-bench
+	EXCLUDE_FROM_ALL
+	${AreaGeodesicBenchmarkSources}
+	$<TARGET_OBJECTS:UTIL>)
+
+target_link_libraries(area-geodesic-bench
+	osrm
+	${BOOST_BASE_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
+	${TBB_LIBRARIES}
+	${MAYBE_SHAPEFILE}
+	LibArchive::LibArchive)

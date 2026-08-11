@@ -253,14 +253,14 @@ def run(cmd):
     return result.stdout
 
 
-def prepare(build_dir, profile, workdir, f, entry_point_mesh=False):
+def prepare(build_dir, profile, workdir, f, whole_graph=False):
     osm = os.path.join(workdir, f"{f.slug()}.osm")
     with open(osm, "w") as handle:
         handle.write(osm_document(f))
     base = os.path.join(workdir, f.slug())
-    if entry_point_mesh:
+    if whole_graph:
         # a thin wrapper so the stock profile stays untouched
-        wrapper = os.path.join(workdir, "entry_point_mesh_profile.lua")
+        wrapper = os.path.join(workdir, "whole_graph_profile.lua")
         if not os.path.exists(wrapper):
             with open(wrapper, "w") as handle:
                 # the stock profile builds its properties inside setup(), and
@@ -273,7 +273,7 @@ def prepare(build_dir, profile, workdir, f, entry_point_mesh=False):
                     "local original_setup = profile.setup\n"
                     "profile.setup = function(...)\n"
                     "  local result = original_setup(...)\n"
-                    "  result.properties.area_emit_visibility_graph = false\n"
+                    "  result.properties.area_emit_visibility_graph = true\n"
                     "  return result\n"
                     "end\n"
                     "return profile\n"
@@ -437,19 +437,22 @@ def render_svg(path, title, subtitle, f, drawing):
 
 
 def visual_proof(port, outdir, f, stamp):
-    """A picture each for a route starting in, ending in, and crossing the area."""
+    """A picture each for a route starting in, ending in, crossing, and staying inside."""
     left, right, top, bottom = f.bounds
+
+    def first_inside(cols, rows):
+        for row in rows:
+            for col in cols:
+                if f.inside(col, row):
+                    return loc(col, row)
+        return None
 
     # an interior point that is inside the plaza and clear of every obstacle; prefer one
     # that an obstacle hides from at least one corner, since that is the hard case
-    interior = None
-    for row in range(top + 1, bottom):
-        for col in range(left + 1, right):
-            if f.inside(col, row):
-                interior = loc(col, row)
-                break
-        if interior:
-            break
+    interior = first_inside(range(left + 1, right), range(top + 1, bottom))
+    # and one as far from it as the area allows, so that whatever stands between them
+    # has to be dealt with
+    far_interior = first_inside(range(right - 1, left, -1), range(bottom - 1, top, -1))
 
     # leave by whichever way the fixture actually has, not by assumption
     west = loc(0, top) if any(n for n in f.nodes.values() if n[1] == 0) else loc(6, bottom + 2)
@@ -458,10 +461,16 @@ def visual_proof(port, outdir, f, stamp):
         ("starts", "route starts inside the area", interior, east),
         ("ends", "route ends inside the area", west, interior),
         ("crosses", "route crosses the area end to end", west, east),
+        # the case the mesh cannot answer: it never leaves the area, so the geodesic
+        # across the polygon is worked out at query time instead
+        ("within", "route starts and ends inside the area", interior, far_interior),
     ]
 
     results = []
     for name, description, origin, destination in cases:
+        if origin is None or destination is None or origin == destination:
+            results.append((name, None))
+            continue
         body = query(port, origin, destination, overview="full")
         if body.get("code") != "Ok":
             results.append((name, None))
@@ -604,12 +613,11 @@ def main():
     parser.add_argument("--build-dir", default="build")
     parser.add_argument("--profile", default="profiles/foot_area.lua")
     parser.add_argument(
-        "--entry-point-mesh",
+        "--whole-visibility-graph",
         action="store_true",
-        help="emit only the shortest paths between an area's entry points instead of "
-        "its whole visibility graph.  The pruned mesh leaves obstacle corners with no "
-        "edges, so a coordinate inside such an area cannot set off towards them; use "
-        "this to measure what that costs",
+        help="keep the whole visibility graph instead of the pruned mesh.  The pruned "
+        "mesh is already exact for any journey with one end at an entry point, so this "
+        "only shows up on one that begins and ends inside the same area",
     )
     parser.add_argument("--port", type=int, default=5199)
     parser.add_argument("--keep", action="store_true", help="keep the generated datasets")
@@ -649,7 +657,7 @@ def main():
             print(f"writing pictures to {args.svg}\n")
         for f in fixtures:
             dataset, meshed = prepare(
-                args.build_dir, args.profile, workdir, f, args.entry_point_mesh
+                args.build_dir, args.profile, workdir, f, args.whole_visibility_graph
             )
             proc = serve(args.build_dir, dataset, args.port)
             try:

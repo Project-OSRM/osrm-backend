@@ -63,20 +63,21 @@ class AreaMesher
     /** Speed in m/s for crossing an area, taken from the profile. */
     double area_walking_speed{1.4};
     /**
-     * Emit the area's whole visibility graph rather than only the shortest paths
-     * between its entry points.
+     * Emit the area's whole visibility graph rather than the pruned mesh.
      *
-     * run_dijkstra() is an approximation: it keeps the edges that carry a shortest path
-     * between two entry points and throws the rest away, which preserves every
-     * entry-to-entry route exactly while cutting the mesh by up to an order of
-     * magnitude.  What it cannot preserve is a route that starts or ends *inside* the
-     * area, since the coordinate may want a chord no pair of entry points had a reason
-     * to keep.  Emitting the whole graph costs more ways and gives those coordinates the
-     * route the visibility graph would have if they had been part of it.
+     * run_dijkstra() keeps the shortest-path tree rooted at each entry point, which holds
+     * a shortest path from every vertex to every entry point.  That is all a coordinate
+     * inside the area needs -- it sets off towards a vertex it can see and then wants the
+     * shortest way out -- so the pruned mesh is exactly as good as the whole graph for
+     * any journey with one end at an entry point, at O(entry points x vertices) rather
+     * than O(vertices squared).
+     *
+     * The one thing it cannot promise is a journey that begins and ends inside the same
+     * area, which wants a path between two arbitrary vertices.  That is what this is for.
      *
      * Either way the ring edges are emitted -- see with_ring_edges().  See docs/areas.md.
      */
-    bool emit_visibility_graph{true};
+    bool emit_visibility_graph{false};
 
   private:
     AreaDataCollector m_collector;
