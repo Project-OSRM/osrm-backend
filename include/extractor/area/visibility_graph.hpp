@@ -22,6 +22,13 @@ namespace osrm::extractor::area
 {
 
 /**
+ * The factor a coordinate is multiplied by after it has been projected into
+ * OSM-Mercator, so that it can be stored in a pair of int64_t.  Integer arithmetic
+ * avoids a host of nasty bugs.
+ */
+inline constexpr double MERCATOR_COEFF = 100.0;
+
+/**
  * @brief Implements the visibility graph
  *
  * This implementation follows the outline in Chapter 15 of: *de Berg, Cheong, van
@@ -132,32 +139,27 @@ class VisibilityGraph
 namespace boost::geometry::traits
 {
 
-using namespace osrm::extractor::area;
-
-// The coordinates are projected into OSM-Mercator and then multipiled by COEFF so to
-// store them in a pair of int64_t.  Integer arithmetic avoids a host of nasty bugs.
-inline constexpr double COEFF = 100.0;
-
-template <> struct tag<VisibilityGraph::Vertex>
+template <> struct tag<osrm::extractor::area::VisibilityGraph::Vertex>
 {
     using type = point_tag;
 };
-template <> struct dimension<VisibilityGraph::Vertex> : boost::mpl::int_<2>
+template <> struct dimension<osrm::extractor::area::VisibilityGraph::Vertex> : boost::mpl::int_<2>
 {
 };
-template <> struct coordinate_type<VisibilityGraph::Vertex>
+template <> struct coordinate_type<osrm::extractor::area::VisibilityGraph::Vertex>
 {
     using type = double;
 };
-template <> struct coordinate_system<VisibilityGraph::Vertex>
+template <> struct coordinate_system<osrm::extractor::area::VisibilityGraph::Vertex>
 {
     using type = boost::geometry::cs::cartesian; // Point is projected into mercator
 };
-template <std::size_t K> struct access<VisibilityGraph::Vertex, K>
+template <std::size_t K> struct access<osrm::extractor::area::VisibilityGraph::Vertex, K>
 {
-    static inline double get(const VisibilityGraph::Vertex &v) { return v.point[K] / COEFF; }
-    static inline void set(VisibilityGraph::Vertex &v, const double &value)
-    { v.point[K] = value * COEFF; }
+    static inline double get(const osrm::extractor::area::VisibilityGraph::Vertex &v)
+    { return v.point[K] / osrm::extractor::area::MERCATOR_COEFF; }
+    static inline void set(osrm::extractor::area::VisibilityGraph::Vertex &v, const double &value)
+    { v.point[K] = value * osrm::extractor::area::MERCATOR_COEFF; }
 };
 
 } // namespace boost::geometry::traits
