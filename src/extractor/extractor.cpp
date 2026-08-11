@@ -653,6 +653,9 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         // in a big buffer.
 
         area::AreaMesher mesher;
+        const auto &area_properties = scripting_environment.GetProfileProperties();
+        mesher.area_walking_speed = area_properties.area_walking_speed;
+        mesher.emit_visibility_graph = area_properties.area_emit_visibility_graph;
         mesher.init(area_manager, extraction_containers);
 
         tbb::filter<OsmiumBuffer, OsmiumBuffer> mesh_areas_filter(
@@ -671,6 +674,10 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
                                process_elements_filter & extractor_callbacks_filter;
         tbb::parallel_pipeline(num_threads, pipeline2);
         TIMER_STOP(mesh);
+
+        // The pipeline filter is parallel, so the areas arrived in scheduler order.
+        mesher.collector().finalize();
+        WriteOpenAreas(mesher.collector().polygons());
 
         util::Log() << "... " << area_manager.number_of_ways + area_manager.number_of_relations
                     << " areas, yielding " << mesher.added_ways << " ways in " << TIMER_SEC(mesh)
@@ -855,6 +862,100 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     connectivity_checksum = edge_based_graph_factory.GetConnectivityChecksum();
 
     return number_of_edge_based_nodes;
+}
+
+/**
+    \brief Writing the polygons of the meshed areas, and an r-tree to find them by.
+
+    Saves the polygons into '.openareas' and the tree into '.openareas.ramIndex' /
+    '.openareas.fileIndex'.
+
+    The tree gets a coordinate list of its own, holding two opposite corners of each
+    area's bounding box and nothing else.  util::StaticRTree reads every object's extent
+    through the coordinates its @c u and @c v index, so it needs such a list; giving it
+    the engine's own coordinates instead would mean appending corners to a vector whose
+    indices are NodeIDs running parallel to the OSM node ids.
+ */
+void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons)
+{
+    if (polygons.empty())
+    {
+        return;
+    }
+
+    std::vector<AreaPolygonSegment> areas;
+    std::vector<util::Coordinate> bbox_corners;
+    std::vector<util::Coordinate> vertices;
+    std::vector<std::uint32_t> ring_lengths;
+
+    areas.reserve(polygons.size());
+    bbox_corners.reserve(2 * polygons.size());
+
+    const auto to_coordinate = [](const osmium::NodeRef &node)
+    {
+        return util::Coordinate{util::FloatLongitude{node.location().lon()},
+                                util::FloatLatitude{node.location().lat()}};
+    };
+
+    const auto append_ring = [&](const std::vector<osmium::NodeRef> &ring)
+    {
+        for (const auto &node : ring)
+        {
+            vertices.push_back(to_coordinate(node));
+        }
+        ring_lengths.push_back(boost::numeric_cast<std::uint32_t>(ring.size()));
+    };
+
+    for (const auto &polygon : polygons)
+    {
+        AreaPolygonSegment area;
+        area.vertices_offset = boost::numeric_cast<std::uint32_t>(vertices.size());
+        area.rings_offset = boost::numeric_cast<std::uint32_t>(ring_lengths.size());
+        area.walking_speed = polygon.walking_speed;
+
+        // the outer ring first, then the obstacles: the engine tells them apart by
+        // position alone
+        append_ring(polygon.boundary_vertices);
+        for (const auto &obstacle : polygon.obstacle_rings)
+        {
+            append_ring(obstacle);
+        }
+
+        area.num_vertices =
+            boost::numeric_cast<std::uint32_t>(vertices.size()) - area.vertices_offset;
+        area.num_rings =
+            boost::numeric_cast<std::uint32_t>(ring_lengths.size()) - area.rings_offset;
+
+        // the obstacles lie inside the outer ring, so it alone bounds the area
+        util::Coordinate south_west = vertices[area.vertices_offset];
+        util::Coordinate north_east = south_west;
+        for (std::uint32_t i = 0; i < polygon.boundary_vertices.size(); ++i)
+        {
+            const auto &vertex = vertices[area.vertices_offset + i];
+            south_west.lon = std::min(south_west.lon, vertex.lon);
+            south_west.lat = std::min(south_west.lat, vertex.lat);
+            north_east.lon = std::max(north_east.lon, vertex.lon);
+            north_east.lat = std::max(north_east.lat, vertex.lat);
+        }
+        area.u = boost::numeric_cast<NodeID>(bbox_corners.size());
+        bbox_corners.push_back(south_west);
+        area.v = boost::numeric_cast<NodeID>(bbox_corners.size());
+        bbox_corners.push_back(north_east);
+
+        areas.push_back(area);
+    }
+
+    files::writeOpenAreas(
+        config.GetPath(".osrm.openareas"), areas, bbox_corners, vertices, ring_lengths);
+
+    util::StaticRTree<AreaPolygonSegment> rtree(
+        areas, bbox_corners, config.GetPath(".osrm.openareas.fileIndex"));
+    // a name of its own, so that loading both trees into one layout does not collide
+    files::writeRamIndex(
+        config.GetPath(".osrm.openareas.ramIndex"), rtree, "/common/open_areas/rtree");
+
+    util::Log() << "... wrote " << areas.size() << " areas with " << vertices.size()
+                << " vertices for snapping";
 }
 
 /**

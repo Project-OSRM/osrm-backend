@@ -8,6 +8,7 @@
 
 #include "contractor/query_edge.hpp"
 
+#include "extractor/area_routing_data.hpp"
 #include "extractor/class_data.hpp"
 #include "extractor/edge_based_node_segment.hpp"
 #include "extractor/maneuver_override.hpp"
@@ -120,6 +121,26 @@ class BaseDataFacade
 
     virtual std::vector<RTreeLeaf> GetEdgesInBox(const util::Coordinate south_west,
                                                  const util::Coordinate north_east) const = 0;
+
+    /**
+     * @brief The meshed open areas whose bounding box contains the coordinate.
+     *
+     * A bounding box hit is not containment -- the caller still has to run the
+     * point-in-polygon test on the rings, which is what GetOpenAreaRings is for.
+     *
+     * Not pure: a dataset extracted by a profile that does not mesh areas has none of
+     * this, and neither does the offline facade, so the honest default is "no areas".
+     */
+    virtual std::vector<extractor::AreaPolygonSegment>
+    GetOpenAreasAt(const util::Coordinate /*coordinate*/) const
+    { return {}; }
+
+    /**
+     * @brief The rings of one area, outer first and then its obstacles.
+     */
+    virtual std::vector<std::span<const util::Coordinate>>
+    GetOpenAreaRings(const extractor::AreaPolygonSegment & /*area*/) const
+    { return {}; }
 
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,

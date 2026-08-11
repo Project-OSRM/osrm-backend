@@ -231,6 +231,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         &ProfileProperties::left_hand_driving,
         "weight_precision",
         &ProfileProperties::weight_precision,
+        "area_walking_speed",
+        &ProfileProperties::area_walking_speed,
+        "area_emit_visibility_graph",
+        &ProfileProperties::area_emit_visibility_graph,
         "weight_name",
         sol::property(&ProfileProperties::GetWeightName, &ProfileProperties::SetWeightName),
         "max_turn_weight",
@@ -774,6 +778,15 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             sol::optional<bool> force_split_edges = properties["force_split_edges"];
             if (force_split_edges != sol::nullopt)
                 context.properties.force_split_edges = force_split_edges.value();
+
+            sol::optional<double> area_walking_speed = properties["area_walking_speed"];
+            if (area_walking_speed != sol::nullopt)
+                context.properties.area_walking_speed = area_walking_speed.value();
+
+            sol::optional<bool> area_emit_visibility_graph =
+                properties["area_emit_visibility_graph"];
+            if (area_emit_visibility_graph != sol::nullopt)
+                context.properties.area_emit_visibility_graph = area_emit_visibility_graph.value();
         }
     };
 

@@ -52,6 +52,7 @@ class Storage
     void PopulateLayout(storage::BaseDataLayout &layout,
                         const std::vector<std::pair<bool, std::filesystem::path>> &files);
     std::string PopulateLayoutWithRTree(storage::BaseDataLayout &layout);
+    std::string PopulateLayoutWithOpenAreaRTree(storage::BaseDataLayout &layout);
     std::vector<std::pair<bool, std::filesystem::path>> GetUpdatableFiles();
     std::vector<std::pair<bool, std::filesystem::path>> GetStaticFiles();
 

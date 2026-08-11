@@ -90,22 +90,34 @@ std::vector<NodeID> getBackwardForceNodes(const PhantomCandidatesToTarget &endpo
 PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candidates,
                                          const std::vector<NodeID> &path)
 {
-    auto source_it = std::find_if(candidates.source_phantoms.begin(),
-                                  candidates.source_phantoms.end(),
-                                  [&path](const auto &source_phantom)
-                                  {
-                                      return path.front() == source_phantom.forward_segment_id.id ||
-                                             path.front() == source_phantom.reverse_segment_id.id;
-                                  });
+    auto source_it =
+        std::find_if(candidates.source_phantoms.begin(),
+                     candidates.source_phantoms.end(),
+                     [&path](const auto &source_phantom)
+                     {
+                         // A disabled direction is not a direction the search
+                         // could have set off in, so its id says nothing about
+                         // which candidate this path came from.  Area snapping
+                         // relies on that: it offers one candidate per way
+                         // leaving a vertex, and the two ends of one way carry
+                         // the same pair of ids.
+                         return (source_phantom.forward_segment_id.enabled &&
+                                 path.front() == source_phantom.forward_segment_id.id) ||
+                                (source_phantom.reverse_segment_id.enabled &&
+                                 path.front() == source_phantom.reverse_segment_id.id);
+                     });
     BOOST_ASSERT(source_it != candidates.source_phantoms.end());
 
-    auto target_it = std::find_if(candidates.target_phantoms.begin(),
-                                  candidates.target_phantoms.end(),
-                                  [&path](const auto &target_phantom)
-                                  {
-                                      return path.back() == target_phantom.forward_segment_id.id ||
-                                             path.back() == target_phantom.reverse_segment_id.id;
-                                  });
+    auto target_it =
+        std::find_if(candidates.target_phantoms.begin(),
+                     candidates.target_phantoms.end(),
+                     [&path](const auto &target_phantom)
+                     {
+                         return (target_phantom.forward_segment_id.enabled &&
+                                 path.back() == target_phantom.forward_segment_id.id) ||
+                                (target_phantom.reverse_segment_id.enabled &&
+                                 path.back() == target_phantom.reverse_segment_id.id);
+                     });
     BOOST_ASSERT(target_it != candidates.target_phantoms.end());
 
     return PhantomEndpoints{*source_it, *target_it};

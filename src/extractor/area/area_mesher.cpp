@@ -66,6 +66,27 @@ std::string area_id(const osmium::Area &area)
     return strstream.str();
 }
 
+/**
+ * @brief Add every edge of every ring -- the outer boundary and each obstacle.
+ *
+ * The rotational sweep never reports a vertex's own ring neighbours as visible, so the
+ * visibility graph contains no ring edges at all and they have to be put back.  Without
+ * them the boundary is a dead zone: you cannot walk along the edge of a plaza or round a
+ * fountain, and a coordinate wedged into a corner has nowhere to set off for.  One edge
+ * per vertex is nothing beside the graph they complete, so both meshing modes get them.
+ */
+std::set<OsmiumSegment> with_ring_edges(std::set<OsmiumSegment> segments, const OsmiumPolygon &poly)
+{
+    for_each_ring(poly,
+                  [&](auto &ring)
+                  {
+                      for_each_pair_in_ring(ring,
+                                            [&](const osmium::NodeRef &u, const osmium::NodeRef &v)
+                                            { segments.emplace(OsmiumSegment(u, v)); });
+                  });
+    return segments;
+}
+
 } // namespace
 
 /**
@@ -202,7 +223,11 @@ NodeRefSet AreaMesher::get_entry_points(const OsmiumPolygon &poly)
         last_ways = current_ways;
         all_ways.insert(current_ways.begin(), current_ways.end());
     }
-    if (entry_nodes.size() >= 2 and all_ways.size() >= 3)
+    // Two incident ways is the smallest arrangement worth meshing: one way in, one way
+    // out, and a crossing that is not otherwise possible.  Requiring three would drop the
+    // plaza with a pair of entrances on the same side -- a common shape, and one where
+    // the mesh is the only graph the area has.
+    if (entry_nodes.size() >= 2 and all_ways.size() >= 2)
         return entry_nodes;
     return NodeRefSet{};
 }
@@ -347,6 +372,11 @@ void AreaMesher::mesh_area(const osmium::Area &area,
             continue;
         }
 
+        // Hand the engine what it needs to snap a coordinate lying inside this area
+        // onto one of its entry points later.  This is the only point in the pipeline
+        // where the polygon and its entry points are both known.
+        m_collector.record(poly, area_walking_speed);
+
         // The vertices that should be in the visibility map.
         NodeRefSet work_vertices = get_obstacle_vertices(poly);
 
@@ -381,8 +411,13 @@ void AreaMesher::mesh_area(const osmium::Area &area,
         write_debug("osrm-area-routing-visgraph-debug", vis_map);
 #endif
 
-        // std::set<OsmiumSegment> segments = run_dijkstra(OsmiumPolygon(), vis_map, entry_points);
-        std::set<OsmiumSegment> segments = run_dijkstra(poly, vis_map, entry_points);
+        // The modes differ only in how much of the visibility graph survives -- all of
+        // it, or just the edges on a shortest path between two entry points.  Both then
+        // get the ring edges, which the sweep never reports and which nothing works
+        // without.
+        std::set<OsmiumSegment> segments =
+            emit_visibility_graph ? vis_map : run_dijkstra(poly, vis_map, entry_points);
+        segments = with_ring_edges(std::move(segments), poly);
         util::Log(logDEBUG) << "  After running Dijkstra there are " << segments.size()
                             << " edges left.";
         add_to_buffer(segments, out_buffer);

@@ -3,10 +3,18 @@
 How to route inside pedestrian areas, or over the interior of an area where you can
 travel freely in all directions.
 
-%OSRM can create routes crossing the interior of an area by generating virtual ways
-between every pair of entry points to the area. This process is called @em meshing. The
-generated ways follow lines of sight, avoid obstacles, and use existing nodes. An entry
-point is where another way connects to the perimeter of the area.
+%OSRM can create routes crossing the interior of an area by generating virtual ways along
+its lines of sight. This process is called @em meshing. The generated ways avoid obstacles
+and use existing nodes.
+
+By default the whole visibility graph is emitted: every pair of mutually visible vertices
+is joined, and so is every edge of every ring. That is what lets a coordinate *inside* an
+area be snapped to whichever vertex makes its journey shortest, and what makes the
+perimeter of a plaza and the sides of an obstacle walkable in their own right. Set
+`area_emit_visibility_graph = false` in your profile's properties to emit only the
+shortest paths between entry points instead; the routes between entry points are the same
+either way, but coordinates inside the area then have far less to snap to. An entry point
+is where another way connects to the perimeter of the area.
 
 This feature is still EXPERIMENTAL.
 

@@ -32,6 +32,20 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
         allocated_regions.push_back({rtree_filename.data(), std::move(fake_layout)});
     }
 
+    {
+        // and the same trick again for the open areas' own r-tree.  It has to be a region
+        // of its own: each of these layouts puts its single block at offset zero, so two
+        // blocks in one layout would send the second one off the end of the first string.
+        std::unique_ptr<storage::BaseDataLayout> fake_layout =
+            std::make_unique<storage::TarDataLayout>();
+
+        open_area_rtree_filename = storage.PopulateLayoutWithOpenAreaRTree(*fake_layout);
+        if (!open_area_rtree_filename.empty())
+        {
+            allocated_regions.push_back({open_area_rtree_filename.data(), std::move(fake_layout)});
+        }
+    }
+
     auto files = storage.GetStaticFiles();
     auto updatable_files = storage.GetUpdatableFiles();
     files.insert(files.end(), updatable_files.begin(), updatable_files.end());

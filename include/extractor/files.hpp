@@ -1,6 +1,7 @@
 #ifndef OSRM_EXTRACTOR_FILES_HPP
 #define OSRM_EXTRACTOR_FILES_HPP
 
+#include "extractor/area_routing_data.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/packed_osm_ids.hpp"
@@ -182,6 +183,40 @@ inline void writeDatasources(const std::filesystem::path &path, Datasources &sou
     storage::tar::FileWriter writer{path, fingerprint};
 
     serialization::write(writer, "/common/data_sources_names", sources);
+}
+
+// reads .osrm.openareas
+template <typename AreaVectorT, typename CoordinateVectorT, typename RingLengthVectorT>
+void readOpenAreas(const std::filesystem::path &path,
+                   AreaVectorT &areas,
+                   CoordinateVectorT &bbox_corners,
+                   CoordinateVectorT &vertices,
+                   RingLengthVectorT &ring_lengths)
+{
+    const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
+    storage::tar::FileReader reader{path, fingerprint};
+
+    storage::serialization::read(reader, "/common/open_areas/areas", areas);
+    storage::serialization::read(reader, "/common/open_areas/bbox_corners", bbox_corners);
+    storage::serialization::read(reader, "/common/open_areas/vertices", vertices);
+    storage::serialization::read(reader, "/common/open_areas/ring_lengths", ring_lengths);
+}
+
+// writes .osrm.openareas
+template <typename AreaVectorT, typename CoordinateVectorT, typename RingLengthVectorT>
+void writeOpenAreas(const std::filesystem::path &path,
+                    const AreaVectorT &areas,
+                    const CoordinateVectorT &bbox_corners,
+                    const CoordinateVectorT &vertices,
+                    const RingLengthVectorT &ring_lengths)
+{
+    const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
+    storage::tar::FileWriter writer{path, fingerprint};
+
+    storage::serialization::write(writer, "/common/open_areas/areas", areas);
+    storage::serialization::write(writer, "/common/open_areas/bbox_corners", bbox_corners);
+    storage::serialization::write(writer, "/common/open_areas/vertices", vertices);
+    storage::serialization::write(writer, "/common/open_areas/ring_lengths", ring_lengths);
 }
 
 // reads .osrm.geometry
@@ -539,20 +574,25 @@ void writeEdgeBasedNodeWeightsDurations(const std::filesystem::path &path,
 }
 
 template <typename RTreeT>
-void writeRamIndex(const std::filesystem::path &path, const RTreeT &rtree)
+void writeRamIndex(const std::filesystem::path &path,
+                   const RTreeT &rtree,
+                   const std::string &name = "/common/rtree")
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
-    util::serialization::write(writer, "/common/rtree", rtree);
+    util::serialization::write(writer, name, rtree);
 }
 
-template <typename RTreeT> void readRamIndex(const std::filesystem::path &path, RTreeT &rtree)
+template <typename RTreeT>
+void readRamIndex(const std::filesystem::path &path,
+                  RTreeT &rtree,
+                  const std::string &name = "/common/rtree")
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
-    util::serialization::read(reader, "/common/rtree", rtree);
+    util::serialization::read(reader, name, rtree);
 }
 
 template <typename EdgeListT>

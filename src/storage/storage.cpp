@@ -259,6 +259,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
         std::unique_ptr<storage::BaseDataLayout> static_layout =
             std::make_unique<storage::ContiguousDataLayout>();
         Storage::PopulateLayoutWithRTree(*static_layout);
+        Storage::PopulateLayoutWithOpenAreaRTree(*static_layout);
         std::vector<std::pair<bool, std::filesystem::path>> files = Storage::GetStaticFiles();
         Storage::PopulateLayout(*static_layout, files);
         auto static_handle = setupRegion(shared_register, *static_layout);
@@ -295,6 +296,9 @@ std::vector<std::pair<bool, std::filesystem::path>> Storage::GetStaticFiles()
     std::vector<std::pair<bool, std::filesystem::path>> files = {
         {IS_OPTIONAL, config.GetPath(".osrm.cells")},
         {IS_OPTIONAL, config.GetPath(".osrm.partition")},
+        // only present when the profile meshed pedestrian areas
+        {IS_OPTIONAL, config.GetPath(".osrm.openareas")},
+        {IS_OPTIONAL, config.GetPath(".osrm.openareas.ramIndex")},
         {IS_REQUIRED, config.GetPath(".osrm.ebg_nodes")},
         {IS_REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
         {IS_REQUIRED, config.GetPath(".osrm.nbg_nodes")},
@@ -363,6 +367,28 @@ std::string Storage::PopulateLayoutWithRTree(storage::BaseDataLayout &layout)
 }
 
 /**
+ * The same again for the r-tree over the meshed open areas, which has a leaf file of its
+ * own.  Deliberately a separate function rather than another block in the one above:
+ * MMapMemoryAllocator registers the returned string as an entire memory region with the
+ * block at offset zero, so a layout holding two of these needs two regions and two
+ * strings to point them at.
+ *
+ * @return the leaf file's path, or an empty string when the dataset has no meshed areas.
+ */
+std::string Storage::PopulateLayoutWithOpenAreaRTree(storage::BaseDataLayout &layout)
+{
+    if (!std::filesystem::exists(config.GetPath(".osrm.openareas.fileIndex")))
+    {
+        return {};
+    }
+
+    auto filename = std::filesystem::absolute(config.GetPath(".osrm.openareas.fileIndex")).string();
+    layout.SetBlock("/common/open_areas/rtree/file_index_path",
+                    make_block<char>(filename.length() + 1));
+    return filename;
+}
+
+/**
  * This function examines all our data files and figures out how much
  * memory needs to be allocated, and the position of each data structure
  * in that big block.  It updates the fields in the layout parameter.
@@ -396,6 +422,17 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
                          "/common/rtree/file_index_path")) >= absolute_file_index_path.size());
         std::copy(
             absolute_file_index_path.begin(), absolute_file_index_path.end(), file_index_path_ptr);
+    }
+
+    // and the same for the area r-tree's leaf file, when there is one
+    if (std::filesystem::exists(config.GetPath(".osrm.openareas.fileIndex")))
+    {
+        const auto path_ptr = index.GetBlockPtr<char>("/common/open_areas/rtree/file_index_path");
+        std::fill(
+            path_ptr, path_ptr + index.GetBlockSize("/common/open_areas/rtree/file_index_path"), 0);
+        const auto absolute_path =
+            std::filesystem::absolute(config.GetPath(".osrm.openareas.fileIndex")).string();
+        std::copy(absolute_path.begin(), absolute_path.end(), path_ptr);
     }
 
     // Timestamp mark
@@ -470,6 +507,22 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
     {
         auto rtree = make_search_tree_view(index, "/common/rtree");
         extractor::files::readRamIndex(config.GetPath(".osrm.ramIndex"), rtree);
+    }
+
+    // the meshed open areas, and the r-tree that finds them.  Only present when the
+    // profile meshed any, so everything downstream has to cope with their absence.
+    if (std::filesystem::exists(config.GetPath(".osrm.openareas")))
+    {
+        auto views = make_open_areas_view(index, "/common/open_areas");
+        extractor::files::readOpenAreas(config.GetPath(".osrm.openareas"),
+                                        std::get<0>(views),
+                                        std::get<1>(views),
+                                        std::get<2>(views),
+                                        std::get<3>(views));
+
+        auto rtree = make_open_area_tree_view(index, "/common/open_areas/rtree");
+        extractor::files::readRamIndex(
+            config.GetPath(".osrm.openareas.ramIndex"), rtree, "/common/open_areas/rtree");
     }
 
     // FIXME we only need to get the weight name

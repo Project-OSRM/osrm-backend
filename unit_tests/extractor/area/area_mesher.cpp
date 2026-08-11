@@ -1,5 +1,6 @@
 #include "extractor/area/area_mesher.hpp"
 
+#include "extractor/area/area_data_collector.hpp"
 #include "extractor/area/area_manager.hpp"
 #include "extractor/area/typedefs.hpp"
 #include "extractor/extraction_containers.hpp"
@@ -291,6 +292,130 @@ BOOST_AUTO_TEST_CASE(area_mesher_buffer_reader_batches_then_reports_eof)
     const auto eof = reader.read();
     BOOST_CHECK(!eof); // an invalid buffer signals end of input
     BOOST_CHECK_THROW(reader.read(), osrm::util::exception);
+}
+
+// The engine needs the polygon and its entry points to snap a coordinate lying inside
+// the area later, and meshing is the only point where both are known.
+BOOST_AUTO_TEST_CASE(area_mesher_records_the_area_for_the_engine)
+{
+    ExtractionRelationContainer relations;
+    AreaManager manager{relations};
+    ExtractionContainers containers;
+    attach_ways(manager, containers, {1, 2, 3});
+
+    osmium::memory::Buffer in_buffer{4096, osmium::memory::Buffer::auto_grow::yes};
+    build_area(in_buffer);
+    osmium::memory::Buffer out_buffer{4096, osmium::memory::Buffer::auto_grow::yes};
+
+    AreaMesher mesher;
+    mesher.init(manager, containers);
+    mesher.area_walking_speed = 1.25;
+    mesher.mesh_area(in_buffer.get<osmium::Area>(0), out_buffer, relations);
+
+    BOOST_REQUIRE_EQUAL(mesher.collector().size(), 1u);
+    const auto &record = mesher.collector().polygons()[0];
+
+    // the outer ring, open, without the repeated closing node
+    std::string ring;
+    for (const auto &n : record.boundary_vertices)
+        ring += (ring.empty() ? "" : " ") + std::to_string(n.ref());
+    BOOST_CHECK_EQUAL(ring, "1 2 3 4");
+
+    BOOST_CHECK_CLOSE(record.walking_speed, 1.25, 0.001);
+}
+
+// An area nobody can enter is of no use to snapping either, so it is not recorded.
+BOOST_AUTO_TEST_CASE(area_mesher_does_not_record_an_area_without_entry_points)
+{
+    ExtractionRelationContainer relations;
+    AreaManager manager{relations};
+    ExtractionContainers containers;
+    // no ways attached, so get_entry_points() finds nothing
+
+    osmium::memory::Buffer in_buffer{4096, osmium::memory::Buffer::auto_grow::yes};
+    build_area(in_buffer);
+    osmium::memory::Buffer out_buffer{4096, osmium::memory::Buffer::auto_grow::yes};
+
+    AreaMesher mesher;
+    mesher.init(manager, containers);
+    mesher.mesh_area(in_buffer.get<osmium::Area>(0), out_buffer, relations);
+
+    BOOST_CHECK_EQUAL(mesher.collector().size(), 0u);
+}
+
+// An area too large to mesh is exactly where snapping matters most, so it is recorded
+// even though no ways are generated for it.
+BOOST_AUTO_TEST_CASE(area_mesher_records_an_area_it_declined_to_mesh)
+{
+    ExtractionRelationContainer relations;
+    AreaManager manager{relations};
+    ExtractionContainers containers;
+    attach_ways(manager, containers, {1, 2, 3});
+
+    osmium::memory::Buffer in_buffer{4096, osmium::memory::Buffer::auto_grow::yes};
+    build_area(in_buffer);
+    osmium::memory::Buffer out_buffer{4096, osmium::memory::Buffer::auto_grow::yes};
+
+    AreaMesher mesher;
+    mesher.init(manager, containers);
+    mesher.max_vertices = 1;
+    mesher.mesh_area(in_buffer.get<osmium::Area>(0), out_buffer, relations);
+
+    BOOST_CHECK_EQUAL(mesher.added_ways, 0);
+    BOOST_CHECK_EQUAL(mesher.collector().size(), 1u);
+}
+
+// With the whole visibility graph emitted, every node of the area has onward edges, so a
+// coordinate snapped inside it can set off towards any node it can see.  The entry-point
+// mesh leaves obstacle corners with none.
+BOOST_AUTO_TEST_CASE(area_mesher_can_emit_the_whole_visibility_graph)
+{
+    ExtractionRelationContainer relations;
+    AreaManager manager{relations};
+    ExtractionContainers containers;
+    attach_ways(manager, containers, {1, 2, 3});
+
+    osmium::memory::Buffer in_buffer{4096, osmium::memory::Buffer::auto_grow::yes};
+    build_area(in_buffer);
+
+    const auto mesh = [&](bool whole)
+    {
+        osmium::memory::Buffer out{8192, osmium::memory::Buffer::auto_grow::yes};
+        AreaMesher mesher;
+        mesher.init(manager, containers);
+        mesher.emit_visibility_graph = whole;
+        mesher.mesh_area(in_buffer.get<osmium::Area>(0), out, relations);
+        std::set<std::pair<osmium::object_id_type, osmium::object_id_type>> edges;
+        for (const auto &way : out.select<osmium::Way>())
+        {
+            const auto a = way.nodes()[0].ref(), b = way.nodes()[1].ref();
+            edges.emplace(std::min(a, b), std::max(a, b));
+        }
+        return edges;
+    };
+
+    const auto entry_point_mesh = mesh(false);
+    const auto whole_graph = mesh(true);
+
+    // the whole graph is a superset, and strictly larger for an area with an obstacle
+    BOOST_CHECK_GT(whole_graph.size(), entry_point_mesh.size());
+    for (const auto &edge : entry_point_mesh)
+        BOOST_CHECK_MESSAGE(whole_graph.count(edge) == 1,
+                            "edge " << edge.first << "-" << edge.second
+                                    << " is in the entry-point mesh but not the whole graph");
+
+    // every corner of the obstacle now has at least one edge; in the entry-point mesh
+    // some of them have none, which is what makes a straight line to them a dead end
+    const auto degree = [](const auto &edges, osmium::object_id_type node)
+    {
+        std::size_t count = 0;
+        for (const auto &edge : edges)
+            count += (edge.first == node || edge.second == node);
+        return count;
+    };
+    for (osmium::object_id_type corner : {5, 6, 7, 8})
+        BOOST_CHECK_MESSAGE(degree(whole_graph, corner) > 0,
+                            "obstacle corner " << corner << " has no onward edge");
 }
 
 BOOST_AUTO_TEST_SUITE_END()
