@@ -136,13 +136,13 @@ Feature: Traffic - speeds
 
         When I route I should get
           | from | to | route    | speed   | weights       | a:datasources | a:speed | a:nodes|
-          | a    | b  | fb,fb    | 36 km/h | 328.9,0       | 0             | 10      | 6:2    |
-          | a    | c  | fb,bc,bc | 30 km/h | 328.9,737.2,0 | 0:1           | 10:7.5  | 6:2:3  |
-          | b    | c  | bc,bc    | 27 km/h | 737.2,0       | 1             | 7.5     | 2:3    |
-          | a    | d  | fb,df,df | 36 km/h | 139.8,486.8,0 | 0:0           | 10:10   | 2:6:4  |
-          | d    | c  | dc,dc    | 36 km/h | 955.4,0       | 0             | 10      | 4:3    |
-          | g    | b  | fb,fb    | 36 km/h | 164.4,0       | 0             | 10      | 6:2    |
-          | a    | g  | fb,fb    | 36 km/h | 164.5,0       | 0             | 10      | 6:2    |
+          | a    | b  | fb,fb    | 36 km/h | 328.9,0       | 0             | 10      | fb     |
+          | a    | c  | fb,bc,bc | 30 km/h | 328.9,737.2,0 | 0:1           | 10:7.5  | fbc    |
+          | b    | c  | bc,bc    | 27 km/h | 737.2,0       | 1             | 7.5     | bc     |
+          | a    | d  | fb,df,df | 36 km/h | 139.8,486.8,0 | 0:0           | 10:10   | bfd    |
+          | d    | c  | dc,dc    | 36 km/h | 955.4,0       | 0             | 10      | dc     |
+          | g    | b  | fb,fb    | 36 km/h | 164.4,0       | 0             | 10      | fb     |
+          | a    | g  | fb,fb    | 36 km/h | 164.5,0       | 0             | 10      | fb     |
 
 
     Scenario: Verify that negative values cause an error, they're not valid at all
