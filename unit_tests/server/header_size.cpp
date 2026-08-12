@@ -109,4 +109,36 @@ BOOST_AUTO_TEST_CASE(calculation_formula_verification)
     run_test_for_n_coordinates(10000);
 }
 
+BOOST_AUTO_TEST_CASE(minimum_body_size)
+{
+    // Unconfigured limits (0 and the -1 default) fall back to the fixed floor.
+    EngineConfig zeroed;
+    zeroed.max_locations_trip = 0;
+    zeroed.max_locations_viaroute = 0;
+    zeroed.max_locations_distance_table = 0;
+    zeroed.max_locations_map_matching = 0;
+    BOOST_CHECK_EQUAL(deriveMaxBodySize(zeroed), 1024u * 1024u);
+
+    EngineConfig defaulted;
+    BOOST_CHECK_EQUAL(deriveMaxBodySize(defaulted), 1024u * 1024u);
+}
+
+BOOST_AUTO_TEST_CASE(body_size_grows_with_the_coordinate_limit)
+{
+    // The body has to fit the largest limit of any service, not just the first one checked.
+    EngineConfig config;
+    config.max_locations_trip = 0;
+    config.max_locations_viaroute = 0;
+    config.max_locations_distance_table = 0;
+    config.max_locations_map_matching = 100000;
+
+    const auto size = deriveMaxBodySize(config);
+    BOOST_CHECK_GT(size, 1024u * 1024u);
+
+    // A generously encoded coordinate together with its per-coordinate options still fits.
+    const std::string encoded_coordinate = "[13.388860,52.517037],";
+    const std::string encoded_options = "[90,10],100,\"unrestricted\",";
+    BOOST_CHECK_GT(size, 100000u * (encoded_coordinate.size() + encoded_options.size()));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

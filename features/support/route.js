@@ -205,6 +205,13 @@ export default class Route {
     sendRequest(url, this.log, callback);
   }
 
+  // Issues a POST against a verbatim path, for scenarios that exercise the HTTP layer itself
+  // rather than a routing result.
+  postUrl(path, jsonBody, callback) {
+    const url = new URL(path, env.wp.host);
+    sendPostRequest(url, jsonBody, this.log, callback);
+  }
+
   // Overwrites the default values in defaults
   // e.g. [[a, 1], [b, 2]], [[a, 5], [d, 10]] => [[a, 5], [b, 2], [d, 10]]
   overwriteParams(defaults, other) {

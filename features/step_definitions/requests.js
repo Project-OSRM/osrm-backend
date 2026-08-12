@@ -14,8 +14,30 @@ When(/^I request \/(.*)$/, async function (path) {
   });
 });
 
+When(/^I POST to \/(.*) with body$/, async function (path, body) {
+  await this.reprocessAndLoadData();
+  await new Promise((resolve, reject) => {
+    this.postUrl(path, body, (err, res, responseBody) => {
+      if (err) return reject(err);
+      this.response = res;
+      this.body = responseBody;
+      resolve();
+    });
+  });
+});
+
 Then(/^I should get a response/, function () {
   this.ShouldGetAResponse();
+});
+
+Then(/^response should be flatbuffers$/, function () {
+  assert.equal(this.response.statusCode, 200);
+  const contentType = this.response.headers['content-type'] || '';
+  assert.ok(
+    contentType.includes('flatbuffers'),
+    `expected a flatbuffers response, got "${contentType}"`,
+  );
+  assert.ok(this.body.length);
 });
 
 Then(/^response should be valid JSON$/, function (callback) {
