@@ -94,7 +94,7 @@ the body. The JSON keys mirror the URL option names above:
 | `coordinates` | array of `[longitude, latitude]`, or a `"polyline(...)"` / `"polyline6(...)"` string | Required. The locations to route through. |
 | `bearings` | array of `[value, range]` or `null` | Per-coordinate, as in the URL API. |
 | `radiuses` | array of number, `"unlimited"` or `null` | Per-coordinate. |
-| `hints` | array of base64 string or `null` | Per-coordinate. |
+| `hints` | array of base64 string or `null` | Per-coordinate. Accepted for compatibility with the URL API, but ignored. |
 | `approaches` | array of `"curb"` / `"opposite"` / `"unrestricted"` or `null` | Per-coordinate. |
 | `exclude` | array of string | Classes to avoid. |
 | `generate_hints` | boolean | |

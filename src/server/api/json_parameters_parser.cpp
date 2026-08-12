@@ -7,7 +7,6 @@
 
 #include "engine/approach.hpp"
 #include "engine/bearing.hpp"
-#include "engine/hint.hpp"
 #include "engine/polyline_compressor.hpp"
 
 #include "util/coordinate.hpp"
@@ -201,36 +200,19 @@ bool parseBaseParameters(const rj::Value &doc,
     }
 
     // hints: [ base64 string | null, ... ]
+    // Hints are deprecated: the engine no longer uses them to look up phantom nodes, so the
+    // encoded payload is not decoded here. Only the shape is validated, and one (empty) entry
+    // per element is recorded so that the hints/coordinates size check in IsValid() sees the
+    // same counts as the URL API.
     if (const auto it = doc.FindMember("hints"); it != doc.MemberEnd())
     {
         if (!it->value.IsArray())
             return fail(error, "hints must be an array");
         for (const auto &h : it->value.GetArray())
         {
-            if (h.IsNull())
-            {
-                params.hints.emplace_back(std::nullopt);
-                continue;
-            }
-            if (!h.IsString())
+            if (!h.IsNull() && !h.IsString())
                 return fail(error, "each hint must be null or a base64 string");
-
-            const std::string hint_string{h.GetString(), h.GetStringLength()};
-            if (hint_string.empty())
-            {
-                params.hints.emplace_back(std::nullopt);
-                continue;
-            }
-            if (hint_string.size() % engine::ENCODED_SEGMENT_HINT_SIZE != 0)
-                return fail(error, "hint has an invalid length");
-
-            std::vector<engine::SegmentHint> segment_hints;
-            for (std::size_t i = 0; i < hint_string.size(); i += engine::ENCODED_SEGMENT_HINT_SIZE)
-            {
-                segment_hints.push_back(engine::SegmentHint::FromBase64(
-                    hint_string.substr(i, engine::ENCODED_SEGMENT_HINT_SIZE)));
-            }
-            params.hints.push_back(engine::Hint{std::move(segment_hints)});
+            params.hints.emplace_back(std::nullopt);
         }
     }
 
@@ -478,18 +460,11 @@ std::optional<engine::api::RouteParameters> parseJSONParameters(const std::strin
     if (!parseDocument(json_body, doc, error))
         return std::nullopt;
 
-    try
-    {
-        RouteParameters params;
-        if (!parseRouteParameters(doc, params, error))
-            return std::nullopt;
+    RouteParameters params;
+    if (!parseRouteParameters(doc, params, error))
+        return std::nullopt;
 
-        return params;
-    }
-    catch (const std::exception &e)
-    {
-        return failOpt(error, std::string{"failed to parse parameters: "} + e.what());
-    }
+    return params;
 }
 
 template <>
@@ -502,53 +477,46 @@ std::optional<engine::api::MatchParameters> parseJSONParameters(const std::strin
     if (!parseDocument(json_body, doc, error))
         return std::nullopt;
 
-    try
+    MatchParameters params;
+    if (!parseRouteParameters(doc, params, error))
+        return std::nullopt;
+
+    // timestamps: [ non-negative integer, ... ]
+    if (const auto it = doc.FindMember("timestamps"); it != doc.MemberEnd())
     {
-        MatchParameters params;
-        if (!parseRouteParameters(doc, params, error))
-            return std::nullopt;
-
-        // timestamps: [ non-negative integer, ... ]
-        if (const auto it = doc.FindMember("timestamps"); it != doc.MemberEnd())
+        if (!it->value.IsArray())
+            return failOpt(error, "timestamps must be an array of integers");
+        for (const auto &t : it->value.GetArray())
         {
-            if (!it->value.IsArray())
-                return failOpt(error, "timestamps must be an array of integers");
-            for (const auto &t : it->value.GetArray())
-            {
-                if (!t.IsUint())
-                    return failOpt(error, "timestamps entries must be non-negative integers");
-                params.timestamps.push_back(t.GetUint());
-            }
+            if (!t.IsUint())
+                return failOpt(error, "timestamps entries must be non-negative integers");
+            params.timestamps.push_back(t.GetUint());
         }
-
-        // gaps: "split" | "ignore"
-        if (const auto it = doc.FindMember("gaps"); it != doc.MemberEnd())
-        {
-            if (!it->value.IsString())
-                return failOpt(error, "gaps must be a string");
-            const std::string_view v{it->value.GetString(), it->value.GetStringLength()};
-            if (v == "split")
-                params.gaps = MatchParameters::GapsType::Split;
-            else if (v == "ignore")
-                params.gaps = MatchParameters::GapsType::Ignore;
-            else
-                return failOpt(error, "invalid gaps value");
-        }
-
-        // tidy: bool
-        if (const auto it = doc.FindMember("tidy"); it != doc.MemberEnd())
-        {
-            if (!it->value.IsBool())
-                return failOpt(error, "tidy must be a boolean");
-            params.tidy = it->value.GetBool();
-        }
-
-        return params;
     }
-    catch (const std::exception &e)
+
+    // gaps: "split" | "ignore"
+    if (const auto it = doc.FindMember("gaps"); it != doc.MemberEnd())
     {
-        return failOpt(error, std::string{"failed to parse parameters: "} + e.what());
+        if (!it->value.IsString())
+            return failOpt(error, "gaps must be a string");
+        const std::string_view v{it->value.GetString(), it->value.GetStringLength()};
+        if (v == "split")
+            params.gaps = MatchParameters::GapsType::Split;
+        else if (v == "ignore")
+            params.gaps = MatchParameters::GapsType::Ignore;
+        else
+            return failOpt(error, "invalid gaps value");
     }
+
+    // tidy: bool
+    if (const auto it = doc.FindMember("tidy"); it != doc.MemberEnd())
+    {
+        if (!it->value.IsBool())
+            return failOpt(error, "tidy must be a boolean");
+        params.tidy = it->value.GetBool();
+    }
+
+    return params;
 }
 
 template <>
@@ -561,94 +529,86 @@ std::optional<engine::api::TableParameters> parseJSONParameters(const std::strin
     if (!parseDocument(json_body, doc, error))
         return std::nullopt;
 
-    try
+    TableParameters params;
+    if (!parseBaseParameters(doc, params, error))
+        return std::nullopt;
+
+    if (const auto it = doc.FindMember("sources"); it != doc.MemberEnd())
     {
-        TableParameters params;
-        if (!parseBaseParameters(doc, params, error))
+        if (!parseIndexArray(it->value, "sources", params.sources, error))
             return std::nullopt;
-
-        if (const auto it = doc.FindMember("sources"); it != doc.MemberEnd())
-        {
-            if (!parseIndexArray(it->value, "sources", params.sources, error))
-                return std::nullopt;
-        }
-
-        if (const auto it = doc.FindMember("destinations"); it != doc.MemberEnd())
-        {
-            if (!parseIndexArray(it->value, "destinations", params.destinations, error))
-                return std::nullopt;
-        }
-
-        if (const auto it = doc.FindMember("annotations"); it != doc.MemberEnd())
-        {
-            using AnnotationsType = TableParameters::AnnotationsType;
-            const auto to_type = [](std::string_view v) -> std::optional<AnnotationsType>
-            {
-                if (v == "duration")
-                    return AnnotationsType::Duration;
-                if (v == "distance")
-                    return AnnotationsType::Distance;
-                return std::nullopt;
-            };
-
-            if (it->value.IsBool())
-            {
-                params.annotations =
-                    it->value.GetBool() ? AnnotationsType::All : AnnotationsType::None;
-            }
-            else if (it->value.IsArray())
-            {
-                auto type = AnnotationsType::None;
-                for (const auto &a : it->value.GetArray())
-                {
-                    if (!a.IsString())
-                        return failOpt(error, "annotation entries must be strings");
-                    const auto parsed = to_type({a.GetString(), a.GetStringLength()});
-                    if (!parsed)
-                        return failOpt(error, "invalid annotation value");
-                    type = type | *parsed;
-                }
-                params.annotations = type;
-            }
-            else
-            {
-                return failOpt(error, "annotations must be a boolean or an array of strings");
-            }
-        }
-
-        if (const auto it = doc.FindMember("fallback_speed"); it != doc.MemberEnd())
-        {
-            if (!it->value.IsNumber())
-                return failOpt(error, "fallback_speed must be a number");
-            params.fallback_speed = it->value.GetDouble();
-        }
-
-        if (const auto it = doc.FindMember("fallback_coordinate"); it != doc.MemberEnd())
-        {
-            if (!it->value.IsString())
-                return failOpt(error, "fallback_coordinate must be a string");
-            const std::string_view v{it->value.GetString(), it->value.GetStringLength()};
-            if (v == "input")
-                params.fallback_coordinate_type = TableParameters::FallbackCoordinateType::Input;
-            else if (v == "snapped")
-                params.fallback_coordinate_type = TableParameters::FallbackCoordinateType::Snapped;
-            else
-                return failOpt(error, "invalid fallback_coordinate value");
-        }
-
-        if (const auto it = doc.FindMember("scale_factor"); it != doc.MemberEnd())
-        {
-            if (!it->value.IsNumber())
-                return failOpt(error, "scale_factor must be a number");
-            params.scale_factor = it->value.GetDouble();
-        }
-
-        return params;
     }
-    catch (const std::exception &e)
+
+    if (const auto it = doc.FindMember("destinations"); it != doc.MemberEnd())
     {
-        return failOpt(error, std::string{"failed to parse parameters: "} + e.what());
+        if (!parseIndexArray(it->value, "destinations", params.destinations, error))
+            return std::nullopt;
     }
+
+    if (const auto it = doc.FindMember("annotations"); it != doc.MemberEnd())
+    {
+        using AnnotationsType = TableParameters::AnnotationsType;
+        const auto to_type = [](std::string_view v) -> std::optional<AnnotationsType>
+        {
+            if (v == "duration")
+                return AnnotationsType::Duration;
+            if (v == "distance")
+                return AnnotationsType::Distance;
+            return std::nullopt;
+        };
+
+        if (it->value.IsBool())
+        {
+            params.annotations = it->value.GetBool() ? AnnotationsType::All : AnnotationsType::None;
+        }
+        else if (it->value.IsArray())
+        {
+            auto type = AnnotationsType::None;
+            for (const auto &a : it->value.GetArray())
+            {
+                if (!a.IsString())
+                    return failOpt(error, "annotation entries must be strings");
+                const auto parsed = to_type({a.GetString(), a.GetStringLength()});
+                if (!parsed)
+                    return failOpt(error, "invalid annotation value");
+                type = type | *parsed;
+            }
+            params.annotations = type;
+        }
+        else
+        {
+            return failOpt(error, "annotations must be a boolean or an array of strings");
+        }
+    }
+
+    if (const auto it = doc.FindMember("fallback_speed"); it != doc.MemberEnd())
+    {
+        if (!it->value.IsNumber())
+            return failOpt(error, "fallback_speed must be a number");
+        params.fallback_speed = it->value.GetDouble();
+    }
+
+    if (const auto it = doc.FindMember("fallback_coordinate"); it != doc.MemberEnd())
+    {
+        if (!it->value.IsString())
+            return failOpt(error, "fallback_coordinate must be a string");
+        const std::string_view v{it->value.GetString(), it->value.GetStringLength()};
+        if (v == "input")
+            params.fallback_coordinate_type = TableParameters::FallbackCoordinateType::Input;
+        else if (v == "snapped")
+            params.fallback_coordinate_type = TableParameters::FallbackCoordinateType::Snapped;
+        else
+            return failOpt(error, "invalid fallback_coordinate value");
+    }
+
+    if (const auto it = doc.FindMember("scale_factor"); it != doc.MemberEnd())
+    {
+        if (!it->value.IsNumber())
+            return failOpt(error, "scale_factor must be a number");
+        params.scale_factor = it->value.GetDouble();
+    }
+
+    return params;
 }
 
 } // namespace osrm::server::api
