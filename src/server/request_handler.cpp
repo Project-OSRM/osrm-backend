@@ -188,7 +188,7 @@ void RequestHandler::HandleRequest(const Request &current_request,
         ServiceHandler::ResultT result = util::json::Object();
         auto &json_result = std::get<util::json::Object>(result);
         json_result.values["code"] = "InvalidMethod";
-        json_result.values["message"] = "Method not allowed. Use GET or POST.";
+        json_result.values["message"] = "Method not allowed. Use GET, HEAD, POST, or OPTIONS.";
         SendResponse(result, current_reply, bhttp::status::method_not_allowed);
         current_reply.set(bhttp::field::allow, "GET, HEAD, POST, OPTIONS");
         return;
@@ -205,13 +205,16 @@ void RequestHandler::HandleRequest(const Request &current_request,
         std::string request_string;
         util::URIDecode(std::string(current_request.target()), request_string);
 
-        // Echo every incoming request to the console as a single line. GET carries its full query
-        // in the URL; POST additionally gets its JSON body appended (compacted to one line) so both
-        // request types are logged identically and can be replayed from the log alone.
-        util::Log() << "[req][" << tid << "] " << request_string
-                    << (is_post && !util::LogPolicy::GetInstance().IsMute()
-                            ? " " + CompactJsonForLog(current_request.body())
-                            : std::string());
+        // Echo every incoming request as a single line at debug level (as on the GET-only code
+        // path before POST support). GET carries its full query in the URL; POST additionally
+        // gets its JSON body appended (compacted to one line) so both request types are echoed
+        // identically and can be replayed from the log alone. The access log below repeats this
+        // at info level, so keeping the echo at debug avoids logging every request body twice in
+        // a normal deployment.
+        util::Log(logDEBUG) << "[req][" << tid << "] " << request_string
+                            << (is_post && !util::LogPolicy::GetInstance().IsMute()
+                                    ? " " + CompactJsonForLog(current_request.body())
+                                    : std::string());
 
         ServiceHandler::ResultT result;
         bhttp::status response_status = bhttp::status::ok;
