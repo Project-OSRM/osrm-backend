@@ -16,10 +16,6 @@
 
 #include <boost/iostreams/copy.hpp>
 
-#include <rapidjson/document.h>
-#include <rapidjson/stringbuffer.h>
-#include <rapidjson/writer.h>
-
 #include <ctime>
 
 #include <algorithm>
@@ -55,24 +51,48 @@ bool IsJsonContentType(std::string content_type)
     return content_type.rfind("application/json", 0) == 0;
 }
 
-// Renders a POST body as compact, single-line JSON for the access log so the request can be
-// replayed verbatim from the log later. Falls back to collapsing raw newlines when the body
-// is not valid JSON (e.g. wrong Content-Type), so the log line still stays on one line.
+// Renders a request body as compact, single-line text for the access log so the request can be
+// replayed from the log later. Insignificant whitespace between tokens is dropped and any raw
+// newline is neutralised, so the log line always stays on one line; whitespace inside JSON
+// string literals is preserved (a raw newline there means the body was not valid JSON anyway).
+//
+// This is deliberately a single non-recursive pass rather than a RapidJSON parse-and-reserialise:
+// both Document::Parse (default flags) and Value::Accept recurse once per nesting level, so a
+// hostile body such as "[[[[..." would overflow the stack here -- and this runs on every POST,
+// before the request is even dispatched.
 std::string CompactJsonForLog(const std::string &body)
 {
-    rapidjson::Document doc;
-    if (!doc.Parse(body.c_str(), body.size()).HasParseError())
-    {
-        rapidjson::StringBuffer buffer;
-        rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
-        doc.Accept(writer);
-        return std::string(buffer.GetString(), buffer.GetSize());
-    }
+    std::string out;
+    out.reserve(body.size());
 
-    std::string collapsed = body;
-    std::replace(collapsed.begin(), collapsed.end(), '\n', ' ');
-    std::replace(collapsed.begin(), collapsed.end(), '\r', ' ');
-    return collapsed;
+    bool in_string = false;
+    bool escaped = false;
+    for (const char c : body)
+    {
+        const bool is_newline = c == '\n' || c == '\r';
+        if (in_string)
+        {
+            // Keep the string's contents verbatim, but never emit an actual newline.
+            out.push_back(is_newline ? ' ' : c);
+            if (escaped)
+                escaped = false;
+            else if (c == '\\')
+                escaped = true;
+            else if (c == '"')
+                in_string = false;
+        }
+        else if (c == '"')
+        {
+            in_string = true;
+            out.push_back(c);
+        }
+        else if (c != ' ' && c != '\t' && !is_newline)
+        {
+            out.push_back(c);
+        }
+        // else: insignificant whitespace between tokens, dropped.
+    }
+    return out;
 }
 
 // Builds the JSON error returned when the request path cannot be parsed. `iter` points at

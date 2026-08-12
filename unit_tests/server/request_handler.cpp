@@ -218,31 +218,65 @@ BOOST_AUTO_TEST_CASE(a_failing_query_maps_to_bad_request)
     BOOST_CHECK(get.result() == bhttp::status::bad_request);
 }
 
-BOOST_AUTO_TEST_CASE(post_bodies_are_logged_on_a_single_line)
+// Runs `request` through the handler with logging enabled and returns everything written to
+// stdout (the request echo and the access log line).
+std::string captureLog(RequestHandler &handler, const Request &request)
 {
-    RequestHandler handler;
-    handler.RegisterServiceHandler(std::make_unique<StubServiceHandler>());
-
-    // The access log is only written when logging is enabled, so turn it on and capture it.
     auto &policy = util::LogPolicy::GetInstance();
     const bool was_mute = policy.IsMute();
     policy.Unmute();
     std::ostringstream captured;
     auto *previous = std::cout.rdbuf(captured.rdbuf());
 
-    // A body that is not valid JSON still has to end up on one line so that the log stays
-    // parseable line by line.
-    handle(handler,
-           makeRequest(
-               bhttp::verb::post, "/route/v1/driving", "application/json", "not\njson\r\nhere"));
+    handle(handler, request);
 
     std::cout.rdbuf(previous);
     if (was_mute)
         policy.Mute();
+    return captured.str();
+}
 
-    const auto log = captured.str();
-    BOOST_CHECK(log.find("not json  here") != std::string::npos);
+BOOST_AUTO_TEST_CASE(post_bodies_are_logged_on_a_single_line)
+{
+    RequestHandler handler;
+    handler.RegisterServiceHandler(std::make_unique<StubServiceHandler>());
+
+    // A body that is not valid JSON still has to end up on one line so that the log stays
+    // parseable line by line: raw newlines are neutralised, insignificant whitespace dropped.
+    const auto log = captureLog(
+        handler,
+        makeRequest(
+            bhttp::verb::post, "/route/v1/driving", "application/json", "not\njson\r\nhere"));
+    BOOST_CHECK(log.find("notjsonhere") != std::string::npos);
     BOOST_CHECK(log.find("not\njson") == std::string::npos);
+
+    // Whitespace inside a JSON string literal must survive verbatim so the request stays
+    // replayable; whitespace between tokens is compacted away.
+    const auto with_string = captureLog(handler,
+                                        makeRequest(bhttp::verb::post,
+                                                    "/route/v1/driving",
+                                                    "application/json",
+                                                    "{ \"exclude\": [ \"toll road\" ] }"));
+    BOOST_CHECK(with_string.find("{\"exclude\":[\"toll road\"]}") != std::string::npos);
+}
+
+BOOST_AUTO_TEST_CASE(a_deeply_nested_post_body_does_not_crash_the_logger)
+{
+    RequestHandler handler;
+    handler.RegisterServiceHandler(std::make_unique<StubServiceHandler>());
+
+    // The body is logged before the request is dispatched, so a hostile body must not be able
+    // to take the worker down there. A recursive JSON walk would overflow the stack; the
+    // single-pass compactor handles any depth. (The request itself is rejected downstream.)
+    std::string body = "{\"coordinates\":";
+    body.append(1000000, '[');
+    body.append(1000000, ']');
+    body += "}";
+
+    const auto log = captureLog(
+        handler, makeRequest(bhttp::verb::post, "/route/v1/driving", "application/json", body));
+    // Reaching this line at all means the logger survived the nesting.
+    BOOST_CHECK(!log.empty());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
