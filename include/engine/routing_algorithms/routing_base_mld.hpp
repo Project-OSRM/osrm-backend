@@ -745,35 +745,37 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
     if (source_phantom.IsValidForwardSource())
     {
         forward_heap.Insert(source_phantom.forward_segment_id.id,
-                            EdgeWeight{0} - source_phantom.GetForwardWeightPlusOffset(),
+                            source_phantom.GetForwardWeightAsSource(),
                             {source_phantom.forward_segment_id.id,
                              false,
-                             EdgeDistance{0} - source_phantom.GetForwardDistance()});
+                             source_phantom.GetForwardDistanceAsSource()});
     }
 
     if (source_phantom.IsValidReverseSource())
     {
         forward_heap.Insert(source_phantom.reverse_segment_id.id,
-                            EdgeWeight{0} - source_phantom.GetReverseWeightPlusOffset(),
+                            source_phantom.GetReverseWeightAsSource(),
                             {source_phantom.reverse_segment_id.id,
                              false,
-                             EdgeDistance{0} - source_phantom.GetReverseDistance()});
+                             source_phantom.GetReverseDistanceAsSource()});
     }
 
     if (target_phantom.IsValidForwardTarget())
     {
-        reverse_heap.Insert(
-            target_phantom.forward_segment_id.id,
-            target_phantom.GetForwardWeightPlusOffset(),
-            {target_phantom.forward_segment_id.id, false, target_phantom.GetForwardDistance()});
+        reverse_heap.Insert(target_phantom.forward_segment_id.id,
+                            target_phantom.GetForwardWeightAsTarget(),
+                            {target_phantom.forward_segment_id.id,
+                             false,
+                             target_phantom.GetForwardDistanceAsTarget()});
     }
 
     if (target_phantom.IsValidReverseTarget())
     {
-        reverse_heap.Insert(
-            target_phantom.reverse_segment_id.id,
-            target_phantom.GetReverseWeightPlusOffset(),
-            {target_phantom.reverse_segment_id.id, false, target_phantom.GetReverseDistance()});
+        reverse_heap.Insert(target_phantom.reverse_segment_id.id,
+                            target_phantom.GetReverseWeightAsTarget(),
+                            {target_phantom.reverse_segment_id.id,
+                             false,
+                             target_phantom.GetReverseDistanceAsTarget()});
     }
 
     const PhantomEndpoints endpoints{source_phantom, target_phantom};

@@ -236,17 +236,17 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                     target_nodes_index.insert(
                         {phantom_node.forward_segment_id.id,
                          std::make_tuple(index,
-                                         phantom_node.GetForwardWeightPlusOffset(),
-                                         phantom_node.GetForwardDuration(),
-                                         phantom_node.GetForwardDistance())});
+                                         phantom_node.GetForwardWeightAsTarget(),
+                                         phantom_node.GetForwardDurationAsTarget(),
+                                         phantom_node.GetForwardDistanceAsTarget())});
 
                 if (phantom_node.IsValidReverseTarget())
                     target_nodes_index.insert(
                         {phantom_node.reverse_segment_id.id,
                          std::make_tuple(index,
-                                         phantom_node.GetReverseWeightPlusOffset(),
-                                         phantom_node.GetReverseDuration(),
-                                         phantom_node.GetReverseDistance())});
+                                         phantom_node.GetReverseWeightAsTarget(),
+                                         phantom_node.GetReverseDurationAsTarget(),
+                                         phantom_node.GetReverseDistanceAsTarget())});
             }
             else if (DIRECTION == REVERSE_DIRECTION)
             {
@@ -254,17 +254,17 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                     target_nodes_index.insert(
                         {phantom_node.forward_segment_id.id,
                          std::make_tuple(index,
-                                         EdgeWeight{0} - phantom_node.GetForwardWeightPlusOffset(),
-                                         EdgeDuration{0} - phantom_node.GetForwardDuration(),
-                                         EdgeDistance{0} - phantom_node.GetForwardDistance())});
+                                         phantom_node.GetForwardWeightAsSource(),
+                                         phantom_node.GetForwardDurationAsSource(),
+                                         phantom_node.GetForwardDistanceAsSource())});
 
                 if (phantom_node.IsValidReverseSource())
                     target_nodes_index.insert(
                         {phantom_node.reverse_segment_id.id,
                          std::make_tuple(index,
-                                         EdgeWeight{0} - phantom_node.GetReverseWeightPlusOffset(),
-                                         EdgeDuration{0} - phantom_node.GetReverseDuration(),
-                                         EdgeDistance{0} - phantom_node.GetReverseDistance())});
+                                         phantom_node.GetReverseWeightAsSource(),
+                                         phantom_node.GetReverseDurationAsSource(),
+                                         phantom_node.GetReverseDistanceAsSource())});
             }
         }
     }
@@ -346,17 +346,17 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                 if (phantom_node.IsValidForwardSource())
                 {
                     insert_node(phantom_node.forward_segment_id.id,
-                                EdgeWeight{0} - phantom_node.GetForwardWeightPlusOffset(),
-                                EdgeDuration{0} - phantom_node.GetForwardDuration(),
-                                EdgeDistance{0} - phantom_node.GetForwardDistance());
+                                phantom_node.GetForwardWeightAsSource(),
+                                phantom_node.GetForwardDurationAsSource(),
+                                phantom_node.GetForwardDistanceAsSource());
                 }
 
                 if (phantom_node.IsValidReverseSource())
                 {
                     insert_node(phantom_node.reverse_segment_id.id,
-                                EdgeWeight{0} - phantom_node.GetReverseWeightPlusOffset(),
-                                EdgeDuration{0} - phantom_node.GetReverseDuration(),
-                                EdgeDistance{0} - phantom_node.GetReverseDistance());
+                                phantom_node.GetReverseWeightAsSource(),
+                                phantom_node.GetReverseDurationAsSource(),
+                                phantom_node.GetReverseDistanceAsSource());
                 }
             }
             else if (DIRECTION == REVERSE_DIRECTION)
@@ -364,17 +364,17 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                 if (phantom_node.IsValidForwardTarget())
                 {
                     insert_node(phantom_node.forward_segment_id.id,
-                                phantom_node.GetForwardWeightPlusOffset(),
-                                phantom_node.GetForwardDuration(),
-                                phantom_node.GetForwardDistance());
+                                phantom_node.GetForwardWeightAsTarget(),
+                                phantom_node.GetForwardDurationAsTarget(),
+                                phantom_node.GetForwardDistanceAsTarget());
                 }
 
                 if (phantom_node.IsValidReverseTarget())
                 {
                     insert_node(phantom_node.reverse_segment_id.id,
-                                phantom_node.GetReverseWeightPlusOffset(),
-                                phantom_node.GetReverseDuration(),
-                                phantom_node.GetReverseDistance());
+                                phantom_node.GetReverseWeightAsTarget(),
+                                phantom_node.GetReverseDurationAsTarget(),
+                                phantom_node.GetReverseDistanceAsTarget());
                 }
             }
         }

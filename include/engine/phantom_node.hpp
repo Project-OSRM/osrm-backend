@@ -50,9 +50,9 @@ struct PhantomNode
           forward_distance(INVALID_EDGE_DISTANCE), reverse_distance(INVALID_EDGE_DISTANCE),
           forward_distance_offset{0}, reverse_distance_offset{0},
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
-          forward_duration_offset{0}, reverse_duration_offset{0},
-          component({INVALID_COMPONENTID, 0}), fwd_segment_position(0),
-          is_valid_forward_source{false}, is_valid_forward_target{false},
+          forward_duration_offset{0}, reverse_duration_offset{0}, approach_weight{0},
+          approach_duration{0}, approach_distance{0}, component({INVALID_COMPONENTID, 0}),
+          fwd_segment_position(0), is_valid_forward_source{false}, is_valid_forward_target{false},
           is_valid_reverse_source{false}, is_valid_reverse_target{false}, bearing(0)
 
     {
@@ -105,6 +105,44 @@ struct PhantomNode
         BOOST_ASSERT(reverse_segment_id.enabled);
         return reverse_distance + reverse_distance_offset;
     }
+
+    //
+    // What a search puts in its heap for this phantom.  A source is seeded with the
+    // negation of its own cost, which the path then makes up as it travels the rest of
+    // the segment; a target with the cost itself.  The approach walk is added in both
+    // roles, being travelled either way.
+    //
+    // Deliberately not folded into the Get*PlusOffset accessors: leg assembly reads
+    // those to work out what a route costs, and the walk is already drawn into the leg
+    // itself (engine/area_route.hpp).  These are for seeding a heap and nothing else.
+    //
+
+    EdgeWeight GetForwardWeightAsSource() const
+    { return approach_weight - GetForwardWeightPlusOffset(); }
+    EdgeWeight GetForwardWeightAsTarget() const
+    { return approach_weight + GetForwardWeightPlusOffset(); }
+    EdgeWeight GetReverseWeightAsSource() const
+    { return approach_weight - GetReverseWeightPlusOffset(); }
+    EdgeWeight GetReverseWeightAsTarget() const
+    { return approach_weight + GetReverseWeightPlusOffset(); }
+
+    EdgeDuration GetForwardDurationAsSource() const
+    { return approach_duration - GetForwardDuration(); }
+    EdgeDuration GetForwardDurationAsTarget() const
+    { return approach_duration + GetForwardDuration(); }
+    EdgeDuration GetReverseDurationAsSource() const
+    { return approach_duration - GetReverseDuration(); }
+    EdgeDuration GetReverseDurationAsTarget() const
+    { return approach_duration + GetReverseDuration(); }
+
+    EdgeDistance GetForwardDistanceAsSource() const
+    { return approach_distance - GetForwardDistance(); }
+    EdgeDistance GetForwardDistanceAsTarget() const
+    { return approach_distance + GetForwardDistance(); }
+    EdgeDistance GetReverseDistanceAsSource() const
+    { return approach_distance - GetReverseDistance(); }
+    EdgeDistance GetReverseDistanceAsTarget() const
+    { return approach_distance + GetReverseDistance(); }
 
     bool IsBidirected() const { return forward_segment_id.enabled && reverse_segment_id.enabled; }
 
@@ -173,9 +211,10 @@ struct PhantomNode
           reverse_distance{reverse_distance}, forward_distance_offset{forward_distance_offset},
           reverse_distance_offset{reverse_distance_offset}, forward_duration{forward_duration},
           reverse_duration{reverse_duration}, forward_duration_offset{forward_duration_offset},
-          reverse_duration_offset{reverse_duration_offset},
-          component{component.id, component.is_tiny}, location{location},
-          input_location{input_location}, fwd_segment_position{other.fwd_segment_position},
+          reverse_duration_offset{reverse_duration_offset}, approach_weight{0},
+          approach_duration{0}, approach_distance{0}, component{component.id, component.is_tiny},
+          location{location}, input_location{input_location},
+          fwd_segment_position{other.fwd_segment_position},
           is_valid_forward_source{is_valid_forward_source},
           is_valid_forward_target{is_valid_forward_target},
           is_valid_reverse_source{is_valid_reverse_source},
@@ -197,6 +236,22 @@ struct PhantomNode
     EdgeDuration reverse_duration;
     EdgeDuration forward_duration_offset; // TODO: try to remove -> requires path unpacking changes
     EdgeDuration reverse_duration_offset; // TODO: try to remove -> requires path unpacking changes
+
+    /**
+     * The walk from where the traveller asked to be to where this phantom sits, for a
+     * coordinate that snapped into an open area (engine/area_snapping.hpp).  Zero for
+     * every ordinary phantom.
+     *
+     * It cannot live in the offsets above.  A search seeds a source with the negation of
+     * its offset and a target with the offset itself, so one stored number would have to
+     * carry both signs, and the same coordinate is a source in one journey and a target
+     * in another: every coordinate of a table is both at once, and so is a via point.
+     * Kept separately, it is added by the seeding accessors below in either role.
+     */
+    EdgeWeight approach_weight;
+    EdgeDuration approach_duration;
+    EdgeDistance approach_distance;
+
     ComponentID component;
 
     util::Coordinate location; // this is the coordinate of x
@@ -211,7 +266,7 @@ struct PhantomNode
     unsigned short bearing : 12;
 };
 
-static_assert(sizeof(PhantomNode) == 80, "PhantomNode has more padding then expected");
+static_assert(sizeof(PhantomNode) == 92, "PhantomNode has more padding than expected");
 
 using PhantomNodeCandidates = std::vector<PhantomNode>;
 using PhantomCandidateAlternatives = std::pair<PhantomNodeCandidates, PhantomNodeCandidates>;

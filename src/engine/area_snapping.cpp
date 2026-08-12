@@ -88,42 +88,35 @@ util::Coordinate vertex_at(const std::vector<std::span<const util::Coordinate>> 
  * itself stays put: the API reads `forward_segment_id.id` unconditionally to name a
  * waypoint.
  *
- * The cost of the walk goes into that direction's weight offset.
- * `GetForwardWeightPlusOffset()` is the cost from the start of the edge-based node to the
- * phantom, and the search seeds a source with its negation but a target with the value
- * itself -- so the same walk has to be subtracted in one case and added in the other,
- * which is what @p role decides.  The result accounting never reads the offsets;
- * `assembleLeg` works from `forward_weight` and the per-segment values.  So this charges
- * the search and nothing else.  The types are signed, and a departure going below zero is
- * exactly what is meant: the journey begins before the graph does.
+ * The cost of the walk goes on the phantom itself, not into the direction's offset.  A
+ * search seeds a source with the negation of its offset and a target with the offset
+ * itself, so an offset would have to carry both signs at once for a coordinate that is
+ * both, which every coordinate of a table is and so is a via point.  Carried separately,
+ * it is added in either role; see `PhantomNode::approach_weight`.  Leg assembly never
+ * reads it, and does not need to: the walk is drawn into the leg as a stretch of its own
+ * (engine/area_route.hpp).
  */
 PhantomNode at_vertex(PhantomNode phantom,
                       const bool forward,
                       const util::Coordinate from,
                       const util::Coordinate vertex,
                       const double walking_speed,
-                      const double weight_multiplier,
-                      const ApproachRole role)
+                      const double weight_multiplier)
 {
     const auto metres = util::coordinate_calculation::greatCircleDistance(from, vertex);
     const auto seconds = metres / walking_speed;
 
-    // durations are stored in deci-seconds, weights in the profile's own unit.
-    // A via point is charged nothing: see ApproachRole.
-    const auto sign = role == ApproachRole::Via ? 0 : (role == ApproachRole::Departure ? -1 : 1);
-    const auto duration = to_alias<EdgeDuration>(sign * std::lround(seconds * 10.));
-    const auto weight = to_alias<EdgeWeight>(sign * std::lround(seconds * weight_multiplier));
+    // durations are stored in deci-seconds, weights in the profile's own unit
+    phantom.approach_weight = to_alias<EdgeWeight>(std::lround(seconds * weight_multiplier));
+    phantom.approach_duration = to_alias<EdgeDuration>(std::lround(seconds * 10.));
+    phantom.approach_distance = to_alias<EdgeDistance>(metres);
 
     if (forward)
     {
-        phantom.forward_weight_offset = phantom.forward_weight_offset + weight;
-        phantom.forward_duration_offset = phantom.forward_duration_offset + duration;
         phantom.reverse_segment_id.enabled = false;
     }
     else
     {
-        phantom.reverse_weight_offset = phantom.reverse_weight_offset + weight;
-        phantom.reverse_duration_offset = phantom.reverse_duration_offset + duration;
         phantom.forward_segment_id.enabled = false;
     }
 
@@ -204,8 +197,10 @@ std::optional<PhantomNodeCandidates> SnapInsideOpenArea(const datafacade::BaseDa
                 // answers both, because sitting at a segment's first node means carrying
                 // a weight of zero forwards and the whole of the segment in reverse.
                 //
-                // A via point takes the departure convention.  It is both ends at once
-                // and something has to give; see ApproachRole.
+                // Getting this wrong does not merely cost accuracy.  A candidate that
+                // stands at a node's start and is then used as a target sits *before* a
+                // source that is further along the same node, and the journey between
+                // them comes out short by the stretch in between.
                 const bool arriving = role == ApproachRole::Arrival;
                 const auto forward_usable =
                     arriving ? phantom.IsValidForwardTarget() : phantom.IsValidForwardSource();
@@ -218,23 +213,13 @@ std::optional<PhantomNodeCandidates> SnapInsideOpenArea(const datafacade::BaseDa
 
                 if (forward_usable && forward_at_the_vertex && claim(phantom.forward_segment_id.id))
                 {
-                    candidates.push_back(at_vertex(phantom,
-                                                   true,
-                                                   coordinate,
-                                                   vertex,
-                                                   area.walking_speed,
-                                                   weight_multiplier,
-                                                   role));
+                    candidates.push_back(at_vertex(
+                        phantom, true, coordinate, vertex, area.walking_speed, weight_multiplier));
                 }
                 if (reverse_usable && reverse_at_the_vertex && claim(phantom.reverse_segment_id.id))
                 {
-                    candidates.push_back(at_vertex(phantom,
-                                                   false,
-                                                   coordinate,
-                                                   vertex,
-                                                   area.walking_speed,
-                                                   weight_multiplier,
-                                                   role));
+                    candidates.push_back(at_vertex(
+                        phantom, false, coordinate, vertex, area.walking_speed, weight_multiplier));
                 }
             }
         }

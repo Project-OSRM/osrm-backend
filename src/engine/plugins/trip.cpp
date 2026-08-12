@@ -206,7 +206,7 @@ Status TripPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
         return Status::Error;
 
     const auto &facade = algorithms.GetFacade();
-    auto phantom_node_pairs = GetPhantomNodes(facade, parameters, ApproachCharge::NeverCharge);
+    auto phantom_node_pairs = GetPhantomNodes(facade, parameters);
     if (phantom_node_pairs.size() != number_of_locations)
     {
         return Error("NoSegment",
