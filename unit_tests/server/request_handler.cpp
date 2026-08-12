@@ -258,6 +258,17 @@ BOOST_AUTO_TEST_CASE(post_bodies_are_logged_on_a_single_line)
                                                     "application/json",
                                                     "{ \"exclude\": [ \"toll road\" ] }"));
     BOOST_CHECK(with_string.find("{\"exclude\":[\"toll road\"]}") != std::string::npos);
+
+    // An escaped quote or backslash inside a string must not end the string early, so the
+    // compactor keeps preserving whitespace right up to the real closing quote. Body sent:
+    // {"exclude":["a\"b\\c d"]} -- the escaped quote, escaped backslash and the space after
+    // them all have to survive verbatim.
+    const auto with_escapes = captureLog(handler,
+                                         makeRequest(bhttp::verb::post,
+                                                     "/route/v1/driving",
+                                                     "application/json",
+                                                     "{ \"exclude\": [ \"a\\\"b\\\\c d\" ] }"));
+    BOOST_CHECK(with_escapes.find("{\"exclude\":[\"a\\\"b\\\\c d\"]}") != std::string::npos);
 }
 
 BOOST_AUTO_TEST_CASE(a_deeply_nested_post_body_does_not_crash_the_logger)
