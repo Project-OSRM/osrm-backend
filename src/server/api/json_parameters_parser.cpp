@@ -16,7 +16,6 @@
 #include <rapidjson/document.h>
 #include <rapidjson/error/en.h>
 
-#include <cstdint>
 #include <limits>
 #include <optional>
 #include <string>
@@ -45,9 +44,15 @@ std::nullopt_t failOpt(std::string &error, std::string message)
 }
 
 // Parses the request body into a DOM, reporting syntax errors through `error`.
+//
+// kParseIterativeFlag is essential, not an optimization: RapidJSON's default parser recurses
+// once per nesting level, so a body such as "[[[[..." (a POST client controls it verbatim)
+// overflows the stack and crashes the worker at a depth of ~150k — well inside the default
+// body-size limit. The iterative parser uses an explicit heap stack and cannot be made to
+// recurse, and RapidJSON frees the resulting DOM without recursion either.
 bool parseDocument(const std::string &json_body, rj::Document &doc, std::string &error)
 {
-    if (doc.Parse(json_body.c_str(), json_body.size()).HasParseError())
+    if (doc.Parse<rj::kParseIterativeFlag>(json_body.c_str(), json_body.size()).HasParseError())
         return fail(error,
                     std::string{"invalid JSON: "} + rj::GetParseError_En(doc.GetParseError()));
     return true;
@@ -170,9 +175,21 @@ bool parseBaseParameters(const rj::Value &doc,
             }
             else if (b.IsArray() && b.Size() == 2 && b[0].IsInt() && b[1].IsInt())
             {
+                // engine::Bearing stores shorts and the URL grammar parses them with
+                // x3::short_, which rejects anything that does not fit. Mirror that here
+                // instead of letting a plain static_cast wrap a large value into an in-range
+                // one (e.g. 65536 -> 0), which would slip past Bearing::IsValid().
+                const auto value = b[0].GetInt();
+                const auto range = b[1].GetInt();
+                if (value < std::numeric_limits<short>::min() ||
+                    value > std::numeric_limits<short>::max() ||
+                    range < std::numeric_limits<short>::min() ||
+                    range > std::numeric_limits<short>::max())
+                {
+                    return fail(error, "each bearing value must fit in a 16-bit integer");
+                }
                 params.bearings.push_back(
-                    engine::Bearing{static_cast<std::int16_t>(b[0].GetInt()),
-                                    static_cast<std::int16_t>(b[1].GetInt())});
+                    engine::Bearing{static_cast<short>(value), static_cast<short>(range)});
             }
             else
             {

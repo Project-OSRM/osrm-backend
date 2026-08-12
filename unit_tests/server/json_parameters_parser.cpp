@@ -428,6 +428,45 @@ BOOST_AUTO_TEST_CASE(table_boolean_annotations_and_fallback_coordinate)
     BOOST_CHECK(none.annotations == TableParameters::AnnotationsType::None);
 }
 
+BOOST_AUTO_TEST_CASE(deeply_nested_json_does_not_overflow_the_stack)
+{
+    // RapidJSON's default recursive-descent parser overflows the stack on a body such as
+    // "[[[[..." at a depth well inside the configured body-size limit, taking the whole
+    // worker down. The parser must reject such input instead of crashing.
+    for (const std::size_t depth : {1000u, 100000u, 1000000u})
+    {
+        std::string body = "{\"coordinates\": ";
+        body.append(depth, '[');
+        // Leave the arrays unclosed: the point is that parsing terminates without recursing
+        // once per level, not that the document is well-formed.
+        body += "}";
+
+        checkRejected<RouteParameters>(body);
+    }
+
+    // A fully-closed but pathologically deep array is also parsed and freed without recursion.
+    std::string closed = "{\"coordinates\": ";
+    closed.append(100000, '[');
+    closed.append(100000, ']');
+    closed += "}";
+    checkRejected<RouteParameters>(closed);
+}
+
+BOOST_AUTO_TEST_CASE(out_of_range_bearings_are_rejected_not_truncated)
+{
+    // A plain static_cast<short> would wrap 65536 to 0 and 65890 to 354 — both in range for
+    // Bearing::IsValid — so a request the URL grammar rejects (x3::short_ overflows) would be
+    // silently accepted with a different meaning. The parser must reject it up front.
+    checkRejected<RouteParameters>(bodyWith("\"bearings\": [[65536,65536],[0,180]]"));
+    checkRejected<RouteParameters>(bodyWith("\"bearings\": [[65890,65546],[0,180]]"));
+    checkRejected<RouteParameters>(bodyWith("\"bearings\": [[-40000,0],[0,180]]"));
+
+    // A value that fits in a short but is out of the valid bearing domain still parses (as in
+    // the URL API) and is caught by IsValid().
+    auto params = checkAccepted<RouteParameters>(bodyWith("\"bearings\": [[400,0],[0,180]]"));
+    BOOST_CHECK(!params.IsValid());
+}
+
 BOOST_AUTO_TEST_CASE(requests_with_hints_compare_equal)
 {
     // BaseParameters::operator== is defaulted, so equality of two requests compares the hint
