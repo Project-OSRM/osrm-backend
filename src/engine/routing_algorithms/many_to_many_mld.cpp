@@ -36,7 +36,8 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
                       const EdgeDuration duration,
                       const EdgeDistance distance,
                       SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
-                      LevelID level)
+                      LevelID level,
+                      const EdgeWeight approach = EdgeWeight{0})
 {
     for (const auto edge : facade.GetBorderEdgeRange(level, node))
     {
@@ -70,7 +71,7 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
             const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
             if (!toHeapNode)
             {
-                query_heap.Insert(to, to_weight, {node, false, to_duration, to_distance});
+                query_heap.Insert(to, to_weight, {node, false, to_duration, to_distance, approach});
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration, to_distance, node) <
@@ -79,7 +80,7 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
                               toHeapNode->data.distance,
                               toHeapNode->data.parent))
             {
-                toHeapNode->data = {node, false, to_duration, to_distance};
+                toHeapNode->data = {node, false, to_duration, to_distance, approach};
                 toHeapNode->weight = to_weight;
                 query_heap.DecreaseKey(*toHeapNode);
             }
@@ -130,8 +131,13 @@ void relaxOutgoingEdges(
                     const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
-                        query_heap.Insert(
-                            to, to_weight, {heapNode.node, true, to_duration, to_distance});
+                        query_heap.Insert(to,
+                                          to_weight,
+                                          {heapNode.node,
+                                           true,
+                                           to_duration,
+                                           to_distance,
+                                           heapNode.data.approach});
                     }
                     else if (std::tie(to_weight, to_duration, to_distance, heapNode.node) <
                              std::tie(toHeapNode->weight,
@@ -139,7 +145,8 @@ void relaxOutgoingEdges(
                                       toHeapNode->data.distance,
                                       toHeapNode->data.parent))
                     {
-                        toHeapNode->data = {heapNode.node, true, to_duration, to_distance};
+                        toHeapNode->data = {
+                            heapNode.node, true, to_duration, to_distance, heapNode.data.approach};
                         toHeapNode->weight = to_weight;
                         query_heap.DecreaseKey(*toHeapNode);
                     }
@@ -171,8 +178,13 @@ void relaxOutgoingEdges(
                     const auto toHeapNode = query_heap.GetHeapNodeIfWasInserted(to);
                     if (!toHeapNode)
                     {
-                        query_heap.Insert(
-                            to, to_weight, {heapNode.node, true, to_duration, to_distance});
+                        query_heap.Insert(to,
+                                          to_weight,
+                                          {heapNode.node,
+                                           true,
+                                           to_duration,
+                                           to_distance,
+                                           heapNode.data.approach});
                     }
                     else if (std::tie(to_weight, to_duration, to_distance, heapNode.node) <
                              std::tie(toHeapNode->weight,
@@ -180,7 +192,8 @@ void relaxOutgoingEdges(
                                       toHeapNode->data.distance,
                                       toHeapNode->data.parent))
                     {
-                        toHeapNode->data = {heapNode.node, true, to_duration, to_distance};
+                        toHeapNode->data = {
+                            heapNode.node, true, to_duration, to_distance, heapNode.data.approach};
                         toHeapNode->weight = to_weight;
                         query_heap.DecreaseKey(*toHeapNode);
                     }
@@ -200,7 +213,8 @@ void relaxOutgoingEdges(
                                 heapNode.data.duration,
                                 heapNode.data.distance,
                                 query_heap,
-                                level);
+                                level,
+                                heapNode.data.approach);
 }
 
 //
@@ -221,7 +235,9 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                               MAXIMAL_EDGE_DISTANCE);
 
     // Collect destination (source) nodes into a map
-    std::unordered_multimap<NodeID, std::tuple<std::size_t, EdgeWeight, EdgeDuration, EdgeDistance>>
+    std::unordered_multimap<
+        NodeID,
+        std::tuple<std::size_t, EdgeWeight, EdgeDuration, EdgeDistance, EdgeWeight>>
         target_nodes_index;
     target_nodes_index.reserve(target_indices.size());
     for (std::size_t index = 0; index < target_indices.size(); ++index)
@@ -238,7 +254,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                          std::make_tuple(index,
                                          phantom_node.GetForwardWeightAsTarget(),
                                          phantom_node.GetForwardDurationAsTarget(),
-                                         phantom_node.GetForwardDistanceAsTarget())});
+                                         phantom_node.GetForwardDistanceAsTarget(),
+                                         phantom_node.approach_weight)});
 
                 if (phantom_node.IsValidReverseTarget())
                     target_nodes_index.insert(
@@ -246,7 +263,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                          std::make_tuple(index,
                                          phantom_node.GetReverseWeightAsTarget(),
                                          phantom_node.GetReverseDurationAsTarget(),
-                                         phantom_node.GetReverseDistanceAsTarget())});
+                                         phantom_node.GetReverseDistanceAsTarget(),
+                                         phantom_node.approach_weight)});
             }
             else if (DIRECTION == REVERSE_DIRECTION)
             {
@@ -256,7 +274,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                          std::make_tuple(index,
                                          phantom_node.GetForwardWeightAsSource(),
                                          phantom_node.GetForwardDurationAsSource(),
-                                         phantom_node.GetForwardDistanceAsSource())});
+                                         phantom_node.GetForwardDistanceAsSource(),
+                                         phantom_node.approach_weight)});
 
                 if (phantom_node.IsValidReverseSource())
                     target_nodes_index.insert(
@@ -264,7 +283,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                          std::make_tuple(index,
                                          phantom_node.GetReverseWeightAsSource(),
                                          phantom_node.GetReverseDurationAsSource(),
-                                         phantom_node.GetReverseDistanceAsSource())});
+                                         phantom_node.GetReverseDistanceAsSource(),
+                                         phantom_node.approach_weight)});
             }
         }
     }
@@ -275,8 +295,11 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
     auto &query_heap = *(engine_working_data.many_to_many_heap);
 
     // Check if node is in the destinations list and update weights/durations
-    auto update_values =
-        [&](NodeID node, EdgeWeight weight, EdgeDuration duration, EdgeDistance distance)
+    auto update_values = [&](NodeID node,
+                             EdgeWeight weight,
+                             EdgeDuration duration,
+                             EdgeDistance distance,
+                             EdgeWeight approach)
     {
         auto candidates = target_nodes_index.equal_range(node);
         for (auto it = candidates.first; it != candidates.second;)
@@ -285,10 +308,16 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
             EdgeWeight target_weight;
             EdgeDuration target_duration;
             EdgeDistance target_distance;
-            std::tie(index, target_weight, target_duration, target_distance) = it->second;
+            EdgeWeight target_approach;
+            std::tie(index, target_weight, target_duration, target_distance, target_approach) =
+                it->second;
 
             const auto path_weight = weight + target_weight;
-            if (path_weight >= EdgeWeight{0})
+            // The walk into an open area is charged at both ends and is not travel, so it
+            // cannot make a target that sits before the source reachable.  Test the graph
+            // part, or a degenerate pairing is accepted and the cell comes out short by
+            // the stretch between them.  See ManyToManyHeapData::approach.
+            if (path_weight - (approach + target_approach) >= EdgeWeight{0})
             {
                 const auto path_duration = duration + target_duration;
                 const auto path_distance = distance + target_distance;
@@ -318,7 +347,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
     auto insert_node = [&](NodeID node,
                            EdgeWeight initial_weight,
                            EdgeDuration initial_duration,
-                           EdgeDistance initial_distance)
+                           EdgeDistance initial_distance,
+                           EdgeWeight approach)
     {
         if (target_nodes_index.contains(node))
         {
@@ -326,13 +356,20 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
             // the node (e.g destination is before source on oneway segment) we want to allow
             // node to be visited later in the search along a reachable path.
             // Therefore, we manually run first step of search without marking node as visited.
-            update_values(node, initial_weight, initial_duration, initial_distance);
-            relaxBorderEdges<DIRECTION>(
-                facade, node, initial_weight, initial_duration, initial_distance, query_heap, 0);
+            update_values(node, initial_weight, initial_duration, initial_distance, approach);
+            relaxBorderEdges<DIRECTION>(facade,
+                                        node,
+                                        initial_weight,
+                                        initial_duration,
+                                        initial_distance,
+                                        query_heap,
+                                        0,
+                                        approach);
         }
         else
         {
-            query_heap.Insert(node, initial_weight, {node, initial_duration, initial_distance});
+            query_heap.Insert(
+                node, initial_weight, {node, initial_duration, initial_distance, approach});
         }
     };
 
@@ -348,7 +385,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                     insert_node(phantom_node.forward_segment_id.id,
                                 phantom_node.GetForwardWeightAsSource(),
                                 phantom_node.GetForwardDurationAsSource(),
-                                phantom_node.GetForwardDistanceAsSource());
+                                phantom_node.GetForwardDistanceAsSource(),
+                                phantom_node.approach_weight);
                 }
 
                 if (phantom_node.IsValidReverseSource())
@@ -356,7 +394,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                     insert_node(phantom_node.reverse_segment_id.id,
                                 phantom_node.GetReverseWeightAsSource(),
                                 phantom_node.GetReverseDurationAsSource(),
-                                phantom_node.GetReverseDistanceAsSource());
+                                phantom_node.GetReverseDistanceAsSource(),
+                                phantom_node.approach_weight);
                 }
             }
             else if (DIRECTION == REVERSE_DIRECTION)
@@ -366,7 +405,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                     insert_node(phantom_node.forward_segment_id.id,
                                 phantom_node.GetForwardWeightAsTarget(),
                                 phantom_node.GetForwardDurationAsTarget(),
-                                phantom_node.GetForwardDistanceAsTarget());
+                                phantom_node.GetForwardDistanceAsTarget(),
+                                phantom_node.approach_weight);
                 }
 
                 if (phantom_node.IsValidReverseTarget())
@@ -374,7 +414,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                     insert_node(phantom_node.reverse_segment_id.id,
                                 phantom_node.GetReverseWeightAsTarget(),
                                 phantom_node.GetReverseDurationAsTarget(),
-                                phantom_node.GetReverseDistanceAsTarget());
+                                phantom_node.GetReverseDistanceAsTarget(),
+                                phantom_node.approach_weight);
                 }
             }
         }
@@ -387,8 +428,11 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
         const auto heapNode = query_heap.DeleteMinGetHeapNode();
 
         // Update values
-        update_values(
-            heapNode.node, heapNode.weight, heapNode.data.duration, heapNode.data.distance);
+        update_values(heapNode.node,
+                      heapNode.weight,
+                      heapNode.data.duration,
+                      heapNode.data.distance,
+                      heapNode.data.approach);
 
         // Relax outgoing edges
         relaxOutgoingEdges<DIRECTION>(
@@ -448,7 +492,14 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         auto new_duration = heapNode.data.duration + target_duration;
         auto new_distance = heapNode.data.distance + target_distance;
 
-        if (new_weight >= EdgeWeight{0} &&
+        // The graph part of the weight, not the whole of it.  A target that sits before
+        // the source on one edge-based node is unreachable this way, and that is what a
+        // negative weight says; the walk into an open area is charged at both ends and is
+        // not travel, so it can lift the sum above zero and hide it.  See
+        // ManyToManyHeapData::approach.
+        const auto approach = heapNode.data.approach + current_bucket.approach;
+
+        if (new_weight - approach >= EdgeWeight{0} &&
             std::tie(new_weight, new_duration, new_distance) <
                 std::tie(current_weight, current_duration, current_distance))
         {
@@ -480,7 +531,8 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                                            column_idx,
                                            heapNode.weight,
                                            heapNode.data.duration,
-                                           heapNode.data.distance);
+                                           heapNode.data.distance,
+                                           heapNode.data.approach);
 
     const auto &partition = facade.GetMultiLevelPartition();
     const auto maximal_level = partition.GetNumberOfLevels() - 1;

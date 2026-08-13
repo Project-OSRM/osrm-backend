@@ -124,7 +124,8 @@ void insertSourceInHeap(ManyToManyQueryHeap &heap, const PhantomNodeCandidates &
                         phantom_node.GetForwardWeightAsSource(),
                         {phantom_node.forward_segment_id.id,
                          phantom_node.GetForwardDurationAsSource(),
-                         phantom_node.GetForwardDistanceAsSource()});
+                         phantom_node.GetForwardDistanceAsSource(),
+                         phantom_node.approach_weight});
         }
         if (phantom_node.IsValidReverseSource())
         {
@@ -132,7 +133,8 @@ void insertSourceInHeap(ManyToManyQueryHeap &heap, const PhantomNodeCandidates &
                         phantom_node.GetReverseWeightAsSource(),
                         {phantom_node.reverse_segment_id.id,
                          phantom_node.GetReverseDurationAsSource(),
-                         phantom_node.GetReverseDistanceAsSource()});
+                         phantom_node.GetReverseDistanceAsSource(),
+                         phantom_node.approach_weight});
         }
     }
 }
@@ -148,7 +150,8 @@ void insertTargetInHeap(ManyToManyQueryHeap &heap, const PhantomNodeCandidates &
                         phantom_node.GetForwardWeightAsTarget(),
                         {phantom_node.forward_segment_id.id,
                          phantom_node.GetForwardDurationAsTarget(),
-                         phantom_node.GetForwardDistanceAsTarget()});
+                         phantom_node.GetForwardDistanceAsTarget(),
+                         phantom_node.approach_weight});
         }
         if (phantom_node.IsValidReverseTarget())
         {
@@ -156,7 +159,8 @@ void insertTargetInHeap(ManyToManyQueryHeap &heap, const PhantomNodeCandidates &
                         phantom_node.GetReverseWeightAsTarget(),
                         {phantom_node.reverse_segment_id.id,
                          phantom_node.GetReverseDurationAsTarget(),
-                         phantom_node.GetReverseDistanceAsTarget()});
+                         phantom_node.GetReverseDistanceAsTarget(),
+                         phantom_node.approach_weight});
         }
     }
 }

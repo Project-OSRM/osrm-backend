@@ -103,3 +103,39 @@ Feature: Foot - Tables and trips across a pedestrian area
         When I plan a trip I should get
             | waypoints | trips | distance |
             | p,q,s     | psq   | 647m +-6 |
+
+    # A pair with one end off the plaza.  Walking is symmetric, so the matrix has to be:
+    # an asymmetric cell for a foot profile is the bug announcing itself.  Both cells are
+    # 161.7 m, which is 50 m along way A and then 111.8 m straight across the plaza, and
+    # is what /route reports in both directions.
+    Scenario: Foot - A pair with only one end on the plaza
+        Given the node map
+            """
+            e-a-------b-f
+              |       |
+              | m     |
+            h-d-------c-g
+            """
+
+        And the ways
+            | nodes | highway    | area | name  |
+            | abcda | pedestrian | yes  | Plaza |
+            | ea    | pedestrian |      | A     |
+            | bf    | pedestrian |      | B     |
+            | hd    | pedestrian |      | C     |
+            | cg    | pedestrian |      | D     |
+
+        When I route I should get
+            | from | to | distance | time   |
+            | m    | e  | 161.7m   | 115.8s |
+            | e    | m  | 161.7m   | 115.8s |
+
+        When I request a travel distance matrix I should get
+            |   | m     | e     |
+            | m | 0     | 161.7 |
+            | e | 161.7 | 0     |
+
+        When I request a travel time matrix I should get
+            |   | m     | e     |
+            | m | 0     | 115.8 |
+            | e | 115.8 | 0     |
