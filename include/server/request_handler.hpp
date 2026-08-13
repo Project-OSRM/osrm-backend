@@ -12,14 +12,19 @@ namespace osrm::server
 using Request = boost::beast::http::request<boost::beast::http::string_body>;
 using Response = boost::beast::http::response<boost::beast::http::vector_body<char>>;
 
+inline void SetCorsHeaders(Response &res)
+{
+    res.set("Access-Control-Allow-Origin", "*");
+    res.set("Access-Control-Allow-Methods", "GET, HEAD, POST, OPTIONS");
+    res.set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
+}
+
 inline void SetInternalServerError(Response &res)
 {
     static constexpr char body[] =
         "{\"code\": \"InternalError\",\"message\":\"Internal Server Error\"}";
     res.result(boost::beast::http::status::internal_server_error);
-    res.set("Access-Control-Allow-Origin", "*");
-    res.set("Access-Control-Allow-Methods", "GET");
-    res.set("Access-Control-Allow-Headers", "X-Requested-With, Content-Type");
+    SetCorsHeaders(res);
     res.set(boost::beast::http::field::content_type, "application/json; charset=UTF-8");
     res.body().assign(body, body + (sizeof(body) - 1)); // drop trailing '\0'
 }

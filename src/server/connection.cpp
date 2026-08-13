@@ -21,9 +21,10 @@ using tcp = boost::asio::ip::tcp;
 Connection::Connection(tcp::socket socket,
                        RequestHandler &handler,
                        unsigned max_header_size,
+                       std::uint64_t max_body_size,
                        short keepalive_timeout)
     : stream_(std::move(socket)), request_handler_(handler), max_header_size_(max_header_size),
-      keepalive_timeout_(keepalive_timeout)
+      max_body_size_(max_body_size), keepalive_timeout_(keepalive_timeout)
 { stream_.expires_after(std::chrono::seconds(keepalive_timeout_)); }
 
 void Connection::start() { handle_read(); }
@@ -41,6 +42,8 @@ void Connection::handle_read()
     // Note: The name is a bit of a misnomer, this includes the size of the GET request line.
     // Some people parse huge GET requests for table requests, we need to make this configurable.
     parser_->header_limit(max_header_size_);
+    // POST requests carry the query in the body; allow it to grow beyond Beast's 1 MB default.
+    parser_->body_limit(max_body_size_);
 
     stream_.expires_after(std::chrono::seconds(keepalive_timeout_));
 

@@ -2,6 +2,7 @@
 
 #include <boost/assert.hpp>
 
+#include "server/api/json_parameters_parser.hpp"
 #include "server/api/parameters_parser.hpp"
 #include "engine/api/table_parameters.hpp"
 
@@ -66,6 +67,27 @@ std::string getWrongOptionHelp(const engine::api::TableParameters &parameters)
 
     return help;
 }
+
+// Shared tail for the GET and POST paths: validate the parsed parameters and run the query.
+// `result` must hold a util::json::Object on entry (for error messages).
+engine::Status runTable(OSRM &routing_machine,
+                        const engine::api::TableParameters &parameters,
+                        osrm::engine::api::ResultT &result)
+{
+    if (!parameters.IsValid())
+    {
+        auto &json_result = std::get<util::json::Object>(result);
+        json_result.values["code"] = "InvalidOptions";
+        json_result.values["message"] = getWrongOptionHelp(parameters);
+        return engine::Status::Error;
+    }
+
+    if (parameters.format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
+    {
+        result = flatbuffers::FlatBufferBuilder();
+    }
+    return routing_machine.Table(parameters, result);
+}
 } // namespace
 
 engine::Status TableService::RunQuery(std::size_t prefix_length,
@@ -88,21 +110,24 @@ engine::Status TableService::RunQuery(std::size_t prefix_length,
     }
     BOOST_ASSERT(parameters);
 
-    if (!parameters->IsValid())
+    return runTable(BaseService::routing_machine, *parameters, result);
+}
+
+engine::Status TableService::RunJSONQuery(const std::string &json_body,
+                                          osrm::engine::api::ResultT &result)
+{
+    result = util::json::Object();
+    auto &json_result = std::get<util::json::Object>(result);
+
+    std::string error;
+    auto parameters = api::parseJSONParameters<engine::api::TableParameters>(json_body, error);
+    if (!parameters)
     {
-        json_result.values["code"] = "InvalidOptions";
-        json_result.values["message"] = getWrongOptionHelp(*parameters);
+        json_result.values["code"] = "InvalidQuery";
+        json_result.values["message"] = error;
         return engine::Status::Error;
     }
-    BOOST_ASSERT(parameters->IsValid());
 
-    if (parameters->format)
-    {
-        if (parameters->format == engine::api::BaseParameters::OutputFormatType::FLATBUFFERS)
-        {
-            result = flatbuffers::FlatBufferBuilder();
-        }
-    }
-    return BaseService::routing_machine.Table(*parameters, result);
+    return runTable(BaseService::routing_machine, *parameters, result);
 }
 } // namespace osrm::server::service

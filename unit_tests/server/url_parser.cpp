@@ -130,4 +130,49 @@ BOOST_AUTO_TEST_CASE(valid_urls)
     BOOST_CHECK_EQUAL(reference_9.prefix_length, result_9->prefix_length);
 }
 
+// returns distance to front
+std::size_t testInvalidURLPrefix(std::string url)
+{
+    auto iter = url.begin();
+    auto result = api::parseURLPrefix(iter, url.end());
+    BOOST_CHECK(!result);
+    return std::distance(url.begin(), iter);
+}
+
+BOOST_AUTO_TEST_CASE(valid_url_prefixes)
+{
+    // A POST URL carries no query, and the trailing slash is optional.
+    auto result_1 = api::parseURLPrefix("/route/v1/profile");
+    BOOST_REQUIRE(result_1);
+    BOOST_CHECK_EQUAL(result_1->service, "route");
+    BOOST_CHECK_EQUAL(result_1->version, 1u);
+    BOOST_CHECK_EQUAL(result_1->profile, "profile");
+    BOOST_CHECK(result_1->query.empty());
+    BOOST_CHECK_EQUAL(result_1->prefix_length, 18UL);
+
+    auto result_2 = api::parseURLPrefix("/route/v1/profile/");
+    BOOST_REQUIRE(result_2);
+    BOOST_CHECK_EQUAL(result_2->profile, "profile");
+    BOOST_CHECK(result_2->query.empty());
+    BOOST_CHECK_EQUAL(result_2->prefix_length, 18UL);
+
+    // multi-digit version and a profile with special characters
+    auto result_3 = api::parseURLPrefix("/table/v12/foo-bar_baz.profile");
+    BOOST_REQUIRE(result_3);
+    BOOST_CHECK_EQUAL(result_3->service, "table");
+    BOOST_CHECK_EQUAL(result_3->version, 12u);
+    BOOST_CHECK_EQUAL(result_3->prefix_length, 31UL);
+}
+
+BOOST_AUTO_TEST_CASE(invalid_url_prefixes)
+{
+    // An expectation failure reports the position the grammar failed at ...
+    BOOST_CHECK_EQUAL(testInvalidURLPrefix("/route/"), 7UL);
+    BOOST_CHECK_EQUAL(testInvalidURLPrefix("/route/bla"), 7UL);
+    BOOST_CHECK_EQUAL(testInvalidURLPrefix("/route/v1"), 9UL);
+    // ... while trailing input leaves the iterator where the prefix ended: a POST URL must
+    // not carry the query in the URL.
+    BOOST_CHECK_EQUAL(testInvalidURLPrefix("/route/v1/profile/0,1;2,3"), 18UL);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

@@ -92,6 +92,8 @@ struct MatchParameters : public RouteParameters
         return RouteParameters::IsValid() &&
                (timestamps.empty() || timestamps.size() == coordinates.size());
     }
+
+    bool operator==(const MatchParameters &) const = default;
 };
 } // namespace osrm::engine::api
 

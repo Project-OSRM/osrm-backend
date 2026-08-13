@@ -11,6 +11,7 @@
 #include <boost/beast/version.hpp>
 #include <boost/config.hpp>
 
+#include <cstdint>
 #include <memory>
 #include <optional>
 #include <vector>
@@ -27,6 +28,7 @@ class Connection : public std::enable_shared_from_this<Connection>
     explicit Connection(boost::asio::ip::tcp::socket socket,
                         RequestHandler &handler,
                         unsigned max_header_size,
+                        std::uint64_t max_body_size,
                         short keepalive_timeout);
 
     Connection(const Connection &) = delete;
@@ -60,6 +62,7 @@ class Connection : public std::enable_shared_from_this<Connection>
     RequestHandler &request_handler_;
 
     unsigned max_header_size_;
+    std::uint64_t max_body_size_;
     short keepalive_timeout_;
     short processed_requests_ = 0;
 };

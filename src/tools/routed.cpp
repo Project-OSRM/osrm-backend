@@ -111,7 +111,8 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              EngineConfig &config,
                                              int &requested_thread_num,
                                              short &keepalive_timeout,
-                                             unsigned &max_header_size)
+                                             unsigned &max_header_size,
+                                             std::uint64_t &max_body_size)
 {
     using boost::program_options::value;
     using std::filesystem::path;
@@ -195,7 +196,11 @@ inline unsigned generateServerProgramOptions(const int argc,
             "max-header-size",
             value<unsigned>(&max_header_size)->default_value(0),
             "Maximum size of the HTTP headers (including GET request line). Default: auto (based "
-            "on maximum coordinates).");
+            "on maximum coordinates).")(
+            "max-request-body-size",
+            value<std::uint64_t>(&max_body_size)->default_value(0),
+            "Maximum size in bytes of the HTTP request body (JSON POST requests). Default: auto "
+            "(based on maximum coordinates).");
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
@@ -257,6 +262,11 @@ inline unsigned generateServerProgramOptions(const int argc,
         max_header_size = server::deriveMaxHeaderSize(config);
     }
 
+    if (max_body_size == 0)
+    {
+        max_body_size = server::deriveMaxBodySize(config);
+    }
+
     if (!config.use_shared_memory && option_variables.contains("base"))
     {
         return INIT_OK_START_ENGINE;
@@ -293,6 +303,7 @@ try
     short keepalive_timeout = 5;
     // Size of 0 means: Determine automatically based on coordinate limits.
     unsigned max_header_size = 0;
+    std::uint64_t max_body_size = 0;
     const unsigned init_result = generateServerProgramOptions(argc,
                                                               argv,
                                                               base_path,
@@ -302,7 +313,8 @@ try
                                                               config,
                                                               requested_thread_num,
                                                               keepalive_timeout,
-                                                              max_header_size);
+                                                              max_header_size,
+                                                              max_body_size);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
     {
         return EXIT_SUCCESS;
@@ -344,6 +356,7 @@ try
     util::Log() << "IP port: " << ip_port;
     util::Log() << "Keepalive timeout: " << keepalive_timeout;
     util::Log() << "Maximum header size: " << max_header_size;
+    util::Log() << "Maximum request body size: " << max_body_size;
 
 #ifndef _WIN32
     int sig = 0;
@@ -356,8 +369,12 @@ try
 #endif
 
     auto service_handler = std::make_unique<server::ServiceHandler>(config);
-    auto routing_server = server::Server::CreateServer(
-        ip_address, ip_port, requested_thread_num, keepalive_timeout, max_header_size);
+    auto routing_server = server::Server::CreateServer(ip_address,
+                                                       ip_port,
+                                                       requested_thread_num,
+                                                       keepalive_timeout,
+                                                       max_header_size,
+                                                       max_body_size);
 
     routing_server->RegisterServiceHandler(std::move(service_handler));
 

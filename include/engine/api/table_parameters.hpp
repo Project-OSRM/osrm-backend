@@ -78,6 +78,8 @@ struct TableParameters : public BaseParameters
 
     double scale_factor = 1;
 
+    bool operator==(const TableParameters &) const = default;
+
     TableParameters() = default;
     template <typename... Args>
     TableParameters(std::vector<std::size_t> sources_,

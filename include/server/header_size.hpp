@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "engine/engine_config.hpp"
 
 #include <algorithm>
+#include <cstddef>
 
 namespace osrm::server
 {
@@ -52,6 +53,29 @@ inline unsigned deriveMaxHeaderSize(const engine::EngineConfig &config)
     // radius               | 3 (digits) + 1 semi-colon = 4 chars
     // Total of 47 chars and we add a generous 1024 chars for the request line
     return std::max(MIN_HEADER_SIZE, 48 * static_cast<unsigned>(max_coordinates) + 1024u);
+}
+
+// Estimates the maximum HTTP request body size (for POST requests with a JSON body).
+// A JSON coordinate such as `[13.388000,52.517000],` is ~24 bytes; per-coordinate options
+// (hints, bearings, ...) add more, so we budget generously per coordinate on top of a
+// fixed floor to accommodate the surrounding JSON structure and options.
+inline std::size_t deriveMaxBodySize(const engine::EngineConfig &config)
+{
+    constexpr std::size_t MIN_BODY_SIZE = 1024 * 1024; // 1 MiB
+
+    int max_coordinates = 0;
+    max_coordinates = std::max(max_coordinates, config.max_locations_trip);
+    max_coordinates = std::max(max_coordinates, config.max_locations_viaroute);
+    max_coordinates = std::max(max_coordinates, config.max_locations_distance_table);
+    max_coordinates = std::max(max_coordinates, config.max_locations_map_matching);
+
+    if (max_coordinates <= 0)
+    {
+        return MIN_BODY_SIZE;
+    }
+
+    // ~128 bytes per coordinate covers the coordinate plus its per-coordinate options.
+    return std::max(MIN_BODY_SIZE, 128 * static_cast<std::size_t>(max_coordinates) + 4096u);
 }
 
 } // namespace osrm::server

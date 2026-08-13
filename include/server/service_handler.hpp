@@ -25,7 +25,12 @@ class ServiceHandlerInterface
 {
   public:
     virtual ~ServiceHandlerInterface() {}
+    // GET: parameters come from the URL query string.
     virtual engine::Status RunQuery(api::ParsedURL parsed_url,
+                                    osrm::engine::api::ResultT &result) = 0;
+    // POST: parameters come from a JSON request body.
+    virtual engine::Status RunQuery(api::ParsedURL parsed_url,
+                                    const std::string &json_body,
                                     osrm::engine::api::ResultT &result) = 0;
 };
 
@@ -36,6 +41,8 @@ class ServiceHandler final : public ServiceHandlerInterface
     using ResultT = osrm::engine::api::ResultT;
 
     virtual engine::Status RunQuery(api::ParsedURL parsed_url, ResultT &result) override;
+    virtual engine::Status
+    RunQuery(api::ParsedURL parsed_url, const std::string &json_body, ResultT &result) override;
 
   private:
     std::unordered_map<std::string, std::unique_ptr<service::BaseService>> service_map;

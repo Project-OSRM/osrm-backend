@@ -104,6 +104,8 @@ struct BaseParameters
     {
     }
 
+    bool operator==(const BaseParameters &) const = default;
+
     bool IsValid() const
     {
         return (hints.empty() || hints.size() == coordinates.size()) &&

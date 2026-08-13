@@ -17,6 +17,7 @@
 #include <sys/types.h>
 #endif
 
+#include <cstdint>
 #include <future>
 #include <memory>
 #include <string>
@@ -34,23 +35,29 @@ class Server : public std::enable_shared_from_this<Server>
                                                 int ip_port,
                                                 unsigned requested_num_threads,
                                                 short keepalive_timeout,
-                                                unsigned max_header_size)
+                                                unsigned max_header_size,
+                                                std::uint64_t max_body_size)
     {
         util::Log() << "HTTP/1.1 server using Boost.Beast, compression by zlib " << zlibVersion();
         const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
         const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
-        return std::make_shared<Server>(
-            ip_address, ip_port, real_num_threads, keepalive_timeout, max_header_size);
+        return std::make_shared<Server>(ip_address,
+                                        ip_port,
+                                        real_num_threads,
+                                        keepalive_timeout,
+                                        max_header_size,
+                                        max_body_size);
     }
 
     explicit Server(const std::string &address,
                     const int port,
                     const unsigned thread_pool_size,
                     const short keepalive_timeout,
-                    const unsigned max_header_size)
+                    const unsigned max_header_size,
+                    const std::uint64_t max_body_size)
         : thread_pool_size(thread_pool_size), keepalive_timeout(keepalive_timeout),
-          max_header_size(max_header_size), io_context(thread_pool_size),
-          acceptor(boost::asio::make_strand(io_context))
+          max_header_size(max_header_size), max_body_size(max_body_size),
+          io_context(thread_pool_size), acceptor(boost::asio::make_strand(io_context))
     {
         boost::beast::error_code ec;
 
@@ -177,8 +184,11 @@ class Server : public std::enable_shared_from_this<Server>
         if (!ec)
         {
             // Create the connection and start it
-            auto connection = std::make_shared<Connection>(
-                std::move(socket), request_handler, max_header_size, keepalive_timeout);
+            auto connection = std::make_shared<Connection>(std::move(socket),
+                                                           request_handler,
+                                                           max_header_size,
+                                                           max_body_size,
+                                                           keepalive_timeout);
 
             connection->start();
         }
@@ -198,6 +208,7 @@ class Server : public std::enable_shared_from_this<Server>
     unsigned thread_pool_size;
     short keepalive_timeout;
     unsigned max_header_size;
+    std::uint64_t max_body_size;
     boost::asio::io_context io_context;
     boost::asio::ip::tcp::acceptor acceptor;
 };
