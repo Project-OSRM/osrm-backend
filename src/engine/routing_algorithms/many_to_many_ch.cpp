@@ -12,19 +12,27 @@ namespace osrm::engine::routing_algorithms
 namespace ch
 {
 
+// The test is on weight minus approach, not on weight. A source and a target on one
+// edge-based node with the target the earlier of the two need a loop to get from one to
+// the other, and the graph part of the weight going negative is what says so. The walk
+// into an open area is charged at both ends and is not travel, so it lifts the sum back
+// above zero and hides the case. The cell then comes out short by the stretch between
+// them. weight is the whole weight, walk included, which is what the cell reports;
+// approach is how much of it is the walk.
 inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
                           const NodeID node,
                           EdgeWeight &weight,
+                          const EdgeWeight approach,
                           EdgeDuration &duration,
                           EdgeDistance &distance)
 { // Special case for CH when contractor creates a loop edge node->node
-    BOOST_ASSERT(weight < EdgeWeight{0});
+    BOOST_ASSERT(weight - approach < EdgeWeight{0});
 
     const auto loop_weight = ch::getLoopMetric<EdgeWeight>(facade, node);
     if (std::get<0>(loop_weight) != INVALID_EDGE_WEIGHT)
     {
         const auto new_weight_with_loop = weight + std::get<0>(loop_weight);
-        if (new_weight_with_loop >= EdgeWeight{0})
+        if (new_weight_with_loop - approach >= EdgeWeight{0})
         {
             weight = new_weight_with_loop;
             auto result = ch::getLoopMetric<EdgeDuration>(facade, node);
@@ -70,13 +78,17 @@ void relaxOutgoingEdges(
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {
-                query_heap.Insert(to, to_weight, {heapNode.node, to_duration, to_distance});
+                query_heap.Insert(
+                    to,
+                    to_weight,
+                    {heapNode.node, to_duration, to_distance, heapNode.data.approach});
             }
             // Found a shorter Path -> Update weight and set new parent
             else if (std::tie(to_weight, to_duration) <
                      std::tie(toHeapNode->weight, toHeapNode->data.duration))
             {
-                toHeapNode->data = {heapNode.node, to_duration, to_distance};
+                toHeapNode->data = {
+                    heapNode.node, to_duration, to_distance, heapNode.data.approach};
                 toHeapNode->weight = to_weight;
                 query_heap.DecreaseKey(*toHeapNode);
             }
@@ -126,9 +138,12 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         auto new_duration = heapNode.data.duration + target_duration;
         auto new_distance = heapNode.data.distance + target_distance;
 
-        if (new_weight < EdgeWeight{0})
+        const auto approach = heapNode.data.approach + current_bucket.approach;
+
+        if (new_weight - approach < EdgeWeight{0})
         {
-            if (addLoopWeight(facade, heapNode.node, new_weight, new_duration, new_distance))
+            if (addLoopWeight(
+                    facade, heapNode.node, new_weight, approach, new_duration, new_distance))
             {
                 current_weight = std::min(current_weight, new_weight);
                 current_duration = std::min(current_duration, new_duration);
@@ -164,7 +179,8 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                                            column_index,
                                            heapNode.weight,
                                            heapNode.data.duration,
-                                           heapNode.data.distance);
+                                           heapNode.data.distance,
+                                           heapNode.data.approach);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(facade, heapNode, query_heap, candidates);
 }
