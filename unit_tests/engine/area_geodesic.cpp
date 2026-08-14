@@ -189,8 +189,31 @@ BOOST_AUTO_TEST_CASE(geodesic_threads_a_one_metre_gap)
     const auto found = geodesic_between(1, fresh_key(), rings, from, to);
 
     BOOST_REQUIRE(found);
-    // straight across would be 600 m; round the end of the wall is half as long again
-    BOOST_CHECK_GT(found->length, 1.5 * straight(from, to));
+
+    // It threads the gap by hugging the western face of the wall: it turns at that face's
+    // two corners and runs along it in between, which is the shortest way past and the
+    // reason the gap is passable at all.
+    //
+    // This assertion used to be that the path was at least half as long again as the 600 m
+    // straight line, which is what the solver produced when the visibility graph was
+    // missing every edge that runs along a wall. Without the wall's western face the path
+    // could not turn at its two corners in succession and had to leave by a longer route,
+    // 894 m against the 630 m it takes now. The number was measured from the behaviour
+    // rather than derived, so it pinned the defect in place. Naming the corners says what
+    // the path has to do instead of how far it may go.
+    const auto turns_at = [&](const util::Coordinate corner)
+    {
+        return std::any_of(found->bends.begin(),
+                           found->bends.end(),
+                           [&](const auto bend) { return straight(bend, corner) < 1.0; });
+    };
+    BOOST_CHECK(turns_at(at(1, 480)));
+    BOOST_CHECK(turns_at(at(1, 520)));
+
+    // Longer than the straight line, which runs into the wall, but only by the width of
+    // the detour to reach the gap and back.
+    BOOST_CHECK_GT(found->length, straight(from, to));
+    BOOST_CHECK_LT(found->length, 1.1 * straight(from, to));
     BOOST_REQUIRE_GE(found->bends.size(), 1u);
     // and it turns only at real corners -- of the wall, or of the plaza
     for (const auto bend : found->bends)
