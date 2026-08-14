@@ -3,7 +3,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <algorithm>
-#include <cmath>
 #include <span>
 #include <vector>
 
