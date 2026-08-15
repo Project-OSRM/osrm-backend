@@ -141,6 +141,38 @@ bool intersect(const TPoint *a,
     // the parameter of the intersection point: a + s * (b - a)
     double s = num / denom;
 
+    // Snap the parameters to the endpoints they belong to, before comparing them.
+    //
+    // This function already means to treat a touch as not a crossing: with less_equal it
+    // rejects the parameters at 0 and at 1.  It says so by dividing, and division does not
+    // land on 1.  Worse, whether it does depends on the compiler: for a segment ending
+    // exactly on the endpoint of another, taken from a plaza in the fuzz corpus, `t` comes
+    // out as exactly 1 when multiply-add is contracted into fma and as
+    // 0.99999999999985489385 when it is not, so the same predicate on the same points
+    // answers differently in two translation units of one build.
+    //
+    // A parameter is exactly 0 or 1 precisely when the corresponding endpoint lies on the
+    // other segment's line, and that is a cross product rather than a quotient: it is
+    // exactly zero whenever the two differences it multiplies are, which is the whole of
+    // this case, and no rounding can move it off zero.  So the degenerate cases are
+    // decided by the cross products and only the genuinely interior ones by the division.
+    //
+    // The cost of getting it wrong is a sight line deleted from a visibility graph.
+    // Walking along a wall is allowed, so a line that grazes an obstacle's corner and
+    // continues along its face is real, and dropping it sends the planner the long way
+    // round.
+    const auto side = [](const TPoint *p, const TPoint *q, const TPoint *r)
+    {
+        return (Coord)(boost::geometry::get<0>(*q) - boost::geometry::get<0>(*p)) *
+                   (Coord)(boost::geometry::get<1>(*r) - boost::geometry::get<1>(*p)) -
+               (Coord)(boost::geometry::get<1>(*q) - boost::geometry::get<1>(*p)) *
+                   (Coord)(boost::geometry::get<0>(*r) - boost::geometry::get<0>(*p));
+    };
+    if (side(c, d, a) == 0.0)
+        s = 0.0;
+    if (side(c, d, b) == 0.0)
+        s = 1.0;
+
     if (comp(s, 0.0))
         return false;
 
@@ -155,6 +187,11 @@ bool intersect(const TPoint *a,
 
     // the parameter of the intersection point: c + t * (d - c)
     double t = num / denom;
+
+    if (side(a, b, c) == 0.0)
+        t = 0.0;
+    if (side(a, b, d) == 0.0)
+        t = 1.0;
 
     if (comp(t, 0.0) || comp(1.0, t))
         return false;
