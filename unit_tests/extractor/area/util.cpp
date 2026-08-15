@@ -138,4 +138,99 @@ BOOST_AUTO_TEST_CASE(area_util_test_collinear_tolerance)
     }
 }
 
+// A segment that ends on, or passes through, the endpoint of another does not cross it.
+//
+// intersect() already means to say this: with std::less_equal it rejects the parameters at
+// 0 and 1, so a touch is not a crossing. It says it by dividing, and division does not land
+// on 1 exactly. The coordinates below are from a plaza in the fuzz corpus, at the scale the
+// engine actually stores, and there the touch computes to 0.9999999999998549, a hundredth
+// of a nanometre short of the endpoint and on the wrong side of the test.
+//
+// The cost of getting this wrong is a sight line deleted from a visibility graph. Walking
+// along a wall is allowed, so a line that grazes an obstacle's corner and continues along
+// its face is real, and dropping it makes the planner go the long way round. Two other
+// places in this codebase already work around the same weakness by hand.
+BOOST_AUTO_TEST_CASE(area_util_a_touch_at_an_endpoint_is_not_a_crossing)
+{
+    using point_t = boost::geometry::model::d2::point_xy<double>;
+
+    // Vertical, running up to the top right corner of a rectangular obstacle.
+    const point_t from(1.003304, 1.0009790000000001);
+    const point_t to(1.003304, 1.0028539999999999);
+    // The obstacle's bottom edge. Its right endpoint lies exactly on the segment above.
+    const point_t edge_left(1.002507, 1.002066);
+    const point_t edge_right(1.003304, 1.002066);
+
+    BOOST_CHECK(!intersect(&from, &to, &edge_left, &edge_right));
+    // And the same the other way round, since which segment is named first is arbitrary.
+    BOOST_CHECK(!intersect(&edge_left, &edge_right, &from, &to));
+
+    // The obstacle's right edge, which the segment runs along and ends on. Collinear, so
+    // it was already rejected as parallel, but it is the other half of the same picture.
+    const point_t edge_top(1.003304, 1.002854);
+    BOOST_CHECK(!intersect(&from, &to, &edge_right, &edge_top));
+
+    // Unit-scale versions of the same shapes, so the property is stated independently of
+    // the coordinates that happened to expose it.
+    const point_t a(0, 0), b(0, 10), c(-5, 5), e(0, 5);
+    BOOST_CHECK(!intersect(&a, &b, &c, &e)); // e is the endpoint, sitting on a..b
+    BOOST_CHECK(!intersect(&c, &e, &a, &b));
+
+    // A real crossing still crosses.
+    const point_t g(-5, 5), h(5, 5);
+    BOOST_CHECK(intersect(&a, &b, &g, &h));
+}
+
+// The same property over a grid of lon/lat sized coordinates, where the rounding bites.
+//
+// The single case above passes with or without the fix on some compilers, because whether
+// the quotient lands on 1 depends on multiply-add being contracted into fma. That makes it
+// a poor guard: it would go on passing while the predicate was wrong everywhere else. Here
+// a few hundred touches are built at the scale the engine stores, near 1.0 with differences
+// around 1e-6, which is where the cancellation is worst and where the answer stops being
+// reproducible unless the degenerate case is decided exactly.
+//
+// Every configuration is a T: a vertical segment, and a horizontal one whose endpoint lies
+// exactly on it. None of them is a crossing.
+BOOST_AUTO_TEST_CASE(area_util_touching_is_never_a_crossing_at_lonlat_scale)
+{
+    using point_t = boost::geometry::model::d2::point_xy<double>;
+
+    constexpr double ORIGIN = 1.0;
+    constexpr double GRID = 1e-6; // the coordinate cell the engine stores
+    std::size_t checked = 0, wrong = 0;
+
+    for (int column = 1; column <= 40; ++column)
+    {
+        for (int low = 1; low <= 12; ++low)
+        {
+            for (int high = low + 2; high <= low + 14; high += 3)
+            {
+                const auto x = ORIGIN + column * 797 * GRID;
+                const auto y0 = ORIGIN + low * 1087 * GRID;
+                const auto y1 = ORIGIN + high * 1087 * GRID;
+                // Strictly between the two, so the touch is in the vertical segment's
+                // interior and cannot be dismissed as a shared endpoint.
+                const auto y = ORIGIN + ((low + high) / 2) * 1087 * GRID;
+
+                const point_t top(x, y1), bottom(x, y0);
+                const point_t left(x - 613 * GRID, y), touch(x, y);
+
+                ++checked;
+                // The horizontal segment ends on the vertical one: a touch, not a crossing.
+                if (intersect(&bottom, &top, &left, &touch))
+                    ++wrong;
+                // And with the arguments the other way round.
+                if (intersect(&left, &touch, &bottom, &top))
+                    ++wrong;
+            }
+        }
+    }
+
+    BOOST_TEST_MESSAGE("touching configurations checked: " << checked
+                                                           << ", reported as crossings: " << wrong);
+    BOOST_CHECK_GT(checked, 500u);
+    BOOST_CHECK_EQUAL(wrong, 0u);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
