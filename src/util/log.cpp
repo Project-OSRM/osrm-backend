@@ -69,8 +69,27 @@ Log::Log(LogLevel level_, std::ostream &ostream) : level(level_), stream(ostream
 
 Log::Log(LogLevel level_) : level(level_), buffer{}, stream{buffer} { Init(); }
 
+namespace
+{
+//! Whether anything written to a Log at this level will be printed at all.
+bool wanted(const LogLevel level)
+{
+    const auto &policy = LogPolicy::GetInstance();
+    return !policy.IsMute() && level <= policy.GetLevel();
+}
+} // namespace
+
 void Log::Init()
 {
+    // Asked before the lock is taken.  A Log that will not be printed is built and
+    // destroyed on every call of every statement that is switched off, and taking a
+    // process-wide mutex twice to decide to print nothing serialises every thread in the
+    // program on the ones in a hot loop.  operator<< already skips the formatting.
+    if (!wanted(level))
+    {
+        return;
+    }
+
     std::lock_guard<std::mutex> lock(get_mutex());
     if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
     {
@@ -121,6 +140,12 @@ std::mutex &Log::get_mutex()
  */
 Log::~Log()
 {
+    // As in Init(): decided before the lock, because there is nothing to flush.
+    if (!wanted(level))
+    {
+        return;
+    }
+
     std::lock_guard<std::mutex> lock(get_mutex());
     if (!LogPolicy::GetInstance().IsMute() && level <= LogPolicy::GetInstance().GetLevel())
     {
