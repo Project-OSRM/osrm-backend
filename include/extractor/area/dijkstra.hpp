@@ -140,13 +140,33 @@ template <class vertex_t> class Dijkstra
         distances[s] = 0;
         pq.insert(s);
 
+        // Which vertices have been popped, and so have their final distance.
+        //
+        // Without this the tie-break below can rewrite the predecessor of a vertex that
+        // was settled long ago.  Two adjacent vertices the same distance from the source
+        // then end up pointing at each other, and the predecessor array, which every
+        // caller walks to recover a path, has a cycle in it.
+        std::vector<bool> settled(vertices.size(), false);
+
         while (!pq.empty())
         {
             size_t u = pq.pop();
+            if (settled[u])
+            {
+                continue;
+            }
+            settled[u] = true;
             double dist_u = distances[u];
             for (Edge e : adj[u])
             {
                 size_t v = e.other;
+                if (settled[v])
+                {
+                    // Its distance is final and so is the way it was reached.  This is
+                    // also what keeps the predecessors acyclic: a vertex only ever
+                    // points at one that settled before it did.
+                    continue;
+                }
                 const double candidate = dist_u + e.weight;
                 if (significantly_shorter(candidate, distances[v]))
                 {
@@ -157,6 +177,8 @@ template <class vertex_t> class Dijkstra
                 else if (approximately_equal(candidate, distances[v]) &&
                          vertices[u] < vertices[predecessors[v]])
                 {
+                    // Equally short, so the choice is free and is made the same way on
+                    // every platform and in every run: the smaller vertex wins.
                     predecessors[v] = u;
                     pq.insert_or_decrease(v);
                 }
