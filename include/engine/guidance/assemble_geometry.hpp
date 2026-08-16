@@ -67,7 +67,7 @@ inline LegGeometry assembleGeometry(const datafacade::BaseDataFacade &facade,
     auto prev_coordinate = geometry.locations.front();
     for (const auto &path_point : leg_data)
     {
-        auto coordinate = facade.GetCoordinateOfNode(path_point.turn_via_node);
+        auto coordinate = coordinateOf(facade, path_point);
         current_distance =
             util::coordinate_calculation::greatCircleDistance(prev_coordinate, coordinate);
         cumulative_distance += current_distance;

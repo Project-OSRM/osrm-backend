@@ -43,7 +43,33 @@ struct PathData
     DatasourceID datasource_id;
     // If segment precedes a turn, ID of the turn itself
     std::optional<EdgeID> turn_edge;
+    // Where this point actually is, when that is not where turn_via_node is.
+    //
+    // Every point of a route normally lands on a node of the graph, and assembly finds
+    // its position by looking the node up.  A point that is computed rather than
+    // traversed has nowhere to be looked up, and this is where it says where it is.
+    // Invalid by default, which means the node lookup, so a producer that does not set
+    // it is unaffected.
+    //
+    // The node id is left alone.  A producer that sets this decides separately which
+    // node the point is attributed to, because that is what annotations report and it is
+    // not a question this field can answer.
+    util::Coordinate coordinate{};
 };
+
+/**
+ * @brief Where a point of a route is.
+ *
+ * The one place that resolves PathData::coordinate against the node lookup.  Distance,
+ * geometry and the steps have to agree about where a point is, and they agree by all
+ * asking here.
+ */
+template <typename FacadeT>
+inline util::Coordinate coordinateOf(const FacadeT &facade, const PathData &point)
+{
+    return point.coordinate.IsValid() ? point.coordinate
+                                      : facade.GetCoordinateOfNode(point.turn_via_node);
+}
 
 struct InternalRouteResult
 {
