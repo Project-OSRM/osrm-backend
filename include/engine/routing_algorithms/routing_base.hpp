@@ -357,7 +357,7 @@ double getPathDistance(const DataFacade<Algorithm> &facade,
 
     for (const auto &p : unpacked_path)
     {
-        const auto current_coordinate = facade.GetCoordinateOfNode(p.turn_via_node);
+        const auto current_coordinate = coordinateOf(facade, p);
 
         distance +=
             util::coordinate_calculation::greatCircleDistance(prev_coordinate, current_coordinate);

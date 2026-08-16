@@ -193,7 +193,7 @@ inline std::vector<RouteStep> assembleSteps(const datafacade::BaseDataFacade &fa
 
                 intersection.in = bearing_class.findMatchingBearing(bearings.first);
                 intersection.out = bearing_class.findMatchingBearing(bearings.second);
-                intersection.location = facade.GetCoordinateOfNode(path_point.turn_via_node);
+                intersection.location = coordinateOf(facade, path_point);
                 intersection.bearings.clear();
                 intersection.bearings.reserve(bearing_data.size());
                 intersection.lanes = lane_data.first;

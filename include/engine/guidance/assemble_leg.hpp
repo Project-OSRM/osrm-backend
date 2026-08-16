@@ -172,7 +172,7 @@ inline RouteLeg assembleLeg(const datafacade::BaseDataFacade &facade,
     auto prev_coordinate = source_node.location;
     for (const auto &path_point : route_data)
     {
-        auto coordinate = facade.GetCoordinateOfNode(path_point.turn_via_node);
+        auto coordinate = coordinateOf(facade, path_point);
         distance += util::coordinate_calculation::greatCircleDistance(prev_coordinate, coordinate);
         prev_coordinate = coordinate;
     }
