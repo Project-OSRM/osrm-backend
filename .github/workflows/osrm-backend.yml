@@ -469,7 +469,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: gcc-14
             CXXCOMPILER: g++-14
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
           - name: gcc-15-release
             continue-on-error: false
@@ -478,7 +477,6 @@ jobs:
             BUILD_TYPE: Release
             CCOMPILER: gcc-15
             CXXCOMPILER: g++-15
-            CXXFLAGS: '-Wno-array-bounds -Wno-uninitialized'
 
           - name: linux-release-bindings
             build_bindings: true

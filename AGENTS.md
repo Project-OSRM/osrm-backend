@@ -9,7 +9,7 @@ OSRM supports two routing algorithms: Contraction Hierarchies (CH) and Multi-Lev
 
 We target C++20 but need to deal with older compilers that only have partial support.
 
-Use `./scripts/format.sh` to format the code. Ensure clang-format-15 is available on the system.
+Use `./scripts/format.sh` to format the code. Ensure clang-format-22 is available on the system.
 
 ## Coding Standards
 
@@ -25,7 +25,7 @@ Specific practices to follow (see [wiki](https://github.com/Project-OSRM/osrm-ba
 - **Comments**: Minimal use of comments on internal interfaces. Use C++ style `//` comments, not C style `/* */`. Use `#if 0` / `#endif` to comment out blocks
 - **Integer types**: Use only `int`/`unsigned` for 32-bit, or precise-width types like `int16_t`, `int64_t`
 - **No RTTI/exceptions**: Avoid `dynamic_cast<>` and exceptions (except for IO operations)
-- **Compiler warnings**: Treat all warnings as errors - fix them, don't ignore them
+- **Compiler warnings**: Treat all warnings as errors - fix them, don't ignore them. The one exception is GCC's optimizer-invented diagnostics, which report on code paths inlining created rather than on anything reachable. Those are suppressed by family in `cmake/warnings.cmake` under the `GNU` guard, because the call site they land on moves with every GCC release and the `-flto` ones come out of `lto1` with no source file to attach a pragma to. Add to that list only after confirming the diagnostic is unreachable, and never widen it to `-Wuninitialized`
 - **Assert liberally**: Use `BOOST_ASSERT` to check preconditions and assumptions
 - **Indentation**: 4 spaces (enforced by clang-format)
 
