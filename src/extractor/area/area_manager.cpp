@@ -2,7 +2,17 @@
 
 #include "util/log.hpp"
 
+// GCC cannot see that libosmium hands set_user() the NUL-terminated string of
+// the source object, so the strlen it inlines here looks like an overread.
+// Clang has no such warning group and would reject the name.
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wstringop-overread"
+#endif
 #include <osmium/area/assembler.hpp>
+#if defined(__GNUC__) && !defined(__clang__)
+#pragma GCC diagnostic pop
+#endif
 
 namespace osrm::extractor::area
 {
