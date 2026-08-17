@@ -15,6 +15,7 @@
 #include "engine/datafacade/algorithm_datafacade.hpp"
 #include "engine/datafacade/datafacade_base.hpp"
 
+#include "util/function_ref.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/typedefs.hpp"
@@ -189,10 +190,9 @@ class MockAlgorithmDataFacade<engine::datafacade::CH>
     EdgeID FindEdgeInEitherDirection(const NodeID /* from */, const NodeID /* to */) const override
     { return SPECIAL_EDGEID; }
 
-    EdgeID
-    FindSmallestEdge(const NodeID /* from */,
-                     const NodeID /* to */,
-                     const std::function<bool(const EdgeData &)> & /* filter */) const override
+    EdgeID FindSmallestEdge(const NodeID /* from */,
+                            const NodeID /* to */,
+                            util::FunctionRef<bool(const EdgeData &)> /* filter */) const override
     { return SPECIAL_EDGEID; }
 
     EdgeID FindEdgeIndicateIfReverse(const NodeID /* from */,
