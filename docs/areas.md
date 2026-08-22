@@ -24,6 +24,29 @@ This feature is still EXPERIMENTAL.
 
 ## Configuration
 
+### Using the foot profile
+
+The bundled foot profile already carries everything below, switched off. Open
+[profiles/foot.lua](../profiles/foot.lua) and set the flag near the top of the file:
+
+```lua
+local enable_area_meshing = true
+```
+
+Or leave that file alone and extract with
+[profiles/foot_area.lua](../profiles/foot_area.lua), which is the same profile with the
+flag turned on:
+
+```
+osrm-extract -p profiles/foot_area.lua your-data.osm.pbf
+```
+
+When meshing is off the extractor writes no `.osrm.openareas` files and the profile
+behaves exactly as it did before the feature existed. The rest of this section is for
+adding meshing to a profile of your own.
+
+### Adding it to your own profile
+
 To opt-in to this feature, you must declare an algorithm to be used for area meshing.
 Find your LUA profile's @ref setup function and insert this line:
 
@@ -153,7 +176,8 @@ differential test that was used to validate the sweep (comparing it against a br
 reference over random polygons with holes) live in the repository.
 
 @sa AreaManager
-<br> A complete example profile is found in the file: [profiles/foot_area.lua](../profiles/foot_area.lua).
+<br> A complete example profile is found in the file: [profiles/foot.lua](../profiles/foot.lua),
+where every step above is guarded by the `enable_area_meshing` flag.
 <br> https://wiki.openstreetmap.org/wiki/Relation:multipolygon
 <br> https://wiki.openstreetmap.org/wiki/Key:area
 <br> https://wiki.openstreetmap.org/wiki/Tag:highway%3Dpedestrian#Squares_and_plazas
