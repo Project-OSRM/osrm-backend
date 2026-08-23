@@ -30,6 +30,11 @@ inline Location get_dummy_location()
     return {7.437069_lon, 43.749249_lat};
 }
 
+inline Location get_unmatched_location()
+{
+    return {Longitude{0.0}, Latitude{0.0}};
+}
+
 inline Locations get_locations_in_small_component()
 {
     using osrm::operator""_lat;

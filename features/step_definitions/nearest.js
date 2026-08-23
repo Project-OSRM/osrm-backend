@@ -3,7 +3,8 @@ import util from 'util';
 
 import flatbuffers from 'flatbuffers';
 import { osrm } from '../support/fbresult_generated.js';
-const FBResult = osrm.engine.api.fbresult.FBResult;
+const FBResult = osrm.engine.api.fbresult.FBResult;   
+import assert from 'node:assert';
 import { When } from '@cucumber/cucumber';
 
 When(/^I request nearest I should get$/, async function (table) {
@@ -140,4 +141,124 @@ When(/^I request nearest with flatbuffers I should get$/, async function (table)
   }.bind(this);
 
   await this.processRowsAndDiff(table, testRow);
+});
+
+When(/^I request nearest with flatbuffers for multiple coordinates I should get$/, async function (table) {
+  await this.reprocessAndLoadData();
+  const rows = table.hashes();
+
+  const nodes = rows.map((row) => {
+    const node = this.findNodeByName(row.in);
+    if (!node) throw new Error(util.format('*** unknown in-node "%s"', row.in));
+    return node;
+  });
+
+  this.queryParams.output = 'flatbuffers';
+
+  const { res: response, body } = await new Promise((resolve, reject) => {
+    this.requestNearestBatch(nodes, this.queryParams, (err, response, body) => {
+      if (err) return reject(err);
+      resolve({ res: response, body });
+    });
+  });
+
+  assert.strictEqual(response.statusCode, 200, `expected 200, got ${response.statusCode}`);
+  assert.ok(body.length, 'expected a non-empty flatbuffers body');
+
+  const bytes = new Uint8Array(body.length);
+  for (let indx = 0; indx < body.length; ++indx) {
+    bytes[indx] = body.charCodeAt(indx);
+  }
+  const buf = new flatbuffers.ByteBuffer(bytes);
+  const fb = FBResult.getRootAsFBResult(buf);
+
+  assert.ok(!fb.error(), 'expected a successful (non-error) response');
+
+  const groupsLength = fb.waypointsGroupedLength();
+  assert.strictEqual(
+    groupsLength,
+    rows.length,
+    `expected ${rows.length} waypoint groups, got ${groupsLength}`,
+  );
+
+  rows.forEach((row, i) => {
+    const group = fb.waypointsGrouped(i);
+
+    if (row.out === 'NoSegment') {
+      assert.strictEqual(group.matched(), false, `coordinate ${i} (${row.in}): expected unmatched`);
+      assert.ok(group.error(), `coordinate ${i} (${row.in}): expected an error object`);
+      assert.strictEqual(group.error().code(), 'NoSegment');
+      return;
+    }
+
+    assert.strictEqual(group.matched(), true, `coordinate ${i} (${row.in}): expected matched`);
+    assert.ok(group.waypointsLength() > 0, `coordinate ${i} (${row.in}): expected at least one match`);
+
+    const outNode = this.findNodeByName(row.out);
+    if (!outNode) throw new Error(util.format('*** unknown out-node "%s"', row.out));
+
+    const location = group.waypoints(0).location();
+    const coord = [location.longitude(), location.latitude()];
+    assert.ok(
+      this.FuzzyMatch.matchLocation(coord, outNode),
+      util.format('coordinate %d (%s): expected near %s, got [%d,%d]', i, row.in, row.out, coord[0], coord[1]),
+    );
+  });
+});
+When(/^I request nearest for multiple coordinates I should get$/, async function (table) {
+  await this.reprocessAndLoadData();
+  const rows = table.hashes();
+
+  const nodes = rows.map((row) => {
+    const node = this.findNodeByName(row.in);
+    if (!node) throw new Error(util.format('*** unknown in-node "%s"', row.in));
+    return node;
+  });
+
+  const params = Object.assign({}, this.queryParams);
+  if (rows.some((row) => row.radius)) {
+    params.radiuses = rows.map((row) => (row.radius ? row.radius : '')).join(';');
+  }
+
+  const { res: response, body } = await new Promise((resolve, reject) => {
+    this.requestNearestBatch(nodes, params, (err, response, body) => {
+      if (err) return reject(err);
+      resolve({ res: response, body });
+    });
+  });
+
+  assert.strictEqual(response.statusCode, 200, `expected 200, got ${response.statusCode}: ${body}`);
+  const json = JSON.parse(body);
+  assert.strictEqual(json.code, 'Ok', `expected code Ok, got ${json.code}: ${body}`);
+  assert.strictEqual(
+    json.waypoints.length,
+    rows.length,
+    `expected ${rows.length} waypoint groups, got ${json.waypoints.length}`,
+  );
+
+  rows.forEach((row, i) => {
+    const group = json.waypoints[i];
+
+    if (row.out === 'NoSegment') {
+      assert.ok(
+        !Array.isArray(group) && group.code === 'NoSegment',
+        `coordinate ${i} (${row.in}): expected NoSegment, got ${JSON.stringify(group)}`,
+      );
+      return;
+    }
+
+    assert.ok(
+      Array.isArray(group) && group.length,
+      `coordinate ${i} (${row.in}): expected matches, got ${JSON.stringify(group)}`,
+    );
+
+    const outNode = this.findNodeByName(row.out);
+    if (!outNode) throw new Error(util.format('*** unknown out-node "%s"', row.out));
+
+    const coord = group[0].location;
+    assert.ok(
+      this.FuzzyMatch.matchLocation(coord, outNode),
+      util.format('coordinate %d (%s): expected near %s, got [%d,%d]', i, row.in, row.out, coord[0], coord[1]),
+    );
+  });
 });

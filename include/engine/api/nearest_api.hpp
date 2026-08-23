@@ -26,8 +26,7 @@ class NearestAPI final : public BaseAPI
     void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,
                       osrm::engine::api::ResultT &response) const
     {
-        BOOST_ASSERT(phantom_nodes.size() == 1);
-        BOOST_ASSERT(parameters.coordinates.size() == 1);
+        BOOST_ASSERT(phantom_nodes.size() == parameters.coordinates.size());
 
         if (std::holds_alternative<flatbuffers::FlatBufferBuilder>(response))
         {
@@ -51,14 +50,17 @@ class NearestAPI final : public BaseAPI
             data_version_string = fb_result.CreateString(data_timestamp);
         }
 
-        flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
-            waypoints_vector;
-        if (!parameters.skip_waypoints)
+        // Builds the flatbuffers Waypoint vector for a single coordinate's matches. Shared by
+        // both the N == 1 flat-field path and the N >= 2 grouped path below.
+        auto make_waypoints_vector =
+            [this,
+             &fb_result](const std::vector<PhantomNodeWithDistance> &nodes_for_coordinate)
+            -> flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
         {
             std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
-            waypoints.resize(phantom_nodes.front().size());
-            std::transform(phantom_nodes.front().begin(),
-                           phantom_nodes.front().end(),
+            waypoints.resize(nodes_for_coordinate.size());
+            std::transform(nodes_for_coordinate.begin(),
+                           nodes_for_coordinate.end(),
                            waypoints.begin(),
                            [this, &fb_result](const PhantomNodeWithDistance &phantom_with_distance)
                            {
@@ -71,28 +73,89 @@ class NearestAPI final : public BaseAPI
                                waypoint->add_nodes(&nodes);
                                return waypoint->Finish();
                            });
+            return fb_result.CreateVector(waypoints);
+        };
 
-            waypoints_vector = fb_result.CreateVector(waypoints);
+        flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
+            waypoints_vector;
+        flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::WaypointGroup>>>
+            waypoints_grouped_vector;
+
+        if (!parameters.skip_waypoints)
+        {
+            if (phantom_nodes.size() == 1)
+            {
+                // Single-coordinate case: unchanged flat field. HandleRequest already
+                // returns NoSegment before reaching here if this coordinate is unmatched,
+                // so phantom_nodes.front() is guaranteed non-empty at this point.
+                waypoints_vector = make_waypoints_vector(phantom_nodes.front());
+            }
+            else
+            {
+                // Multi-coordinate case: one WaypointGroup per input coordinate, in order.
+                // An unmatched coordinate carries `matched = false` and an Error instead of
+                // failing the whole request.
+                std::vector<flatbuffers::Offset<fbresult::WaypointGroup>> groups;
+                groups.resize(phantom_nodes.size());
+                std::transform(
+                    phantom_nodes.begin(),
+                    phantom_nodes.end(),
+                    groups.begin(),
+                    [this, &fb_result, &make_waypoints_vector](
+                        const std::vector<PhantomNodeWithDistance> &nodes_for_coordinate)
+                    {
+                        fbresult::WaypointGroupBuilder group_builder(fb_result);
+                        if (nodes_for_coordinate.empty())
+                        {
+                            auto message = fb_result.CreateString(
+                                "Could not find a matching segment for coordinate");
+                            auto code = fb_result.CreateString("NoSegment");
+                            fbresult::ErrorBuilder error_builder(fb_result);
+                            error_builder.add_code(code);
+                            error_builder.add_message(message);
+                            auto error = error_builder.Finish();
+
+                            group_builder.add_matched(false);
+                            group_builder.add_error(error);
+                        }
+                        else
+                        {
+                            auto waypoints = make_waypoints_vector(nodes_for_coordinate);
+                            group_builder.add_matched(true);
+                            group_builder.add_waypoints(waypoints);
+                        }
+                        return group_builder.Finish();
+                    });
+                waypoints_grouped_vector = fb_result.CreateVector(groups);
+            }
         }
 
         fbresult::FBResultBuilder response(fb_result);
 
-        response.add_waypoints(waypoints_vector);
+        if (phantom_nodes.size() == 1)
+        {
+            response.add_waypoints(waypoints_vector);
+        }
+        else
+        {
+            response.add_waypoints_grouped(waypoints_grouped_vector);
+        }
         if (data_version_string)
         {
             response.add_data_version(*data_version_string);
         }
         fb_result.Finish(response.Finish());
     }
+
     void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,
                       util::json::Object &response) const
     {
-        if (!parameters.skip_waypoints)
+        auto make_waypoint_array = [this](const std::vector<PhantomNodeWithDistance> &nodes_for_coordinate)
         {
             util::json::Array waypoints;
-            waypoints.values.resize(phantom_nodes.front().size());
-            std::transform(phantom_nodes.front().begin(),
-                           phantom_nodes.front().end(),
+            waypoints.values.resize(nodes_for_coordinate.size());
+            std::transform(nodes_for_coordinate.begin(),
+                           nodes_for_coordinate.end(),
                            waypoints.values.begin(),
                            [this](const PhantomNodeWithDistance &phantom_with_distance)
                            {
@@ -109,7 +172,40 @@ class NearestAPI final : public BaseAPI
                                waypoint.values.emplace("nodes", std::move(nodes));
                                return waypoint;
                            });
-            response.values.emplace("waypoints", std::move(waypoints));
+            return waypoints;
+        };
+
+        if (!parameters.skip_waypoints)
+        {
+            if (phantom_nodes.size() == 1)
+            {
+                // Single-coordinate case: unchanged flat field. HandleRequest already
+                // returns NoSegment before reaching here if this coordinate is unmatched,
+                // so phantom_nodes.front() is guaranteed non-empty at this point.
+                response.values.emplace("waypoints", make_waypoint_array(phantom_nodes.front()));
+            }
+            else
+            {
+                // Multi-coordinate case: independent per-coordinate results
+                util::json::Array grouped;
+                grouped.values.resize(phantom_nodes.size());
+                for (std::size_t i = 0; i < phantom_nodes.size(); ++i)
+                {
+                    if (phantom_nodes[i].empty())
+                    {
+                        util::json::Object unmatched;
+                        unmatched.values.emplace("code", "NoSegment");
+                        unmatched.values.emplace(
+                            "message", "Could not find a matching segment for coordinate");
+                        grouped.values[i] = std::move(unmatched);
+                    }
+                    else
+                    {
+                        grouped.values[i] = make_waypoint_array(phantom_nodes[i]);
+                    }
+                }
+                response.values.emplace("waypoints", std::move(grouped));
+            }
         }
 
         response.values.emplace("code", "Ok");
@@ -173,4 +269,4 @@ class NearestAPI final : public BaseAPI
 
 } // namespace osrm::engine::api
 
-#endif
+#endif // OSRM_ENGINE_API_NEAREST_API_HPP

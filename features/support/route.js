@@ -7,7 +7,7 @@ import { sendRequest, sendPostRequest } from './http.js';
 
 // Services that support the JSON POST API. Requests to these are additionally issued as a
 // POST and checked for equivalence with the GET response (see requestPath).
-const POST_SUPPORTED_SERVICES = new Set(['route', 'table', 'match']);
+const POST_SUPPORTED_SERVICES = new Set(['route', 'table', 'match', 'nearest']);
 
 export default class Route {
   constructor(world) {
@@ -262,14 +262,17 @@ export default class Route {
   }
 
   requestNearest(node, userParams, callback) {
-    const defaults = {
-        output: 'json',
-      },
+    return this.requestNearestBatch([node], userParams, callback);
+  }
+
+  requestNearestBatch(nodes, userParams, callback) {
+    const defaults = { output: 'json' },
       params = this.overwriteParams(defaults, userParams);
-    params.coordinates = [[node.lon, node.lat].join(',')];
+
+    params.coordinates = nodes.map((n) => [n.lon, n.lat].join(','));
 
     return this.requestPath('nearest', params, callback);
-  }
+  } 
 
   requestTable(waypoints, userParams, callback) {
     const defaults = {

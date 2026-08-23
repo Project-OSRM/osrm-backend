@@ -13,7 +13,7 @@ namespace osrm::engine::plugins
 class NearestPlugin final : public BasePlugin
 {
   public:
-    explicit NearestPlugin(const int max_results, const std::optional<double> default_radius);
+    explicit NearestPlugin(const int max_results, const int max_locations_nearest, const std::optional<double> default_radius);
 
     Status HandleRequest(const RoutingAlgorithmsInterface &algorithms,
                          const api::NearestParameters &params,
@@ -21,6 +21,7 @@ class NearestPlugin final : public BasePlugin
 
   private:
     const int max_results;
+    const int max_locations_nearest;
 };
 } // namespace osrm::engine::plugins
 
