@@ -6,6 +6,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <span>
 #include <vector>
 
 namespace osrm::engine::area
@@ -163,6 +164,7 @@ std::optional<PhantomNodeCandidates> SnapInsideOpenArea(const datafacade::BaseDa
         }
 
         PhantomNodeCandidates candidates;
+
         std::vector<NodeID> claimed_nodes;
         const auto claim = [&claimed_nodes](const NodeID node)
         {
@@ -202,24 +204,38 @@ std::optional<PhantomNodeCandidates> SnapInsideOpenArea(const datafacade::BaseDa
                 // source that is further along the same node, and the journey between
                 // them comes out short by the stretch in between.
                 const bool arriving = role == ApproachRole::Arrival;
-                const auto forward_usable =
-                    arriving ? phantom.IsValidForwardTarget() : phantom.IsValidForwardSource();
-                const auto reverse_usable =
-                    arriving ? phantom.IsValidReverseTarget() : phantom.IsValidReverseSource();
-                const auto forward_at_the_vertex =
-                    (arriving ? phantom.reverse_weight : phantom.forward_weight) == EdgeWeight{0};
-                const auto reverse_at_the_vertex =
-                    (arriving ? phantom.forward_weight : phantom.reverse_weight) == EdgeWeight{0};
+                {
+                    const auto forward_usable =
+                        arriving ? phantom.IsValidForwardTarget() : phantom.IsValidForwardSource();
+                    const auto reverse_usable =
+                        arriving ? phantom.IsValidReverseTarget() : phantom.IsValidReverseSource();
+                    const auto forward_at_the_vertex =
+                        (arriving ? phantom.reverse_weight : phantom.forward_weight) ==
+                        EdgeWeight{0};
+                    const auto reverse_at_the_vertex =
+                        (arriving ? phantom.forward_weight : phantom.reverse_weight) ==
+                        EdgeWeight{0};
 
-                if (forward_usable && forward_at_the_vertex && claim(phantom.forward_segment_id.id))
-                {
-                    candidates.push_back(at_vertex(
-                        phantom, true, coordinate, vertex, area.walking_speed, weight_multiplier));
-                }
-                if (reverse_usable && reverse_at_the_vertex && claim(phantom.reverse_segment_id.id))
-                {
-                    candidates.push_back(at_vertex(
-                        phantom, false, coordinate, vertex, area.walking_speed, weight_multiplier));
+                    if (forward_usable && forward_at_the_vertex &&
+                        claim(phantom.forward_segment_id.id))
+                    {
+                        candidates.push_back(at_vertex(phantom,
+                                                       true,
+                                                       coordinate,
+                                                       vertex,
+                                                       area.walking_speed,
+                                                       weight_multiplier));
+                    }
+                    if (reverse_usable && reverse_at_the_vertex &&
+                        claim(phantom.reverse_segment_id.id))
+                    {
+                        candidates.push_back(at_vertex(phantom,
+                                                       false,
+                                                       coordinate,
+                                                       vertex,
+                                                       area.walking_speed,
+                                                       weight_multiplier));
+                    }
                 }
             }
         }

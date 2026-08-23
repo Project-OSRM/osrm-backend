@@ -504,11 +504,22 @@ std::set<OsmiumSegment> AreaMesher::run_dijkstra(const OsmiumPolygon &poly,
         for (index_t target = 0; target < d.num_vertices(); ++target)
         {
             index_t v = target;
-            while (v != u && v != predecessors.at(v))
+            // A tree of n vertices has no path longer than n edges, so a walk that has
+            // not reached the root by then is going round a cycle.  Dijkstra does not
+            // produce one, but this is a loop over every vertex of every area in the
+            // input, and the cost of it being wrong is that extraction never finishes:
+            // no output, no error, nothing to look at.  So it is bounded here and says
+            // so, rather than being trusted.
+            for (index_t step = 0; v != u && v != predecessors.at(v); ++step)
             {
+                if (step > d.num_vertices())
+                {
+                    util::Log(logWARNING)
+                        << "Shortest-path tree has a cycle at node " << d.get_vertex(v).ref()
+                        << ", giving up on this entry point.";
+                    break;
+                }
                 auto s = OsmiumSegment(d.get_vertex(v), d.get_vertex(predecessors.at(v)));
-                util::Log(logDEBUG)
-                    << "    Collecting: " << s.first.ref() << " -> " << s.second.ref();
                 result.emplace(s);
                 v = predecessors.at(v);
             }

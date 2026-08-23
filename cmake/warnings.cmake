@@ -116,7 +116,14 @@ no_warning(restrict)
 no_warning(free-nonheap-object)
 no_warning(unneeded-internal-declaration)
 if(CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  # GCC diagnoses code paths its own optimizer invented, most of them inside
+  # std::variant's visit-based move touching inactive alternatives. Which call
+  # site trips over first moves with every GCC release and with -flto, and the
+  # -flto ones are reported from lto1 with no source file to attach a pragma
+  # to, so this cannot be scoped down any further. -Wuninitialized stays on,
+  # so the definite case is still an error. See #7690.
   no_warning(stringop-overflow)
+  no_warning(maybe-uninitialized)
 endif()
 
 # MSVC-specific warning configuration

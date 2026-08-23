@@ -10,6 +10,7 @@
 #include "partitioner/multi_level_partition.hpp"
 
 #include "util/filtered_graph.hpp"
+#include "util/function_ref.hpp"
 #include "util/integer_range.hpp"
 
 namespace osrm::engine::datafacade
@@ -55,7 +56,7 @@ template <> class AlgorithmDataFacade<CH>
 
     virtual EdgeID FindSmallestEdge(const NodeID edge_based_node_from,
                                     const NodeID edge_based_node_to,
-                                    const std::function<bool(const EdgeData &)> &filter) const = 0;
+                                    util::FunctionRef<bool(const EdgeData &)> filter) const = 0;
 };
 
 template <> class AlgorithmDataFacade<MLD>

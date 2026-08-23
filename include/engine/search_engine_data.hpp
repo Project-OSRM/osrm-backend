@@ -33,8 +33,21 @@ struct ManyToManyHeapData : HeapData
 {
     EdgeDuration duration;
     EdgeDistance distance;
-    ManyToManyHeapData(NodeID p, EdgeDuration duration, EdgeDistance distance)
-        : HeapData(p), duration(duration), distance(distance)
+    // How much of the weight is the walk into an open area rather than travel through the
+    // graph (PhantomNode::approach_weight). Set by the seed and carried unchanged as the
+    // search relaxes, because a walk to where the graph starts is not made up by
+    // travelling along it.
+    //
+    // It has to be separable. A source and a target on one edge-based node with the target
+    // the earlier of the two need a loop, and the graph part of the weight going negative
+    // is what says so. A walk charged at both ends lifts the sum back above zero and hides
+    // it, and the cell then comes out short by the stretch in between.
+    EdgeWeight approach;
+    ManyToManyHeapData(NodeID p,
+                       EdgeDuration duration,
+                       EdgeDistance distance,
+                       EdgeWeight approach = EdgeWeight{0})
+        : HeapData(p), duration(duration), distance(distance), approach(approach)
     {
     }
 };
@@ -100,15 +113,22 @@ struct ManyToManyMultiLayerDijkstraHeapData : MultiLayerDijkstraHeapData
 {
     EdgeDuration duration;
     EdgeDistance distance;
-    ManyToManyMultiLayerDijkstraHeapData(NodeID p, EdgeDuration duration, EdgeDistance distance)
-        : MultiLayerDijkstraHeapData(p), duration(duration), distance(distance)
+    //! See ManyToManyHeapData::approach.
+    EdgeWeight approach;
+    ManyToManyMultiLayerDijkstraHeapData(NodeID p,
+                                         EdgeDuration duration,
+                                         EdgeDistance distance,
+                                         EdgeWeight approach = EdgeWeight{0})
+        : MultiLayerDijkstraHeapData(p), duration(duration), distance(distance), approach(approach)
     {
     }
     ManyToManyMultiLayerDijkstraHeapData(NodeID p,
                                          bool from,
                                          EdgeDuration duration,
-                                         EdgeDistance distance)
-        : MultiLayerDijkstraHeapData(p, from), duration(duration), distance(distance)
+                                         EdgeDistance distance,
+                                         EdgeWeight approach = EdgeWeight{0})
+        : MultiLayerDijkstraHeapData(p, from), duration(duration), distance(distance),
+          approach(approach)
     {
     }
 };

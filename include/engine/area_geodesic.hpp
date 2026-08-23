@@ -31,13 +31,34 @@ struct Geodesic
 /**
  * @brief How far the geodesic solver will go before giving up.
  *
- * Solving an area means building the visibility graph among its vertices, which costs
- * O(n² log n).  Measured by src/benchmarks/area_geodesic.cpp, an area of 40 vertices
- * takes about half a millisecond against a budget of one, and one of 68 takes two
- * milliseconds.  Areas that occur are far smaller than either -- Monaco's largest has 24
- * -- so the limit is a guard against the pathological rather than a real constraint.
+ * Solving an area means building the visibility graph among its vertices.  solve() runs
+ * visible_vertices() from each vertex in turn and that is itself quadratic, so the build
+ * is cubic in practice.  Measured by src/benchmarks/area_geodesic.cpp:
+ *
+ *     vertices     40     104     200     260     404     580
+ *     build      0.8ms   9.0ms    50ms   101ms   356ms   996ms
+ *
+ * The cost lands on the first request to reach an area and is then cached, so it is a
+ * latency spike rather than a throughput cost.
+ *
+ * Giving up is not free either.  An area the solver declines falls back to the mesh, and
+ * the mesh holds only the shortest-path trees rooted at the entry points, so a journey
+ * with both ends inside the area walks out towards an entry point and back instead of
+ * going straight.  On the Notre-Dame parvis, 120 vertices, 226 of 386 sampled crossings
+ * whose straight line was entirely clear came back more than a tenth longer than it, the
+ * worst at 2.16 times.  All 386 are within 1.003 once the area is solved.
+ *
+ * So this is a real constraint, not a guard against the pathological.  In Ile-de-France
+ * the median pedestrian area has 22 vertices but the 95th percentile has 119, and 40
+ * declines a quarter of them.  256 covers 98.7%, and what it still declines are the
+ * genuinely large ones -- theme parks and campuses, up to 2821 vertices -- where a cubic
+ * build cannot be paid at any point in a request.
+ *
+ * Raising this further wants the build to get cheaper first.  The extractor already
+ * solves the same problem with a rotational sweep at O(n² log n), which is the obvious
+ * next step and would move this number rather than being traded against it.
  */
-inline constexpr std::size_t GEODESIC_MAX_VERTICES = 40;
+inline constexpr std::size_t GEODESIC_MAX_VERTICES = 256;
 
 /** How many areas' visibility graphs to keep, per thread. */
 inline constexpr std::size_t GEODESIC_CACHE_SIZE = 32;
