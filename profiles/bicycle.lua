@@ -24,7 +24,7 @@ function setup()
       weight_name                   = 'duration',
       process_call_tagless_node     = false,
       max_speed_for_map_matching    = 40/3.6, -- kmph -> m/s (reduced from 110 to realistic bicycle speed)
-      use_turn_restrictions         = false,
+      use_turn_restrictions         = true,
       continue_straight_at_waypoint = false,
       mode_change_penalty           = 30,
     },

@@ -1,7 +1,8 @@
 @routing @bicycle @restrictions
 Feature: Bike - Turn restrictions
-# Ignore turn restrictions on bicycle, since you always become a temporary pedestrian.
-# Note that if u-turns are allowed, turn restrictions can lead to suprising, but correct, routes.
+# Turn restrictions apply to bicycles unless the relation says otherwise with
+# except=bicycle or restriction:bicycle. Note that if u-turns are allowed, turn
+# restrictions can lead to surprising, but correct, routes.
 
     Background:
         Given the profile "bicycle"
@@ -31,7 +32,7 @@ Feature: Bike - Turn restrictions
 
         When I route I should get
             | from | to | route    |
-            | s    | w  | sj,wj,wj |
+            | s    | w  |          |
             | s    | n  | sj,nj,nj |
             | s    | e  | sj,ej,ej |
 
@@ -64,8 +65,8 @@ Feature: Bike - Turn restrictions
         When I route I should get
             | from | to | route    |
             | s    | a  | sj,aj,aj |
-            | s    | b  | sj,bj,bj |
-            | s    | c  | sj,cj,cj |
+            | s    | b  |          |
+            | s    | c  |          |
             | s    | d  | sj,dj,dj |
 
     @except
@@ -92,6 +93,9 @@ Feature: Bike - Turn restrictions
             | s    | a  | sj,aj,aj |
             | s    | b  | sj,bj,bj |
 
+    # Only a semicolon separates values, and the parser does not trim spaces, so
+    # `bus; bicycle` and the comma separated forms below do not except anything.
+    # These are not forms that appear in OSM data, where `bicycle;bus` is the norm.
     @except
     Scenario: Bike - Multiple except tag values
         Given the node map
@@ -125,9 +129,9 @@ Feature: Bike - Turn restrictions
 
         When I route I should get
             | from | to | route    |
-            | s    | a  | sj,ja,ja |
+            | s    | a  |          |
             | s    | b  | sj,jb,jb |
-            | s    | c  | sj,jc,jc |
+            | s    | c  |          |
             | s    | d  | sj,jd,jd |
-            | s    | e  | sj,je,je |
-            | s    | f  | sj,jf,jf |
+            | s    | e  |          |
+            | s    | f  |          |
