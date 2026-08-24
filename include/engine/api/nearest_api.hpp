@@ -53,8 +53,7 @@ class NearestAPI final : public BaseAPI
         // Builds the flatbuffers Waypoint vector for a single coordinate's matches. Shared by
         // both the N == 1 flat-field path and the N >= 2 grouped path below.
         auto make_waypoints_vector =
-            [this,
-             &fb_result](const std::vector<PhantomNodeWithDistance> &nodes_for_coordinate)
+            [this, &fb_result](const std::vector<PhantomNodeWithDistance> &nodes_for_coordinate)
             -> flatbuffers::Offset<flatbuffers::Vector<flatbuffers::Offset<fbresult::Waypoint>>>
         {
             std::vector<flatbuffers::Offset<fbresult::Waypoint>> waypoints;
@@ -97,35 +96,37 @@ class NearestAPI final : public BaseAPI
                 // failing the whole request.
                 std::vector<flatbuffers::Offset<fbresult::WaypointGroup>> groups;
                 groups.resize(phantom_nodes.size());
-                std::transform(
-                    phantom_nodes.begin(),
-                    phantom_nodes.end(),
-                    groups.begin(),
-                    [this, &fb_result, &make_waypoints_vector](
-                        const std::vector<PhantomNodeWithDistance> &nodes_for_coordinate)
-                    {
-                        fbresult::WaypointGroupBuilder group_builder(fb_result);
-                        if (nodes_for_coordinate.empty())
-                        {
-                            auto message = fb_result.CreateString(
-                                "Could not find a matching segment for coordinate");
-                            auto code = fb_result.CreateString("NoSegment");
-                            fbresult::ErrorBuilder error_builder(fb_result);
-                            error_builder.add_code(code);
-                            error_builder.add_message(message);
-                            auto error = error_builder.Finish();
+                std::transform(phantom_nodes.begin(),
+                               phantom_nodes.end(),
+                               groups.begin(),
+                               [this, &fb_result, &make_waypoints_vector](
+                                   const std::vector<PhantomNodeWithDistance> &nodes_for_coordinate)
+                               {
+                                   if (nodes_for_coordinate.empty())
+                                   {
+                                       auto message = fb_result.CreateString(
+                                           "Could not find a matching segment for coordinate");
+                                       auto code = fb_result.CreateString("NoSegment");
+                                       fbresult::ErrorBuilder error_builder(fb_result);
+                                       error_builder.add_code(code);
+                                       error_builder.add_message(message);
+                                       auto error = error_builder.Finish();
 
-                            group_builder.add_matched(false);
-                            group_builder.add_error(error);
-                        }
-                        else
-                        {
-                            auto waypoints = make_waypoints_vector(nodes_for_coordinate);
-                            group_builder.add_matched(true);
-                            group_builder.add_waypoints(waypoints);
-                        }
-                        return group_builder.Finish();
-                    });
+                                       fbresult::WaypointGroupBuilder group_builder(fb_result);
+                                       group_builder.add_matched(false);
+                                       group_builder.add_error(error);
+                                       return group_builder.Finish();
+                                   }
+                                   else
+                                   {
+                                       auto waypoints = make_waypoints_vector(nodes_for_coordinate);
+
+                                       fbresult::WaypointGroupBuilder group_builder(fb_result);
+                                       group_builder.add_matched(true);
+                                       group_builder.add_waypoints(waypoints);
+                                       return group_builder.Finish();
+                                   }
+                               });
                 waypoints_grouped_vector = fb_result.CreateVector(groups);
             }
         }
@@ -150,7 +151,8 @@ class NearestAPI final : public BaseAPI
     void MakeResponse(const std::vector<std::vector<PhantomNodeWithDistance>> &phantom_nodes,
                       util::json::Object &response) const
     {
-        auto make_waypoint_array = [this](const std::vector<PhantomNodeWithDistance> &nodes_for_coordinate)
+        auto make_waypoint_array =
+            [this](const std::vector<PhantomNodeWithDistance> &nodes_for_coordinate)
         {
             util::json::Array waypoints;
             waypoints.values.resize(nodes_for_coordinate.size());

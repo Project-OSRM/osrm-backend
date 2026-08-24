@@ -739,7 +739,7 @@ BOOST_AUTO_TEST_CASE(valid_nearest_urls)
     CHECK_EQUAL_RANGE(reference_2.approaches, result_2->approaches);
     CHECK_EQUAL_RANGE(reference_2.coordinates, result_2->coordinates);
 
-        std::vector<util::Coordinate> coords_2 = {{util::FloatLongitude{1}, util::FloatLatitude{2}},
+    std::vector<util::Coordinate> coords_2 = {{util::FloatLongitude{1}, util::FloatLatitude{2}},
                                               {util::FloatLongitude{3}, util::FloatLatitude{4}},
                                               {util::FloatLongitude{5}, util::FloatLatitude{6}}};
 

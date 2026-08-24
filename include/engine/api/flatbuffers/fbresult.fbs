@@ -19,9 +19,9 @@ table FBResult {
     code: Error;
     data_version: string;
     waypoints: [Waypoint]; //Used as 'sources' waypoints for a 'Table' service
-    waypoints_grouped: [WaypointGroup];
     routes: [RouteObject];
     table: TableResult;
+    waypoints_grouped: [WaypointGroup];
 }
 
 root_type FBResult;

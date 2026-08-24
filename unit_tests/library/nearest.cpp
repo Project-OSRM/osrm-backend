@@ -146,9 +146,9 @@ void test_nearest_response_all_unmatched_coordinates(bool use_json_only_api)
     params.coordinates.push_back(get_unmatched_location());
     params.coordinates.push_back(get_unmatched_location());
     params.coordinates.push_back(get_unmatched_location());
-    params.radiuses.push_back(1.0);              
-    params.radiuses.push_back(1.0);              
-    params.radiuses.push_back(1.0);              
+    params.radiuses.push_back(1.0);
+    params.radiuses.push_back(1.0);
+    params.radiuses.push_back(1.0);
 
     json::Object json_result;
 
@@ -161,10 +161,11 @@ void test_nearest_response_all_unmatched_coordinates(bool use_json_only_api)
     const auto &groups = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_REQUIRE_EQUAL(groups.size(), 3);
 
-    for(const auto &group : groups){
+    for (const auto &group : groups)
+    {
         const auto &unmatched_slot = std::get<json::Object>(group);
         const auto slot_code = std::get<json::String>(unmatched_slot.values.at("code")).value;
-            BOOST_CHECK_EQUAL(slot_code, "NoSegment");
+        BOOST_CHECK_EQUAL(slot_code, "NoSegment");
         const auto slot_message = std::get<json::String>(unmatched_slot.values.at("message")).value;
         BOOST_CHECK_EQUAL(slot_message, "Could not find a matching segment for coordinate");
     }
@@ -173,7 +174,6 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_all_unmatched_coordinates_old_api)
 { test_nearest_response_all_unmatched_coordinates(true); }
 BOOST_AUTO_TEST_CASE(test_nearest_response_all_unmatched_coordinates_new_api)
 { test_nearest_response_all_unmatched_coordinates(false); }
-
 
 void test_nearest_response_one_unmatched_coordinate(bool use_json_only_api)
 {
@@ -184,13 +184,12 @@ void test_nearest_response_one_unmatched_coordinate(bool use_json_only_api)
     NearestParameters params;
     params.coordinates.push_back(get_dummy_location());
     params.coordinates.push_back(get_unmatched_location());
-    params.radiuses.push_back(std::nullopt);    
-    params.radiuses.push_back(1.0);              
+    params.radiuses.push_back(std::nullopt);
+    params.radiuses.push_back(1.0);
 
     json::Object json_result;
     const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
 
-    
     BOOST_REQUIRE(rc == Status::Ok);
 
     const auto code = std::get<json::String>(json_result.values.at("code")).value;
@@ -207,7 +206,7 @@ void test_nearest_response_one_unmatched_coordinate(bool use_json_only_api)
         const auto distance = std::get<json::Number>(waypoint_object.values.at("distance")).value;
         BOOST_CHECK(distance >= 0);
     }
-    
+
     const auto &unmatched_slot = std::get<json::Object>(groups[1]);
     const auto slot_code = std::get<json::String>(unmatched_slot.values.at("code")).value;
     BOOST_CHECK_EQUAL(slot_code, "NoSegment");
@@ -259,7 +258,7 @@ void test_nearest_response_per_coordinate_options(bool use_json_only_api)
 
     const auto &groups = std::get<json::Array>(json_result.values.at("waypoints")).values;
     BOOST_REQUIRE_EQUAL(groups.size(), 2);
-    
+
     for (const auto &group : groups)
     {
         const auto &waypoints = std::get<json::Array>(group).values;

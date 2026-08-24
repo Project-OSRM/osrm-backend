@@ -56,7 +56,6 @@ engine::Status runNearest(OSRM &routing_machine,
 }
 } // namespace
 
-
 engine::Status NearestService::RunQuery(std::size_t prefix_length,
                                         std::string &query,
                                         osrm::engine::api::ResultT &result)
@@ -78,7 +77,6 @@ engine::Status NearestService::RunQuery(std::size_t prefix_length,
     BOOST_ASSERT(parameters);
     return runNearest(BaseService::routing_machine, *parameters, result);
 } // namespace osrm::server::service
-
 
 engine::Status NearestService::RunJSONQuery(const std::string &json_body,
                                             osrm::engine::api::ResultT &result)

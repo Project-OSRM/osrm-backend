@@ -20,7 +20,6 @@ class NearestService final : public BaseService
     engine::Status RunQuery(std::size_t prefix_length,
                             std::string &query,
                             osrm::engine::api::ResultT &result) final override;
-    
 
     engine::Status RunJSONQuery(const std::string &json_body,
                                 osrm::engine::api::ResultT &result) final override;

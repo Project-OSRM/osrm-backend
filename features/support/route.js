@@ -52,6 +52,9 @@ export default class Route {
     for (const key of Object.keys(params)) {
       const value = params[key];
       switch (key) {
+      case 'number':
+        body.number = Number(value);
+        break;
       case 'coordinates':
         if (Array.isArray(value) && value.length === 1 && /^polyline6?\(/.test(value[0])) {
           body.coordinates = value[0];

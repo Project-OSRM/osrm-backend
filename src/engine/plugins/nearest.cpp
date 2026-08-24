@@ -10,8 +10,11 @@
 namespace osrm::engine::plugins
 {
 
-NearestPlugin::NearestPlugin(const int max_results_, const int max_locations_nearest_, const std::optional<double> default_radius_)
-    : BasePlugin(default_radius_), max_results{max_results_}, max_locations_nearest{max_locations_nearest_}
+NearestPlugin::NearestPlugin(const int max_results_,
+                             const int max_locations_nearest_,
+                             const std::optional<double> default_radius_)
+    : BasePlugin(default_radius_), max_results{max_results_},
+      max_locations_nearest{max_locations_nearest_}
 {
 }
 
@@ -20,8 +23,8 @@ Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms
                                     osrm::engine::api::ResultT &result) const
 {
     if (params.coordinates.empty())
-    return Error("InvalidOptions", "Coordinates are invalid", result);
-    BOOST_ASSERT(params.IsValid()); 
+        return Error("InvalidOptions", "Coordinates are invalid", result);
+    BOOST_ASSERT(params.IsValid());
 
     if (!CheckAlgorithms(params, algorithms, result))
         return Status::Error;
@@ -40,12 +43,13 @@ Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms
     if (!CheckAllCoordinates(params.coordinates))
         return Error("InvalidOptions", "Coordinates are invalid", result);
 
-        
-    if(max_locations_nearest>0 && (boost::numeric_cast<std::int64_t>(params.coordinates.size()) > max_locations_nearest))
+    if (max_locations_nearest > 0 &&
+        (boost::numeric_cast<std::int64_t>(params.coordinates.size()) > max_locations_nearest))
     {
         return Error("TooBig",
                      "Number of coordinates " + std::to_string(params.coordinates.size()) +
-                         " is higher than current maximum (" + std::to_string(max_locations_nearest) + ")",
+                         " is higher than current maximum (" +
+                         std::to_string(max_locations_nearest) + ")",
                      result);
     }
 
@@ -55,7 +59,7 @@ Status NearestPlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms
     {
         return Error("NoSegment", "Could not find a matching segment for coordinate", result);
     }
-    
+
     api::NearestAPI nearest_api(facade, params);
     nearest_api.MakeResponse(phantom_nodes, result);
     return Status::Ok;

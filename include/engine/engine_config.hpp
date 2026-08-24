@@ -76,7 +76,7 @@ struct EngineConfig final
     int max_locations_viaroute = -1;
     int max_locations_distance_table = -1;
     int max_locations_map_matching = -1;
-    int max_locations_nearest = 10; 
+    int max_locations_nearest = 10;
     double max_radius_map_matching = -1.0;
     int max_results_nearest = -1;
     double default_radius = -1.0;
