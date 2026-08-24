@@ -707,7 +707,16 @@ jobs:
           fi
           popd
           ./scripts/ci/test_cli_parsing.sh -b "${OSRM_BUILD_DIR}"
-          npm test -- --parallel $JOBS
+
+          # Coverage counts accumulate into shared .gcda files, which concurrent
+          # osrm-routed processes clobber, so a parallel run reports a different
+          # number every time. Run the suite serially where it is measured. See
+          # codecov.yml.
+          if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
+            npm test
+          else
+            npm test -- --parallel $JOBS
+          fi
 
       - name: Generate coverage report
         if: ${{ matrix.ENABLE_COVERAGE == 'ON' }}

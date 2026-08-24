@@ -1,0 +1,19 @@
+# Codecov configuration.
+#
+# The coverage job runs the cucumber suite, and the counts land in shared .gcda
+# files. Repeated runs of an identical tree have differed by up to 2100 lines
+# out of 96461, so a project status that gates on any drop at all reports
+# regressions that are not there. Keep the number visible and stop it blocking
+# until the run is reproducible, then put the gate back.
+#
+# The patch status is unaffected by this and stays gating: it only measures the
+# lines a pull request touches, and it has been stable.
+coverage:
+  status:
+    project:
+      default:
+        informational: true
+    patch:
+      default:
+        target: auto
+        threshold: 0%
