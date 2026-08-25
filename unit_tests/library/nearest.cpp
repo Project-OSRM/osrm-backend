@@ -312,6 +312,63 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component_old_a
 BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component_new_api)
 { test_nearest_response_for_location_in_small_component(false); }
 
+
+BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization_multiple_coordinates)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    NearestParameters params;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_unmatched_location());
+    params.radiuses.push_back(std::nullopt);
+    params.radiuses.push_back(1.0);
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Nearest(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    BOOST_CHECK(!fb->error());
+
+    BOOST_CHECK(fb->waypoints() == nullptr);
+    BOOST_REQUIRE(fb->waypoints_grouped() != nullptr);
+    BOOST_REQUIRE_EQUAL(fb->waypoints_grouped()->size(), 2);
+
+    auto matched_group = fb->waypoints_grouped()->Get(0);
+    BOOST_CHECK(matched_group->matched());
+    BOOST_CHECK(matched_group->waypoints()->size() > 0);
+
+    auto unmatched_group = fb->waypoints_grouped()->Get(1);
+    BOOST_CHECK(!unmatched_group->matched());
+    BOOST_REQUIRE(unmatched_group->error() != nullptr);
+    BOOST_CHECK_EQUAL(unmatched_group->error()->code()->str(), "NoSegment");
+}
+
+BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization_multiple_coordinates_skip_waypoints)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    NearestParameters params;
+    params.skip_waypoints = true;
+    params.coordinates.push_back(get_dummy_location());
+    params.coordinates.push_back(get_dummy_location());
+
+    engine::api::ResultT result = flatbuffers::FlatBufferBuilder();
+    const auto rc = osrm.Nearest(params, result);
+    BOOST_REQUIRE(rc == Status::Ok);
+
+    auto &fb_result = std::get<flatbuffers::FlatBufferBuilder>(result);
+    auto fb = engine::api::fbresult::GetFBResult(fb_result.GetBufferPointer());
+    BOOST_CHECK(!fb->error());
+    BOOST_CHECK(fb->waypoints() == nullptr);
+    BOOST_CHECK(fb->waypoints_grouped() == nullptr);
+}
+
 BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
