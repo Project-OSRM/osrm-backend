@@ -99,7 +99,7 @@ class NearestAPI final : public BaseAPI
                 std::transform(phantom_nodes.begin(),
                                phantom_nodes.end(),
                                groups.begin(),
-                               [this, &fb_result, &make_waypoints_vector](
+                               [&fb_result, &make_waypoints_vector](
                                    const std::vector<PhantomNodeWithDistance> &nodes_for_coordinate)
                                {
                                    if (nodes_for_coordinate.empty())
