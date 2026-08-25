@@ -26,7 +26,8 @@ __export(fbresult_exports, {
   TableResult: () => TableResult,
   Turn: () => Turn,
   Uint64Pair: () => Uint64Pair,
-  Waypoint: () => Waypoint
+  Waypoint: () => Waypoint,
+  WaypointGroup: () => WaypointGroup
 });
 
 // osrm/engine/api/fbresult/annotation.ts
@@ -309,7 +310,7 @@ var Error2 = class _Error {
 };
 
 // osrm/engine/api/fbresult/fbresult.ts
-import * as flatbuffers12 from "flatbuffers";
+import * as flatbuffers13 from "flatbuffers";
 
 // osrm/engine/api/fbresult/route-object.ts
 import * as flatbuffers9 from "flatbuffers";
@@ -1316,6 +1317,67 @@ var TableResult = class _TableResult {
   }
 };
 
+// osrm/engine/api/fbresult/waypoint-group.ts
+import * as flatbuffers12 from "flatbuffers";
+var WaypointGroup = class _WaypointGroup {
+  bb = null;
+  bb_pos = 0;
+  __init(i, bb) {
+    this.bb_pos = i;
+    this.bb = bb;
+    return this;
+  }
+  static getRootAsWaypointGroup(bb, obj) {
+    return (obj || new _WaypointGroup()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  }
+  static getSizePrefixedRootAsWaypointGroup(bb, obj) {
+    bb.setPosition(bb.position() + flatbuffers12.SIZE_PREFIX_LENGTH);
+    return (obj || new _WaypointGroup()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
+  }
+  matched() {
+    const offset = this.bb.__offset(this.bb_pos, 4);
+    return offset ? !!this.bb.readInt8(this.bb_pos + offset) : false;
+  }
+  waypoints(index, obj) {
+    const offset = this.bb.__offset(this.bb_pos, 6);
+    return offset ? (obj || new Waypoint()).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+  }
+  waypointsLength() {
+    const offset = this.bb.__offset(this.bb_pos, 6);
+    return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+  }
+  error(obj) {
+    const offset = this.bb.__offset(this.bb_pos, 8);
+    return offset ? (obj || new Error2()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
+  }
+  static startWaypointGroup(builder) {
+    builder.startObject(3);
+  }
+  static addMatched(builder, matched) {
+    builder.addFieldInt8(0, +matched, 0);
+  }
+  static addWaypoints(builder, waypointsOffset) {
+    builder.addFieldOffset(1, waypointsOffset, 0);
+  }
+  static createWaypointsVector(builder, data) {
+    builder.startVector(4, data.length, 4);
+    for (let i = data.length - 1; i >= 0; i--) {
+      builder.addOffset(data[i]);
+    }
+    return builder.endVector();
+  }
+  static startWaypointsVector(builder, numElems) {
+    builder.startVector(4, numElems, 4);
+  }
+  static addError(builder, errorOffset) {
+    builder.addFieldOffset(2, errorOffset, 0);
+  }
+  static endWaypointGroup(builder) {
+    const offset = builder.endObject();
+    return offset;
+  }
+};
+
 // osrm/engine/api/fbresult/fbresult.ts
 var FBResult = class _FBResult {
   bb = null;
@@ -1329,7 +1391,7 @@ var FBResult = class _FBResult {
     return (obj || new _FBResult()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
   }
   static getSizePrefixedRootAsFBResult(bb, obj) {
-    bb.setPosition(bb.position() + flatbuffers12.SIZE_PREFIX_LENGTH);
+    bb.setPosition(bb.position() + flatbuffers13.SIZE_PREFIX_LENGTH);
     return (obj || new _FBResult()).__init(bb.readInt32(bb.position()) + bb.position(), bb);
   }
   error() {
@@ -1364,8 +1426,16 @@ var FBResult = class _FBResult {
     const offset = this.bb.__offset(this.bb_pos, 14);
     return offset ? (obj || new TableResult()).__init(this.bb.__indirect(this.bb_pos + offset), this.bb) : null;
   }
+  waypointsGrouped(index, obj) {
+    const offset = this.bb.__offset(this.bb_pos, 16);
+    return offset ? (obj || new WaypointGroup()).__init(this.bb.__indirect(this.bb.__vector(this.bb_pos + offset) + index * 4), this.bb) : null;
+  }
+  waypointsGroupedLength() {
+    const offset = this.bb.__offset(this.bb_pos, 16);
+    return offset ? this.bb.__vector_len(this.bb_pos + offset) : 0;
+  }
   static startFBResult(builder) {
-    builder.startObject(6);
+    builder.startObject(7);
   }
   static addError(builder, error) {
     builder.addFieldInt8(0, +error, 0);
@@ -1404,6 +1474,19 @@ var FBResult = class _FBResult {
   }
   static addTable(builder, tableOffset) {
     builder.addFieldOffset(5, tableOffset, 0);
+  }
+  static addWaypointsGrouped(builder, waypointsGroupedOffset) {
+    builder.addFieldOffset(6, waypointsGroupedOffset, 0);
+  }
+  static createWaypointsGroupedVector(builder, data) {
+    builder.startVector(4, data.length, 4);
+    for (let i = data.length - 1; i >= 0; i--) {
+      builder.addOffset(data[i]);
+    }
+    return builder.endVector();
+  }
+  static startWaypointsGroupedVector(builder, numElems) {
+    builder.startVector(4, numElems, 4);
   }
   static endFBResult(builder) {
     const offset = builder.endObject();
