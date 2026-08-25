@@ -12,25 +12,6 @@ Feature: HTTP POST requests
             | nodes |
             | ab    |
 
-    Scenario: Services without POST support report NotImplemented
-        When I POST to /nearest/v1/testbot with body
-            """
-            {"coordinates": [[1,1]]}
-            """
-        Then status code should be NotImplemented
-
-        When I POST to /trip/v1/testbot with body
-            """
-            {"coordinates": [[1,1],[1,1]]}
-            """
-        Then status code should be NotImplemented
-
-        When I POST to /tile/v1/testbot with body
-            """
-            {"coordinates": [[1,1],[1,1]]}
-            """
-        Then status code should be NotImplemented
-
     Scenario: POST to an unknown service
         When I POST to /nonsense/v1/testbot with body
             """
@@ -44,6 +25,19 @@ Feature: HTTP POST requests
             {"coordinates": [[1,1],[1,1]]}
             """
         Then status code should be InvalidVersion
+
+    Scenario: Services without POST support report NotImplemented
+        When I POST to /trip/v1/testbot with body
+            """
+            {"coordinates": [[1,1],[1,1]]}
+            """
+        Then status code should be NotImplemented
+
+        When I POST to /tile/v1/testbot with body
+            """
+            {"coordinates": [[1,1],[1,1]]}
+            """
+        Then status code should be NotImplemented
 
     Scenario: POST with a body that is not a valid request
         When I POST to /route/v1/testbot with body
@@ -87,5 +81,11 @@ Feature: HTTP POST requests
         When I POST to /match/v1/testbot with body
             """
             {"coordinates": [[1,1],[1,1]], "format": "flatbuffers"}
+            """
+        Then response should be flatbuffers
+
+        When I POST to /nearest/v1/testbot with body
+            """
+            {"coordinates": [[1,1]], "format": "flatbuffers"}
             """
         Then response should be flatbuffers
