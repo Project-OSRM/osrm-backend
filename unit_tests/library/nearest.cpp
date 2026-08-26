@@ -312,7 +312,6 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component_old_a
 BOOST_AUTO_TEST_CASE(test_nearest_response_for_location_in_small_component_new_api)
 { test_nearest_response_for_location_in_small_component(false); }
 
-
 BOOST_AUTO_TEST_CASE(test_nearest_fb_serialization_multiple_coordinates)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
