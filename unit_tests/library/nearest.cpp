@@ -270,6 +270,45 @@ BOOST_AUTO_TEST_CASE(test_nearest_response_per_coordinate_options_old_api)
 BOOST_AUTO_TEST_CASE(test_nearest_response_per_coordinate_options_new_api)
 { test_nearest_response_per_coordinate_options(false); }
 
+void test_nearest_response_first_unmatched_coordinate(bool use_json_only_api)
+{
+    auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
+
+    using namespace osrm;
+
+    NearestParameters params;
+    params.coordinates.push_back(get_unmatched_location());
+    params.coordinates.push_back(get_dummy_location());
+    params.radiuses.push_back(1.0);
+    params.radiuses.push_back(std::nullopt);
+
+    json::Object json_result;
+    const auto rc = run_nearest_json(osrm, params, json_result, use_json_only_api);
+    BOOST_REQUIRE(rc == Status::Ok);
+
+    const auto &groups = std::get<json::Array>(json_result.values.at("waypoints")).values;
+    BOOST_REQUIRE_EQUAL(groups.size(), 2);
+
+    // Slot 0: unmatched.
+    const auto &unmatched_slot = std::get<json::Object>(groups[0]);
+    const auto slot_code = std::get<json::String>(unmatched_slot.values.at("code")).value;
+    BOOST_CHECK_EQUAL(slot_code, "NoSegment");
+
+    // Slot 1: matched, proving the lookup after an unmatched coordinate still runs.
+    const auto &matched_group = std::get<json::Array>(groups[1]).values;
+    BOOST_CHECK(!matched_group.empty());
+    for (const auto &waypoint : matched_group)
+    {
+        const auto &waypoint_object = std::get<json::Object>(waypoint);
+        const auto distance = std::get<json::Number>(waypoint_object.values.at("distance")).value;
+        BOOST_CHECK(distance >= 0);
+    }
+}
+BOOST_AUTO_TEST_CASE(test_nearest_response_first_unmatched_coordinate_old_api)
+{ test_nearest_response_first_unmatched_coordinate(true); }
+BOOST_AUTO_TEST_CASE(test_nearest_response_first_unmatched_coordinate_new_api)
+{ test_nearest_response_first_unmatched_coordinate(false); }
+
 void test_nearest_response_for_location_in_small_component(bool use_json_only_api)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/ch/monaco.osrm");
