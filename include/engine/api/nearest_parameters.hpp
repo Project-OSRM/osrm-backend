@@ -45,7 +45,7 @@ namespace osrm::engine::api
 struct NearestParameters : public BaseParameters
 {
     unsigned number_of_results = 1;
-
+    bool operator==(const NearestParameters &) const = default;
     bool IsValid() const { return BaseParameters::IsValid() && number_of_results >= 1; }
 };
 } // namespace osrm::engine::api

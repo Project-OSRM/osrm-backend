@@ -221,7 +221,7 @@ class BasePlugin
             // we didn't find a fitting node, return error
             if (phantom_nodes[i].empty())
             {
-                break;
+                continue;
             }
         }
         return phantom_nodes;

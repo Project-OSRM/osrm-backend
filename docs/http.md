@@ -109,7 +109,8 @@ accepts `sources`/`destinations` (arrays of indices), `annotations` (bool or
 `["duration","distance"]`), `fallback_speed`, `fallback_coordinate` (`"input"`/`"snapped"`)
 and `scale_factor`. `match` accepts the same keys as `route`, plus `timestamps` (array of
 integers, seconds since the UNIX epoch), `gaps` (`"split"`/`"ignore"`) and `tidy` (bool).
-Services that do not support `POST` return a `NotImplemented` error.
+`nearest` additionally accepts `number` (integer ≥ 1), applied independently to each
+coordinate. Services that do not support `POST` return a `NotImplemented` error.
 
 The maximum request body size defaults to a value derived from the configured coordinate
 limits and can be overridden with the `--max-request-body-size` option of `osrm-routed`.
@@ -131,6 +132,11 @@ curl -X POST 'http://router.project-osrm.org/table/v1/driving' \
 curl -X POST 'http://router.project-osrm.org/match/v1/driving' \
   -H 'Content-Type: application/json' \
   -d '{"coordinates":[[13.388860,52.517037],[13.397634,52.529407],[13.428555,52.523219]],"timestamps":[1424684612,1424684616,1424684620],"gaps":"ignore","tidy":true}'
+
+# Nearest matches for two coordinates, one result each:
+curl -X POST 'http://router.project-osrm.org/nearest/v1/driving' \
+  -H 'Content-Type: application/json' \
+  -d '{"coordinates":[[13.388860,52.517037],[13.397634,52.529407]],"number":1}'
 ```
 
 ### Responses
@@ -180,7 +186,7 @@ Snaps a coordinate to the street network and returns the nearest `n` matches.
 GET http://{server}/nearest/v1/{profile}/{coordinates}.json?number={number}
 ```
 
-Where `coordinates` only supports a single `{longitude},{latitude}` entry.
+Where `coordinates` support up to a server-configured maximum number of `{longitude},{latitude}` entries. (see `--max-nearest-locations` in `osrm-routed`).
 
 In addition to the [general options](#general-options) the following options are supported for this service:
 
@@ -188,65 +194,79 @@ In addition to the [general options](#general-options) the following options are
 |------------|------------------------------|----------------------------------------------------|
 |number      |`integer >= 1` (default `1`)  |Number of nearest segments that should be returned. |
 
-As `waypoints` is a single thing returned by that service, using it with the option `skip_waypoints` set to `true` is quite useless, but still
-possible. In that case, only the `code` field will be returned.
+As `waypoints` is a single thing returned by that service, using it with the option `skip_waypoints` set to `true` is quite useless, but still possible. In that case, only the `code` field will be returned.
 
 **Response**
 
 - `code` if the request was successful `Ok` otherwise see the service dependent and general status codes.
-- `waypoints` array of `Waypoint` objects sorted by distance to the input coordinate. Each object has at least the following additional properties:
-  - `nodes`: Array of OpenStreetMap node ids. Each id is a 64-bit unsigned integer (encoded as a JSON number for the `json` format, and as `ulong` for the `flatbuffers` format).
+- `waypoints`:
+  - For a single coordinate, an array of `Waypoint` objects sorted by distance to the input coordinate, exactly as in prior versions. Each object has at least the following additional properties:
+    - `nodes`: Array of OpenStreetMap node ids. Each id is a 64-bit unsigned integer (encoded as a JSON number for the `json` format, and as `ulong` for the `flatbuffers` format).
+  - For two or more coordinates, an array of per-coordinate results, in input order. Each element is either an array of `Waypoint` objects (same shape as the single-coordinate case) or, if that coordinate could not be matched to the street network, an object `{"code": "NoSegment", "message": "Could not find a matching segment for coordinate"}`. The request as a whole still returns `Ok` even if some or all coordinates are unmatched.
 
+`number` applies independently to each coordinate: a request with `number=3` and two coordinates returns up to three matches for *each* coordinate (up to six `Waypoint` objects total across both groups), not three matches total.
+
+If a single coordinate is supplied and cannot be matched, the request fails with a top-level `NoSegment` error, unchanged from prior versions.
 #### Example Requests
 
 ```bash
 # Querying nearest three snapped locations of `13.388860,52.517037` with a bearing between `20° - 340°`.
 curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037?number=3&bearings=0,20'
+
+# Querying nearest matches for two coordinates in a single batch request.
+curl 'http://router.project-osrm.org/nearest/v1/driving/13.388860,52.517037;0,0?number=1'
 ```
 
 #### Example Response
+
+Single coordinate (`13.388860,52.517037?number=3`):
 
 ```JSON
 {
    "waypoints" : [
       {
-         "nodes": [
-            2264199819,
-            0
-         ],
+         "nodes": [2264199819, 0],
          "hint" : "KSoKADRYroqUBAEAEAAAABkAAAAGAAAAAAAAABhnCQCLtwAA_0vMAKlYIQM8TMwArVghAwEAAQH1a66g",
          "distance" : 4.152629,
          "name" : "Friedrichstraße",
-         "location" : [
-            13.388799,
-            52.517033
-         ]
+         "location" : [13.388799, 52.517033]
       },
       {
-         "nodes": [
-            2045820592,
-            0
-         ],
+         "nodes": [2045820592, 0],
          "hint" : "KSoKADRYroqUBAEABgAAAAAAAAAAAAAAKQAAABhnCQCLtwAA7kvMAAxZIQM8TMwArVghAwAAAQH1a66g",
          "distance" : 11.811961,
          "name" : "Friedrichstraße",
-         "location" : [
-            13.388782,
-            52.517132
-         ]
+         "location" : [13.388782, 52.517132]
       },
       {
-         "nodes": [
-            0,
-            21487242
-         ],
+         "nodes": [0, 21487242],
          "hint" : "KioKgDbbDgCUBAEAAAAAABoAAAAAAAAAPAAAABlnCQCLtwAA50vMADJZIQM8TMwArVghAwAAAQH1a66g",
          "distance" : 15.872438,
          "name" : "Friedrichstraße",
-         "location" : [
-            13.388775,
-            52.51717
-         ]
+         "location" : [13.388775, 52.51717]
+      }
+   ],
+   "code" : "Ok"
+}
+```
+
+Two coordinates (`13.388860,52.517037;0,0?number=1`), where the second coordinate (`0,0`, out in the ocean) cannot be matched to the street network:
+
+```JSON
+{
+   "waypoints" : [
+      [
+         {
+            "nodes": [2264199819, 0],
+            "hint" : "KSoKADRYroqUBAEAEAAAABkAAAAGAAAAAAAAABhnCQCLtwAA_0vMAKlYIQM8TMwArVghAwEAAQH1a66g",
+            "distance" : 4.152629,
+            "name" : "Friedrichstraße",
+            "location" : [13.388799, 52.517033]
+         }
+      ],
+      {
+         "code" : "NoSegment",
+         "message" : "Could not find a matching segment for coordinate"
       }
    ],
    "code" : "Ok"
@@ -1033,6 +1053,7 @@ Root object is the only object, available from a 'raw' `flatbuffers` buffer. It 
 - `error`: `bool` Marks response as erroneous. An erroneous response should include the `code` fieldset, all the other fields may not be present.
 - `code`: `Error` Error description object, only present, when `error` is `true`
 - `waypoints`: `[Waypoint]` Array of `Waypoint` objects. Should present for every service call, unless `skip_waypoints` is set to `true`. Table service will put `sources` array here.
+- `waypoints_grouped`: `[WaypointGroup]` Used instead of `waypoints` for Nearest requests with two or more coordinates. One `WaypointGroup` per input coordinate, in input order.
 - `routes`: `[RouteObject]` Array of `RouteObject` objects. May be empty or absent. Should present for Route/Trip/Match services call.
 - `table`: `Table` Table object, may absent. Should be present in case of Table service call.
 
@@ -1051,6 +1072,16 @@ Almost the same as `json` Waypoint object. The following properties differ:
 
 - `location`: `Position` Same as `json` location field, but different format.
 - `nodes`: `Uint64Pair` Same as `json` nodes field, but different format.
+
+### WaypointGroup object
+
+Used only by the Nearest service for requests with two or more coordinates, in place of the flat `waypoints` field. Represents one input coordinate's result within the batch.
+
+**Properties**
+
+- `matched`: `bool` Whether this coordinate could be matched to the street network.
+- `waypoints`: `[Waypoint]` Present when `matched` is `true`. Array of `Waypoint` objects for this coordinate, sorted by distance.
+- `error`: `Error` Present when `matched` is `false`. Carries `code` (`"NoSegment"`) and a `message`, mirroring the JSON per-coordinate error shape.
 
 ### RouteObject object
 

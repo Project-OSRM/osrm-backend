@@ -184,6 +184,9 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("max-nearest-size",
          value<int>(&config.max_results_nearest)->default_value(100),
          "Max. results supported in nearest query") //
+        ("max-nearest-locations",
+         value<int>(&config.max_locations_nearest)->default_value(10),
+         "Max. locations supported in nearest query") //
         ("max-alternatives",
          value<int>(&config.max_alternatives)->default_value(3),
          "Max. number of alternatives supported in the MLD route query") //

@@ -4,6 +4,7 @@
 #include "parameters_io.hpp"
 
 #include "engine/api/match_parameters.hpp"
+#include "engine/api/nearest_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
 #include "engine/api/table_parameters.hpp"
 
@@ -126,6 +127,87 @@ BOOST_AUTO_TEST_CASE(valid_table_json)
                 TableParameters::FallbackCoordinateType::Snapped);
     BOOST_CHECK_EQUAL(result->scale_factor, 2.0);
     BOOST_CHECK(result->IsValid());
+}
+
+BOOST_AUTO_TEST_CASE(valid_nearest_json)
+{
+    std::string error;
+    auto result = parseJSONParameters<NearestParameters>(
+        "{\"coordinates\": [[1.1,2.2],[3.3,4.4]], \"number\": 3}", error);
+    BOOST_REQUIRE_MESSAGE(result, error);
+
+    BOOST_CHECK_EQUAL(result->coordinates.size(), 2);
+    BOOST_CHECK_EQUAL(result->number_of_results, 3u);
+    BOOST_CHECK(result->IsValid());
+}
+
+BOOST_AUTO_TEST_CASE(nearest_number_defaults_when_absent)
+{
+    // Omitting "number" must leave number_of_results at its default, exactly as omitting
+    // number= does for the URL grammar.
+    auto json = checkAccepted<NearestParameters>("{\"coordinates\": [[1.1,2.2]]}");
+    auto url = parseParameters<NearestParameters>(std::string{"1.1,2.2"});
+    BOOST_REQUIRE(url);
+
+    BOOST_CHECK_EQUAL(json.number_of_results, url->number_of_results);
+}
+
+BOOST_AUTO_TEST_CASE(nearest_json_matches_url_parsing)
+{
+    auto url = parseParameters<NearestParameters>(std::string{"1.1,2.2;3.3,4.4?number=5"});
+    BOOST_REQUIRE(url);
+
+    std::string error;
+    auto json = parseJSONParameters<NearestParameters>(
+        "{\"coordinates\": [[1.1,2.2],[3.3,4.4]], \"number\": 5}", error);
+    BOOST_REQUIRE_MESSAGE(json, error);
+
+    BOOST_CHECK(*json == *url);
+}
+
+BOOST_AUTO_TEST_CASE(nearest_single_coordinate_still_valid)
+{
+    // Backward compatibility: a single-coordinate request remains valid, unchanged from the
+    // pre-batch behaviour.
+    auto params = checkAccepted<NearestParameters>("{\"coordinates\": [[1.1,2.2]], \"number\": 1}");
+    BOOST_CHECK_EQUAL(params.coordinates.size(), 1);
+    BOOST_CHECK(params.IsValid());
+}
+
+BOOST_AUTO_TEST_CASE(nearest_rejects_wrong_type)
+{
+    checkRejected<NearestParameters>(bodyWith("\"number\": \"three\""));
+    checkRejected<NearestParameters>(bodyWith("\"number\": -1"));
+    checkRejected<NearestParameters>(bodyWith("\"number\": 1.5"));
+}
+
+BOOST_AUTO_TEST_CASE(nearest_rejects_malformed_bodies)
+{
+    checkRejected<NearestParameters>("{");
+    checkRejected<NearestParameters>("{\"coordinates\": 5}");
+    checkRejected<NearestParameters>(bodyWith("\"bearings\": 5"));
+}
+
+BOOST_AUTO_TEST_CASE(nearest_accepts_per_coordinate_options)
+{
+    // bearings/radiuses/hints/approaches are inherited from BaseParameters and, per the
+    // batch-lookup design, must be accepted once more than one coordinate is present.
+    auto params = checkAccepted<NearestParameters>(
+        bodyWith("\"bearings\": [null,[10,20]], \"radiuses\": [null,\"unlimited\"], "
+                 "\"approaches\": [null,\"curb\"], \"number\": 2"));
+
+    BOOST_REQUIRE_EQUAL(params.bearings.size(), 2u);
+    BOOST_CHECK(!params.bearings[0]);
+    BOOST_REQUIRE(params.bearings[1]);
+    BOOST_CHECK_EQUAL(params.bearings[1]->bearing, 10);
+
+    BOOST_REQUIRE_EQUAL(params.radiuses.size(), 2u);
+    BOOST_CHECK(params.radiuses[1] == std::numeric_limits<double>::infinity());
+
+    BOOST_REQUIRE_EQUAL(params.approaches.size(), 2u);
+    BOOST_CHECK(params.approaches[1] == engine::Approach::CURB);
+
+    BOOST_CHECK(params.IsValid());
 }
 
 BOOST_AUTO_TEST_CASE(valid_match_json)

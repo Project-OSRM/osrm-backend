@@ -2,6 +2,7 @@
 
 #include "engine/api/base_parameters.hpp"
 #include "engine/api/match_parameters.hpp"
+#include "engine/api/nearest_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
 #include "engine/api/table_parameters.hpp"
 
@@ -628,4 +629,28 @@ std::optional<engine::api::TableParameters> parseJSONParameters(const std::strin
     return params;
 }
 
+template <>
+std::optional<engine::api::NearestParameters> parseJSONParameters(const std::string &json_body,
+                                                                  std::string &error)
+{
+    using engine::api::NearestParameters;
+
+    rj::Document doc;
+    if (!parseDocument(json_body, doc, error))
+        return std::nullopt;
+
+    NearestParameters params;
+    if (!parseBaseParameters(doc, params, error))
+        return std::nullopt;
+
+    // number: how many results to return per coordinate
+    if (const auto it = doc.FindMember("number"); it != doc.MemberEnd())
+    {
+        if (!it->value.IsUint())
+            return failOpt(error, "number must be a non-negative integer");
+        params.number_of_results = it->value.GetUint();
+    }
+
+    return params;
+}
 } // namespace osrm::server::api

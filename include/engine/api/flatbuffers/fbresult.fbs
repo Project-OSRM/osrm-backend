@@ -8,6 +8,12 @@ table Error {
     message: string;
 }
 
+table WaypointGroup {
+    matched: bool = false;
+    waypoints: [Waypoint];
+    error: Error;
+}
+
 table FBResult {
     error: bool = false;
     code: Error;
@@ -15,6 +21,7 @@ table FBResult {
     waypoints: [Waypoint]; //Used as 'sources' waypoints for a 'Table' service
     routes: [RouteObject];
     table: TableResult;
+    waypoints_grouped: [WaypointGroup];
 }
 
 root_type FBResult;
