@@ -486,6 +486,16 @@ target_link_libraries(osrm-customize osrm_customize ${Boost_PROGRAM_OPTIONS_LIBR
 target_link_libraries(osrm-contract osrm_contract ${Boost_PROGRAM_OPTIONS_LIBRARY})
 target_link_libraries(osrm-routed osrm ${Boost_PROGRAM_OPTIONS_LIBRARY} ${OPTIONAL_SOCKET_LIBS} ${ZLIB_LIBRARY})
 
+# Lua C modules pulled in by a profile's require() are dlopen'ed at runtime and
+# resolve their lua_* symbols against the hosting executable. vcpkg links Lua
+# statically, which leaves those symbols out of the dynamic symbol table and
+# makes the load fail with "undefined symbol: lua_gettop". ENABLE_EXPORTS puts
+# them back (-rdynamic on ELF toolchains). Only these two binaries embed Lua.
+# See https://github.com/Project-OSRM/osrm-backend/issues/7700
+if(NOT MSVC)
+  set_target_properties(osrm-extract osrm-contract PROPERTIES ENABLE_EXPORTS ON)
+endif()
+
 set(EXTRACTOR_LIBRARIES
     ${BZIP2_LIBRARIES}
     ${BOOST_BASE_LIBRARIES}
