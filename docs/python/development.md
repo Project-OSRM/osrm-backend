@@ -287,15 +287,23 @@ one shot.
 The workflow pushes the version bump, the tag, and the GitHub Release with the
 `BACKEND_RELEASE_TOKEN` secret rather than the default `GITHUB_TOKEN`, because a
 tag pushed with `GITHUB_TOKEN` does not trigger the `osrm-backend.yml` run that
-builds the release artifacts. The token needs `contents:write` and `workflow`
-permissions on the repository.
+builds the release artifacts. The token needs Contents: read and write, to push
+the version bump and the tag, and Actions: read, so the job can poll the CI run
+it waits on. A classic PAT covers both with the `repo` scope.
 
 The first step of the release job checks that token against the GitHub API
-before anything else runs, so an expired or revoked token fails the job in
-seconds with an explicit message instead of a `could not read Username for
-'https://github.com'` error out of `actions/checkout`. When the token is within
-45 days of expiring the step emits a warning on the run, which is the cue to
-rotate the secret before the next monthly release.
+before anything else runs, so a bad token fails the job in seconds with an
+explicit message instead of a `could not read Username for 'https://github.com'`
+error out of `actions/checkout`. It separates the three cases that look alike
+from the outside: an unreachable API (a runner network fault, not a token
+fault), HTTP 401 (the value is not a credential GitHub recognizes, so it has
+expired, been revoked, or picked up stray whitespace on the way into the
+secret), and HTTP 403 (the token is real but its grant is too narrow).
+
+When the token is within 45 days of expiring the step emits a warning on the
+run, which is the cue to rotate the secret before the next monthly release.
+Expiry comes from the `github-authentication-token-expiration` response header,
+which is absent for tokens that never expire.
 
 ### Scheduled monthly release
 
