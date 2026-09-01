@@ -42,6 +42,41 @@ jobs:
             echo "nameserver 1.1.1.1"
             echo "nameserver 8.8.8.8"
           } | sudo tee /etc/resolv.conf > /dev/null
+      - name: Verify release token
+        env:
+          RELEASE_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
+        run: |
+          if [ -z "$RELEASE_TOKEN" ]; then
+            echo "::error title=Release token missing::BACKEND_RELEASE_TOKEN is not available to this workflow. Store a token with contents:write and workflow permissions on $GITHUB_REPOSITORY as an organization or repository secret."
+            exit 1
+          fi
+
+          HEADERS="$(mktemp)"
+          STATUS="$(curl -sS --retry 3 --retry-connrefused -o /dev/null -D "$HEADERS" -w '%{http_code}' \
+            -H "Authorization: Bearer $RELEASE_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY" || echo "000")"
+
+          if [ "$STATUS" != "200" ]; then
+            echo "::error title=Release token rejected::BACKEND_RELEASE_TOKEN was rejected by the GitHub API (HTTP $STATUS); it has most likely expired or been revoked. Rotate the secret with a token that has contents:write and workflow permissions on $GITHUB_REPOSITORY, then re-run this workflow."
+            exit 1
+          fi
+
+          EXPIRY="$(tr -d '\r' < "$HEADERS" | tr 'A-Z' 'a-z' | sed -n 's/^github-authentication-token-expiration: *//p')"
+          if [ -z "$EXPIRY" ]; then
+            echo "BACKEND_RELEASE_TOKEN is valid and does not expire."
+            exit 0
+          fi
+
+          echo "BACKEND_RELEASE_TOKEN is valid until $EXPIRY."
+          EXPIRY_EPOCH="$(date -u -d "$EXPIRY" +%s 2>/dev/null || true)"
+          if [ -n "$EXPIRY_EPOCH" ]; then
+            DAYS_LEFT=$(( (EXPIRY_EPOCH - $(date -u +%s)) / 86400 ))
+            if [ "$DAYS_LEFT" -lt 45 ]; then
+              echo "::warning title=Release token expiring::BACKEND_RELEASE_TOKEN expires in $DAYS_LEFT day(s), on $EXPIRY. Rotate it before the next monthly release."
+            fi
+          fi
+
       - uses: actions/checkout@v7
         with:
           token: ${{ secrets.BACKEND_RELEASE_TOKEN }}
