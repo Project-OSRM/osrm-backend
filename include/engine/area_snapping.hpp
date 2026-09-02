@@ -44,8 +44,13 @@ enum class ApproachRole
  * have given if the coordinate had been part of it when it was built.  See
  * plans/open-area-snapping.md, sections R11 and R12.
  *
- * @return the candidates, or nothing if the coordinate is not inside any open area, or
- *         is inside one whose vertices are all unreachable.
+ * Areas overlap, and one holding the coordinate may have nothing to offer -- the extractor
+ * records a polygon before it applies AreaMesher::max_vertices, so a plaza too large to
+ * mesh is stored with no way on any of its vertices.  Every area holding the coordinate is
+ * tried before giving up.
+ *
+ * @return the candidates, or nothing if the coordinate is inside no open area, or inside
+ *         only areas whose vertices are all unreachable.
  */
 std::optional<PhantomNodeCandidates> SnapInsideOpenArea(const datafacade::BaseDataFacade &facade,
                                                         const util::Coordinate coordinate,

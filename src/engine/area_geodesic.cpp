@@ -101,11 +101,9 @@ Point projected_vertex(const SolvedArea &area, std::size_t index)
     return Point{};
 }
 
-SolvedArea solve(const std::vector<std::span<const util::Coordinate>> &rings)
+/** The mutually visible pairs, which is the expensive half and the reason to cache. */
+void build_adjacency(SolvedArea &area)
 {
-    SolvedArea area;
-    flatten(rings, area);
-
     area.adjacency.resize(area.size());
     for (std::size_t u = 0; u < area.size(); ++u)
     {
@@ -122,7 +120,6 @@ SolvedArea solve(const std::vector<std::span<const util::Coordinate>> &rings)
             }
         }
     }
-    return area;
 }
 
 /**
@@ -324,12 +321,22 @@ geodesic_between(std::uint32_t dataset,
     }
     if (area == nullptr)
     {
-        // build it before deciding the points are inside, so that a run of queries
-        // against one area pays for the graph once whatever the answers turn out to be
-        area = &cache().put(key, solve(rings));
+        // Containment is decided before the graph is built, not after.  Projecting the
+        // rings is linear and building the visibility graph is cubic, and a coordinate
+        // arrives here once for every area whose *bounding box* claimed it, most of
+        // which do not hold it at all.  Building first would charge every one of those
+        // near misses the full price of an answer that is about to be thrown away.
+        SolvedArea candidate;
+        flatten(rings, candidate);
+        if (!inside_area(projected_from, candidate.rings) ||
+            !inside_area(projected_to, candidate.rings))
+        {
+            return std::nullopt;
+        }
+        build_adjacency(candidate);
+        area = &cache().put(key, std::move(candidate));
     }
-
-    if (!inside_area(projected_from, area->rings) || !inside_area(projected_to, area->rings))
+    else if (!inside_area(projected_from, area->rings) || !inside_area(projected_to, area->rings))
     {
         return std::nullopt;
     }

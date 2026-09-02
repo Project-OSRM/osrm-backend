@@ -37,15 +37,14 @@ bool on_any_ring(const Point &point, std::span<const Ring> rings, const double t
     const auto limit = tolerance * tolerance;
     for (const Ring &ring : rings)
     {
-        bool found = false;
-        for_each_edge(ring,
-                      [&](const Point &a, const Point &b)
-                      {
-                          if (!found && distance_squared_to_segment(point, a, b) <= limit)
-                              found = true;
-                      });
-        if (found)
-            return true;
+        // A plain loop rather than for_each_edge, which cannot stop early.  This runs
+        // once per vertex from visible_vertices, so scanning a whole ring after the
+        // answer is known costs the snapping path a factor of the ring's length.
+        for (std::size_t i = 0; i < ring.size(); ++i)
+        {
+            if (distance_squared_to_segment(point, ring[i], ring[(i + 1) % ring.size()]) <= limit)
+                return true;
+        }
     }
     return false;
 }
@@ -53,20 +52,22 @@ bool on_any_ring(const Point &point, std::span<const Ring> rings, const double t
 
 bool crosses_ring(const Point &from, const Point &to, Ring ring)
 {
-    bool crosses = false;
-    for_each_edge(ring,
-                  [&](const Point &a, const Point &b)
-                  {
-                      // an edge sharing an endpoint with from..to meets it only there,
-                      // and cannot obstruct it -- the same reasoning as in the sweep
-                      const auto same = [](const Point &p, const Point &q)
-                      { return p.x == q.x && p.y == q.y; };
-                      if (same(a, from) || same(a, to) || same(b, from) || same(b, to))
-                          return;
-                      if (extractor::area::intersect(&from, &to, &a, &b))
-                          crosses = true;
-                  });
-    return crosses;
+    const auto same = [](const Point &p, const Point &q) { return p.x == q.x && p.y == q.y; };
+    // A plain loop rather than for_each_edge, which cannot stop early.  visible_vertices
+    // calls this once per vertex per ring, so a whole-ring scan after the first crossing
+    // is found is a factor of the ring's length on the snapping path.
+    for (std::size_t i = 0; i < ring.size(); ++i)
+    {
+        const Point &a = ring[i];
+        const Point &b = ring[(i + 1) % ring.size()];
+        // an edge sharing an endpoint with from..to meets it only there, and cannot
+        // obstruct it -- the same reasoning as in the sweep
+        if (same(a, from) || same(a, to) || same(b, from) || same(b, to))
+            continue;
+        if (extractor::area::intersect(&from, &to, &a, &b))
+            return true;
+    }
+    return false;
 }
 
 bool inside_ring(const Point &point, Ring ring)

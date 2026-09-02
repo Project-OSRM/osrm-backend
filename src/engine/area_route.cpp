@@ -26,20 +26,20 @@ constexpr double DEFAULT_WALKING_SPEED = 1.4;
 double metres(const util::Coordinate a, const util::Coordinate b)
 { return util::coordinate_calculation::greatCircleDistance(a, b); }
 
-/** The one area holding both coordinates, if there is one. */
-std::optional<extractor::AreaPolygonSegment> commonArea(const datafacade::BaseDataFacade &facade,
-                                                        const util::Coordinate from,
-                                                        const util::Coordinate to)
+/** Every area holding both coordinates, in an order that is a property of the data. */
+std::vector<extractor::AreaPolygonSegment> commonAreas(const datafacade::BaseDataFacade &facade,
+                                                       const util::Coordinate from,
+                                                       const util::Coordinate to)
 {
     auto here = facade.GetOpenAreasAt(from);
     if (here.empty())
     {
-        return std::nullopt;
+        return {};
     }
     const auto there = facade.GetOpenAreasAt(to);
     if (there.empty())
     {
-        return std::nullopt;
+        return {};
     }
 
     // the r-tree hands them back in packing order, which is not a property of the input
@@ -48,18 +48,46 @@ std::optional<extractor::AreaPolygonSegment> commonArea(const datafacade::BaseDa
               [](const auto &lhs, const auto &rhs)
               { return lhs.vertices_offset < rhs.vertices_offset; });
 
+    std::vector<extractor::AreaPolygonSegment> shared;
     for (const auto &area : here)
     {
-        const auto shared = std::any_of(there.begin(),
-                                        there.end(),
-                                        [&](const auto &other)
-                                        { return other.vertices_offset == area.vertices_offset; });
-        if (!shared)
+        if (std::any_of(there.begin(),
+                        there.end(),
+                        [&](const auto &other)
+                        { return other.vertices_offset == area.vertices_offset; }))
         {
-            continue;
+            // a bounding box is not the area; geodesic_between checks containment properly
+            shared.push_back(area);
         }
-        // a bounding box is not the area; geodesic_between checks containment properly
-        return area;
+    }
+    return shared;
+}
+
+/**
+ * @brief The geodesic between two coordinates, across whichever shared area holds them.
+ *
+ * The r-tree answers with bounding boxes, and a bounding box is not the area, so a
+ * coordinate can be filed under an area it is not inside.  geodesic_between settles that
+ * properly and declines when it does not hold.  Taking only the first shared area
+ * therefore threw the journey away whenever the first one was a near miss, even though a
+ * later one answered it perfectly well.
+ *
+ * The area is returned with the geodesic because the caller needs its walking speed.
+ */
+std::optional<std::pair<extractor::AreaPolygonSegment, Geodesic>>
+geodesicAcross(const datafacade::BaseDataFacade &facade,
+               const util::Coordinate from,
+               const util::Coordinate to)
+{
+    for (const auto &area : commonAreas(facade, from, to))
+    {
+        const auto rings = facade.GetOpenAreaRings(area);
+        auto geodesic =
+            geodesic_between(facade.GetCheckSum(), area.vertices_offset, rings, from, to);
+        if (geodesic)
+        {
+            return std::pair{area, std::move(*geodesic)};
+        }
     }
     return std::nullopt;
 }
@@ -133,19 +161,13 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
         {
             continue;
         }
-        const auto area = commonArea(facade, from, to);
-        if (!area)
+        const auto answer = geodesicAcross(facade, from, to);
+        if (!answer)
         {
             continue;
         }
-
-        const auto rings = facade.GetOpenAreaRings(*area);
-        const auto geodesic =
-            geodesic_between(facade.GetCheckSum(), area->vertices_offset, rings, from, to);
-        if (!geodesic)
-        {
-            continue;
-        }
+        const auto &area = answer->first;
+        const auto &geodesic = answer->second;
 
         // No comparison against the routed leg: there is nothing to compare with.  The
         // leg runs between the two *snapped* points and leaves the walks to them out of
@@ -154,15 +176,15 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
         // path between the two coordinates through the area, and a route that leaves the
         // area to come back could only beat it on ways faster than the area itself,
         // which for a profile that meshes plazas is not a case that arises.
-        if (geodesic->length < WORTH_REPLACING_METRES)
+        if (geodesic.length < WORTH_REPLACING_METRES)
         {
             continue;
         }
 
         // Every bend has to resolve to a node, or the geometry cannot be written down.
         std::vector<NodeID> bends;
-        bends.reserve(geodesic->bends.size());
-        for (const auto bend : geodesic->bends)
+        bends.reserve(geodesic.bends.size());
+        for (const auto bend : geodesic.bends)
         {
             const auto node = nodeAt(facade, bend);
             if (!node)
@@ -171,7 +193,7 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
             }
             bends.push_back(*node);
         }
-        if (bends.size() != geodesic->bends.size())
+        if (bends.size() != geodesic.bends.size())
         {
             continue;
         }
@@ -186,7 +208,7 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
 
         const auto cost = [&](double length)
         {
-            const auto stretch = length / area->walking_speed;
+            const auto stretch = length / area.walking_speed;
             return std::pair{to_alias<EdgeWeight>(std::lround(stretch * multiplier)),
                              to_alias<EdgeDuration>(std::lround(stretch * 10.))};
         };
@@ -203,10 +225,10 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
         auto previous = from;
         for (std::size_t i = 0; i < bends.size(); ++i)
         {
-            const auto [step_weight, step_duration] = cost(metres(previous, geodesic->bends[i]));
+            const auto [step_weight, step_duration] = cost(metres(previous, geodesic.bends[i]));
             path.push_back(
                 PathData{named, bends[i], step_weight, {0}, step_duration, {0}, 0, std::nullopt});
-            previous = geodesic->bends[i];
+            previous = geodesic.bends[i];
         }
 
         // assembleLeg adds the target phantom's own weight on top of the path, and
@@ -357,25 +379,20 @@ void useGeodesicInTable(const datafacade::BaseDataFacade &facade,
         for (std::size_t column = 0; column < columns; ++column)
         {
             const auto to = coordinates[destinations.empty() ? column : destinations[column]];
-            const auto area = commonArea(facade, from, to);
-            if (!area)
+            const auto answer = geodesicAcross(facade, from, to);
+            if (!answer)
             {
                 continue;
             }
-            const auto rings = facade.GetOpenAreaRings(*area);
-            const auto geodesic =
-                geodesic_between(facade.GetCheckSum(), area->vertices_offset, rings, from, to);
-            if (!geodesic)
-            {
-                continue;
-            }
+            const auto &area = answer->first;
+            const auto &geodesic = answer->second;
 
             const auto cell = row * columns + column;
             durations[cell] =
-                to_alias<EdgeDuration>(std::lround(geodesic->length / area->walking_speed * 10.));
+                to_alias<EdgeDuration>(std::lround(geodesic.length / area.walking_speed * 10.));
             if (!distances.empty())
             {
-                distances[cell] = to_alias<EdgeDistance>(geodesic->length);
+                distances[cell] = to_alias<EdgeDistance>(geodesic.length);
             }
         }
     }
