@@ -141,6 +141,11 @@ struct ProfileProperties
     //! Deliberately not called walking_speed: the profiles already use that name for a
     //! speed in km/h, and mixing the two units would be silent.
     double area_walking_speed = 1.4;
+    //! effective area, in square metres, below which a vertex of an open area is
+    //! simplified away at extraction (Visvalingam-Whyatt).  An OSM plaza is drawn to be
+    //! looked at, and its kerbstone detail is paid for again on every query that snaps
+    //! into it.  Zero switches it off.  See extractor/area/simplify.hpp.
+    double area_simplify_threshold = 0.0;
 };
 } // namespace osrm::extractor
 
