@@ -5,6 +5,7 @@
 
 #include <array>
 #include <filesystem>
+#include <ostream>
 #include <set>
 #include <string>
 #include <vector>
