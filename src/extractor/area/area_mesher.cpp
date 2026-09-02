@@ -4,6 +4,7 @@
 #include "extractor/area/area_mesher.hpp"
 
 #include "extractor/area/dijkstra.hpp"
+#include "extractor/area/simplify.hpp"
 #include "extractor/area/typedefs.hpp"
 #include "extractor/area/util.hpp"
 #include "extractor/area/visibility_graph.hpp"
@@ -361,15 +362,29 @@ void AreaMesher::mesh_area(const osmium::Area &area,
     };
 #endif
 
-    for (const OsmiumPolygon &poly : area_builder(area))
+    for (const OsmiumPolygon &drawn : area_builder(area))
     {
-        NodeRefSet entry_points = get_entry_points(poly);
+        NodeRefSet entry_points = get_entry_points(drawn);
         if (entry_points.size() < 2)
         {
-            util::Log(logDEBUG) << "  Poly outer size: " << poly.outer().size();
-            util::Log(logDEBUG) << "  Poly inner rings: " << poly.inners().size();
+            util::Log(logDEBUG) << "  Poly outer size: " << drawn.outer().size();
+            util::Log(logDEBUG) << "  Poly inner rings: " << drawn.inners().size();
             util::Log(logDEBUG) << "  Not enough entry points: " << entry_points.size();
             continue;
+        }
+
+        // Drop the vertices that carry no shape, before anything else looks at the
+        // polygon, so that the mesher, the stored rings and everything the engine does
+        // with them are all talking about one geometry.  The entry points are pinned:
+        // they were found on the polygon as drawn, and an entrance simplified away leaves
+        // the area unreachable from the way that met it.
+        const OsmiumPolygon simplified = simplify(drawn, area_simplify_threshold, entry_points);
+        const OsmiumPolygon &poly = simplified;
+
+        if (poly.outer().size() != drawn.outer().size())
+        {
+            util::Log(logDEBUG) << "  Simplified outer ring " << drawn.outer().size() << " -> "
+                                << poly.outer().size() << " vertices";
         }
 
         // Hand the engine what it needs to snap a coordinate lying inside this area

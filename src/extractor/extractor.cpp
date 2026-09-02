@@ -656,6 +656,7 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         const auto &area_properties = scripting_environment.GetProfileProperties();
         mesher.area_walking_speed = area_properties.area_walking_speed;
         mesher.emit_visibility_graph = area_properties.area_emit_visibility_graph;
+        mesher.area_simplify_threshold = area_properties.area_simplify_threshold;
         mesher.init(area_manager, extraction_containers);
 
         tbb::filter<OsmiumBuffer, OsmiumBuffer> mesh_areas_filter(
