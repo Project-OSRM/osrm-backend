@@ -311,6 +311,31 @@ BOOST_AUTO_TEST_CASE(geodesic_caches_the_graph_per_area_and_dataset)
     BOOST_CHECK_EQUAL(cached_geodesic_count(), 0u);
 }
 
+/**
+ * A near miss costs nothing but the containment test.
+ *
+ * The r-tree answers with bounding boxes, so this is asked about every area whose box
+ * claims a coordinate, and most of them do not hold it. Building the visibility graph is
+ * cubic in the vertex count and deciding containment is linear, so the order matters:
+ * building first charged every near miss the full price of an answer already lost.
+ */
+BOOST_AUTO_TEST_CASE(geodesic_does_not_build_a_graph_for_a_point_it_does_not_hold)
+{
+    forget_cached_geodesics();
+
+    // a right triangle sharing its bounding box with the 1000 m square
+    const std::vector<util::Coordinate> corners{at(0, 0), at(1000, 0), at(0, 1000)};
+    const Rings rings{corners};
+
+    // x + y > 1000, so both are in the bounding box and outside the triangle
+    BOOST_CHECK(!geodesic_between(1, fresh_key(), rings, at(600, 600), at(700, 700)));
+    BOOST_CHECK_EQUAL(cached_geodesic_count(), 0u);
+
+    // and a pair it does hold still builds and is kept
+    BOOST_REQUIRE(geodesic_between(1, fresh_key(), rings, at(100, 100), at(200, 200)));
+    BOOST_CHECK_EQUAL(cached_geodesic_count(), 1u);
+}
+
 // The cache is bounded, and evicting does not change any answer.
 BOOST_AUTO_TEST_CASE(geodesic_cache_is_bounded_and_eviction_is_invisible)
 {

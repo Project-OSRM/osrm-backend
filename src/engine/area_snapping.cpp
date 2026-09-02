@@ -242,7 +242,17 @@ std::optional<PhantomNodeCandidates> SnapInsideOpenArea(const datafacade::BaseDa
 
         if (candidates.empty())
         {
-            return std::nullopt;
+            // Nothing here to set off from, which does not mean there is nowhere.  An
+            // area the mesher declined -- AreaMesher::max_vertices -- is recorded all the
+            // same, and no vertex of it carries a way, so it yields nothing however long
+            // it is walked over.  Areas overlap, so another one may hold this coordinate
+            // and be meshed.
+            //
+            // Returning here instead of looking sent the request back to ordinary
+            // snapping, which projects onto the nearest edge of the perimeter, and the
+            // route then leaves the plaza by a corner and comes back.  The `return` after
+            // the loop is what answers "none of them had anything".
+            continue;
         }
         return candidates;
     }
