@@ -306,10 +306,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                edge_based_edge_list,
                                ebg_connectivity_checksum);
 
-    // Only now do the edge-based nodes have ids, so only now can an area's vertex say
-    // which of them stand on it.  See WriteOpenAreas.
-    WriteOpenAreas(parsed_osm_data.open_areas, area_vertex_nodes, edge_based_node_segments);
-
     ProcessGuidanceTurns(node_based_graph,
                          edge_based_nodes_container,
                          coordinates,
@@ -340,6 +336,12 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                    edge_based_edge_list,
                    edge_based_node_segments,
                    edge_based_nodes_container);
+
+    // The last point at which the segments are still here, and the first at which they
+    // are the ones the engine will see: the r-tree takes them next, and everything that
+    // renumbers or reprocesses them has run.  An area's vertex names them, so this
+    // cannot happen beside the meshing, where they do not exist yet.
+    WriteOpenAreas(parsed_osm_data.open_areas, area_vertex_nodes, edge_based_node_segments);
 
     util::Log() << "Building r-tree ...";
     TIMER_START(rtree);
