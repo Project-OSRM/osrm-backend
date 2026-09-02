@@ -52,6 +52,7 @@
 #include <osmium/thread/pool.hpp>
 #include <osmium/visitor.hpp>
 
+#include <filesystem>
 #include <algorithm>
 #include <memory>
 #include <thread>
@@ -953,6 +954,16 @@ void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons,
 {
     if (polygons.empty())
     {
+        // Nothing to write, and nothing must be left over either.  The engine loads
+        // .osrm.openareas whenever the file exists, so one left behind by an earlier
+        // extraction with a different profile would be attached to this graph as if it
+        // belonged to it, with edge-based node ids that mean something else entirely.
+        // Every other output of an extraction is overwritten; these have to be removed.
+        for (const auto &suffix :
+             {".osrm.openareas", ".osrm.openareas.ramIndex", ".osrm.openareas.fileIndex"})
+        {
+            std::filesystem::remove(config.GetPath(suffix));
+        }
         return;
     }
 

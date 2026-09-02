@@ -41,9 +41,11 @@ flag turned on:
 osrm-extract -p profiles/foot_area.lua your-data.osm.pbf
 ```
 
-When meshing is off the extractor writes no `.osrm.openareas` files and the profile
-behaves exactly as it did before the feature existed. The rest of this section is for
-adding meshing to a profile of your own.
+When meshing is off the extractor writes no `.osrm.openareas` files, and removes any
+left behind by an earlier extraction under the same name, so that a dataset built with one
+profile cannot carry the areas of another. The profile then behaves exactly as it did
+before the feature existed. The rest of this section is for adding meshing to a profile of
+your own.
 
 ### Adding it to your own profile
 

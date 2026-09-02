@@ -23,10 +23,13 @@ clean:
 
 ch/$(DATA_NAME).osrm: $(DATA_NAME).osrm
 	mkdir -p ch
+	# a fresh copy: a file the extraction no longer produces must not survive from an older one
+	rm -f ch/$(DATA_NAME).osrm.*
 	cp $(DATA_NAME).osrm.* ch/
 
 mld/$(DATA_NAME).osrm: $(DATA_NAME).osrm
 	mkdir -p mld
+	rm -f mld/$(DATA_NAME).osrm.*
 	cp $(DATA_NAME).osrm.* mld/
 
 $(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTRACT)
