@@ -42,6 +42,62 @@ jobs:
             echo "nameserver 1.1.1.1"
             echo "nameserver 8.8.8.8"
           } | sudo tee /etc/resolv.conf > /dev/null
+      - name: Verify release token
+        env:
+          RELEASE_TOKEN: ${{ secrets.BACKEND_RELEASE_TOKEN }}
+        run: |
+          PERMS="Contents: read and write plus Actions: read on $GITHUB_REPOSITORY (a classic PAT needs the repo scope)"
+
+          if [ -z "$RELEASE_TOKEN" ]; then
+            echo "::error title=Release token missing::BACKEND_RELEASE_TOKEN is not available to this workflow. Store a token with $PERMS as an organization or repository secret."
+            exit 1
+          fi
+
+          HEADERS="$(mktemp)"
+          STATUS="$(curl -sS --retry 3 --retry-connrefused -o /dev/null -D "$HEADERS" -w '%{http_code}' \
+            -H "Authorization: Bearer $RELEASE_TOKEN" \
+            -H "Accept: application/vnd.github+json" \
+            "https://api.github.com/repos/$GITHUB_REPOSITORY" || echo "000")"
+
+          case "$STATUS" in
+            200)
+              ;;
+            000)
+              echo "::error title=Token check failed::Could not reach the GitHub API to validate BACKEND_RELEASE_TOKEN. That is a connectivity failure on the runner, not evidence that the token is bad."
+              exit 1
+              ;;
+            401)
+              echo "::error title=Release token rejected::BACKEND_RELEASE_TOKEN was rejected with HTTP 401, so the value is not a credential GitHub recognizes: it has expired, been revoked, or been stored with stray whitespace. Regenerate it, update the secret, and re-run this workflow."
+              exit 1
+              ;;
+            403)
+              echo "::error title=Release token not authorized::BACKEND_RELEASE_TOKEN authenticated but was refused with HTTP 403, so the token is valid and its grant is not. It needs $PERMS."
+              exit 1
+              ;;
+            *)
+              echo "::error title=Release token check failed::Validating BACKEND_RELEASE_TOKEN against the GitHub API returned an unexpected HTTP $STATUS."
+              exit 1
+              ;;
+          esac
+
+          EXPIRY="$(tr -d '\r' < "$HEADERS" | awk 'tolower($1) == "github-authentication-token-expiration:" { $1 = ""; sub(/^[[:space:]]+/, ""); print }')"
+          if [ -z "$EXPIRY" ]; then
+            echo "BACKEND_RELEASE_TOKEN is valid and does not expire."
+            exit 0
+          fi
+
+          echo "BACKEND_RELEASE_TOKEN is valid until $EXPIRY."
+          EXPIRY_EPOCH="$(date -u -d "$EXPIRY" +%s 2>/dev/null || true)"
+          if [ -z "$EXPIRY_EPOCH" ]; then
+            echo "::warning title=Release token expiry unreadable::Could not parse the token expiry '$EXPIRY', so the expiry warning is inactive for this run."
+            exit 0
+          fi
+
+          DAYS_LEFT=$(( (EXPIRY_EPOCH - $(date -u +%s)) / 86400 ))
+          if [ "$DAYS_LEFT" -lt 45 ]; then
+            echo "::warning title=Release token expiring::BACKEND_RELEASE_TOKEN expires in $DAYS_LEFT day(s), on $EXPIRY. Rotate it before the next monthly release."
+          fi
+
       - uses: actions/checkout@v7
         with:
           token: ${{ secrets.BACKEND_RELEASE_TOKEN }}

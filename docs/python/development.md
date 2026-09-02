@@ -282,6 +282,29 @@ not by pushing a tag by hand. The workflow bumps the version, creates the tag,
 drives CI, downloads the built wheels, and publishes to both PyPI and npm in
 one shot.
 
+### Release credentials
+
+The workflow pushes the version bump, the tag, and the GitHub Release with the
+`BACKEND_RELEASE_TOKEN` secret rather than the default `GITHUB_TOKEN`, because a
+tag pushed with `GITHUB_TOKEN` does not trigger the `osrm-backend.yml` run that
+builds the release artifacts. The token needs Contents: read and write, to push
+the version bump and the tag, and Actions: read, so the job can poll the CI run
+it waits on. A classic PAT covers both with the `repo` scope.
+
+The first step of the release job checks that token against the GitHub API
+before anything else runs, so a bad token fails the job in seconds with an
+explicit message instead of a `could not read Username for 'https://github.com'`
+error out of `actions/checkout`. It separates the three cases that look alike
+from the outside: an unreachable API (a runner network fault, not a token
+fault), HTTP 401 (the value is not a credential GitHub recognizes, so it has
+expired, been revoked, or picked up stray whitespace on the way into the
+secret), and HTTP 403 (the token is real but its grant is too narrow).
+
+When the token is within 45 days of expiring the step emits a warning on the
+run, which is the cue to rotate the secret before the next monthly release.
+Expiry comes from the `github-authentication-token-expiration` response header,
+which is absent for tokens that never expire.
+
 ### Scheduled monthly release
 
 A cron on the 1st of each month at 08:00 UTC runs the workflow against
@@ -290,9 +313,9 @@ A cron on the 1st of each month at 08:00 UTC runs the workflow against
 1. Compute the next version as `(YYYY-2000).M.patchlevel` (e.g. `26.4.0`).
 2. Bump `package.json` + `package-lock.json`, commit, create annotated tag
    `v<version>`, push branch and tag.
-3. Dispatch `osrm-backend.yml` on the tag. That run builds wheels + sdist
+3. The tag push triggers `osrm-backend.yml`. That run builds wheels + sdist
    via `cibuildwheel` and uploads them as `wheels-*` artifacts.
-4. Wait for the dispatched CI run to finish with conclusion `success`.
+4. Wait for the CI run on the tag's commit to finish with conclusion `success`.
 5. Run the `publish` job: download every `wheels-*` artifact into `dist/`,
    publish to PyPI via trusted publisher (OIDC), then `npm publish`.
 
