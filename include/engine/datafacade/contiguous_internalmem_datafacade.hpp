@@ -381,6 +381,44 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     }
 
     std::vector<PhantomNodeWithDistance>
+    PhantomNodesOnAreaVertex(const extractor::AreaPolygonSegment &area,
+                             const std::uint32_t vertex,
+                             const Approach approach) const override final
+    {
+        if (vertex >= area.num_vertices)
+        {
+            return {};
+        }
+        const std::size_t index = area.vertices_offset + vertex;
+        if (index + 1 >= m_open_area_vertex_segment_offsets.size())
+        {
+            return {};
+        }
+        const auto begin = m_open_area_vertex_segment_offsets[index];
+        auto end = m_open_area_vertex_segment_offsets[index + 1];
+        if (begin >= end)
+        {
+            return {};
+        }
+
+        // The same budget the nearest-neighbour search worked to.  A plaza vertex carries
+        // every chord of the mesh that ends on it, sixteen or so, and seeding the search
+        // with all of them costs six times the latency for the same routes: once one
+        // chord out of a vertex is seeded, the search reaches the others by turning.
+        // Which few the r-tree handed back was a tie broken by its packing order; these
+        // are the first in the stored order, which is a property of the graph.
+        constexpr std::uint32_t AREA_VERTEX_CANDIDATES = 8;
+        end = std::min(end, begin + AREA_VERTEX_CANDIDATES);
+
+        const std::vector<extractor::EdgeBasedNodeSegment> segments(
+            m_open_area_vertex_segments.begin() + begin, m_open_area_vertex_segments.begin() + end);
+
+        BOOST_ASSERT(m_geospatial_query.get());
+        return m_geospatial_query->MakePhantomNodesOn(
+            m_open_area_vertices[index], segments, approach);
+    }
+
+    std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const double max_distance,
                                const std::optional<Bearing> bearing,

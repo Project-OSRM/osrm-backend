@@ -108,6 +108,55 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         return MakePhantomNodes(input_coordinate, results);
     }
 
+    /**
+     * @brief The phantoms standing on one point, for segments the caller already knows.
+     *
+     * The same filters and the same MakePhantomNode as a nearest-neighbour search, for a
+     * caller that does not need the r-tree to find out what is there.  Snapping into an
+     * open area is such a caller: extraction records the segments standing on each of an
+     * area's vertices, so asking the r-tree once per vertex is asking a point lookup as a
+     * spatial search.  See extractor::Extractor::WriteOpenAreas.
+     *
+     * A phantom belongs to the coordinate it was built for -- MakePhantomNode projects the
+     * segment onto it, and the location, both weights and all four offsets follow from
+     * that projection -- so this takes segments and builds the phantoms here, rather than
+     * letting anything store phantoms and reuse them for another point.
+     */
+    std::vector<PhantomNodeWithDistance> MakePhantomNodesOn(const util::Coordinate input_coordinate,
+                                                            const std::vector<EdgeData> &segments,
+                                                            const Approach approach) const
+    {
+        std::vector<PhantomNodeWithDistance> results;
+        results.reserve(segments.size());
+        for (auto data : segments)
+        {
+            if (!data.forward_segment_id.enabled)
+            {
+                // HasValidEdge reads the forward id to find the geometry, and every
+                // segment the r-tree holds has one
+                continue;
+            }
+            // the filters read the segment and the request, never the projection, so the
+            // candidate needs no coordinate of its own
+            const CandidateSegment candidate{util::Coordinate{}, data};
+            const auto excluded = CheckSegmentExclude(candidate);
+            const auto approached = CheckApproach(input_coordinate, candidate, approach);
+            const auto valid_edge = HasValidEdge(candidate);
+
+            data.forward_segment_id.enabled = data.forward_segment_id.enabled && excluded.first &&
+                                              approached.first && valid_edge.first;
+            data.reverse_segment_id.enabled = data.reverse_segment_id.enabled && excluded.second &&
+                                              approached.second && valid_edge.second;
+
+            if (!data.forward_segment_id.enabled && !data.reverse_segment_id.enabled)
+            {
+                continue;
+            }
+            results.push_back(MakePhantomNode(input_coordinate, data));
+        }
+        return results;
+    }
+
     // Returns a list of phantom node candidates from the nearest location that are valid
     // within the provided parameters. If there is tie between equidistant locations,
     // we only pick candidates from one location.

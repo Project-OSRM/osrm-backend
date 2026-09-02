@@ -105,6 +105,28 @@ class MockAreaFacade final : public MockBaseDataFacade
         return found;
     }
 
+    /** The same phantom NearestPhantomNodes would find, by vertex rather than by search. */
+    std::vector<engine::PhantomNodeWithDistance>
+    PhantomNodesOnAreaVertex(const extractor::AreaPolygonSegment &segment,
+                             const std::uint32_t vertex,
+                             const engine::Approach /*approach*/) const override
+    {
+        NodeID id = 1;
+        for (const auto &area : areas)
+        {
+            if (area.segment.vertices_offset == segment.vertices_offset)
+            {
+                if (!area.reachable || vertex >= area.outer.size())
+                {
+                    return {};
+                }
+                return {{standing_at(area.outer[vertex], id + 2 * vertex), 0.0}};
+            }
+            id += 2 * area.outer.size();
+        }
+        return {};
+    }
+
   private:
     static bool within_bounding_box(const MockArea &area, const util::Coordinate coordinate)
     {

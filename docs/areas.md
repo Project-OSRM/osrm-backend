@@ -139,6 +139,32 @@ function process_way(profile, way, result, relations)
 end
 ```
 
+### What is written, and who reads it
+
+Meshing produces three files beside the usual ones. `.osrm.openareas` holds every meshed
+area's rings, flattened, and `.osrm.openareas.ramIndex` and `.fileIndex` hold an r-tree
+over their bounding boxes, which is how the engine finds the area a coordinate falls
+into.
+
+`.osrm.openareas` also records, for each vertex of each area, the edge-based node
+segments standing on it. Snapping a coordinate inside an area offers one candidate per
+vertex the coordinate can see, and it needs to know which edges leave each of those
+vertices. Asking the r-tree was one nearest-neighbour traversal per visible vertex, which
+was most of the cost of a request into a plaza; the extractor knows the answer, so it
+writes it down. The segments are stored as the r-tree stores them, and the engine builds
+the phantom for the vertex from them the same way a search would have, at the vertex's
+own coordinate. At most eight are used per vertex, the budget the search had, since one
+edge out of a vertex is enough for the search to reach the rest by turning.
+
+Those segments name edge-based nodes by id, and `osrm-partition` renumbers the edge-based
+nodes for cell locality. It renumbers the stored segments in the same step, alongside the
+r-tree leaves and the node data. A partitioned dataset whose `.osrm.openareas` came from
+somewhere else is wrong in a way nothing checks, so keep the files of one extraction
+together.
+
+The format changed when the segments were added, so data extracted before that has to be
+extracted again.
+
 ## Known trade-offs and follow-ups
 
 The feature ships EXPERIMENTAL, and a few deliberate trade-offs were left in place to

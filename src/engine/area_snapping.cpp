@@ -4,6 +4,8 @@
 
 #include "util/coordinate_calculation.hpp"
 
+#include <boost/numeric/conversion/cast.hpp>
+
 #include <algorithm>
 #include <cmath>
 #include <span>
@@ -21,15 +23,6 @@ namespace
  * the vertex is an endpoint of some way.  Anything further away is a different place.
  */
 constexpr double SAME_PLACE_METRES = 0.5;
-
-/** Nothing is visible from further than this, so do not look. */
-constexpr double VERTEX_LOOKUP_RADIUS_METRES = 1.0;
-
-/**
- * How many phantoms to ask for at a vertex.  Several ways meet at a plaza vertex and we
- * want the ones that *leave* it, so one is not enough.
- */
-constexpr std::size_t VERTEX_LOOKUP_RESULTS = 8;
 
 struct ProjectedRings
 {
@@ -177,11 +170,14 @@ std::optional<PhantomNodeCandidates> SnapInsideOpenArea(const datafacade::BaseDa
         for (const auto index : visible_vertices(point, projected.views))
         {
             const auto vertex = vertex_at(rings, index);
-            for (const auto &found : facade.NearestPhantomNodes(vertex,
-                                                                VERTEX_LOOKUP_RESULTS,
-                                                                VERTEX_LOOKUP_RADIUS_METRES,
-                                                                std::nullopt,
-                                                                approach))
+
+            // Which edge-based nodes stand here is recorded at extraction, so this is a
+            // lookup.  Asking the r-tree for the nearest few instead meant one traversal
+            // per visible vertex -- most of the cost of snapping into an area -- and it
+            // had to hand back things that merely pass close by for the tests below to
+            // throw away again.
+            for (const auto &found : facade.PhantomNodesOnAreaVertex(
+                     area, boost::numeric_cast<std::uint32_t>(index), approach))
             {
                 const auto &phantom = found.phantom_node;
                 if (util::coordinate_calculation::greatCircleDistance(phantom.location, vertex) >
