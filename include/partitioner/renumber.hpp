@@ -46,8 +46,8 @@ inline void renumber(std::vector<Partition> &partitions,
     }
 }
 
-inline void renumber(util::vector_view<extractor::EdgeBasedNodeSegment> &segments,
-                     const std::vector<std::uint32_t> &permutation)
+template <typename SegmentsT>
+inline void renumberSegments(SegmentsT &segments, const std::vector<std::uint32_t> &permutation)
 {
     for (auto &segment : segments)
     {
@@ -57,6 +57,17 @@ inline void renumber(util::vector_view<extractor::EdgeBasedNodeSegment> &segment
             segment.reverse_segment_id.id = permutation[segment.reverse_segment_id.id];
     }
 }
+
+//! The r-tree leaves, renumbered in place in the mapped .osrm.fileIndex.
+inline void renumber(util::vector_view<extractor::EdgeBasedNodeSegment> &segments,
+                     const std::vector<std::uint32_t> &permutation)
+{ renumberSegments(segments, permutation); }
+
+//! The segments an open area records per vertex, which are the same objects the r-tree
+//! holds and name edge-based nodes the same way.  See Extractor::WriteOpenAreas.
+inline void renumber(std::vector<extractor::EdgeBasedNodeSegment> &segments,
+                     const std::vector<std::uint32_t> &permutation)
+{ renumberSegments(segments, permutation); }
 
 inline void renumber(std::vector<extractor::NBGToEBG> &mapping,
                      const std::vector<std::uint32_t> &permutation)

@@ -10,6 +10,7 @@
 #include "partitioner/remove_unconnected.hpp"
 #include "partitioner/renumber.hpp"
 
+#include "extractor/area_routing_data.hpp"
 #include "extractor/compressed_node_based_graph_edge.hpp"
 #include "extractor/files.hpp"
 
@@ -147,6 +148,40 @@ int Partitioner::Run(const PartitionerConfig &config)
         extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
         renumber(node_data, permutation);
         extractor::files::writeNodeData(config.GetOutputPath(".osrm.ebg_nodes"), node_data);
+    }
+    {
+        // An open area records, for each of its vertices, the edge-based node segments
+        // standing on it (Extractor::WriteOpenAreas).  They name edge-based nodes by id,
+        // and the ids have just changed, so they are renumbered here alongside the r-tree
+        // leaves and the node data.  Left alone, every one of them would point at
+        // whichever node inherited its old number, and the engine's check that a
+        // segment's two directions share a geometry fails for nearly all of them.
+        // Only a profile that meshes areas produces the file, hence the test.
+        const auto open_areas_path = config.GetPath(".osrm.openareas");
+        if (std::filesystem::exists(open_areas_path))
+        {
+            std::vector<extractor::AreaPolygonSegment> areas;
+            std::vector<util::Coordinate> bbox_corners;
+            std::vector<util::Coordinate> vertices;
+            std::vector<std::uint32_t> ring_lengths;
+            std::vector<extractor::EdgeBasedNodeSegment> vertex_segments;
+            std::vector<std::uint32_t> vertex_segment_offsets;
+            extractor::files::readOpenAreas(open_areas_path,
+                                            areas,
+                                            bbox_corners,
+                                            vertices,
+                                            ring_lengths,
+                                            vertex_segments,
+                                            vertex_segment_offsets);
+            renumber(vertex_segments, permutation);
+            extractor::files::writeOpenAreas(config.GetOutputPath(".osrm.openareas"),
+                                             areas,
+                                             bbox_corners,
+                                             vertices,
+                                             ring_lengths,
+                                             vertex_segments,
+                                             vertex_segment_offsets);
+        }
     }
     {
         std::vector<EdgeWeight> node_weights;

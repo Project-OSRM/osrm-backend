@@ -1,6 +1,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 #include <boost/test/unit_test.hpp>
 
+#include "extractor/edge_based_node_segment.hpp"
 #include "partitioner/renumber.hpp"
 
 #include "../common/range_tools.hpp"
@@ -81,6 +82,38 @@ BOOST_AUTO_TEST_CASE(unsplitable_case)
 
     auto permutation = makePermutation(graph, partitions);
     CHECK_EQUAL_RANGE(permutation, 0, 7, 8, 5, 6, 11, 4, 3, 9, 10, 1, 2);
+}
+
+// The segments an open area stores per vertex name edge-based nodes the way the r-tree
+// leaves do, and go through the same renumbering.  A direction that is not there is left
+// alone, and the enabled bits survive.
+BOOST_AUTO_TEST_CASE(renumber_open_area_vertex_segments)
+{
+    using extractor::EdgeBasedNodeSegment;
+    std::vector<EdgeBasedNodeSegment> segments{
+        EdgeBasedNodeSegment{SegmentID{0, true}, SegmentID{1, true}, 10, 11, 0, true},
+        EdgeBasedNodeSegment{SegmentID{2, true}, SegmentID{3, false}, 11, 12, 1, true},
+        EdgeBasedNodeSegment{SegmentID{3, true}, SegmentID{0, true}, 12, 10, 2, false}};
+    // old id -> new id
+    const std::vector<std::uint32_t> permutation{3, 2, 1, 0};
+
+    renumber(segments, permutation);
+
+    BOOST_CHECK_EQUAL(segments[0].forward_segment_id.id, 3u);
+    BOOST_CHECK_EQUAL(segments[0].reverse_segment_id.id, 2u);
+    BOOST_CHECK(segments[0].forward_segment_id.enabled && segments[0].reverse_segment_id.enabled);
+
+    BOOST_CHECK_EQUAL(segments[1].forward_segment_id.id, 1u);
+    BOOST_CHECK_EQUAL(segments[1].reverse_segment_id.id, 3u); // disabled, so untouched
+    BOOST_CHECK(!segments[1].reverse_segment_id.enabled);
+
+    BOOST_CHECK_EQUAL(segments[2].forward_segment_id.id, 0u);
+    BOOST_CHECK_EQUAL(segments[2].reverse_segment_id.id, 3u);
+    // what is not an id is not touched
+    BOOST_CHECK_EQUAL(segments[2].u, 12u);
+    BOOST_CHECK_EQUAL(segments[2].v, 10u);
+    BOOST_CHECK_EQUAL(segments[2].fwd_segment_position, 2u);
+    BOOST_CHECK(!segments[2].is_startpoint);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

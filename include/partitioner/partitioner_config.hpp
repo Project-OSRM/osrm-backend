@@ -12,7 +12,9 @@ struct PartitionerConfig final : storage::IOConfig
 {
     PartitionerConfig()
         : IOConfig({".osrm.fileIndex", ".osrm.ebg_nodes", ".osrm.enw"},
-                   {".osrm.hsgr", ".osrm.cnbg"},
+                   // .osrm.openareas exists only when the profile meshed areas; it carries
+                   // edge-based node ids and is renumbered with the rest
+                   {".osrm.hsgr", ".osrm.cnbg", ".osrm.openareas"},
                    {".osrm.ebg",
                     ".osrm.cnbg",
                     ".osrm.cnbg_to_ebg",
