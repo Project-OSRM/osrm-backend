@@ -211,10 +211,13 @@ inline auto make_search_tree_view(const SharedDataIndex &index, const std::strin
  */
 inline auto make_open_areas_view(const SharedDataIndex &index, const std::string &name)
 {
-    return std::make_tuple(make_vector_view<extractor::AreaPolygonSegment>(index, name + "/areas"),
-                           make_coordinates_view(index, name + "/bbox_corners"),
-                           make_coordinates_view(index, name + "/vertices"),
-                           make_vector_view<std::uint32_t>(index, name + "/ring_lengths"));
+    return std::make_tuple(
+        make_vector_view<extractor::AreaPolygonSegment>(index, name + "/areas"),
+        make_coordinates_view(index, name + "/bbox_corners"),
+        make_coordinates_view(index, name + "/vertices"),
+        make_vector_view<std::uint32_t>(index, name + "/ring_lengths"),
+        make_vector_view<extractor::EdgeBasedNodeSegment>(index, name + "/vertex_segments"),
+        make_vector_view<std::uint32_t>(index, name + "/vertex_segment_offsets"));
 }
 
 /**

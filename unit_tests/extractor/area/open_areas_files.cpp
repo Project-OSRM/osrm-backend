@@ -1,4 +1,5 @@
 #include "extractor/area_routing_data.hpp"
+#include "extractor/edge_based_node_segment.hpp"
 #include "extractor/files.hpp"
 
 #include "../../common/temporary_file.hpp"
@@ -49,14 +50,54 @@ BOOST_AUTO_TEST_CASE(open_areas_round_trip)
 
     const std::vector<std::uint32_t> ring_lengths{4, 4, 3};
 
-    files::writeOpenAreas(file.path, areas, bbox_corners, vertices, ring_lengths);
+    // Two segments stand on vertex 0, one on vertex 3, none on the rest.  The offsets run
+    // one longer than the vertices, so the last vertex's range has something to end at.
+    std::vector<EdgeBasedNodeSegment> vertex_segments{
+        EdgeBasedNodeSegment{SegmentID{7, true}, SegmentID{8, true}, 100, 101, 0, true},
+        EdgeBasedNodeSegment{SegmentID{9, true}, SegmentID{10, true}, 100, 102, 1, true},
+        EdgeBasedNodeSegment{SegmentID{11, true}, SegmentID{12, false}, 103, 100, 2, false}};
+    std::vector<std::uint32_t> vertex_segment_offsets{0, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3};
+
+    files::writeOpenAreas(file.path,
+                          areas,
+                          bbox_corners,
+                          vertices,
+                          ring_lengths,
+                          vertex_segments,
+                          vertex_segment_offsets);
 
     std::vector<AreaPolygonSegment> read_areas;
     std::vector<util::Coordinate> read_bbox_corners;
     std::vector<util::Coordinate> read_vertices;
     std::vector<std::uint32_t> read_ring_lengths;
-    files::readOpenAreas(
-        file.path, read_areas, read_bbox_corners, read_vertices, read_ring_lengths);
+    std::vector<EdgeBasedNodeSegment> read_vertex_segments;
+    std::vector<std::uint32_t> read_vertex_segment_offsets;
+    files::readOpenAreas(file.path,
+                         read_areas,
+                         read_bbox_corners,
+                         read_vertices,
+                         read_ring_lengths,
+                         read_vertex_segments,
+                         read_vertex_segment_offsets);
+
+    BOOST_REQUIRE_EQUAL(read_vertex_segments.size(), vertex_segments.size());
+    for (std::size_t i = 0; i < vertex_segments.size(); ++i)
+    {
+        BOOST_CHECK_EQUAL(read_vertex_segments[i].forward_segment_id.id,
+                          vertex_segments[i].forward_segment_id.id);
+        BOOST_CHECK_EQUAL(read_vertex_segments[i].forward_segment_id.enabled,
+                          vertex_segments[i].forward_segment_id.enabled);
+        BOOST_CHECK_EQUAL(read_vertex_segments[i].reverse_segment_id.id,
+                          vertex_segments[i].reverse_segment_id.id);
+        BOOST_CHECK_EQUAL(read_vertex_segments[i].reverse_segment_id.enabled,
+                          vertex_segments[i].reverse_segment_id.enabled);
+        BOOST_CHECK_EQUAL(read_vertex_segments[i].u, vertex_segments[i].u);
+        BOOST_CHECK_EQUAL(read_vertex_segments[i].v, vertex_segments[i].v);
+        BOOST_CHECK_EQUAL(read_vertex_segments[i].fwd_segment_position,
+                          vertex_segments[i].fwd_segment_position);
+        BOOST_CHECK_EQUAL(read_vertex_segments[i].is_startpoint, vertex_segments[i].is_startpoint);
+    }
+    BOOST_CHECK(read_vertex_segment_offsets == vertex_segment_offsets);
 
     BOOST_REQUIRE_EQUAL(read_areas.size(), areas.size());
     for (std::size_t i = 0; i < areas.size(); ++i)

@@ -186,12 +186,18 @@ inline void writeDatasources(const std::filesystem::path &path, Datasources &sou
 }
 
 // reads .osrm.openareas
-template <typename AreaVectorT, typename CoordinateVectorT, typename RingLengthVectorT>
+template <typename AreaVectorT,
+          typename CoordinateVectorT,
+          typename RingLengthVectorT,
+          typename SegmentVectorT,
+          typename OffsetVectorT>
 void readOpenAreas(const std::filesystem::path &path,
                    AreaVectorT &areas,
                    CoordinateVectorT &bbox_corners,
                    CoordinateVectorT &vertices,
-                   RingLengthVectorT &ring_lengths)
+                   RingLengthVectorT &ring_lengths,
+                   SegmentVectorT &vertex_segments,
+                   OffsetVectorT &vertex_segment_offsets)
 {
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
@@ -200,15 +206,24 @@ void readOpenAreas(const std::filesystem::path &path,
     storage::serialization::read(reader, "/common/open_areas/bbox_corners", bbox_corners);
     storage::serialization::read(reader, "/common/open_areas/vertices", vertices);
     storage::serialization::read(reader, "/common/open_areas/ring_lengths", ring_lengths);
+    storage::serialization::read(reader, "/common/open_areas/vertex_segments", vertex_segments);
+    storage::serialization::read(
+        reader, "/common/open_areas/vertex_segment_offsets", vertex_segment_offsets);
 }
 
 // writes .osrm.openareas
-template <typename AreaVectorT, typename CoordinateVectorT, typename RingLengthVectorT>
+template <typename AreaVectorT,
+          typename CoordinateVectorT,
+          typename RingLengthVectorT,
+          typename SegmentVectorT,
+          typename OffsetVectorT>
 void writeOpenAreas(const std::filesystem::path &path,
                     const AreaVectorT &areas,
                     const CoordinateVectorT &bbox_corners,
                     const CoordinateVectorT &vertices,
-                    const RingLengthVectorT &ring_lengths)
+                    const RingLengthVectorT &ring_lengths,
+                    const SegmentVectorT &vertex_segments,
+                    const OffsetVectorT &vertex_segment_offsets)
 {
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
@@ -217,6 +232,9 @@ void writeOpenAreas(const std::filesystem::path &path,
     storage::serialization::write(writer, "/common/open_areas/bbox_corners", bbox_corners);
     storage::serialization::write(writer, "/common/open_areas/vertices", vertices);
     storage::serialization::write(writer, "/common/open_areas/ring_lengths", ring_lengths);
+    storage::serialization::write(writer, "/common/open_areas/vertex_segments", vertex_segments);
+    storage::serialization::write(
+        writer, "/common/open_areas/vertex_segment_offsets", vertex_segment_offsets);
 }
 
 // reads .osrm.geometry

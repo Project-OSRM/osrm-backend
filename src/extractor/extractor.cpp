@@ -255,6 +255,11 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     auto const &coordinates = node_based_graph_factory.GetCoordinates();
     files::writeNodes(
         config.GetPath(".osrm.nbg_nodes"), coordinates, node_based_graph_factory.GetOsmNodes());
+    // Before the ids go: an area names its vertices in OSM terms and the segments that
+    // will stand on them are numbered in the graph's, so the two have to be introduced
+    // while both are still here.
+    const auto area_vertex_nodes =
+        MapAreaVerticesToNodes(parsed_osm_data.open_areas, node_based_graph_factory.GetOsmNodes());
     node_based_graph_factory.ReleaseOsmNodes();
 
     auto const &node_based_graph = node_based_graph_factory.GetGraph();
@@ -300,6 +305,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                edge_based_node_distances,
                                edge_based_edge_list,
                                ebg_connectivity_checksum);
+
+    // Only now do the edge-based nodes have ids, so only now can an area's vertex say
+    // which of them stand on it.  See WriteOpenAreas.
+    WriteOpenAreas(parsed_osm_data.open_areas, area_vertex_nodes, edge_based_node_segments);
 
     ProcessGuidanceTurns(node_based_graph,
                          edge_based_nodes_container,
@@ -375,6 +384,10 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         util::Log() << "Profile: " << config.profile_path.filename().string();
     }
     util::Log() << "Threads: " << number_of_threads;
+
+    // Filled by the meshing pass below and written out much later, once the edge-based
+    // graph has numbered the nodes a vertex of an area needs to name.
+    std::vector<area::PolygonRecord> open_areas;
 
     const osmium::io::File input_file(config.input_path.string());
     osmium::thread::Pool pool(number_of_threads);
@@ -678,7 +691,9 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
 
         // The pipeline filter is parallel, so the areas arrived in scheduler order.
         mesher.collector().finalize();
-        WriteOpenAreas(mesher.collector().polygons());
+        // Not written yet.  A vertex of an area wants to say which edge-based nodes stand
+        // on it, and those are numbered by BuildEdgeExpandedGraph, which has not run.
+        open_areas = mesher.collector().polygons();
 
         util::Log() << "... " << area_manager.number_of_ways + area_manager.number_of_relations
                     << " areas, yielding " << mesher.added_ways << " ways in " << TIMER_SEC(mesh)
@@ -739,7 +754,8 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
                          std::move(osm_coordinates),
                          std::move(osm_node_ids),
                          std::move(extraction_containers.used_edges),
-                         std::move(extraction_containers.all_edges_annotation_data_list)};
+                         std::move(extraction_containers.all_edges_annotation_data_list),
+                         std::move(open_areas)};
 }
 
 void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
@@ -876,17 +892,90 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     through the coordinates its @c u and @c v index, so it needs such a list; giving it
     the engine's own coordinates instead would mean appending corners to a vector whose
     indices are NodeIDs running parallel to the OSM node ids.
+
+    Each vertex also carries the edge-based node segments standing on it.  Snapping a
+    coordinate inside an area asks, of every vertex it can see, "which phantoms are here",
+    and answering that with a nearest-neighbour search of the r-tree cost one traversal
+    per vertex -- 94% of the time spent snapping into an area.  It is not a spatial
+    question at all: the mesher knows exactly which vertices it gave edges to.  It just
+    cannot say so until the edge-based graph has numbered them, which is why this runs
+    after BuildEdgeExpandedGraph rather than beside the meshing.
+
+    What is stored is the segment as the r-tree holds it, so the engine can build the same
+    phantom the search would have handed it.  A phantom depends on the coordinate it was
+    asked about -- MakePhantomNode projects the segment onto it -- so storing phantoms
+    themselves would be storing an answer to one question only.
  */
-void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons)
+std::unordered_map<OSMNodeID, NodeID>
+Extractor::MapAreaVerticesToNodes(const std::vector<area::PolygonRecord> &polygons,
+                                  const extractor::PackedOSMIDs &osm_node_ids)
+{
+    std::unordered_map<OSMNodeID, NodeID> node_of_osm_id;
+    if (polygons.empty())
+    {
+        return node_of_osm_id;
+    }
+
+    std::unordered_set<OSMNodeID> wanted;
+    const auto want = [&wanted](const std::vector<osmium::NodeRef> &ring)
+    {
+        for (const auto &node : ring)
+        {
+            wanted.insert(to_alias<OSMNodeID>(node.ref()));
+        }
+    };
+    for (const auto &polygon : polygons)
+    {
+        want(polygon.boundary_vertices);
+        for (const auto &obstacle : polygon.obstacle_rings)
+        {
+            want(obstacle);
+        }
+    }
+
+    node_of_osm_id.reserve(wanted.size());
+    for (NodeID node = 0; node < osm_node_ids.size(); ++node)
+    {
+        const auto osm_id = osm_node_ids[node];
+        if (wanted.count(osm_id) != 0)
+        {
+            node_of_osm_id.emplace(osm_id, node);
+        }
+    }
+    return node_of_osm_id;
+}
+
+void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons,
+                               const std::unordered_map<OSMNodeID, NodeID> &node_of_osm_id,
+                               const std::vector<EdgeBasedNodeSegment> &edge_based_node_segments)
 {
     if (polygons.empty())
     {
         return;
     }
 
+    // node-based node -> the segments that end on it.  A segment passing *through* a
+    // vertex is not standing on it and is deliberately not collected: it is exactly what
+    // the engine's weight test used to have to throw away.
+    std::unordered_map<NodeID, std::vector<EdgeBasedNodeSegment>> segments_at;
+    for (const auto &segment : edge_based_node_segments)
+    {
+        segments_at[segment.u].push_back(segment);
+        if (segment.v != segment.u)
+        {
+            segments_at[segment.v].push_back(segment);
+        }
+    }
+
     std::vector<AreaPolygonSegment> areas;
     std::vector<util::Coordinate> bbox_corners;
     std::vector<util::Coordinate> vertices;
+    std::vector<EdgeBasedNodeSegment> vertex_segments;
+    std::vector<std::uint32_t> vertex_segment_offsets;
+    // A vertex the graph compressed away has no node of its own.  Nothing is lost by it:
+    // such a vertex lies inside a segment rather than at its end, so no phantom stands
+    // there, and the engine's weight test rejected it before this stored anything.
+    std::size_t compressed_away = 0;
     std::vector<std::uint32_t> ring_lengths;
 
     areas.reserve(polygons.size());
@@ -898,11 +987,28 @@ void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons)
                                 util::FloatLatitude{node.location().lat()}};
     };
 
+    // One entry per vertex, in the same order, saying where that vertex's segments start
+    // in vertex_segments.  A trailing entry closes the last range, so the engine reads
+    // vertex i as [offsets[i], offsets[i + 1]).
     const auto append_ring = [&](const std::vector<osmium::NodeRef> &ring)
     {
         for (const auto &node : ring)
         {
             vertices.push_back(to_coordinate(node));
+
+            vertex_segment_offsets.push_back(
+                boost::numeric_cast<std::uint32_t>(vertex_segments.size()));
+            const auto node_id = node_of_osm_id.find(to_alias<OSMNodeID>(node.ref()));
+            if (node_id == node_of_osm_id.end())
+            {
+                ++compressed_away;
+            }
+            else if (const auto standing = segments_at.find(node_id->second);
+                     standing != segments_at.end())
+            {
+                vertex_segments.insert(
+                    vertex_segments.end(), standing->second.begin(), standing->second.end());
+            }
         }
         ring_lengths.push_back(boost::numeric_cast<std::uint32_t>(ring.size()));
     };
@@ -946,8 +1052,20 @@ void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons)
         areas.push_back(area);
     }
 
-    files::writeOpenAreas(
-        config.GetPath(".osrm.openareas"), areas, bbox_corners, vertices, ring_lengths);
+    // closes the last vertex's range
+    vertex_segment_offsets.push_back(boost::numeric_cast<std::uint32_t>(vertex_segments.size()));
+
+    util::Log() << "... " << areas.size() << " open areas, " << vertices.size() << " vertices, "
+                << vertex_segments.size() << " segments standing on them, " << compressed_away
+                << " vertices the graph compressed away";
+
+    files::writeOpenAreas(config.GetPath(".osrm.openareas"),
+                          areas,
+                          bbox_corners,
+                          vertices,
+                          ring_lengths,
+                          vertex_segments,
+                          vertex_segment_offsets);
 
     util::StaticRTree<AreaPolygonSegment> rtree(
         areas, bbox_corners, config.GetPath(".osrm.openareas.fileIndex"));

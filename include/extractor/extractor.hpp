@@ -29,12 +29,15 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #define EXTRACTOR_HPP
 
 #include "extractor/area/area_data_collector.hpp"
+#include "extractor/edge_based_node_segment.hpp"
+
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/extractor_config.hpp"
 #include "extractor/graph_compressor.hpp"
 #include "extractor/maneuver_override.hpp"
 #include "extractor/packed_osm_ids.hpp"
+#include <unordered_map>
 
 #include "restriction_graph.hpp"
 #include "util/typedefs.hpp"
@@ -61,6 +64,10 @@ class Extractor
         extractor::PackedOSMIDs osm_node_ids;
         std::vector<NodeBasedEdge> edge_list;
         std::vector<NodeBasedEdgeAnnotation> annotation_data;
+        //! The meshed open areas, still in OSM terms.  They are written out only after
+        //! the edge-based graph exists, because what the engine wants to know about a
+        //! vertex is which edge-based nodes stand on it, and those have no ids yet here.
+        std::vector<area::PolygonRecord> open_areas;
     };
 
   private:
@@ -101,7 +108,21 @@ class Extractor
      * Write what the engine needs to snap a coordinate that falls inside a meshed area:
      * the polygons themselves, and an r-tree over their bounding boxes to find them.
      */
-    void WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons);
+    /**
+     * @brief The node-based node each area vertex became, for the vertices only.
+     *
+     * Has to be taken before NodeBasedGraphFactory::ReleaseOsmNodes(), and is wanted
+     * after BuildEdgeExpandedGraph, so it is collected in between.  Restricted to the
+     * vertices because the whole mapping is one entry per node in the region and this is
+     * one entry per plaza corner.
+     */
+    static std::unordered_map<OSMNodeID, NodeID>
+    MapAreaVerticesToNodes(const std::vector<area::PolygonRecord> &polygons,
+                           const extractor::PackedOSMIDs &osm_node_ids);
+
+    void WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons,
+                        const std::unordered_map<OSMNodeID, NodeID> &node_of_osm_id,
+                        const std::vector<EdgeBasedNodeSegment> &edge_based_node_segments);
 
     void ProcessGuidanceTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                               const EdgeBasedNodeDataContainer &edge_based_node_container,

@@ -169,6 +169,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     util::vector_view<util::Coordinate> m_open_area_bbox_corners;
     util::vector_view<util::Coordinate> m_open_area_vertices;
     util::vector_view<std::uint32_t> m_open_area_ring_lengths;
+    //! The edge-based node segments standing on each vertex, in vertex order, and where
+    //! each vertex's run of them begins.  See Extractor::WriteOpenAreas.
+    util::vector_view<extractor::EdgeBasedNodeSegment> m_open_area_vertex_segments;
+    util::vector_view<std::uint32_t> m_open_area_vertex_segment_offsets;
 
     std::optional<extractor::IntersectionBearingsView> intersection_bearings_view;
 
@@ -226,7 +230,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             std::tie(m_open_areas,
                      m_open_area_bbox_corners,
                      m_open_area_vertices,
-                     m_open_area_ring_lengths) = make_open_areas_view(index, "/common/open_areas");
+                     m_open_area_ring_lengths,
+                     m_open_area_vertex_segments,
+                     m_open_area_vertex_segment_offsets) =
+                make_open_areas_view(index, "/common/open_areas");
             m_open_area_rtree = make_open_area_tree_view(index, "/common/open_areas/rtree");
         }
 
