@@ -700,7 +700,9 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
                                       distance,
                                       weight,
                                       duration,
-                                      edge_iterator->result.flags);
+                                      edge_iterator->result.flags,
+                                      edge_iterator->result.osm_source_id,
+                                      node_iterator->node_id);
             scripting_environment.ProcessSegment(segment);
 
             auto &edge = edge_iterator->result;
