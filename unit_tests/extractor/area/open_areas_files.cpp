@@ -57,6 +57,9 @@ BOOST_AUTO_TEST_CASE(open_areas_round_trip)
         EdgeBasedNodeSegment{SegmentID{9, true}, SegmentID{10, true}, 100, 102, 1, true},
         EdgeBasedNodeSegment{SegmentID{11, true}, SegmentID{12, false}, 103, 100, 2, false}};
     std::vector<std::uint32_t> vertex_segment_offsets{0, 2, 2, 2, 3, 3, 3, 3, 3, 3, 3, 3};
+    // vertex 0 sees 1 and 3, vertex 1 sees 0, vertex 3 sees 0; nothing else sees anything
+    std::vector<std::uint32_t> visibility_targets{1, 3, 0, 0};
+    std::vector<std::uint32_t> visibility_offsets{0, 2, 3, 3, 4, 4, 4, 4, 4, 4, 4, 4};
 
     files::writeOpenAreas(file.path,
                           areas,
@@ -64,7 +67,9 @@ BOOST_AUTO_TEST_CASE(open_areas_round_trip)
                           vertices,
                           ring_lengths,
                           vertex_segments,
-                          vertex_segment_offsets);
+                          vertex_segment_offsets,
+                          visibility_targets,
+                          visibility_offsets);
 
     std::vector<AreaPolygonSegment> read_areas;
     std::vector<util::Coordinate> read_bbox_corners;
@@ -72,13 +77,19 @@ BOOST_AUTO_TEST_CASE(open_areas_round_trip)
     std::vector<std::uint32_t> read_ring_lengths;
     std::vector<EdgeBasedNodeSegment> read_vertex_segments;
     std::vector<std::uint32_t> read_vertex_segment_offsets;
+    std::vector<std::uint32_t> read_visibility_targets;
+    std::vector<std::uint32_t> read_visibility_offsets;
     files::readOpenAreas(file.path,
                          read_areas,
                          read_bbox_corners,
                          read_vertices,
                          read_ring_lengths,
                          read_vertex_segments,
-                         read_vertex_segment_offsets);
+                         read_vertex_segment_offsets,
+                         read_visibility_targets,
+                         read_visibility_offsets);
+    BOOST_CHECK(read_visibility_targets == visibility_targets);
+    BOOST_CHECK(read_visibility_offsets == visibility_offsets);
 
     BOOST_REQUIRE_EQUAL(read_vertex_segments.size(), vertex_segments.size());
     for (std::size_t i = 0; i < vertex_segments.size(); ++i)

@@ -166,13 +166,18 @@ int Partitioner::Run(const PartitionerConfig &config)
             std::vector<std::uint32_t> ring_lengths;
             std::vector<extractor::EdgeBasedNodeSegment> vertex_segments;
             std::vector<std::uint32_t> vertex_segment_offsets;
+            // the visibility graph names vertices, not nodes, and passes through untouched
+            std::vector<std::uint32_t> visibility_targets;
+            std::vector<std::uint32_t> visibility_offsets;
             extractor::files::readOpenAreas(open_areas_path,
                                             areas,
                                             bbox_corners,
                                             vertices,
                                             ring_lengths,
                                             vertex_segments,
-                                            vertex_segment_offsets);
+                                            vertex_segment_offsets,
+                                            visibility_targets,
+                                            visibility_offsets);
             renumber(vertex_segments, permutation);
             extractor::files::writeOpenAreas(config.GetOutputPath(".osrm.openareas"),
                                              areas,
@@ -180,7 +185,9 @@ int Partitioner::Run(const PartitionerConfig &config)
                                              vertices,
                                              ring_lengths,
                                              vertex_segments,
-                                             vertex_segment_offsets);
+                                             vertex_segment_offsets,
+                                             visibility_targets,
+                                             visibility_offsets);
         }
     }
     {

@@ -82,8 +82,10 @@ geodesicAcross(const datafacade::BaseDataFacade &facade,
     for (const auto &area : commonAreas(facade, from, to))
     {
         const auto rings = facade.GetOpenAreaRings(area);
-        auto geodesic =
-            geodesic_between(facade.GetCheckSum(), area.vertices_offset, rings, from, to);
+        const auto stored = [&](const std::uint32_t vertex)
+        { return facade.GetOpenAreaVisibility(area, vertex); };
+        auto geodesic = geodesic_between(
+            facade.GetCheckSum(), area.vertices_offset, rings, from, to, StoredVisibility{stored});
         if (geodesic)
         {
             return std::pair{area, std::move(*geodesic)};

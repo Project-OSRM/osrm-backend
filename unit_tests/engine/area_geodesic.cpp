@@ -336,6 +336,79 @@ BOOST_AUTO_TEST_CASE(geodesic_does_not_build_a_graph_for_a_point_it_does_not_hol
     BOOST_CHECK_EQUAL(cached_geodesic_count(), 1u);
 }
 
+// A graph written down at extraction is used as it is, and answers the same as one built.
+BOOST_AUTO_TEST_CASE(geodesic_uses_a_stored_graph)
+{
+    forget_cached_geodesics();
+    Plaza plaza{1000.0, 400.0}; // block spans 300..700; vertices 0-3 outer, 4-7 block
+    const auto from = at(100, 500), to = at(900, 500);
+
+    const auto built = geodesic_between(1, fresh_key(), plaza.rings, from, to);
+    BOOST_REQUIRE(built);
+
+    // what the sweep would report: every pair that sees each other, plus the ring edges
+    std::vector<std::vector<std::uint32_t>> sees(8);
+    const auto link = [&](std::uint32_t a, std::uint32_t b)
+    {
+        sees[a].push_back(b);
+        sees[b].push_back(a);
+    };
+    for (std::uint32_t i = 0; i < 4; ++i)
+    {
+        link(i, (i + 1) % 4);         // outer ring
+        link(4 + i, 4 + (i + 1) % 4); // block ring
+    }
+    // each outer corner sees the three block corners that are not hidden behind the block
+    link(0, 4);
+    link(0, 5);
+    link(0, 7);
+    link(1, 4);
+    link(1, 5);
+    link(1, 6);
+    link(2, 5);
+    link(2, 6);
+    link(2, 7);
+    link(3, 4);
+    link(3, 6);
+    link(3, 7);
+    const auto stored = [&](std::uint32_t v) { return sees[v]; };
+
+    const auto adopted =
+        geodesic_between(1, fresh_key(), plaza.rings, from, to, StoredVisibility{stored});
+    BOOST_REQUIRE(adopted);
+    BOOST_CHECK_CLOSE(adopted->length, built->length, 1e-6);
+    BOOST_CHECK_EQUAL(adopted->bends.size(), built->bends.size());
+}
+
+// With a stored graph, the cap on building one no longer applies.
+BOOST_AUTO_TEST_CASE(geodesic_stored_graph_lifts_the_vertex_cap)
+{
+    forget_cached_geodesics();
+    std::vector<util::Coordinate> ring;
+    constexpr std::size_t count = GEODESIC_MAX_VERTICES + 1;
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        const auto angle = 2 * M_PI * static_cast<double>(i) / static_cast<double>(count);
+        ring.push_back(at(500 + 400 * std::cos(angle), 500 + 400 * std::sin(angle)));
+    }
+    Rings rings{std::span<const util::Coordinate>(ring)};
+    const auto from = at(500, 500), to = at(520, 520);
+
+    // nothing stored: declined, as before
+    BOOST_CHECK(!geodesic_between(1, fresh_key(), rings, from, to));
+
+    // the ring edges alone are a graph; the straight line is clear, so that is the answer
+    const auto stored = [](std::uint32_t v)
+    {
+        return std::vector<std::uint32_t>{static_cast<std::uint32_t>((v + count - 1) % count),
+                                          static_cast<std::uint32_t>((v + 1) % count)};
+    };
+    const auto found = geodesic_between(1, fresh_key(), rings, from, to, StoredVisibility{stored});
+    BOOST_REQUIRE(found);
+    BOOST_CHECK(found->bends.empty());
+    BOOST_CHECK_CLOSE(found->length, straight(from, to), 0.5);
+}
+
 // The cache is bounded, and evicting does not change any answer.
 BOOST_AUTO_TEST_CASE(geodesic_cache_is_bounded_and_eviction_is_invisible)
 {

@@ -155,6 +155,19 @@ class BaseDataFacade
      * Not pure, for the same reason as GetOpenAreasAt.  An empty answer means nothing
      * stands here, which is also what a vertex the graph compressed away gives.
      */
+    /**
+     * @brief The vertices of an open area that one of its vertices can see.
+     *
+     * The visibility graph the mesher computed, as in-area indices.  A journey with both
+     * ends inside one area is solved over this graph; building it at query time is cubic
+     * in the vertex count, and the mesher already had it.  Empty for a vertex of a polygon
+     * the mesher declined, in which case the engine builds the graph itself.
+     */
+    virtual std::vector<std::uint32_t>
+    GetOpenAreaVisibility(const extractor::AreaPolygonSegment & /*area*/,
+                          const std::uint32_t /*vertex*/) const
+    { return {}; }
+
     virtual std::vector<PhantomNodeWithDistance>
     PhantomNodesOnAreaVertex(const extractor::AreaPolygonSegment & /*area*/,
                              const std::uint32_t /*vertex*/,

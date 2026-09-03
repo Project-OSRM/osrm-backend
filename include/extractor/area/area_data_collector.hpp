@@ -28,6 +28,10 @@ struct PolygonRecord
     std::vector<std::vector<osmium::NodeRef>> obstacle_rings;
     //! Speed in m/s for crossing this area.
     double walking_speed = 0.0;
+    //! The visibility graph as adjacency: for each vertex, in flat order (outer ring, then
+    //! the obstacles), the flat indices of the vertices it sees.  Both directions of every
+    //! edge are present.  Empty for a polygon the mesher declined.
+    std::vector<std::vector<std::uint32_t>> visibility;
 };
 
 /**
@@ -45,7 +49,18 @@ struct PolygonRecord
 class AreaDataCollector
 {
   public:
-    void record(const OsmiumPolygon &poly, double walking_speed);
+    /** @return a handle for add_visibility(); valid until finalize(). */
+    std::size_t record(const OsmiumPolygon &poly, double walking_speed);
+
+    /**
+     * Attach the visibility graph the mesher computed for a recorded polygon.
+     *
+     * The engine solves a journey with both ends inside one area over exactly this graph,
+     * and rebuilding it at query time is cubic in the vertex count.  The mesher has it in
+     * hand, computed once by the sweep, so it is written down.  Ring edges included: the
+     * sweep never reports a vertex's own neighbours, and a path along a wall needs them.
+     */
+    void add_visibility(std::size_t handle, const std::set<OsmiumSegment> &edges);
 
     /** Sort into a deterministic order.  Call once, after meshing. */
     void finalize();

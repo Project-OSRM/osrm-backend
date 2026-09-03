@@ -390,7 +390,7 @@ void AreaMesher::mesh_area(const osmium::Area &area,
         // Hand the engine what it needs to snap a coordinate lying inside this area
         // onto one of its entry points later.  This is the only point in the pipeline
         // where the polygon and its entry points are both known.
-        m_collector.record(poly, area_walking_speed);
+        const auto record = m_collector.record(poly, area_walking_speed);
 
         // The vertices that should be in the visibility map.
         NodeRefSet work_vertices = get_obstacle_vertices(poly);
@@ -421,6 +421,11 @@ void AreaMesher::mesh_area(const osmium::Area &area,
         std::set<OsmiumSegment> vis_map = gv.run(poly, work_vertices);
         util::Log(logDEBUG) << "  After running VisibilityGraph we have " << vis_map.size()
                             << " visible edges.";
+
+        // The engine answers a journey with both ends inside this area over exactly this
+        // graph.  Rebuilding it per query is cubic in the vertex count, so write it down
+        // now that it is in hand, ring edges and all, before it is pruned to the mesh.
+        m_collector.add_visibility(record, with_ring_edges(vis_map, poly));
 
 #ifndef NDEBUG
         write_debug("osrm-area-routing-visgraph-debug", vis_map);

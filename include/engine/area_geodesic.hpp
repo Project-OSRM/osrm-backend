@@ -2,6 +2,7 @@
 #define OSRM_ENGINE_AREA_GEODESIC_HPP
 
 #include "util/coordinate.hpp"
+#include "util/function_ref.hpp"
 
 #include <cstdint>
 #include <optional>
@@ -75,16 +76,26 @@ inline constexpr std::size_t GEODESIC_CACHE_SIZE = 32;
  * @param rings       its rings, outer first, as the facade hands them over
  * @param from, to    the two points, which must both lie inside
  *
+ * @param stored_visibility  what each vertex of the area sees, as in-area indices, when
+ *                           extraction wrote the graph down (Extractor::WriteOpenAreas).
+ *                           With it the graph is not built and GEODESIC_MAX_VERTICES does
+ *                           not apply; without it, or when it is empty for every vertex,
+ *                           the graph is built here as before.
+ *
  * @return the geodesic, or nothing if either point is outside the area, if no path runs
- *         between them, or if the area is larger than GEODESIC_MAX_VERTICES.  Nothing
- *         always means "route this the ordinary way", never "there is no route".
+ *         between them, or if the graph has to be built and the area is larger than
+ *         GEODESIC_MAX_VERTICES.  Nothing always means "route this the ordinary way",
+ *         never "there is no route".
  */
+using StoredVisibility = util::FunctionRef<std::vector<std::uint32_t>(std::uint32_t)>;
+
 std::optional<Geodesic>
 geodesic_between(std::uint32_t dataset,
                  std::uint64_t area,
                  const std::vector<std::span<const util::Coordinate>> &rings,
                  util::Coordinate from,
-                 util::Coordinate to);
+                 util::Coordinate to,
+                 std::optional<StoredVisibility> stored_visibility = std::nullopt);
 
 /** Drop every cached graph on this thread.  For tests, and for a dataset swap. */
 void forget_cached_geodesics();

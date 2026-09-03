@@ -173,6 +173,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     //! each vertex's run of them begins.  See Extractor::WriteOpenAreas.
     util::vector_view<extractor::EdgeBasedNodeSegment> m_open_area_vertex_segments;
     util::vector_view<std::uint32_t> m_open_area_vertex_segment_offsets;
+    //! The visibility graph per vertex, as in-area indices of what it sees.
+    util::vector_view<std::uint32_t> m_open_area_visibility_targets;
+    util::vector_view<std::uint32_t> m_open_area_visibility_offsets;
 
     std::optional<extractor::IntersectionBearingsView> intersection_bearings_view;
 
@@ -232,7 +235,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
                      m_open_area_vertices,
                      m_open_area_ring_lengths,
                      m_open_area_vertex_segments,
-                     m_open_area_vertex_segment_offsets) =
+                     m_open_area_vertex_segment_offsets,
+                     m_open_area_visibility_targets,
+                     m_open_area_visibility_offsets) =
                 make_open_areas_view(index, "/common/open_areas");
             m_open_area_rtree = make_open_area_tree_view(index, "/common/open_areas/rtree");
         }
@@ -378,6 +383,25 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             vertices += length;
         }
         return rings;
+    }
+
+    std::vector<std::uint32_t>
+    GetOpenAreaVisibility(const extractor::AreaPolygonSegment &area,
+                          const std::uint32_t vertex) const override final
+    {
+        if (vertex >= area.num_vertices)
+        {
+            return {};
+        }
+        const std::size_t index = area.vertices_offset + vertex;
+        if (index + 1 >= m_open_area_visibility_offsets.size())
+        {
+            return {};
+        }
+        const auto begin = m_open_area_visibility_offsets[index];
+        const auto end = m_open_area_visibility_offsets[index + 1];
+        return {m_open_area_visibility_targets.begin() + begin,
+                m_open_area_visibility_targets.begin() + end};
     }
 
     std::vector<PhantomNodeWithDistance>

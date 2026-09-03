@@ -217,7 +217,9 @@ inline auto make_open_areas_view(const SharedDataIndex &index, const std::string
         make_coordinates_view(index, name + "/vertices"),
         make_vector_view<std::uint32_t>(index, name + "/ring_lengths"),
         make_vector_view<extractor::EdgeBasedNodeSegment>(index, name + "/vertex_segments"),
-        make_vector_view<std::uint32_t>(index, name + "/vertex_segment_offsets"));
+        make_vector_view<std::uint32_t>(index, name + "/vertex_segment_offsets"),
+        make_vector_view<std::uint32_t>(index, name + "/visibility_targets"),
+        make_vector_view<std::uint32_t>(index, name + "/visibility_offsets"));
 }
 
 /**

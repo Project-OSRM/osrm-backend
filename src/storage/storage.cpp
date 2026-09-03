@@ -520,7 +520,9 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
                                         std::get<2>(views),
                                         std::get<3>(views),
                                         std::get<4>(views),
-                                        std::get<5>(views));
+                                        std::get<5>(views),
+                                        std::get<6>(views),
+                                        std::get<7>(views));
 
         auto rtree = make_open_area_tree_view(index, "/common/open_areas/rtree");
         extractor::files::readRamIndex(

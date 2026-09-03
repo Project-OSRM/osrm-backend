@@ -283,12 +283,39 @@ std::optional<Geodesic> shortest(const SolvedArea &area,
 
 } // namespace
 
+/**
+ * The graph the mesher wrote down, if it wrote one.
+ *
+ * Every edge appears under both of its vertices, so only the direction that goes up is
+ * taken, and each edge is weighted once.  A polygon the mesher declined has no entries at
+ * all, which is how the caller knows to build the graph itself.
+ */
+bool adopt_stored_visibility(SolvedArea &area, const StoredVisibility &stored)
+{
+    area.adjacency.assign(area.size(), {});
+    bool any = false;
+    for (std::uint32_t u = 0; u < area.size(); ++u)
+    {
+        for (const auto v : stored(u))
+        {
+            if (v >= area.size() || v <= u)
+                continue;
+            any = true;
+            const auto weight = metres(area.coordinates[u], area.coordinates[v]);
+            area.adjacency[u].emplace_back(v, weight);
+            area.adjacency[v].emplace_back(u, weight);
+        }
+    }
+    return any;
+}
+
 std::optional<Geodesic>
 geodesic_between(std::uint32_t dataset,
                  std::uint64_t area_key,
                  const std::vector<std::span<const util::Coordinate>> &rings,
                  const util::Coordinate from,
-                 const util::Coordinate to)
+                 const util::Coordinate to,
+                 std::optional<StoredVisibility> stored_visibility)
 {
     // an area needs an outer ring with area to it, and the request has to be for two
     // points that are really inside
@@ -301,7 +328,7 @@ geodesic_between(std::uint32_t dataset,
     {
         vertices += ring.size();
     }
-    if (vertices == 0 || vertices > GEODESIC_MAX_VERTICES)
+    if (vertices == 0)
     {
         return std::nullopt;
     }
@@ -333,7 +360,16 @@ geodesic_between(std::uint32_t dataset,
         {
             return std::nullopt;
         }
-        build_adjacency(candidate);
+        // The graph, from extraction where it wrote one; built here otherwise, and then
+        // only for an area small enough that a cubic build fits a request.
+        if (!(stored_visibility && adopt_stored_visibility(candidate, *stored_visibility)))
+        {
+            if (vertices > GEODESIC_MAX_VERTICES)
+            {
+                return std::nullopt;
+            }
+            build_adjacency(candidate);
+        }
         area = &cache().put(key, std::move(candidate));
     }
     else if (!inside_area(projected_from, area->rings) || !inside_area(projected_to, area->rings))

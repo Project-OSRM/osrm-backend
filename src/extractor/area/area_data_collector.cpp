@@ -3,11 +3,12 @@
 #include <algorithm>
 #include <iterator>
 #include <tuple>
+#include <unordered_map>
 
 namespace osrm::extractor::area
 {
 
-void AreaDataCollector::record(const OsmiumPolygon &poly, double walking_speed)
+std::size_t AreaDataCollector::record(const OsmiumPolygon &poly, double walking_speed)
 {
     PolygonRecord record;
     record.boundary_vertices.assign(poly.outer().begin(), poly.outer().end());
@@ -18,6 +19,35 @@ void AreaDataCollector::record(const OsmiumPolygon &poly, double walking_speed)
 
     tbb::mutex::scoped_lock lock(m_mutex);
     m_polygons.push_back(std::move(record));
+    return m_polygons.size() - 1;
+}
+
+void AreaDataCollector::add_visibility(std::size_t handle, const std::set<OsmiumSegment> &edges)
+{
+    tbb::mutex::scoped_lock lock(m_mutex);
+    auto &record = m_polygons.at(handle);
+
+    // node id -> flat index, the order WriteOpenAreas will lay the vertices out in
+    std::unordered_map<osmium::object_id_type, std::uint32_t> index_of;
+    std::uint32_t index = 0;
+    for (const auto &node : record.boundary_vertices)
+        index_of.emplace(node.ref(), index++);
+    for (const auto &ring : record.obstacle_rings)
+        for (const auto &node : ring)
+            index_of.emplace(node.ref(), index++);
+
+    record.visibility.assign(index, {});
+    for (const auto &edge : edges)
+    {
+        const auto u = index_of.find(edge.first.ref()), v = index_of.find(edge.second.ref());
+        if (u == index_of.end() || v == index_of.end() || u->second == v->second)
+            continue;
+        record.visibility[u->second].push_back(v->second);
+        record.visibility[v->second].push_back(u->second);
+    }
+    // a property of the data, not of the set's iteration order
+    for (auto &targets : record.visibility)
+        std::sort(targets.begin(), targets.end());
 }
 
 void AreaDataCollector::finalize()

@@ -52,8 +52,8 @@
 #include <osmium/thread/pool.hpp>
 #include <osmium/visitor.hpp>
 
-#include <filesystem>
 #include <algorithm>
+#include <filesystem>
 #include <memory>
 #include <thread>
 #include <tuple>
@@ -985,6 +985,10 @@ void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons,
     std::vector<util::Coordinate> vertices;
     std::vector<EdgeBasedNodeSegment> vertex_segments;
     std::vector<std::uint32_t> vertex_segment_offsets;
+    // The visibility graph, laid out like the segments: for each vertex, the flat
+    // in-area indices of the vertices it sees, and where each vertex's run begins.
+    std::vector<std::uint32_t> visibility_targets;
+    std::vector<std::uint32_t> visibility_offsets;
     // A vertex the graph compressed away has no node of its own.  Nothing is lost by it:
     // such a vertex lies inside a segment rather than at its end, so no phantom stands
     // there, and the engine's weight test rejected it before this stored anything.
@@ -1041,6 +1045,18 @@ void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons,
             append_ring(obstacle);
         }
 
+        // one run per vertex, empty when the mesher declined the polygon
+        const auto vertex_count = vertices.size() - area.vertices_offset;
+        for (std::size_t i = 0; i < vertex_count; ++i)
+        {
+            visibility_offsets.push_back(
+                boost::numeric_cast<std::uint32_t>(visibility_targets.size()));
+            if (i < polygon.visibility.size())
+                visibility_targets.insert(visibility_targets.end(),
+                                          polygon.visibility[i].begin(),
+                                          polygon.visibility[i].end());
+        }
+
         area.num_vertices =
             boost::numeric_cast<std::uint32_t>(vertices.size()) - area.vertices_offset;
         area.num_rings =
@@ -1067,10 +1083,12 @@ void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons,
 
     // closes the last vertex's range
     vertex_segment_offsets.push_back(boost::numeric_cast<std::uint32_t>(vertex_segments.size()));
+    visibility_offsets.push_back(boost::numeric_cast<std::uint32_t>(visibility_targets.size()));
 
     util::Log() << "... " << areas.size() << " open areas, " << vertices.size() << " vertices, "
                 << vertex_segments.size() << " segments standing on them, " << compressed_away
-                << " vertices the graph compressed away";
+                << " vertices the graph compressed away, " << visibility_targets.size() / 2
+                << " visibility edges";
 
     files::writeOpenAreas(config.GetPath(".osrm.openareas"),
                           areas,
@@ -1078,7 +1096,9 @@ void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons,
                           vertices,
                           ring_lengths,
                           vertex_segments,
-                          vertex_segment_offsets);
+                          vertex_segment_offsets,
+                          visibility_targets,
+                          visibility_offsets);
 
     util::StaticRTree<AreaPolygonSegment> rtree(
         areas, bbox_corners, config.GetPath(".osrm.openareas.fileIndex"));

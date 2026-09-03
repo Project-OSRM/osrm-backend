@@ -156,6 +156,14 @@ the phantom for the vertex from them the same way a search would have, at the ve
 own coordinate. At most eight are used per vertex, the budget the search had, since one
 edge out of a vertex is enough for the search to reach the rest by turning.
 
+`.osrm.openareas` also carries each area's visibility graph, laid out the same way: for
+every vertex, the in-area indices of the vertices it can see, ring neighbours included. A
+journey with both ends inside one area is solved over that graph. The mesher computes it
+once with its rotational sweep and used to throw it away after pruning it to the mesh,
+leaving the engine to rebuild it per request at a cost cubic in the vertex count, which is
+what the `GEODESIC_MAX_VERTICES` ceiling was for. With the graph stored the ceiling only
+applies to polygons the mesher declined, for which the engine still builds its own.
+
 Those segments name edge-based nodes by id, and `osrm-partition` renumbers the edge-based
 nodes for cell locality. It renumbers the stored segments in the same step, alongside the
 r-tree leaves and the node data. A partitioned dataset whose `.osrm.openareas` came from
