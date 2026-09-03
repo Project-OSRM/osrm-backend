@@ -141,14 +141,14 @@ double soft_floor(double clearance, double comfort);
  * cross an obstacle, so whichever side of the fountain the planner chose is the side the
  * result goes.  That is what makes it safe to apply to a path somebody else computed.
  *
- * Interior nodes want strictly positive clearance to work with.  A taut path does not
- * provide it: the shortest way past a rectangular obstacle runs along its edges, so the
- * path grazes the geometry for most of its length and the bubbles there have no radius.
- * The answer is to plan on geometry that has been eroded by the hard margin, so the taut
- * path turns on offset arcs and every node starts with room around it; see
- * plans/elastic-band/plan.md.  Given a path that touches the geometry anyway, the band
- * does what it can and certificate_holds() reports that the result is not certified,
- * rather than either looping or pretending.
+ * Interior nodes want clearance to work with, and a taut path does not provide it: the
+ * shortest way past a rectangular obstacle runs along its edges, so the path grazes the
+ * geometry for most of its length and there is nothing there for the repulsion to push
+ * against.  Such a path is perfectly legal and certifies as it stands -- see
+ * certificate_holds() -- it simply comes back unchanged, because a band with no room has
+ * nowhere to move to.  Getting it to round its corners means planning on geometry eroded
+ * by the hard margin, so the taut path turns on offset arcs and every node starts with
+ * room around it; see plans/elastic-band/plan.md.
  *
  * @param path    at least two points, the first and last being the anchors
  * @param rings   the area, outer ring first
@@ -158,12 +158,17 @@ Band smooth(std::span<const Point> path,
             const BandParameters &parameters);
 
 /**
- * @brief Whether the path is proved to lie in the free space.
+ * @brief Whether every point of the path is on legal ground.
  *
- * Between interior nodes the proof is the discs: consecutive ones overlap, so the segment
- * between them lies in their union and the union is free.  An anchor has no disc to speak
- * with, because a journey from a portal starts on the boundary at zero clearance, so the
- * two segments that touch one are marched against the geometry directly.
+ * Legal means the closed free space: inside the area, or on the boundary of it or of one
+ * of its obstacles.  Running along the edge of an obstacle is walking, not trespassing,
+ * and a path that does so certifies.
+ *
+ * Each segment is proved one of two ways.  Where both ends have room, the free discs
+ * overlap and contain the segment between them, which settles it without touching the
+ * geometry.  Where they do not -- against a wall, or from an anchor sitting on the
+ * boundary, where a disc has no radius at all -- the segment is tested against the rings
+ * directly by segment_in_closed_area().
  *
  * This is what smooth() sets Band::certified from, and it is total: it needs no help from
  * its caller for any part of the path.

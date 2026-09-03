@@ -318,22 +318,50 @@ BOOST_AUTO_TEST_CASE(an_anchor_segment_into_an_obstacle_is_not_certified)
     away.radii = {0.0, 0.0};
     BOOST_CHECK(certificate_holds(away, blocked.rings));
 
-    // And along an edge of the block, which is neither: the segment lies on the boundary
-    // for its whole length, where the free space begins and the clearance is zero, so
-    // there is no disc anywhere on it and nothing to prove it with. Not certified, and
-    // rightly -- but this is the shape a taut path actually takes, since the shortest way
-    // past a rectangle runs along its edges. It is why the band is specified to receive a
-    // path planned on eroded geometry; see plans/elastic-band/plan.md.
+    // And along an edge of the block: legal ground, and certified. The free space is
+    // closed, so a path may run against an obstacle -- which is exactly what a shortest
+    // path does, since the way past a rectangle runs along its sides. There is no disc
+    // anywhere on this segment to prove it with, so it is the geometry that answers.
     Band grazing;
     grazing.points = {{40, 40}, {60, 40}};
     grazing.radii = {0.0, 0.0};
-    BOOST_CHECK(!certificate_holds(grazing, blocked.rings));
+    BOOST_CHECK(certificate_holds(grazing, blocked.rings));
 
-    // And what smooth() does with such an input: hands it back as it came, saying so.
+    // The whole way round the block, touching it for the entire length: still legal.
+    Band around;
+    around.points = {{40, 40}, {60, 40}, {60, 60}, {40, 60}, {40, 40}};
+    around.radii.assign(around.points.size(), 0.0);
+    BOOST_CHECK(certificate_holds(around, blocked.rings));
+
+    // Along the outer wall of the square, which is boundary too.
+    Band wall;
+    wall.points = {{0, 0}, {100, 0}};
+    wall.radii = {0.0, 0.0};
+    BOOST_CHECK(certificate_holds(wall, blocked.rings));
+
+    // Leaving the plaza altogether is not legal, however much room is on the far side.
+    Band outside;
+    outside.points = {{50, 10}, {50, -10}};
+    outside.radii = {0.0, 0.0};
+    BOOST_CHECK(!certificate_holds(outside, blocked.rings));
+
+    // Cutting the corner of the block: legal at both ends, through the obstacle between.
+    Band corner;
+    corner.points = {{50, 40}, {40, 50}};
+    corner.radii = {0.0, 0.0};
+    BOOST_CHECK(!certificate_holds(corner, blocked.rings));
+
+    // And what smooth() does with an input through the block: hands it back as it came,
+    // saying so.
     const std::vector<Point> path{{40, 40}, {50, 50}, {60, 60}};
     const auto band = smooth(path, blocked.rings, defaults());
     BOOST_CHECK(!band.certified);
     BOOST_CHECK_EQUAL(band.points.size(), path.size());
+
+    // A taut path is the case this is all for: it grazes the geometry, so it has no discs
+    // to speak with, and it must still certify.
+    const std::vector<Point> taut{{10, 40}, {40, 40}, {60, 40}, {90, 40}};
+    BOOST_CHECK(smooth(taut, blocked.rings, defaults()).certified);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

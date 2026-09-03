@@ -53,8 +53,6 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
     // Free space is inside the outer ring and outside every obstacle.  Computed here
     // rather than left to the caller because the distance is meaningless without it: the
     // two sides of a wall are the same distance from it.
-    best.inside = !rings.empty() && inside_area(point, rings);
-
     for (std::size_t r = 0; r < rings.size(); ++r)
     {
         const auto &ring = rings[r];
@@ -86,6 +84,11 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
     }
 
     best.distance = std::sqrt(best_squared);
+    // The free space is closed, so a point on the boundary is on legal ground.  Asking
+    // inside_area() alone would not settle it: it is strict, and ray casting on a point
+    // that lies exactly on an edge answers arbitrarily.  The distance to the nearest
+    // geometry has just been computed, and a point on the boundary is the one at zero.
+    best.inside = best.distance <= ON_GEOMETRY || inside_area(point, rings);
     if (best.distance > 0.0)
     {
         best.gradient = {(point.x - best.nearest.x) / best.distance,

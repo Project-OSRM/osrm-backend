@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <vector>
 
 namespace osrm::engine::area
 {
@@ -48,7 +49,106 @@ bool on_any_ring(const Point &point, std::span<const Ring> rings, const double t
     }
     return false;
 }
+
+/**
+ * How close to a ring counts as on it: a little relative to the size of what is being
+ * measured, plus a floor for the degenerate case.  Projected coordinates are web mercator
+ * degrees, so the absolute term is far below any real geometry.
+ */
+double on_ring_tolerance(const double scale) { return scale * 1e-9 + ON_GEOMETRY; }
+
+double cross(const double ax, const double ay, const double bx, const double by)
+{
+    return ax * by - ay * bx;
+}
+
 } // namespace
+
+bool in_closed_area(const Point &point, std::span<const Ring> rings, const double tolerance)
+{
+    return inside_area(point, rings) || on_any_ring(point, rings, tolerance);
+}
+
+bool segment_in_closed_area(const Point &from, const Point &to, std::span<const Ring> rings)
+{
+    const auto dx = to.x - from.x, dy = to.y - from.y;
+    const auto span = std::hypot(dx, dy);
+    const auto tolerance = on_ring_tolerance(span);
+    if (!(span > 0.0))
+    {
+        return in_closed_area(from, rings, tolerance);
+    }
+
+    // Every parameter along the segment at which it might change sides.  The ends are
+    // always cuts, so there is at least one piece to test.
+    std::vector<double> cuts{0.0, 1.0};
+    const auto cut_at = [&cuts](const double t)
+    {
+        if (t > 0.0 && t < 1.0)
+        {
+            cuts.push_back(t);
+        }
+    };
+
+    for (const Ring &ring : rings)
+    {
+        for (std::size_t i = 0; i < ring.size(); ++i)
+        {
+            const Point &a = ring[i];
+            const Point &b = ring[(i + 1) % ring.size()];
+            const auto ex = b.x - a.x, ey = b.y - a.y;
+            const auto denominator = cross(dx, dy, ex, ey);
+
+            // Parallel, so the edge cannot carry the segment from one side to the other.
+            // It can still bound a stretch that runs along it, and where such a stretch
+            // begins and ends is exactly where the segment stops being on the boundary
+            // and starts being inside or outside.  Those two ends are cuts.
+            if (std::abs(denominator) <= span * std::hypot(ex, ey) * 1e-12)
+            {
+                for (const Point &end : {a, b})
+                {
+                    const auto along = ((end.x - from.x) * dx + (end.y - from.y) * dy);
+                    if (std::abs(cross(end.x - from.x, end.y - from.y, dx, dy)) <=
+                        tolerance * span)
+                    {
+                        cut_at(along / (span * span));
+                    }
+                }
+                continue;
+            }
+
+            const auto t = cross(a.x - from.x, a.y - from.y, ex, ey) / denominator;
+            const auto u = cross(a.x - from.x, a.y - from.y, dx, dy) / denominator;
+            // Touching an end of the edge counts: that is the case where the segment
+            // leaves a vertex of the ring, which is where the proper-crossing test goes
+            // wrong and the reason this function exists.
+            constexpr double SLACK = 1e-12;
+            if (u >= -SLACK && u <= 1.0 + SLACK)
+            {
+                cut_at(t);
+            }
+        }
+    }
+
+    std::sort(cuts.begin(), cuts.end());
+    for (std::size_t i = 0; i + 1 < cuts.size(); ++i)
+    {
+        const auto width = cuts[i + 1] - cuts[i];
+        if (!(width * span > tolerance))
+        {
+            // Two cuts at the same place, or as near as makes no difference. There is no
+            // piece between them to be inside anything.
+            continue;
+        }
+        const auto middle = (cuts[i] + cuts[i + 1]) / 2;
+        const Point at{from.x + dx * middle, from.y + dy * middle};
+        if (!in_closed_area(at, rings, tolerance))
+        {
+            return false;
+        }
+    }
+    return true;
+}
 
 bool crosses_ring(const Point &from, const Point &to, Ring ring)
 {
@@ -115,9 +215,8 @@ std::vector<std::size_t> visible_vertices(const Point &point, std::span<const Ri
             // an obstacle, only around it.
             const Point midpoint{(point.x + vertex.x) / 2, (point.y + vertex.y) / 2};
             const auto tolerance =
-                std::hypot(vertex.x - point.x, vertex.y - point.y) * 1e-9 + 1e-12;
-            bool blocked =
-                !inside_area(midpoint, rings) && !on_any_ring(midpoint, rings, tolerance);
+                on_ring_tolerance(std::hypot(vertex.x - point.x, vertex.y - point.y));
+            bool blocked = !in_closed_area(midpoint, rings, tolerance);
             for (const Ring &other : rings)
             {
                 if (blocked)

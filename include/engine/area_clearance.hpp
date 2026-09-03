@@ -31,14 +31,19 @@ struct Clearance
      */
     Point gradient{};
     /**
-     * Whether the point is in the area's free space: inside the outer ring and outside
-     * every obstacle.
+     * Whether the point is on legal ground: in the closed free space, meaning inside the
+     * area or on the boundary of one of its rings.
      *
-     * The distance alone cannot say.  It is unsigned, so a point a metre inside a
+     * The distance cannot answer this, because it is unsigned: a point in the middle of a
      * fountain and a point a metre away from it report the same clearance, and anything
      * that treats the distance as room will believe the first one has room.  That is not
      * hypothetical: it is why a band could sit 5.71 m inside an obstacle and still be
      * certified, since every disc it carried looked perfectly valid.
+     *
+     * Closed rather than strict, because walking along the edge of an obstacle is legal
+     * and is what a shortest path actually does: the way past a rectangle runs along its
+     * sides.  Such a point is legal and has a clearance of zero, which is the honest
+     * answer -- it has no room, and it does not need any.
      */
     bool inside = false;
     //! Which ring the nearest point is on, indexing the span that was passed in.

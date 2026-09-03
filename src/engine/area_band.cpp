@@ -228,62 +228,6 @@ double anchor_ramp(const double from_anchor, const double comfort)
     return t * t * (3.0 - 2.0 * t);
 }
 
-/**
- * How far off an anchor the free space is judged, in projected units.
- *
- * About a millimetre at any latitude.  An anchor lies on the boundary, where the free
- * space begins, so the question of which side a segment leaves by has to be asked a
- * little way along it and not at the point itself.
- */
-constexpr double ANCHOR_SKIP = 1e-8;
-
-/**
- * Prove that an anchor segment lies in the free space, by marching it.
- *
- * A point inside the free space is the centre of a disc of its clearance that is
- * entirely free, so the segment is free as far as that disc reaches and the next
- * sample can start there.  Repeating this covers the segment with discs, which is the
- * same certificate the interior of the band carries, and unlike sampling it leaves no
- * gap between two probes for geometry to hide in.
- *
- * What this replaces was `crosses_ring`, which asks whether the segment properly
- * crosses a ring edge and by construction answers no here: an anchor is a vertex of
- * the polygon, so every ring edge at that vertex shares an endpoint with the segment
- * and is exempted.  A first segment leaving an anchor straight into an obstacle was
- * therefore reported clear, and one band in six hundred was certified 1.05 m inside
- * one.
- */
-bool segment_is_free(const Point from, const Point to, std::span<const Ring> rings)
-{
-    const auto travel = to - from;
-    const auto total = length(travel);
-    if (!(total > 0.0))
-    {
-        return true;
-    }
-    const auto direction = unit(travel);
-
-    // An anchor sits where it was asked to sit, which on a portal is the boundary
-    // itself: the clearance there is zero, the first disc is a point, and the march
-    // cannot start.  Step off both ends by a hair.  What is being asked is which side
-    // the segment runs along, and that is settled just inside it.
-    const auto skip = std::min(ANCHOR_SKIP, total * 0.25);
-    for (auto travelled = skip; travelled < total - skip;)
-    {
-        const auto here = clearance(from + direction * travelled, rings);
-        if (!here.inside)
-        {
-            return false;
-        }
-        // The disc is free, so the segment is free across it.  Never advance by less
-        // than the skip: a disc can be arbitrarily small alongside geometry the
-        // segment merely runs parallel to, and the march has to terminate.
-        travelled += std::max(here.distance, skip);
-    }
-    // and the far end, which the loop steps over
-    return clearance(from + direction * (total - skip), rings).inside;
-}
-
 double soft_floor(const double clearance_distance, const double comfort)
 {
     if (!(comfort > 0.0))
@@ -303,40 +247,42 @@ bool certificate_holds(const Band &band, std::span<const Ring> rings)
     {
         return false;
     }
-    if (band.points.size() < 2)
+    if (band.points.empty())
     {
         return true;
     }
-    // Every interior disc has to be a real one.  A radius of zero is what a node outside
-    // the free space now reports, and two such nodes close together would otherwise
-    // satisfy the overlap test between them while sitting inside an obstacle: the test
-    // compares a gap against a sum of radii and is happy when both are small.
-    for (std::size_t i = 1; i + 1 < band.points.size(); ++i)
+    if (band.points.size() == 1)
     {
-        if (!(band.radii[i] > 0.0))
+        return segment_in_closed_area(band.points.front(), band.points.front(), rings);
+    }
+
+    for (std::size_t i = 0; i + 1 < band.points.size(); ++i)
+    {
+        // The discs first, because they are cheap: two free discs that overlap contain
+        // the segment between their centres, so the segment is free without looking at
+        // any geometry.  This is what the band is built to satisfy, and in the open it
+        // answers for the whole path.
+        const auto covered = band.radii[i] > 0.0 && band.radii[i + 1] > 0.0 &&
+                             length(band.points[i + 1] - band.points[i]) <
+                                 band.radii[i] + band.radii[i + 1];
+        if (covered)
+        {
+            continue;
+        }
+
+        // Where they have nothing to say, ask the geometry directly.
+        //
+        // They have nothing to say wherever the path touches something, since a disc
+        // there has no radius -- and that is not a corner case, it is where shortest
+        // paths live: the way past a rectangle runs along its sides. Refusing those was
+        // refusing the legal paths that matter most, and it made the certificate a test
+        // of how much room a path had rather than of whether it was legal.
+        if (!segment_in_closed_area(band.points[i], band.points[i + 1], rings))
         {
             return false;
         }
     }
-
-    // From the first interior node to the last: an anchor sits where it was asked to,
-    // which on a portal is the boundary itself, and has no room around it to overlap
-    // with.  The two segments that touch an anchor are checked outright by smooth().
-    for (std::size_t i = 1; i + 2 < band.points.size(); ++i)
-    {
-        if (length(band.points[i + 1] - band.points[i]) >= band.radii[i] + band.radii[i + 1])
-        {
-            return false;
-        }
-    }
-
-    // The two segments that touch an anchor, which the discs cannot speak for, marched
-    // against the geometry instead.  Leaving them to the caller is what made this
-    // predicate answer yes for a path that ran 1.05 m inside an obstacle: it was being
-    // asked of a band the caller had already rejected, and it had nothing to say about
-    // the segment that was wrong.
-    return segment_is_free(band.points.front(), band.points[1], rings) &&
-           segment_is_free(band.points[band.points.size() - 2], band.points.back(), rings);
+    return true;
 }
 
 namespace

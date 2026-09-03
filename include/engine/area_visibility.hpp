@@ -73,6 +73,51 @@ bool inside_ring(const Point &point, Ring ring);
 bool inside_area(const Point &point, std::span<const Ring> rings);
 
 /**
+ * @brief How close to the geometry counts as being on it, in projected units.
+ *
+ * About a tenth of a millimetre at the equator and less further from it.  The value has
+ * to sit in a gap, and there is a wide one: OSM coordinates are stored to 1e-7 degrees,
+ * roughly a centimetre, so nothing below that is a distinction the input can express,
+ * while the arithmetic done on them rounds at 1e-16 or so.  Anywhere in between will do,
+ * and this is the middle of it.
+ *
+ * Too tight and a path running along an edge is refused for being a nanometre off it,
+ * which is not a defect of the path but of the arithmetic: 12 taut paths in the corpus
+ * were rejected that way.  Too loose and a path could cut a real corner.
+ */
+constexpr double ON_GEOMETRY = 1e-9;
+
+/**
+ * @brief Return true if the point is in the closed free space: inside the area, or on
+ * the boundary of any of its rings to within `tolerance`.
+ *
+ * The free space is closed, so walking along the edge of an obstacle is walking on legal
+ * ground.  This matters more than it sounds: the shortest way past a rectangle runs along
+ * its sides, so the boundary is not an edge case here but the commonest place a path is
+ * found.  It also has to be asked with a tolerance, because inside_area() is strict and
+ * ray casting answers arbitrarily for a point that lies exactly on an edge -- which the
+ * midpoint of two adjacent vertices always does.
+ */
+bool in_closed_area(const Point &point, std::span<const Ring> rings, double tolerance);
+
+/**
+ * @brief Return true if every point of the segment from..to is in the closed free space.
+ *
+ * A complete test, not a sample.  The segment is cut at every parameter where it could
+ * change sides -- each crossing of a ring edge, and each end of a stretch where it runs
+ * along one -- and the midpoint of each resulting piece is tested.  A piece with no cut
+ * inside it lies wholly in the free space, wholly in an obstacle, or wholly on the
+ * boundary, so its midpoint speaks for all of it.
+ *
+ * This is what a proper-crossing test such as crosses_ring() cannot do.  That test
+ * exempts a ring edge sharing an endpoint with the segment, on the reasoning that it
+ * meets it only there; the reasoning holds for the sweep, where both ends are ring
+ * vertices, and fails for a segment that leaves a vertex straight into the obstacle it
+ * belongs to.
+ */
+bool segment_in_closed_area(const Point &from, const Point &to, std::span<const Ring> rings);
+
+/**
  * @brief Return the indices of the area's vertices that the point can see.
  *
  * A vertex is visible when the straight line to it stays inside the area: it crosses no
