@@ -9,7 +9,7 @@ namespace osrm::util::guidance
 
 bool EntryClass::activate(std::uint32_t index)
 {
-    if (index >= CHAR_BIT * sizeof(FlagBaseType))
+    if (index >= CAPACITY)
         return false;
 
     enabled_entries_flags |= (FlagBaseType{1} << index);
@@ -24,13 +24,13 @@ bool EntryClass::allowsEntry(std::uint32_t index) const
     // and the extractor logs that it did.  The engine, though, walks the bearings, and
     // there can be more of those than there are bits here.  An ordinary junction never
     // gets near the limit, but a meshed pedestrian area does: every line of sight from a
-    // plaza vertex is a way, and a vertex on a busy plaza has been seen with 96 of them.
+    // plaza vertex is a way, and a vertex on a busy plaza has been seen with 151 of them.
     //
     // Shifting by the width of the type is undefined, so with asserts on this aborted the
     // server and with them off it read whatever the shift happened to produce.  Neither
     // is an answer.  A road that could not be recorded reports no entry, which is what
     // the stored data says about it.
-    if (index >= CHAR_BIT * sizeof(FlagBaseType))
+    if (index >= CAPACITY)
         return false;
 
     return 0 != (enabled_entries_flags & (FlagBaseType{1} << index));
