@@ -58,8 +58,18 @@ class AreaMesher
     const AreaDataCollector &collector() const { return m_collector; }
 
     int added_ways{0};
-    /** Refuse to mesh more vertices */
-    size_t max_vertices{100};
+    /**
+     * The most obstacle-plus-entry vertices an area may have and still be meshed.
+     *
+     * A safety valve against degenerate input, not a routing-quality knob. The engine
+     * used to rebuild the visibility graph per request, cubic in the vertex count, and
+     * this bounded that; now the graph is written at extraction (Extractor::WriteOpenAreas)
+     * and the cost is paid once. Over all of Ile-de-France the sweep is 4.8 s and the
+     * largest real plaza -- Place de la Republique, 1044 vertices -- is 711 work vertices
+     * and 0.6 s. 1024 keeps every real plaza there and stops only genuinely pathological
+     * geometry, whose sweep grows with work x vertices.
+     */
+    size_t max_vertices{1024};
     /** Speed in m/s for crossing an area, taken from the profile. */
     double area_walking_speed{1.4};
     /**
