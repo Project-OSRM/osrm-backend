@@ -1,5 +1,7 @@
 #include "engine/area_clearance.hpp"
 
+#include "engine/area_visibility.hpp"
+
 #include "util/coordinate_calculation.hpp"
 
 #include <algorithm>
@@ -47,6 +49,11 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
 {
     Clearance best;
     auto best_squared = std::numeric_limits<double>::infinity();
+
+    // Free space is inside the outer ring and outside every obstacle.  Computed here
+    // rather than left to the caller because the distance is meaningless without it: the
+    // two sides of a wall are the same distance from it.
+    best.inside = !rings.empty() && inside_area(point, rings);
 
     for (std::size_t r = 0; r < rings.size(); ++r)
     {

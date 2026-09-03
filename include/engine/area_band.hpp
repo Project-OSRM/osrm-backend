@@ -100,6 +100,15 @@ struct Band
      * and never a segment-versus-obstacle test.
      */
     std::vector<double> radii;
+    /**
+     * Whether this path is proved to lie in the free space.
+     *
+     * smooth() hands back the input unchanged when it cannot prove its own result, so a
+     * returned band is not by itself a promise, and the taut input usually cannot be
+     * proved either: it grazes the geometry, where the discs have no radius.  A caller
+     * that may only walk on proved ground reads this rather than assuming.
+     */
+    bool certified = false;
 };
 
 /**
@@ -149,13 +158,17 @@ Band smooth(std::span<const Point> path,
             const BandParameters &parameters);
 
 /**
- * @brief Whether consecutive discs overlap, which is what makes the band collision-free.
+ * @brief Whether the path is proved to lie in the free space.
  *
- * Anchors are exempt.  A journey that starts at a portal starts on the boundary at zero
- * clearance, so its first disc has no radius and can overlap nothing; the certificate
- * applies from the first interior node outward.
+ * Between interior nodes the proof is the discs: consecutive ones overlap, so the segment
+ * between them lies in their union and the union is free.  An anchor has no disc to speak
+ * with, because a journey from a portal starts on the boundary at zero clearance, so the
+ * two segments that touch one are marched against the geometry directly.
+ *
+ * This is what smooth() sets Band::certified from, and it is total: it needs no help from
+ * its caller for any part of the path.
  */
-bool certificate_holds(const Band &band);
+bool certificate_holds(const Band &band, std::span<const Ring> rings);
 
 } // namespace osrm::engine::area
 

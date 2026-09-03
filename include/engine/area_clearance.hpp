@@ -30,6 +30,17 @@ struct Clearance
      * clearance is not differentiable and there is no direction to give.
      */
     Point gradient{};
+    /**
+     * Whether the point is in the area's free space: inside the outer ring and outside
+     * every obstacle.
+     *
+     * The distance alone cannot say.  It is unsigned, so a point a metre inside a
+     * fountain and a point a metre away from it report the same clearance, and anything
+     * that treats the distance as room will believe the first one has room.  That is not
+     * hypothetical: it is why a band could sit 5.71 m inside an obstacle and still be
+     * certified, since every disc it carried looked perfectly valid.
+     */
+    bool inside = false;
     //! Which ring the nearest point is on, indexing the span that was passed in.
     std::size_t ring = 0;
     //! Which segment of that ring, by the index of its first vertex.
@@ -42,7 +53,9 @@ struct Clearance
  * Measures against every ring, the outer boundary included: a path has to stay off the
  * walls of a plaza as much as off the fountain in the middle of it. The point is not
  * required to be inside the area, and the distance is unsigned, so a point outside gets
- * its distance to the boundary rather than a negative number.
+ * its distance to the boundary rather than a negative number.  Whether it is inside is
+ * reported separately, in Clearance::inside; the distance on its own says how far the
+ * geometry is, never which side of it the point is on.
  *
  * A flat scan over the segments.  Plazas have hundreds of them and correctness comes
  * first; an r-tree here would buy a logarithm and cost the ability to check this against

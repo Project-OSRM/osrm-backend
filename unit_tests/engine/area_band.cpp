@@ -181,7 +181,8 @@ BOOST_AUTO_TEST_CASE(the_certificate_holds)
     const std::vector<Point> path{{10, 50}, {39.5, 60.5}, {60.5, 60.5}, {90, 50}};
 
     const auto band = smooth(path, blocked.rings, defaults());
-    BOOST_CHECK(certificate_holds(band));
+    BOOST_CHECK(certificate_holds(band, blocked.rings));
+    BOOST_CHECK(band.certified);
 
     // And what it certifies: every interior node has room around it.
     for (std::size_t i = 1; i + 1 < band.points.size(); ++i)
@@ -288,7 +289,51 @@ BOOST_AUTO_TEST_CASE(degenerate_input)
     const std::vector<Point> same{{50, 50}, {50, 50}};
     const auto band = smooth(same, square.rings, defaults());
     BOOST_CHECK_GE(band.points.size(), 2u);
-    BOOST_CHECK(certificate_holds(band));
+    BOOST_CHECK(certificate_holds(band, square.rings));
+}
+
+// The defect this pins: an anchor on a corner of the block, with the segment leaving it
+// straight through the block.
+//
+// `crosses_ring` cannot see this. It asks whether the segment properly crosses a ring
+// edge, and an anchor that is a vertex of the ring shares an endpoint with the two edges
+// there, which the test exempts. So the segment was called clear, and because the rest of
+// the certificate speaks only for the interior nodes, the whole path certified while
+// running 20 units inside an obstacle.
+BOOST_AUTO_TEST_CASE(an_anchor_segment_into_an_obstacle_is_not_certified)
+{
+    const Blocked blocked;
+
+    // (40,40) and (60,60) are opposite corners of the block, so the straight line between
+    // them is its diagonal and lies entirely inside it.
+    Band diagonal;
+    diagonal.points = {{40, 40}, {60, 60}};
+    diagonal.radii = {0.0, 0.0};
+    BOOST_CHECK(!certificate_holds(diagonal, blocked.rings));
+
+    // Leaving the same corner into the open: certified, which is what stops the fix
+    // from being "reject every anchor segment".
+    Band away;
+    away.points = {{40, 40}, {20, 20}};
+    away.radii = {0.0, 0.0};
+    BOOST_CHECK(certificate_holds(away, blocked.rings));
+
+    // And along an edge of the block, which is neither: the segment lies on the boundary
+    // for its whole length, where the free space begins and the clearance is zero, so
+    // there is no disc anywhere on it and nothing to prove it with. Not certified, and
+    // rightly -- but this is the shape a taut path actually takes, since the shortest way
+    // past a rectangle runs along its edges. It is why the band is specified to receive a
+    // path planned on eroded geometry; see plans/elastic-band/plan.md.
+    Band grazing;
+    grazing.points = {{40, 40}, {60, 40}};
+    grazing.radii = {0.0, 0.0};
+    BOOST_CHECK(!certificate_holds(grazing, blocked.rings));
+
+    // And what smooth() does with such an input: hands it back as it came, saying so.
+    const std::vector<Point> path{{40, 40}, {50, 50}, {60, 60}};
+    const auto band = smooth(path, blocked.rings, defaults());
+    BOOST_CHECK(!band.certified);
+    BOOST_CHECK_EQUAL(band.points.size(), path.size());
 }
 
 BOOST_AUTO_TEST_SUITE_END()
