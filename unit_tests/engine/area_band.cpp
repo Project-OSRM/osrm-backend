@@ -42,6 +42,36 @@ struct Blocked
     }
 };
 
+
+//! How much of a polyline's turning doubles back on itself, in degrees.
+double doubling_back(const std::vector<Point> &points)
+{
+    auto total = 0.0;
+    auto previous = 0.0;
+    for (std::size_t i = 1; i + 1 < points.size(); ++i)
+    {
+        const auto ax = points[i].x - points[i - 1].x, ay = points[i].y - points[i - 1].y;
+        const auto bx = points[i + 1].x - points[i].x, by = points[i + 1].y - points[i].y;
+        const auto la = std::hypot(ax, ay), lb = std::hypot(bx, by);
+        if (!(la > 0.0) || !(lb > 0.0))
+        {
+            continue;
+        }
+        const auto angle =
+            std::acos(std::clamp((ax * bx + ay * by) / (la * lb), -1.0, 1.0)) * 180.0 / M_PI;
+        const auto sign = ax * by - ay * bx;
+        if (previous * sign < 0.0)
+        {
+            total += angle;
+        }
+        if (sign != 0.0)
+        {
+            previous = sign;
+        }
+    }
+    return total;
+}
+
 BandParameters defaults()
 {
     BandParameters p;
@@ -362,6 +392,46 @@ BOOST_AUTO_TEST_CASE(an_anchor_segment_into_an_obstacle_is_not_certified)
     // to speak with, and it must still certify.
     const std::vector<Point> taut{{10, 40}, {40, 40}, {60, 40}, {90, 40}};
     BOOST_CHECK(smooth(taut, blocked.rings, defaults()).certified);
+}
+
+
+// Legal is not the same as better. A band that stays in free space the whole time can
+// still hand back something worse than it was given, and over the corpus that was the
+// rule rather than the exception: every taut path the band managed to move came out
+// worse. So a result has to earn its place, on both of the ways it can fail.
+BOOST_AUTO_TEST_CASE(it_returns_nothing_worse_than_it_was_given)
+{
+    const Blocked blocked;
+
+    // Cranked hard enough to wobble: strong repulsion against a large comfort margin on
+    // geometry that is small relative to it.
+    auto wild = defaults();
+    wild.repulsion = 8.0;
+    wild.contraction = 4.0;
+    wild.sweeps = 200;
+
+    const std::vector<std::vector<Point>> paths{
+        {{10, 50}, {39.5, 60.5}, {60.5, 60.5}, {90, 50}},
+        {{10, 40}, {40, 40}, {60, 40}, {90, 40}},
+        {{10, 50}, {50, 65}, {90, 50}},
+    };
+
+    for (const auto &path : paths)
+    {
+        for (const auto &parameters : {defaults(), wild})
+        {
+            const auto band = smooth(path, blocked.rings, parameters);
+
+            // Never the long way round.
+            BOOST_CHECK_LE(path_length(band.points), path_length(path) * 1.05);
+
+            // And never doubling back more than the two inflections a bulge needs.
+            BOOST_CHECK_LE(doubling_back(band.points), doubling_back(path) + 20.0 + 1e-9);
+
+            // Whatever comes back is legal ground either way.
+            BOOST_CHECK(certificate_holds(band, blocked.rings));
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

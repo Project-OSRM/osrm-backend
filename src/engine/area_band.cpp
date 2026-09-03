@@ -27,6 +27,26 @@ constexpr std::size_t MAX_NODES = 2000;
 //! How much finer than the requested spacing insertion may go to satisfy the certificate.
 constexpr double FINEST = 0.5;
 
+/**
+ * How much extra doubling back, in radians, counts as no worse.
+ *
+ * Twenty degrees, which is two inflections' worth.  A band that bulges off an obstacle has
+ * to reverse where the bulge meets each anchor, since the anchor does not move and the
+ * middle of the path does; that is the shape working, not wobbling, and it costs about ten
+ * degrees an end.  Wobble is nothing like as modest: over the corpus the bands that were
+ * making paths worse doubled back by 208 degrees at the median and by 14,450 at the worst.
+ */
+constexpr double REVERSAL_SLACK = 20.0 * M_PI / 180.0;
+
+/**
+ * The most the band may lengthen a path, as a ratio.
+ *
+ * Buying clearance with length is the trade the band exists to make, so this is not zero;
+ * but the corpus says it has to be bounded, because a band given a path with no room to
+ * work in returned one half as long again.
+ */
+constexpr double MOST_STRETCH = 1.05;
+
 Point operator-(const Point &a, const Point &b) { return {a.x - b.x, a.y - b.y}; }
 Point operator+(const Point &a, const Point &b) { return {a.x + b.x, a.y + b.y}; }
 Point operator*(const Point &a, const double s) { return {a.x * s, a.y * s}; }
@@ -228,6 +248,57 @@ double anchor_ramp(const double from_anchor, const double comfort)
     return t * t * (3.0 - 2.0 * t);
 }
 
+/**
+ * How much of a polyline's turning doubles back on itself, in radians.
+ *
+ * The sum of the angles at the nodes that turn the opposite way from the node before
+ * them.  A path that curves steadily around an obstacle scores zero however sharply it
+ * curves, and a path that zigzags scores the whole of its zigzag.
+ *
+ * Total turning will not do here, which is worth saying because it is the obvious choice.
+ * Smoothing a corner does not remove turning, it spreads it out: a ninety degree corner
+ * rounded into ten nine degree bends still totals ninety.  What is more, holding a
+ * comfort margin legitimately costs turning, since bulging further off an obstacle bends
+ * the path more than hugging it does.  Total turning therefore cannot tell an improvement
+ * from a wobble, while reversal is precisely what a wobble is made of.
+ */
+double polyline_length(std::span<const Point> points)
+{
+    auto total = 0.0;
+    for (std::size_t i = 0; i + 1 < points.size(); ++i)
+    {
+        total += length(points[i + 1] - points[i]);
+    }
+    return total;
+}
+
+double reversal_turning(std::span<const Point> points)
+{
+    auto total = 0.0;
+    auto previous_sign = 0.0;
+    for (std::size_t i = 1; i + 1 < points.size(); ++i)
+    {
+        const auto before = points[i] - points[i - 1];
+        const auto after = points[i + 1] - points[i];
+        const auto lengths = length(before) * length(after);
+        if (!(lengths > 0.0))
+        {
+            continue;
+        }
+        const auto angle = std::acos(std::clamp(dot(before, after) / lengths, -1.0, 1.0));
+        const auto sign = before.x * after.y - before.y * after.x;
+        if (previous_sign * sign < 0.0)
+        {
+            total += angle;
+        }
+        if (sign != 0.0)
+        {
+            previous_sign = sign;
+        }
+    }
+    return total;
+}
+
 double soft_floor(const double clearance_distance, const double comfort)
 {
     if (!(comfort > 0.0))
@@ -398,47 +469,52 @@ Band relax(std::span<const Point> path,
             // nodes that most need to move while their neighbours a little further out
             // move freely, and the path zigzags between them.  The free disc is what the
             // step must not leave, and the free disc is the true clearance.
-            const auto limit = here.distance * 0.5;
+            // Against the room, not the clearance.  They are the same number wherever
+            // there is room to spare, and they differ exactly where the old bound gave
+            // up: a node standing on a wall has a clearance of zero and no bubble at all,
+            // while the room says how far it is to anything else, which is what it
+            // actually has to move in.  A taut path bends on corners and runs along
+            // edges, so this is the ordinary case, not a corner of one.
+            const auto limit = std::min(here.room, spacing) * 0.5;
             const auto moved = length(move);
-            if (limit > 0.0 && moved > limit)
+            if (limit > 0.0)
             {
-                move = move * (limit / moved);
+                if (moved > limit)
+                {
+                    move = move * (limit / moved);
+                }
             }
-            else if (!(limit > 0.0))
+            else if (moved > 0.0)
             {
-                // No room at all: the node is on the geometry, its bubble has no radius,
-                // and the certificate has nothing to say about where it may go.  This is
-                // the one step not covered by it, so it is the one step that has to be
-                // checked outright.
-                //
-                // A small step lets a node pinned on a corner get off it, which is worth
-                // having because a taut path bends exactly on corners.  Unchecked it is
-                // also the only way a node can leave the area, and over the corpus it
-                // did.
+                // Pinched: something else is on the point too, and there is no room in
+                // any direction. Let it off the spot, no further than the sampling.
                 const auto escape = spacing * 0.25;
-                if (moved > escape && moved > 0.0)
+                if (moved > escape)
                 {
                     move = move * (escape / moved);
                 }
-                // The destination being inside the area is not enough.  This step is
-                // the only one not bounded by a free disc, so it is the only one that
-                // can pass over something on the way, and a small obstacle is exactly
-                // what it can step over: a node walked clean across one on the corpus
-                // and the band came out on the far side of it, in a different homotopy
-                // class from the path it was given, with every segment of the result
-                // still in free space and the certificate still satisfied.  What has to
-                // be checked is the ground covered, not the destination.
-                const auto destination = at + move;
-                auto swept_something = !inside_area(destination, rings);
-                for (const auto &ring : rings)
-                {
-                    if (swept_something)
-                    {
-                        break;
-                    }
-                    swept_something = crosses_ring(at, destination, ring);
-                }
-                if (swept_something)
+            }
+
+            if (!(here.distance > 0.0))
+            {
+                // The node is on the geometry, so the disc the step was bounded by is not
+                // a free disc: it straddles the wall the node is standing on, and the
+                // certificate has nothing to say about where the step may go.  This is
+                // the one step not covered by it, so it is the one step checked outright.
+                //
+                // What has to be checked is the ground covered, not the destination.  A
+                // step can pass over a small obstacle entirely: a node walked clean
+                // across one on the corpus and the band came out on the far side of it,
+                // in a different homotopy class from the path it was given, with every
+                // segment of the result still in free space and the certificate still
+                // satisfied.
+                //
+                // And it is asked of the closed free space, because the answer for a node
+                // on a wall is nearly always that it moves along the wall and lands on
+                // it again.  Asking inside_area(), which is strict, refused every such
+                // move, so a node against geometry could only ever step away from it and
+                // a path lying along an edge never moved at all.
+                if (!segment_in_closed_area(at, at + move, rings))
                 {
                     move = {0.0, 0.0};
                 }
@@ -469,10 +545,10 @@ Band relax(std::span<const Point> path,
                 {
                     return true;
                 }
-                return std::none_of(rings.begin(),
-                                    rings.end(),
-                                    [&](const Ring &ring)
-                                    { return crosses_ring(neighbour, destination, ring); });
+                // Complete, and closed: a segment that runs along an edge is legal, and
+                // a proper-crossing test cannot see one that leaves a ring vertex into
+                // the ring it belongs to.
+                return segment_in_closed_area(neighbour, destination, rings);
             };
 
             if (covered(previous, band.radii[i - 1]) && covered(next, band.radii[i + 1]))
@@ -616,22 +692,9 @@ Band relax(std::span<const Point> path,
     // wandered into a different homotopy class is worse than no smoothing at all, because
     // the planner's choice of which side to pass is the part a person notices.
     //
-    // So an uncertified result is discarded and the path is returned as it came.  This is
-    // the case erosion removes: with the geometry offset by the hard margin, no interior
-    // node starts on it, every bubble has a radius, and the certificate holds throughout.
-    // The two segments the certificate cannot speak for: an anchor sits where it was
-    // asked to, which on a portal is the boundary itself, so its bubble has no radius and
-    // can overlap nothing.  Those two are checked outright instead.  They are also the
-    // ones most able to do damage, being the longest and the least constrained, and over
-    // the corpus one of them swept clean across an obstacle and came out the far side.
+    // So an uncertified result is discarded and the path is returned as it came.
     band.certified = certificate_holds(band, rings);
-    if (const auto *why = std::getenv("OSRM_BAND_WHY"); why != nullptr)
-    {
-        std::fprintf(stderr,
-                     "BAND n=%zu certified=%d\n",
-                     band.points.size(),
-                     static_cast<int>(band.certified));
-    }
+
     if (!band.certified)
     {
         band.points.assign(path.begin(), path.end());
@@ -641,9 +704,8 @@ Band relax(std::span<const Point> path,
             recompute(i);
         }
         // The input is handed back as it came, and it gets the same examination as the
-        // band did.  It is a taut path, so usually it grazes the geometry and does not
-        // certify either; saying so is the point.  A caller that may only walk on proved
-        // ground reads this and keeps whatever it had.
+        // band did.  A caller that may only walk on proved ground reads this and keeps
+        // whatever it had.
         band.certified = certificate_holds(band, rings);
     }
 
@@ -723,6 +785,44 @@ Band smooth(std::span<const Point> path,
     {
         band = relax(working, rings, parameters, level);
         working = band.points;
+    }
+
+    // Legal is not the same as better, and the certificate only ever answered the first.
+    // A wobble satisfies it perfectly well: the band stays in free space the whole time
+    // it is making the path worse.  Measured over the corpus with nothing but the
+    // certificate, every taut path the band managed to move came out worse than it went
+    // in -- 242 of them, tripling the turning between them.
+    //
+    // Two ways it can be worse, and they are different faults:
+    //
+    //   It doubles back.  Rounding a corner does not remove turning, it spreads it out --
+    //   ninety degrees rounded into ten bends still totals ninety -- and bulging off an
+    //   obstacle to hold the comfort margin legitimately adds some.  So total turning
+    //   cannot tell an improvement from a wobble.  Turning that reverses can: a path
+    //   curving steadily round an obstacle scores nothing however sharply it curves.
+    //
+    //   It goes the long way round.  The band buys clearance with length, which is the
+    //   trade it exists to make, but only a little of it: unbounded, it returned paths
+    //   half as long again as the taut one it was given.
+    //
+    // Judged here rather than in relax(), and against the path the caller asked for
+    // rather than the previous level's output.  Each level starts from the one above, so
+    // a gate applied per level compares against something already deformed and the
+    // allowances compound: a 5% bound let 7.8% through.
+    const auto reverses_more =
+        reversal_turning(band.points) > reversal_turning(path) + REVERSAL_SLACK;
+    const auto asked_length = polyline_length(path);
+    const auto goes_further =
+        asked_length > 0.0 && polyline_length(band.points) > asked_length * MOST_STRETCH;
+    if (reverses_more || goes_further)
+    {
+        band.points.assign(path.begin(), path.end());
+        band.radii.assign(band.points.size(), 0.0);
+        for (std::size_t i = 0; i < band.points.size(); ++i)
+        {
+            band.radii[i] = bubble_radius(band.points[i], rings, parameters.comfort);
+        }
+        band.certified = certificate_holds(band, rings);
     }
     return band;
 }

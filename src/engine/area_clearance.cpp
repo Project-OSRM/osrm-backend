@@ -49,6 +49,9 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
 {
     Clearance best;
     auto best_squared = std::numeric_limits<double>::infinity();
+    // The nearest thing that is not what the point is already standing on; see
+    // Clearance::room.
+    auto room_squared = std::numeric_limits<double>::infinity();
 
     // Free space is inside the outer ring and outside every obstacle.  Computed here
     // rather than left to the caller because the distance is meaningless without it: the
@@ -75,6 +78,11 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
                 best.ring = r;
                 best.segment = i;
             }
+            if (found.distance_squared > ON_GEOMETRY * ON_GEOMETRY &&
+                found.distance_squared < room_squared)
+            {
+                room_squared = found.distance_squared;
+            }
         }
     }
 
@@ -84,6 +92,7 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
     }
 
     best.distance = std::sqrt(best_squared);
+    best.room = std::isfinite(room_squared) ? std::sqrt(room_squared) : best.distance;
     // The free space is closed, so a point on the boundary is on legal ground.  Asking
     // inside_area() alone would not settle it: it is strict, and ray casting on a point
     // that lies exactly on an edge answers arbitrarily.  The distance to the nearest
