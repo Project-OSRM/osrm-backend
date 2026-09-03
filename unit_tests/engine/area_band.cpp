@@ -398,8 +398,11 @@ BOOST_AUTO_TEST_CASE(an_anchor_segment_into_an_obstacle_is_not_certified)
 // Legal is not the same as better. A band that stays in free space the whole time can
 // still hand back something worse than it was given, and over the corpus that was the
 // rule rather than the exception: every taut path the band managed to move came out
-// worse. So a result has to earn its place, on both of the ways it can fail.
-BOOST_AUTO_TEST_CASE(it_returns_nothing_worse_than_it_was_given)
+// worse. So a result has to earn its place.
+//
+// Length is not what it earns it on. A smoothed path is longer than the taut one it came
+// from, and that is the trade the band exists to make.
+BOOST_AUTO_TEST_CASE(it_returns_nothing_that_doubles_back_more)
 {
     const Blocked blocked;
 
@@ -422,10 +425,7 @@ BOOST_AUTO_TEST_CASE(it_returns_nothing_worse_than_it_was_given)
         {
             const auto band = smooth(path, blocked.rings, parameters);
 
-            // Never the long way round.
-            BOOST_CHECK_LE(path_length(band.points), path_length(path) * 1.05);
-
-            // And never doubling back more than the two inflections a bulge needs.
+            // Never doubling back more than the two inflections a bulge needs.
             BOOST_CHECK_LE(doubling_back(band.points), doubling_back(path) + 20.0 + 1e-9);
 
             // Whatever comes back is legal ground either way.

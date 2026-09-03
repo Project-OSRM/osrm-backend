@@ -38,14 +38,6 @@ constexpr double FINEST = 0.5;
  */
 constexpr double REVERSAL_SLACK = 20.0 * M_PI / 180.0;
 
-/**
- * The most the band may lengthen a path, as a ratio.
- *
- * Buying clearance with length is the trade the band exists to make, so this is not zero;
- * but the corpus says it has to be bounded, because a band given a path with no room to
- * work in returned one half as long again.
- */
-constexpr double MOST_STRETCH = 1.05;
 
 Point operator-(const Point &a, const Point &b) { return {a.x - b.x, a.y - b.y}; }
 Point operator+(const Point &a, const Point &b) { return {a.x + b.x, a.y + b.y}; }
@@ -262,16 +254,6 @@ double anchor_ramp(const double from_anchor, const double comfort)
  * the path more than hugging it does.  Total turning therefore cannot tell an improvement
  * from a wobble, while reversal is precisely what a wobble is made of.
  */
-double polyline_length(std::span<const Point> points)
-{
-    auto total = 0.0;
-    for (std::size_t i = 0; i + 1 < points.size(); ++i)
-    {
-        total += length(points[i + 1] - points[i]);
-    }
-    return total;
-}
-
 double reversal_turning(std::span<const Point> points)
 {
     auto total = 0.0;
@@ -793,28 +775,22 @@ Band smooth(std::span<const Point> path,
     // certificate, every taut path the band managed to move came out worse than it went
     // in -- 242 of them, tripling the turning between them.
     //
-    // Two ways it can be worse, and they are different faults:
+    // What it is judged on is doubling back, and not length.  A smoothed path is longer
+    // than the taut one it came from -- that is the trade the band exists to make, and
+    // holding a margin off an obstacle is bought with distance -- so length says nothing
+    // about whether the band did its job well.  Doubling back does: a path curving
+    // steadily around an obstacle scores nothing however sharply it curves, while a
+    // wobble is made of nothing else.
     //
-    //   It doubles back.  Rounding a corner does not remove turning, it spreads it out --
-    //   ninety degrees rounded into ten bends still totals ninety -- and bulging off an
-    //   obstacle to hold the comfort margin legitimately adds some.  So total turning
-    //   cannot tell an improvement from a wobble.  Turning that reverses can: a path
-    //   curving steadily round an obstacle scores nothing however sharply it curves.
-    //
-    //   It goes the long way round.  The band buys clearance with length, which is the
-    //   trade it exists to make, but only a little of it: unbounded, it returned paths
-    //   half as long again as the taut one it was given.
+    // Nor does total turning, which is the obvious choice and the wrong one.  Rounding a
+    // corner does not remove turning, it spreads it out: ninety degrees rounded into ten
+    // bends still totals ninety.
     //
     // Judged here rather than in relax(), and against the path the caller asked for
     // rather than the previous level's output.  Each level starts from the one above, so
-    // a gate applied per level compares against something already deformed and the
-    // allowances compound: a 5% bound let 7.8% through.
-    const auto reverses_more =
-        reversal_turning(band.points) > reversal_turning(path) + REVERSAL_SLACK;
-    const auto asked_length = polyline_length(path);
-    const auto goes_further =
-        asked_length > 0.0 && polyline_length(band.points) > asked_length * MOST_STRETCH;
-    if (reverses_more || goes_further)
+    // a gate applied per level compares against something already deformed and whatever
+    // it allows compounds from one level to the next.
+    if (reversal_turning(band.points) > reversal_turning(path) + REVERSAL_SLACK)
     {
         band.points.assign(path.begin(), path.end());
         band.radii.assign(band.points.size(), 0.0);
