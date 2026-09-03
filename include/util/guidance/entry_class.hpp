@@ -1,6 +1,7 @@
 #ifndef OSRM_UTIL_GUIDANCE_ENTRY_CLASS_HPP_
 #define OSRM_UTIL_GUIDANCE_ENTRY_CLASS_HPP_
 
+#include <climits>
 #include <cstddef>
 #include <cstdint>
 #include <functional>
@@ -25,9 +26,25 @@ namespace util::guidance
 
 class EntryClass
 {
-    using FlagBaseType = std::uint32_t;
+    using FlagBaseType = std::uint64_t;
 
   public:
+    /**
+     * How many roads of one intersection this can hold an answer for.
+     *
+     * Sixty-four rather than thirty-two because a meshed pedestrian area produces
+     * intersections far larger than a junction ever is: every line of sight from a plaza
+     * vertex is a way. Over Ile-de-France 276 vertices had more roads than thirty-two
+     * bits could describe, with a median of 38 and a worst of 151; sixty-four covers all
+     * but eight of them. A road beyond this reports no entry -- see allowsEntry -- which
+     * is the one answer the stored data supports.
+     *
+     * Widening again is cheap in space, since only the *distinct* classes are stored and
+     * EntryClassID caps those at 65536, but it changes the layout of .osrm.icd and so
+     * costs a re-extraction.
+     */
+    static constexpr std::uint32_t CAPACITY = CHAR_BIT * sizeof(FlagBaseType);
+
     constexpr EntryClass() : enabled_entries_flags(0) {}
 
     // we are hiding the access to the flags behind a protection wall, to make sure the bit logic

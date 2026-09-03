@@ -10,8 +10,10 @@ BOOST_AUTO_TEST_SUITE(entry_class)
 
 using osrm::util::guidance::EntryClass;
 
-// How many roads the class can hold, which is how wide its flags are.
-constexpr std::uint32_t CAPACITY = 32;
+// How many roads the class can hold, which is how wide its flags are.  Taken from the
+// class so that widening it cannot leave the test asserting the old capacity.
+constexpr std::uint32_t CAPACITY = EntryClass::CAPACITY;
+static_assert(CAPACITY == 64, "EntryClass capacity changed, and so did the .osrm.icd layout");
 
 BOOST_AUTO_TEST_CASE(entry_class_records_what_it_is_given)
 {
@@ -30,7 +32,7 @@ BOOST_AUTO_TEST_CASE(entry_class_records_what_it_is_given)
 // The engine walks the bearings of an intersection and asks about each one, and there can
 // be more bearings than there are bits here.  An ordinary junction never comes close, but
 // a meshed pedestrian area does: every line of sight from a plaza vertex becomes a way,
-// and a single vertex has been seen with 96 of them in Ile-de-France.
+// and a single vertex has been seen with 151 of them in Ile-de-France.
 //
 // Before this the shift was by the width of the type, which is undefined behaviour: with
 // asserts on it aborted osrm-routed on any route reported with steps, and with them off it
@@ -45,11 +47,11 @@ BOOST_AUTO_TEST_CASE(entry_class_answers_for_a_road_it_could_not_record)
 
     // Storing one beyond capacity already reports that it did not happen.
     BOOST_CHECK(!entries.activate(CAPACITY));
-    BOOST_CHECK(!entries.activate(95));
+    BOOST_CHECK(!entries.activate(151));
 
     // So reading it back says the same thing, for every index the engine might reach.
     BOOST_CHECK(!entries.allowsEntry(CAPACITY));
-    BOOST_CHECK(!entries.allowsEntry(95));
+    BOOST_CHECK(!entries.allowsEntry(151));
     BOOST_CHECK(!entries.allowsEntry(CHAR_BIT * sizeof(std::uint64_t)));
     BOOST_CHECK(!entries.allowsEntry(std::numeric_limits<std::uint32_t>::max()));
 

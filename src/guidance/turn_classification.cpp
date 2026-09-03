@@ -43,6 +43,11 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
 
     // finally transfer data to the entry/bearing classes
     std::size_t number = 0;
+    // Counted rather than reported one road at a time: a meshed plaza vertex can carry a
+    // hundred roads and is classified once per edge arriving at it, which made this the
+    // loudest thing in an extraction log by two orders of magnitude -- 157 094 lines over
+    // Ile-de-France, from 276 vertices.
+    std::size_t unrecorded = 0;
     if (canBeDiscretized)
     {
         if (util::guidance::BearingClass::getDiscreteBearing(
@@ -59,8 +64,7 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
             {
                 if (!entry_class.activate(number))
                 {
-                    util::Log(logWARNING) << "Road " << number << " was not activated at "
-                                          << util::toOSMLink(location);
+                    ++unrecorded;
                 }
             }
 
@@ -79,13 +83,19 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
             {
                 if (!entry_class.activate(number))
                 {
-                    util::Log(logWARNING) << "Road " << number << " was not activated at "
-                                          << util::toOSMLink(location);
+                    ++unrecorded;
                 }
             }
             bearing_class.add(std::round(road.perceived_bearing));
             ++number;
         }
+    }
+    if (unrecorded > 0)
+    {
+        util::Log(logWARNING) << unrecorded << " of " << number
+                              << " roads could not be recorded (capacity "
+                              << util::guidance::EntryClass::CAPACITY << ") at "
+                              << util::toOSMLink(location);
     }
     return std::make_pair(entry_class, bearing_class);
 }
