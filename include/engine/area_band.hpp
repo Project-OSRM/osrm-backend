@@ -82,15 +82,29 @@ struct BandParameters
     std::size_t sweeps = 30;
 
     /**
-     * How much more doubling back than the input, in degrees, a result may show and
-     * still be handed back.  Above this the input is returned as it was.
+     * How much more doubling back than the input, in degrees, a result may show per
+     * ring within the comfort margin of it, and still be handed back.  Above this the
+     * input is returned as it was.
      *
      * Legal is not the same as better: a wobble stays in free space the whole time it
      * is making the path worse, and what a wobble is made of is turning that changes
-     * sign.  Twenty degrees is two inflections' worth, which is what a band that bulges
-     * off one obstacle needs at its two anchors; see the gate in smooth().
+     * sign.  Twenty degrees is two inflections' worth, which is what bulging off one
+     * obstacle costs at its two ends, and a path past several obstacles is allowed that
+     * for each; see the gate in smooth().
      */
     double reversal_slack = 20.0;
+
+    /**
+     * The smallest lateral excursion, in projected units, that counts as a bend when
+     * doubling back is measured.  Zero counts everything.
+     *
+     * The geometry is drawn by hand at OSM precision, roughly half a metre, and a band
+     * holding a margin from a jagged wall inherits the jaggedness at that scale.  A bend
+     * that moves the line by less than the drawing precision is not one a map reader can
+     * see, so it is not one the gate should refuse a band for.  The engine sets this to
+     * the drawing precision; see smooth_coordinates().
+     */
+    double reversal_floor = 0.0;
 };
 
 /**
@@ -165,6 +179,24 @@ Band smooth(std::span<const Point> path,
  * its caller for any part of the path.
  */
 bool certificate_holds(const Band &band, std::span<const Ring> rings);
+
+/**
+ * @brief How much of a polyline's turning doubles back on itself, in radians.
+ *
+ * The gate's measure.  The sum of the angles at the nodes that start a bend turning the
+ * opposite way from the bend before, counting only bends whose lateral excursion from the
+ * chord across them is at least @p floor; zero counts every bend.  See smooth().
+ */
+double reversal_turning(std::span<const Point> points, double floor = 0.0);
+
+/**
+ * @brief How many rings come within @p reach of any point of the path.
+ *
+ * What the band had to get past.  Each obstacle within the margin of the path costs a
+ * bend either side of it, which is the shape working and not wobbling, and the gate in
+ * smooth() allows for as many as there are.
+ */
+std::size_t rings_in_reach(std::span<const Point> points, std::span<const Ring> rings, double reach);
 
 /**
  * @brief smooth(), for a path and an area given as coordinates.

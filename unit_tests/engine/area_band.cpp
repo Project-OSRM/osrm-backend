@@ -44,35 +44,6 @@ struct Blocked
 };
 
 
-//! How much of a polyline's turning doubles back on itself, in degrees.
-double doubling_back(const std::vector<Point> &points)
-{
-    auto total = 0.0;
-    auto previous = 0.0;
-    for (std::size_t i = 1; i + 1 < points.size(); ++i)
-    {
-        const auto ax = points[i].x - points[i - 1].x, ay = points[i].y - points[i - 1].y;
-        const auto bx = points[i + 1].x - points[i].x, by = points[i + 1].y - points[i].y;
-        const auto la = std::hypot(ax, ay), lb = std::hypot(bx, by);
-        if (!(la > 0.0) || !(lb > 0.0))
-        {
-            continue;
-        }
-        const auto angle =
-            std::acos(std::clamp((ax * bx + ay * by) / (la * lb), -1.0, 1.0)) * 180.0 / M_PI;
-        const auto sign = ax * by - ay * bx;
-        if (previous * sign < 0.0)
-        {
-            total += angle;
-        }
-        if (sign != 0.0)
-        {
-            previous = sign;
-        }
-    }
-    return total;
-}
-
 BandParameters defaults()
 {
     BandParameters p;
@@ -204,6 +175,64 @@ BOOST_AUTO_TEST_CASE(a_path_along_a_wall_lifts_off_it)
     // off the wall by most of the margin somewhere along the way, and never through it
     BOOST_CHECK_GT(highest, 0.5 * parameters.comfort);
     BOOST_CHECK_LE(highest, 2.0 * parameters.comfort);
+}
+
+// The gate's measure, with and without the amplitude floor.
+BOOST_AUTO_TEST_CASE(reversal_ignores_bends_below_the_drawing_precision)
+{
+    // A straight run with a tremor of a tenth of a unit either side of the line.
+    std::vector<Point> tremor;
+    for (int i = 0; i <= 20; ++i)
+    {
+        tremor.push_back({static_cast<double>(i), (i % 2 == 0 ? 0.1 : -0.1) * (i > 0 && i < 20)});
+    }
+    BOOST_CHECK_GT(reversal_turning(tremor), 0.0);
+    BOOST_CHECK_SMALL(reversal_turning(tremor, 0.5), 1e-12);
+
+    // A zigzag of two units either side is a bend a map reader can see.
+    std::vector<Point> zigzag;
+    for (int i = 0; i <= 20; ++i)
+    {
+        zigzag.push_back({static_cast<double>(i), (i % 4 < 2 ? 2.0 : -2.0) * (i > 0 && i < 20)});
+    }
+    BOOST_CHECK_GT(reversal_turning(zigzag, 0.5), 1.0);
+    BOOST_CHECK_CLOSE(reversal_turning(zigzag, 0.5), reversal_turning(zigzag), 1e-9);
+
+    // A bend that reverses costs the angle at the node that starts it: an arch of three
+    // right turns followed by a dip of two left turns scores the first turn of the dip.
+    const std::vector<Point> arch{{0, 0}, {10, 3}, {20, 4}, {30, 3}, {40, 0}, {50, -2}, {60, 0}};
+    const auto turn_at = [&](std::size_t i)
+    {
+        const auto ax = arch[i].x - arch[i - 1].x, ay = arch[i].y - arch[i - 1].y;
+        const auto bx = arch[i + 1].x - arch[i].x, by = arch[i + 1].y - arch[i].y;
+        return std::acos((ax * bx + ay * by) / (std::hypot(ax, ay) * std::hypot(bx, by)));
+    };
+    BOOST_CHECK_CLOSE(reversal_turning(arch), turn_at(4), 1e-9);
+    // and a steady curve scores nothing however far it turns
+    std::vector<Point> curve;
+    for (int i = 0; i <= 18; ++i)
+    {
+        const auto a = i * M_PI / 18.0;
+        curve.push_back({std::cos(a) * 10.0, std::sin(a) * 10.0});
+    }
+    BOOST_CHECK_SMALL(reversal_turning(curve), 1e-12);
+}
+
+BOOST_AUTO_TEST_CASE(rings_in_reach_counts_what_the_path_passes)
+{
+    const Blocked blocked;
+    // Through the middle of the square past the block, well away from the walls.
+    const std::vector<Point> past_the_block{{20, 50}, {38, 62}, {62, 62}, {80, 50}};
+    BOOST_CHECK_EQUAL(rings_in_reach(past_the_block, blocked.rings, 5.0), 1u);
+    // Along the bottom wall: the outer ring and nothing else.
+    const std::vector<Point> along_the_wall{{10, 2}, {50, 2}, {90, 2}};
+    BOOST_CHECK_EQUAL(rings_in_reach(along_the_wall, blocked.rings, 5.0), 1u);
+    // Between the block and the wall, and with reach enough to touch both.
+    const std::vector<Point> between{{10, 20}, {50, 20}, {90, 20}};
+    BOOST_CHECK_EQUAL(rings_in_reach(between, blocked.rings, 5.0), 0u);
+    BOOST_CHECK_EQUAL(rings_in_reach(between, blocked.rings, 25.0), 2u);
+    // Nothing within reach at all.
+    BOOST_CHECK_EQUAL(rings_in_reach(past_the_block, blocked.rings, 1.0), 0u);
 }
 
 BOOST_AUTO_TEST_CASE(the_certificate_holds)
@@ -438,8 +467,14 @@ BOOST_AUTO_TEST_CASE(it_returns_nothing_that_doubles_back_more)
         {
             const auto band = smooth(path, blocked.rings, parameters);
 
-            // Never doubling back more than the two inflections a bulge needs.
-            BOOST_CHECK_LE(doubling_back(band.points), doubling_back(path) + 20.0 + 1e-9);
+            // Never doubling back more than the gate allows: two inflections' worth for
+            // each ring the band had to get past, which here is the block alone.
+            const auto rings = std::max(std::size_t{1},
+                                        rings_in_reach(band.points, blocked.rings, parameters.comfort));
+            BOOST_CHECK_LE(reversal_turning(band.points, parameters.reversal_floor),
+                           reversal_turning(path, parameters.reversal_floor) +
+                               parameters.reversal_slack * static_cast<double>(rings) * M_PI / 180.0 +
+                               1e-9);
 
             // Whatever comes back is legal ground either way.
             BOOST_CHECK(certificate_holds(band, blocked.rings));

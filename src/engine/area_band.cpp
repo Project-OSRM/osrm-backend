@@ -283,6 +283,8 @@ double anchor_ramp(const double from_anchor, const double comfort)
     return t * t * (3.0 - 2.0 * t);
 }
 
+} // namespace
+
 /**
  * How much of a polyline's turning doubles back on itself, in radians.
  *
@@ -297,11 +299,15 @@ double anchor_ramp(const double from_anchor, const double comfort)
  * the path more than hugging it does.  Total turning therefore cannot tell an improvement
  * from a wobble, while reversal is precisely what a wobble is made of.
  */
-double reversal_turning(std::span<const Point> points)
+double reversal_turning(std::span<const Point> points, const double floor)
 {
-    auto total = 0.0;
-    auto previous_sign = 0.0;
-    for (std::size_t i = 1; i + 1 < points.size(); ++i)
+    const auto n = points.size();
+    if (n < 3)
+    {
+        return 0.0;
+    }
+    std::vector<double> angle(n, 0.0), sign(n, 0.0);
+    for (std::size_t i = 1; i + 1 < n; ++i)
     {
         const auto before = points[i] - points[i - 1];
         const auto after = points[i + 1] - points[i];
@@ -310,19 +316,99 @@ double reversal_turning(std::span<const Point> points)
         {
             continue;
         }
-        const auto angle = std::acos(std::clamp(dot(before, after) / lengths, -1.0, 1.0));
-        const auto sign = before.x * after.y - before.y * after.x;
-        if (previous_sign * sign < 0.0)
+        angle[i] = std::acos(std::clamp(dot(before, after) / lengths, -1.0, 1.0));
+        sign[i] = before.x * after.y - before.y * after.x;
+    }
+
+    // The path as a sequence of bends: maximal runs of nodes turning the same way, the
+    // nodes that turn not at all belonging to neither.  A reversal is where one bend
+    // ends and the next turns the other way, and what it costs is the angle at the node
+    // that starts the next bend.
+    //
+    // Not the whole turning of the reversing bend, which was tried: the arc that rounds a
+    // corner is itself a bend that reverses against the flank before it, so that charge
+    // refused every rounded corner.  What this measure cannot see is a bend that turns
+    // one way throughout, a hook or a hairpin, since the flips either side of it are
+    // gentle; that is the sharpest corner's job, not this one's.
+    //
+    // A bend that does not move the line is not a bend.  Each run's amplitude is how far
+    // it departs from the chord between the nodes either side of it, and a run below the
+    // floor is left out of the sequence entirely, so the bends either side of it meet.
+    // Without the floor a band along a wall drawn to OSM precision counted every tremor
+    // of a few centimetres as a reversal, and a corridor a person would see as a straight
+    // line failed the gate at 112 degrees.
+    auto total = 0.0;
+    auto previous_sign = 0.0;
+    std::size_t i = 1;
+    while (i + 1 < n)
+    {
+        if (sign[i] == 0.0)
         {
-            total += angle;
+            ++i;
+            continue;
         }
-        if (sign != 0.0)
+        const auto first = i;
+        auto last = i;
+        while (last + 2 < n && (sign[last + 1] == 0.0 || sign[last + 1] * sign[first] > 0.0))
         {
-            previous_sign = sign;
+            ++last;
         }
+        auto amplitude_squared = 0.0;
+        if (floor > 0.0)
+        {
+            for (std::size_t k = first; k <= last; ++k)
+            {
+                amplitude_squared = std::max(
+                    amplitude_squared,
+                    nearest_on_segment(points[k], points[first - 1], points[last + 1])
+                        .distance_squared);
+            }
+        }
+        if (!(floor > 0.0) || amplitude_squared >= floor * floor)
+        {
+            if (previous_sign * sign[first] < 0.0)
+            {
+                total += angle[first];
+            }
+            previous_sign = sign[first];
+        }
+        i = last + 1;
     }
     return total;
 }
+
+std::size_t rings_in_reach(std::span<const Point> points,
+                           std::span<const Ring> rings,
+                           const double reach)
+{
+    auto count = std::size_t{0};
+    for (const auto &ring : rings)
+    {
+        if (ring.size() < 2)
+        {
+            continue;
+        }
+        auto near = false;
+        for (std::size_t i = 0; i < ring.size() && !near; ++i)
+        {
+            const auto &a = ring[i];
+            const auto &b = ring[(i + 1) % ring.size()];
+            for (const auto &p : points)
+            {
+                if (nearest_on_segment(p, a, b).distance_squared < reach * reach)
+                {
+                    near = true;
+                    break;
+                }
+            }
+        }
+        count += near;
+    }
+    return count;
+}
+
+namespace
+{
 
 } // namespace
 
@@ -850,8 +936,18 @@ Band smooth(std::span<const Point> path,
     // about ten degrees an end.  Wobble is nothing like as modest: over the corpus the
     // bands that were making paths worse doubled back by 208 degrees at the median and by
     // 14,450 at the worst.
-    const auto slack = parameters.reversal_slack * M_PI / 180.0;
-    if (reversal_turning(band.points) > reversal_turning(path) + slack)
+    //
+    // Two inflections' worth *per obstacle the band had to get past*.  A path threading
+    // between several obstacles within the margin weaves round each of them, which is
+    // what the margin asks for and which costs a pair of inflections apiece; with one
+    // obstacle's worth of slack the median band the gate refused on the corpus was a
+    // 71 degree wave through a strip of tree pits that looked exactly right.  Counted on
+    // the result rather than the input, since the input touches what it passes and the
+    // result is what has been pushed off it.
+    const auto passed = std::max(std::size_t{1}, rings_in_reach(band.points, rings, parameters.comfort));
+    const auto slack = parameters.reversal_slack * static_cast<double>(passed) * M_PI / 180.0;
+    if (reversal_turning(band.points, parameters.reversal_floor) >
+        reversal_turning(path, parameters.reversal_floor) + slack)
     {
         band.points.assign(path.begin(), path.end());
         band.radii.assign(band.points.size(), 0.0);
@@ -871,6 +967,11 @@ namespace
 //! nothing: a decimetre is the finest the API emits, polyline6, and the band samples
 //! every quarter margin whether or not the path bends there.
 constexpr double DRAWS_NOTHING_METRES = 0.1;
+
+//! The precision the geometry was drawn to.  An OSM plaza outline is hand traced to
+//! about half a metre, and a bend that moves the line by less than that is not one a
+//! map reader can see; see BandParameters::reversal_floor.
+constexpr double DRAWING_PRECISION_METRES = 0.5;
 
 /**
  * Douglas-Peucker: keep the fewest nodes that leave every dropped one within the
@@ -970,6 +1071,7 @@ smooth_coordinates(const std::vector<std::span<const util::Coordinate>> &rings,
         metres_per_projected_unit(static_cast<double>(util::toFloating(path.front().lat)));
     BandParameters parameters;
     parameters.comfort = comfort_metres / metres_per_unit;
+    parameters.reversal_floor = DRAWING_PRECISION_METRES / metres_per_unit;
 
     const auto band = smooth(taut, views, parameters);
     if (!band.certified)
