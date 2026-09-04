@@ -45,6 +45,13 @@ double sharpest_turn(const std::vector<Point> &points)
     return worst;
 }
 
+util::Coordinate at_metres_(const double x, const double y)
+{
+    constexpr double METRES_PER_DEGREE_ = 111194.9;
+    return {util::FloatLongitude{x / METRES_PER_DEGREE_},
+            util::FloatLatitude{y / METRES_PER_DEGREE_}};
+}
+
 double tightest_clearance(const std::vector<Point> &points, std::span<const Ring> rings)
 {
     auto tightest = 1e18;
@@ -233,6 +240,82 @@ BOOST_AUTO_TEST_CASE(a_taut_path_is_left_alone_by_pulling)
     const std::vector<Point> through{{40, 40}, {50, 50}, {60, 60}};
     BOOST_CHECK_EQUAL(pull_taut(through, plaza.rings).size(), 3u);
     BOOST_CHECK(!round_corners(through, plaza.rings, 5.0).legal);
+}
+
+BOOST_AUTO_TEST_CASE(pulling_keeps_the_anchors_and_copes_with_nothing)
+{
+    const Blocked plaza;
+    BOOST_CHECK(pull_taut(std::vector<Point>{}, plaza.rings).empty());
+    const std::vector<Point> one{{50, 20}};
+    BOOST_CHECK_EQUAL(pull_taut(one, plaza.rings).size(), 1u);
+    const std::vector<Point> two{{10, 10}, {90, 10}};
+    BOOST_CHECK_EQUAL(pull_taut(two, plaza.rings).size(), 2u);
+    // the anchors are the input's own, whatever happens between them
+    const std::vector<Point> loop{{10, 10}, {30, 30}, {50, 10}, {30, 5}, {90, 10}};
+    const auto pulled = pull_taut(loop, plaza.rings);
+    BOOST_CHECK(pulled.front().x == 10 && pulled.front().y == 10);
+    BOOST_CHECK(pulled.back().x == 90 && pulled.back().y == 10);
+    BOOST_CHECK_EQUAL(pulled.size(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(pulling_drops_collinear_vertices_along_a_wall)
+{
+    // Along the south edge of the block, vertex by vertex: every segment grazes the
+    // block, which is legal, and the chord across all of them grazes it just the same.
+    const Blocked plaza;
+    const std::vector<Point> along{{20, 45}, {40, 40}, {45, 40}, {50, 40}, {55, 40}, {60, 40}, {70, 55}};
+    const auto pulled = pull_taut(along, plaza.rings);
+    BOOST_REQUIRE_EQUAL(pulled.size(), 4u);
+    BOOST_CHECK(pulled[1].x == 40 && pulled[2].x == 60);
+}
+
+BOOST_AUTO_TEST_CASE(pulling_takes_the_farthest_reachable_vertex_not_the_first_blocked)
+{
+    // From the start, the last vertex is hidden behind the block but the one before it
+    // is not: visibility along a path is not monotone, and the pass has to look past
+    // the first blocked vertex rather than stop at it.
+    const Blocked plaza;
+    const std::vector<Point> path{{20, 20}, {30, 30}, {35, 35}, {60, 40}, {80, 80}, {65, 65}};
+    const auto pulled = pull_taut(path, plaza.rings);
+    // From (20,20): the last vertex (65,65) is behind the block, (80,80) is behind it
+    // too, and (60,40) is the farthest that can be reached; that is the first hop.
+    BOOST_REQUIRE_GE(pulled.size(), 3u);
+    BOOST_CHECK(pulled[1].x == 60 && pulled[1].y == 40);
+}
+
+BOOST_AUTO_TEST_CASE(a_wobbly_path_given_as_coordinates_comes_back_pulled)
+{
+    // The engine's entry point returns the pulled path even where no arc is drawn,
+    // since a straight line is not what it was given.
+    const std::vector<util::Coordinate> outer{
+        at_metres_(0, 0), at_metres_(100, 0), at_metres_(100, 100), at_metres_(0, 100)};
+    const std::vector<std::span<const util::Coordinate>> rings{outer};
+    const std::vector<util::Coordinate> wobble{
+        at_metres_(10, 10), at_metres_(20, 12), at_metres_(30, 8), at_metres_(40, 12), at_metres_(50, 10)};
+    const auto drawn = round_corners(rings, wobble, 2.0);
+    BOOST_REQUIRE(drawn);
+    BOOST_CHECK_EQUAL(drawn->size(), 2u);
+    BOOST_CHECK(drawn->front() == wobble.front() && drawn->back() == wobble.back());
+}
+
+BOOST_AUTO_TEST_CASE(two_corners_close_together_are_backed_off_rather_than_folded)
+{
+    // Two corners of the block ten units apart, and a margin that would move each of
+    // them further than that: the run between them would swing round, so the offsets
+    // are backed off until it does not, and the result is legal and no sharper than
+    // the taut path.
+    const Blocked plaza;
+    const std::vector<Point> taut{{10, 20}, {40, 40}, {60, 40}, {90, 20}};
+    // not taut in the shortest-path sense, but every vertex is forced: the chord across
+    // (40,40) from (10,20) to (60,40) grazes the block's edge and is legal -- so pull it
+    // first, and what is left is what gets rounded
+    const auto out = round_corners(taut, plaza.rings, 20.0);
+    BOOST_REQUIRE(out.legal);
+    for (const auto &p : out.points)
+    {
+        BOOST_CHECK(in_closed_area(p, plaza.rings, ON_GEOMETRY));
+    }
+    BOOST_CHECK_LE(sharpest_turn(out.points), sharpest_turn(pull_taut(taut, plaza.rings)) + 1e-9);
 }
 
 BOOST_AUTO_TEST_CASE(degenerate_input_is_handed_back)
