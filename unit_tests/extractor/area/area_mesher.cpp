@@ -401,7 +401,7 @@ BOOST_AUTO_TEST_CASE(area_mesher_can_emit_the_whole_visibility_graph)
     // shortest-path tree rooted at each entry point, and on an area this small every sight
     // line lies on one of those trees, so the two coincide.  The saving shows up on larger
     // areas, where the forest grows as entry points x vertices and the whole graph as
-    // vertices squared -- see plans/open-area-snapping.md, R17.
+    // vertices squared.
     BOOST_CHECK_GE(whole_graph.size(), entry_point_mesh.size());
     for (const auto &edge : entry_point_mesh)
         BOOST_CHECK_MESSAGE(whole_graph.count(edge) == 1,

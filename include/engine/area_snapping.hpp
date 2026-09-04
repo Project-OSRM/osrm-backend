@@ -41,8 +41,7 @@ enum class ApproachRole
  * area that the coordinate can see, and offer each of those vertices as a candidate, at a
  * cost equal to walking the straight line.  The search relaxes all of them and picks the
  * one that actually leads somewhere, which is the same answer the visibility graph would
- * have given if the coordinate had been part of it when it was built.  See
- * plans/open-area-snapping.md, sections R11 and R12.
+ * have given if the coordinate had been part of it when it was built.
  *
  * Areas overlap, and one holding the coordinate may have nothing to offer -- the extractor
  * records a polygon before it applies AreaMesher::max_vertices, so a plaza too large to

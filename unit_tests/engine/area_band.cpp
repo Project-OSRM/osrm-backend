@@ -119,39 +119,6 @@ double sharpest_turn(const std::vector<Point> &points)
 
 } // namespace
 
-BOOST_AUTO_TEST_CASE(the_soft_floor_vanishes_only_at_contact)
-{
-    constexpr double DELTA = 1.0;
-
-    // The property the whole two-tier scheme rests on: zero only where the clearance is
-    // zero, so its zero set is the obstacle set and no passage is closed by it.
-    BOOST_CHECK_SMALL(soft_floor(0.0, DELTA), 1e-12);
-    BOOST_CHECK_GT(soft_floor(0.001, DELTA), 0.0);
-    BOOST_CHECK_GT(soft_floor(0.5, DELTA), 0.0);
-
-    // Strictly increasing, so it never reorders two clearances.
-    auto previous = 0.0;
-    for (double rho = 0.0; rho < 10.0; rho += 0.05)
-    {
-        const auto value = soft_floor(rho, DELTA);
-        BOOST_CHECK_GE(value, previous);
-        previous = value;
-    }
-
-    // Converges to rho - delta once there is room to spare, which is the full comfort
-    // margin applying in the open.
-    BOOST_CHECK_CLOSE(soft_floor(10.0, DELTA), 10.0 - DELTA, 0.1);
-
-    // And never exceeds the true clearance, which is what keeps the certificate honest.
-    for (double rho = 0.0; rho < 10.0; rho += 0.1)
-    {
-        BOOST_CHECK_LE(soft_floor(rho, DELTA), rho);
-    }
-
-    // A comfort margin of zero leaves the clearance alone.
-    BOOST_CHECK_CLOSE(soft_floor(3.0, 0.0), 3.0, 1e-9);
-}
-
 BOOST_AUTO_TEST_CASE(an_open_square_leaves_a_straight_line_straight)
 {
     const Square square;

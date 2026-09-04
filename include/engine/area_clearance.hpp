@@ -3,33 +3,23 @@
 
 #include "engine/area_visibility.hpp"
 
-#include <cstddef>
 #include <span>
 
 namespace osrm::engine::area
 {
 
 /**
- * @brief How much room there is at a point, and which way the nearest obstacle lies.
+ * @brief How much room there is at a point.
  *
  * This is the quantity an elastic band is built on.  The clearance is the radius of a
  * disc around the point that is guaranteed free of geometry, so a path whose consecutive
  * points have overlapping discs is collision-free without any segment-versus-obstacle
- * test ever being done.  The gradient is what pushes a path away from whatever it is
- * closest to.
+ * test ever being done.
  */
 struct Clearance
 {
     //! Distance to the nearest point of the area's geometry, in projected units.
     double distance = 0.0;
-    //! The nearest point itself, which is on the segment named below.
-    Point nearest{};
-    /**
-     * Unit vector from @c nearest towards the query point, which is the direction the
-     * clearance grows fastest in.  Zero when the point lies on the geometry, where the
-     * clearance is not differentiable and there is no direction to give.
-     */
-    Point gradient{};
     /**
      * Whether the point is on legal ground: in the closed free space, meaning inside the
      * area or on the boundary of one of its rings.
@@ -60,10 +50,6 @@ struct Clearance
      * free space is caught by testing the ground it covers.
      */
     double room = 0.0;
-    //! Which ring the nearest point is on, indexing the span that was passed in.
-    std::size_t ring = 0;
-    //! Which segment of that ring, by the index of its first vertex.
-    std::size_t segment = 0;
 };
 
 /**

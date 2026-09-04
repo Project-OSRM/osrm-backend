@@ -4,8 +4,6 @@
 
 #include <algorithm>
 #include <cmath>
-#include <cstdio>
-#include <cstdlib>
 #include <limits>
 
 namespace osrm::engine::area
@@ -37,7 +35,6 @@ constexpr double FINEST = 0.5;
  * making paths worse doubled back by 208 degrees at the median and by 14,450 at the worst.
  */
 constexpr double REVERSAL_SLACK = 20.0 * M_PI / 180.0;
-
 
 Point operator-(const Point &a, const Point &b) { return {a.x - b.x, a.y - b.y}; }
 Point operator+(const Point &a, const Point &b) { return {a.x + b.x, a.y + b.y}; }
@@ -101,12 +98,9 @@ std::vector<Point> resample(std::span<const Point> path, const double spacing)
         {
             continue;
         }
-        auto pieces = std::size_t{1};
-        if (spacing > 0.0)
-        {
-            pieces = static_cast<std::size_t>(std::ceil(span / spacing));
-            pieces = std::clamp(pieces, std::size_t{1}, MAX_NODES);
-        }
+        // Spacing is positive here: the only other case returned above.
+        const auto pieces = std::clamp(
+            static_cast<std::size_t>(std::ceil(span / spacing)), std::size_t{1}, MAX_NODES);
         for (std::size_t k = 1; k < pieces; ++k)
         {
             out.push_back(from + (to - from) * (static_cast<double>(k) / pieces));
@@ -202,19 +196,19 @@ Point repulsion_from_everything(const Point &at,
 /**
  * The radius of the free disc at a point, which is its clearance.
  *
- * The true clearance, not the soft-floored one.  Passing it through the floor first was
- * tried, on the argument that a smaller radius keeps the certificate honest, and it is
- * honest but useless: near an obstacle the floor is quadratically small, so a node lifted
- * to 15% of the comfort margin gets a bubble of 1% of it, and no node density that
- * terminates can make consecutive bubbles overlap.  Over the corpus every single band
- * declined.
+ * The clearance itself, with nothing subtracted from it.  Shrinking the radius by a soft
+ * floor of `rho - delta * (1 - exp(-rho / delta))` was tried, on the argument that a
+ * smaller radius keeps the certificate honest, and it is honest but useless: near an
+ * obstacle that floor is quadratically small, so a node lifted to 15% of the comfort
+ * margin gets a bubble of 1% of it, and no node density that terminates can make
+ * consecutive bubbles overlap.  Over the corpus every single band declined.
  *
  * The certificate is a proof that a segment lies in free space, and the free disc is
- * exactly the true clearance.  The comfort margin belongs to the repulsion force, which
+ * exactly the clearance.  The comfort margin belongs to the repulsion force, which
  * is where the two-tier scheme puts it: a margin expressed as a force cannot close a
  * passage, and one expressed as a radius can.
  */
-double bubble_radius(const Point &at, std::span<const Ring> rings, const double /*comfort*/)
+double bubble_radius(const Point &at, std::span<const Ring> rings)
 {
     const auto here = clearance(at, rings);
     // Outside the free space there is no free disc, whatever the distance says.  The
@@ -296,19 +290,6 @@ double reversal_turning(std::span<const Point> points)
     return total;
 }
 
-double soft_floor(const double clearance_distance, const double comfort)
-{
-    if (!(comfort > 0.0))
-    {
-        return std::max(0.0, clearance_distance);
-    }
-    if (!(clearance_distance > 0.0))
-    {
-        return 0.0;
-    }
-    return clearance_distance - comfort * (1.0 - std::exp(-clearance_distance / comfort));
-}
-
 bool certificate_holds(const Band &band, std::span<const Ring> rings)
 {
     if (band.points.size() != band.radii.size())
@@ -374,7 +355,7 @@ Band relax(std::span<const Point> path,
     band.points = resample(path, spacing);
     band.radii.assign(band.points.size(), 0.0);
     const auto recompute = [&](const std::size_t i)
-    { band.radii[i] = bubble_radius(band.points[i], rings, parameters.comfort); };
+    { band.radii[i] = bubble_radius(band.points[i], rings); };
     for (std::size_t i = 0; i < band.points.size(); ++i)
     {
         recompute(i);
@@ -435,20 +416,13 @@ Band relax(std::span<const Point> path,
                 (parameters.repulsion * anchor_ramp(from_anchor[i], parameters.comfort));
             if (length(external) == 0.0 && here.distance < parameters.comfort)
             {
-                Point away{0.0, 0.0};
-                {
-                    // Sitting exactly on the geometry, where the clearance has no
-                    // gradient to follow.  The bisector of the two neighbours points into
-                    // the area, which is enough to get the node off the corner; after
-                    // that the gradient exists and takes over.  A taut path bends
-                    // precisely at such corners, so this is the ordinary case on the
-                    // first sweep, not a curiosity.
-                    // Sitting exactly on the geometry, where every distance is zero and
-                    // the sum above has nothing to point along.  The bisector of the two
-                    // neighbours points into the area, which is enough to get off the
-                    // corner; after that the field exists and takes over.
-                    away = unit(unit(previous - at) + unit(next - at));
-                }
+                // Sitting exactly on the geometry, where every distance is zero and the
+                // sum above has nothing to point along.  The bisector of the two
+                // neighbours points into the area, which is enough to get the node off
+                // the corner; after that the field exists and takes over.  A taut path
+                // bends precisely at such corners, so this is the ordinary case on the
+                // first sweep, not a curiosity.
+                const auto away = unit(unit(previous - at) + unit(next - at));
                 external = away * (parameters.repulsion * parameters.comfort);
             }
 
@@ -459,13 +433,6 @@ Band relax(std::span<const Point> path,
             // space, the path cannot leave free space, and no collision test is needed at
             // any point.
             //
-            // Against the true clearance, not the soft-floored radius.  The floor is
-            // there to shape the repulsion and to keep the certificate conservative, and
-            // near an obstacle it is quadratically small: half a metre of real room
-            // becomes two centimetres of bubble.  Clamping to that freezes exactly the
-            // nodes that most need to move while their neighbours a little further out
-            // move freely, and the path zigzags between them.  The free disc is what the
-            // step must not leave, and the free disc is the true clearance.
             // Against the room, not the clearance.  They are the same number wherever
             // there is room to spare, and they differ exactly where the old bound gave
             // up: a node standing on a wall has a clearance of zero and no bubble at all,
@@ -561,25 +528,26 @@ Band relax(std::span<const Point> path,
         for (std::size_t i = 0; i + 1 < band.points.size();)
         {
             const auto gap = length(band.points[i + 1] - band.points[i]);
-            // A node lying on the geometry has a bubble of no radius, so no gap next to
-            // it can ever satisfy the certificate and halving it does not help.  Without
-            // a floor the loop subdivides until the node ceiling stops it, which is how a
-            // four point path became two thousand.  The floor stops the subdivision and
-            // certificate_holds() then reports honestly that the band is not certified
-            // there, which is the truth and is what erosion is for.
-            // The first and last segments are the ones the certificate exempts, because
-            // an anchor sits where it was asked to and on a portal that is the boundary
-            // itself, where the clearance is zero.  Subdividing them cannot ever satisfy
-            // a condition that involves a bubble of no radius, so it runs to the floor
-            // and leaves a dense jittery cluster at each end: a three node path came back
-            // with 157, eight times finer than the spacing asked for, and at that density
-            // the smallest wobble is a large angle.
+            // An anchor sits where it was asked to, and on a portal that is the boundary
+            // itself, where the clearance is zero.  Subdividing the segment beside one
+            // cannot ever satisfy a condition that involves a bubble of no radius, so it
+            // runs to the floor below and leaves a dense jittery cluster at each end: a
+            // three node path came back with 157, eight times finer than the spacing
+            // asked for, and at that density the smallest wobble is a large angle.
             const auto at_an_end = i == 0 || i + 2 >= band.points.size();
             // Never finer than the sampling asked for.  The certificate can ask for more
             // nodes than that where the geometry is tight, and giving them to it is how a
             // three node path became a hundred and fifty: tension then propagates one
             // node per sweep, so the band needed hundreds of sweeps to converge and at
             // thirty it was nowhere near, which is what the wiggle was.
+            //
+            // The floor also has to be there at all.  A node lying on the geometry has a
+            // bubble of no radius, so no gap next to it can ever satisfy the certificate
+            // and halving it does not help; without a floor the loop subdivides until the
+            // node ceiling stops it, which is how a four point path became two thousand.
+            // Stopping instead costs nothing, because certificate_holds() answers for
+            // such a segment by testing it against the geometry directly rather than by
+            // waiting for two discs that will never be there.
             const auto too_fine = spacing > 0.0 && gap < spacing * FINEST;
 
             // Two reasons to put a node in, and the second one was missing.
@@ -811,7 +779,7 @@ Band smooth(std::span<const Point> path,
         band.radii.assign(band.points.size(), 0.0);
         for (std::size_t i = 0; i < band.points.size(); ++i)
         {
-            band.radii[i] = bubble_radius(band.points[i], rings, parameters.comfort);
+            band.radii[i] = bubble_radius(band.points[i], rings);
         }
         band.certified = certificate_holds(band, rings);
     }

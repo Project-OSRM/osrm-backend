@@ -112,21 +112,6 @@ struct Band
 };
 
 /**
- * @brief The soft clearance floor.
- *
- * `rho - delta * (1 - exp(-rho / delta))`.  Behaves like `rho - delta` once there is room
- * to spare, so the full comfort margin applies in the open, but it vanishes only where
- * `rho` does.  Subtracting the margin outright would instead zero everything within
- * `delta` of an obstacle, which closes every passage narrower than `2 delta` and
- * disconnects places people actually walk.
- *
- * Near zero it behaves like `rho^2 / (2 delta)`, rising gently out of contact, and it is
- * strictly increasing, so it never reorders two clearances or flips the sign of a
- * gradient.
- */
-double soft_floor(double clearance, double comfort);
-
-/**
  * @brief Deform a path until it is locally as short as its surroundings permit.
  *
  * The input is a taut path, straight between the vertices it bends at, which is optimal
@@ -141,14 +126,14 @@ double soft_floor(double clearance, double comfort);
  * cross an obstacle, so whichever side of the fountain the planner chose is the side the
  * result goes.  That is what makes it safe to apply to a path somebody else computed.
  *
- * Interior nodes want clearance to work with, and a taut path does not provide it: the
- * shortest way past a rectangular obstacle runs along its edges, so the path grazes the
- * geometry for most of its length and there is nothing there for the repulsion to push
- * against.  Such a path is perfectly legal and certifies as it stands -- see
- * certificate_holds() -- it simply comes back unchanged, because a band with no room has
- * nowhere to move to.  Getting it to round its corners means planning on geometry eroded
- * by the hard margin, so the taut path turns on offset arcs and every node starts with
- * room around it; see plans/elastic-band/plan.md.
+ * A taut path grazes the geometry for most of its length, because the shortest way past
+ * a rectangular obstacle runs along its edges.  Such a path is legal and certifies as it
+ * stands, see certificate_holds(), and it does get smoothed: a node against a wall has a
+ * clearance of zero but plenty of room, which is what bounds its step, and the segments
+ * it moves over are tested against the rings directly where no free disc can speak for
+ * them.  What such a band cannot do is hold the comfort margin at the anchors, since an
+ * anchor on a portal sits on the boundary and does not move; the margin is faded in
+ * along the path instead.
  *
  * @param path    at least two points, the first and last being the anchors
  * @param rings   the area, outer ring first

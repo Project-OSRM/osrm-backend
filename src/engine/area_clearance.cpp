@@ -14,18 +14,12 @@ namespace osrm::engine::area
 namespace
 {
 
-struct Nearest
-{
-    double distance_squared;
-    Point at;
-};
-
 /**
- * The point of a segment closest to @p p, by projecting onto the line and clamping to the
- * segment.  A degenerate segment, which OSM rings do produce, collapses to its first
- * point rather than dividing by zero.
+ * The squared distance from @p p to the segment a..b, by projecting onto the line and
+ * clamping to the segment.  A degenerate segment, which OSM rings do produce, collapses
+ * to its first point rather than dividing by zero.
  */
-Nearest nearest_on_segment(const Point &p, const Point &a, const Point &b)
+double distance_squared_to_segment(const Point &p, const Point &a, const Point &b)
 {
     const auto dx = b.x - a.x;
     const auto dy = b.y - a.y;
@@ -37,10 +31,9 @@ Nearest nearest_on_segment(const Point &p, const Point &a, const Point &b)
         t = std::clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / length_squared, 0.0, 1.0);
     }
 
-    const Point at{a.x + t * dx, a.y + t * dy};
-    const auto ex = p.x - at.x;
-    const auto ey = p.y - at.y;
-    return {ex * ex + ey * ey, at};
+    const auto ex = p.x - (a.x + t * dx);
+    const auto ey = p.y - (a.y + t * dy);
+    return ex * ex + ey * ey;
 }
 
 } // namespace
@@ -53,12 +46,8 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
     // Clearance::room.
     auto room_squared = std::numeric_limits<double>::infinity();
 
-    // Free space is inside the outer ring and outside every obstacle.  Computed here
-    // rather than left to the caller because the distance is meaningless without it: the
-    // two sides of a wall are the same distance from it.
-    for (std::size_t r = 0; r < rings.size(); ++r)
+    for (const auto &ring : rings)
     {
-        const auto &ring = rings[r];
         if (ring.size() < 2)
         {
             continue;
@@ -66,22 +55,12 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
 
         for (std::size_t i = 0; i < ring.size(); ++i)
         {
-            const auto found = nearest_on_segment(point, ring[i], ring[(i + 1) % ring.size()]);
-            // Strictly less, so the first segment wins a tie.  A point equidistant from
-            // two segments is on the medial axis, where which one is named is arbitrary;
-            // what matters is that the choice is the same on every platform and in every
-            // run, because a path is built out of these answers.
-            if (found.distance_squared < best_squared)
+            const auto found =
+                distance_squared_to_segment(point, ring[i], ring[(i + 1) % ring.size()]);
+            best_squared = std::min(best_squared, found);
+            if (found > ON_GEOMETRY * ON_GEOMETRY && found < room_squared)
             {
-                best_squared = found.distance_squared;
-                best.nearest = found.at;
-                best.ring = r;
-                best.segment = i;
-            }
-            if (found.distance_squared > ON_GEOMETRY * ON_GEOMETRY &&
-                found.distance_squared < room_squared)
-            {
-                room_squared = found.distance_squared;
+                room_squared = found;
             }
         }
     }
@@ -93,16 +72,16 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
 
     best.distance = std::sqrt(best_squared);
     best.room = std::isfinite(room_squared) ? std::sqrt(room_squared) : best.distance;
+    // Free space is inside the outer ring and outside every obstacle, and which side of
+    // the geometry the point is on is settled here rather than left to the caller because
+    // the distance is meaningless without it: the two sides of a wall are the same
+    // distance from it.
+    //
     // The free space is closed, so a point on the boundary is on legal ground.  Asking
     // inside_area() alone would not settle it: it is strict, and ray casting on a point
     // that lies exactly on an edge answers arbitrarily.  The distance to the nearest
     // geometry has just been computed, and a point on the boundary is the one at zero.
     best.inside = best.distance <= ON_GEOMETRY || inside_area(point, rings);
-    if (best.distance > 0.0)
-    {
-        best.gradient = {(point.x - best.nearest.x) / best.distance,
-                         (point.y - best.nearest.y) / best.distance};
-    }
     return best;
 }
 
