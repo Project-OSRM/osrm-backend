@@ -184,6 +184,8 @@ Point repulsion_from_everything(const Point &at,
         }
 
         const auto distance = std::sqrt(nearest_squared);
+        // A ring the point is standing on has no direction to push along; relax()
+        // supplies that push itself, from the shape of the path at the node.
         if (!(distance > 0.0) || distance >= influence)
         {
             continue;
@@ -411,19 +413,37 @@ Band relax(std::span<const Point> path,
             // Faded in over the first stretch of the band, so the path leaves an anchor
             // along the way it arrived rather than being shoved off the wall the moment
             // it starts.
-            auto external =
-                repulsion_from_everything(at, rings, parameters.comfort) *
-                (parameters.repulsion * anchor_ramp(from_anchor[i], parameters.comfort));
-            if (length(external) == 0.0 && here.distance < parameters.comfort)
+            const auto strength =
+                parameters.repulsion * anchor_ramp(from_anchor[i], parameters.comfort);
+            auto external = repulsion_from_everything(at, rings, parameters.comfort) * strength;
+            if (here.distance <= ON_GEOMETRY && parameters.comfort > 0.0)
             {
-                // Sitting exactly on the geometry, where every distance is zero and the
-                // sum above has nothing to point along.  The bisector of the two
-                // neighbours points into the area, which is enough to get the node off
-                // the corner; after that the field exists and takes over.  A taut path
-                // bends precisely at such corners, so this is the ordinary case on the
-                // first sweep, not a curiosity.
-                const auto away = unit(unit(previous - at) + unit(next - at));
-                external = away * (parameters.repulsion * parameters.comfort);
+                // The geometry the node stands on is missing from that sum.  At no
+                // distance there is no direction to push along, so the ring contributes
+                // nothing, and a taut path stands on geometry at every corner it turns
+                // and along every wall it follows: this is the ordinary case on the
+                // first sweep, not a curiosity.  The push is the full influence, since
+                // the distance is zero, in the one direction that leads into the area.
+                //
+                // At a corner that is the bisector of the two neighbours.  Along a wall
+                // the neighbours are in line and the bisector is nothing, and the way
+                // off a wall is its normal; which of the two normals points into the
+                // area is settled by looking.  Before the wall case was here a route
+                // drawn along an obstacle with a ten metre margin set rounded its two
+                // corners and touched the obstacle everywhere between them.
+                auto away = unit(unit(previous - at) + unit(next - at));
+                if (!(length(away) > 0.0))
+                {
+                    const Point normal{-tangent.y, tangent.x};
+                    const auto probe = spacing * 0.1;
+                    const auto left = in_closed_area(at + normal * probe, rings, ON_GEOMETRY);
+                    const auto right = in_closed_area(at - normal * probe, rings, ON_GEOMETRY);
+                    if (left != right)
+                    {
+                        away = left ? normal : normal * -1.0;
+                    }
+                }
+                external = external + away * (parameters.comfort * strength);
             }
 
             auto move = (internal + external) * parameters.step;

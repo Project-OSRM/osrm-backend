@@ -183,6 +183,30 @@ BOOST_AUTO_TEST_CASE(the_anchors_do_not_move)
     BOOST_CHECK_CLOSE(band.points.back().y, 50.0, 1e-9);
 }
 
+// A taut path running along a wall stands on geometry at every interior node, and the
+// repulsion has no direction to push a node on a wall along: the distance is zero.  The
+// band supplies that push from the wall's normal, so the path lifts off the wall by the
+// comfort margin where it has room to, and rounds back onto the anchors at either end.
+BOOST_AUTO_TEST_CASE(a_path_along_a_wall_lifts_off_it)
+{
+    const Square square;
+    const std::vector<Point> along_the_wall{{10, 0}, {50, 0}, {90, 0}};
+    auto parameters = defaults();
+    parameters.comfort = 5.0;
+    const auto band = smooth(along_the_wall, square.rings, parameters);
+    BOOST_REQUIRE(band.certified);
+
+    auto highest = 0.0;
+    for (const auto &p : band.points)
+    {
+        BOOST_CHECK_GE(p.y, 0.0);
+        highest = std::max(highest, p.y);
+    }
+    // off the wall by most of the margin somewhere along the way, and never through it
+    BOOST_CHECK_GT(highest, 0.5 * parameters.comfort);
+    BOOST_CHECK_LE(highest, 2.0 * parameters.comfort);
+}
+
 BOOST_AUTO_TEST_CASE(the_certificate_holds)
 {
     const Blocked blocked;
