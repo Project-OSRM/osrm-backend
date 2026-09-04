@@ -141,3 +141,18 @@ target_link_libraries(area-geodesic-bench
 	${TBB_LIBRARIES}
 	${MAYBE_SHAPEFILE}
 	LibArchive::LibArchive)
+
+file(GLOB AreaBandBenchmarkSources area_band.cpp)
+
+add_executable(area-band-bench
+	EXCLUDE_FROM_ALL
+	${AreaBandBenchmarkSources}
+	$<TARGET_OBJECTS:UTIL>)
+
+target_link_libraries(area-band-bench
+	osrm
+	${BOOST_BASE_LIBRARIES}
+	${CMAKE_THREAD_LIBS_INIT}
+	${TBB_LIBRARIES}
+	${MAYBE_SHAPEFILE}
+	LibArchive::LibArchive)

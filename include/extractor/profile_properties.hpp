@@ -146,6 +146,13 @@ struct ProfileProperties
     //! looked at, and its kerbstone detail is paid for again on every query that snaps
     //! into it.  Zero switches it off.  See extractor/area/simplify.hpp.
     double area_simplify_threshold = 0.0;
+    //! comfort margin, in metres, that a route drawn across an open area is held off the
+    //! geometry by, with the corners it turns rounded to match.  Zero draws the shortest
+    //! path exactly as the planner found it, bending on the vertices it turns at.  Off by
+    //! default: it changes the drawn shape of every plaza route and costs milliseconds a
+    //! leg.  Only /route and /trip draw a shape; a /table cell reports the taut length.
+    //! See docs/areas.md.
+    double area_smoothing_margin = 0.0;
 };
 } // namespace osrm::extractor
 

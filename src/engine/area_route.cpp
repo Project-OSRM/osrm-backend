@@ -1,11 +1,13 @@
 #include "engine/area_route.hpp"
 
+#include "engine/area_band.hpp"
 #include "engine/area_geodesic.hpp"
 
 #include "util/coordinate_calculation.hpp"
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 #include <optional>
 
 namespace osrm::engine::area
@@ -130,6 +132,89 @@ std::optional<NodeID> nodeAt(const datafacade::BaseDataFacade &facade, const uti
     return std::nullopt;
 }
 
+/**
+ * @brief One interior point of a leg drawn across an area: where it is, and which node it
+ * is booked to.
+ *
+ * A bend of the taut path *is* a node, so it needs no coordinate of its own.  A point the
+ * band computed is not on any node, so it carries its position in PathData::coordinate
+ * and is booked to the node of the nearest bend, because the annotations want a node for
+ * every point and that is the honest one: it is the corner the point is rounding.
+ */
+struct Stop
+{
+    util::Coordinate at;
+    NodeID node;
+    bool computed;
+};
+
+/**
+ * @brief The shape a leg is drawn as: the taut bends, or the band's rounding of them.
+ *
+ * With no margin, or when the band declines, the bends are the shape and nothing about
+ * the leg changes.  With a margin the taut path is handed to the band; what it certifies
+ * is drawn instead, every interior point computed.
+ *
+ * A path with no bends still has to book its points somewhere, and the only node in the
+ * story is the vertex the traveller's coordinate snapped to.  When that cannot be found
+ * the straight line is kept, since a point that cannot be booked cannot be written down.
+ */
+std::vector<Stop> shapeOf(const datafacade::BaseDataFacade &facade,
+                          const extractor::AreaPolygonSegment &area,
+                          const util::Coordinate from,
+                          const Geodesic &geodesic,
+                          const std::vector<NodeID> &bends,
+                          const util::Coordinate to,
+                          const std::optional<NodeID> entered)
+{
+    std::vector<Stop> taut;
+    taut.reserve(bends.size());
+    for (std::size_t i = 0; i < bends.size(); ++i)
+    {
+        taut.push_back({geodesic.bends[i], bends[i], false});
+    }
+
+    const auto margin = facade.GetAreaSmoothingMargin();
+    if (!(margin > 0.0) || (bends.empty() && !entered))
+    {
+        return taut;
+    }
+
+    std::vector<util::Coordinate> path;
+    path.reserve(geodesic.bends.size() + 2);
+    path.push_back(from);
+    path.insert(path.end(), geodesic.bends.begin(), geodesic.bends.end());
+    path.push_back(to);
+
+    const auto smoothed = smooth_coordinates(facade.GetOpenAreaRings(area), path, margin);
+    if (!smoothed)
+    {
+        return taut;
+    }
+
+    std::vector<Stop> drawn;
+    drawn.reserve(smoothed->size() - 2);
+    for (std::size_t i = 1; i + 1 < smoothed->size(); ++i)
+    {
+        const auto point = (*smoothed)[i];
+        auto node = entered.value_or(SPECIAL_NODEID);
+        auto nearest = std::numeric_limits<double>::infinity();
+        for (std::size_t b = 0; b < bends.size(); ++b)
+        {
+            // strictly closer, so a tie goes to the earlier bend and the booking is a
+            // property of the geometry rather than of summation order
+            const auto distance = metres(point, geodesic.bends[b]);
+            if (distance < nearest)
+            {
+                nearest = distance;
+                node = bends[b];
+            }
+        }
+        drawn.push_back({point, node, true});
+    }
+    return drawn;
+}
+
 /** Say that a waypoint is where it was asked for, when the caller is tracking waypoints. */
 void report(const std::vector<PhantomNodeCandidates *> &waypoints,
             std::size_t which,
@@ -200,9 +285,18 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
             continue;
         }
 
-        // The path is a straight run from the request through each bend to the other
-        // request, so the leg is that sequence and the phantoms stand at its two ends.
         auto &endpoints = route.leg_endpoints[leg];
+        // the vertex the traveller's coordinate snapped to, which a smoothed straight
+        // line books its points to; asked before the phantom is moved off it below, and
+        // not asked at all unless smoothing could want it, so a leg with no margin costs
+        // exactly what it did
+        const auto entered = bends.empty() && facade.GetAreaSmoothingMargin() > 0.0
+                                 ? nodeAt(facade, endpoints.source_phantom.location)
+                                 : std::nullopt;
+        const auto stops = shapeOf(facade, area, from, geodesic, bends, to, entered);
+
+        // The path is a straight run from the request through each stop to the other
+        // request, so the leg is that sequence and the phantoms stand at its two ends.
         endpoints.source_phantom.location = from;
         endpoints.target_phantom.location = to;
         route.source_traversed_in_reverse[leg] = false;
@@ -223,14 +317,22 @@ void useGeodesicWhereShorter(const datafacade::BaseDataFacade &facade,
 
         auto &path = route.unpacked_path_segments[leg];
         path.clear();
-        path.reserve(bends.size());
+        path.reserve(stops.size());
         auto previous = from;
-        for (std::size_t i = 0; i < bends.size(); ++i)
+        for (const auto &stop : stops)
         {
-            const auto [step_weight, step_duration] = cost(metres(previous, geodesic.bends[i]));
-            path.push_back(
-                PathData{named, bends[i], step_weight, {0}, step_duration, {0}, 0, std::nullopt});
-            previous = geodesic.bends[i];
+            const auto [step_weight, step_duration] = cost(metres(previous, stop.at));
+            // a computed point says where it is; a bend is found by its node, as before
+            path.push_back(PathData{named,
+                                    stop.node,
+                                    step_weight,
+                                    {0},
+                                    step_duration,
+                                    {0},
+                                    0,
+                                    std::nullopt,
+                                    stop.computed ? stop.at : util::Coordinate{}});
+            previous = stop.at;
         }
 
         // assembleLeg adds the target phantom's own weight on top of the path, and

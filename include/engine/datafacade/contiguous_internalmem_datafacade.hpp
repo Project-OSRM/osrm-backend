@@ -567,6 +567,9 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     double GetWeightMultiplier() const override final
     { return m_profile_properties->GetWeightMultiplier(); }
 
+    double GetAreaSmoothingMargin() const override final
+    { return m_profile_properties->area_smoothing_margin; }
+
     util::guidance::BearingClass
     GetBearingClass(const NodeID node_based_node_id) const override final
     {

@@ -237,6 +237,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         &ProfileProperties::area_emit_visibility_graph,
         "area_simplify_threshold",
         &ProfileProperties::area_simplify_threshold,
+        "area_smoothing_margin",
+        &ProfileProperties::area_smoothing_margin,
         "weight_name",
         sol::property(&ProfileProperties::GetWeightName, &ProfileProperties::SetWeightName),
         "max_turn_weight",
@@ -793,6 +795,10 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             sol::optional<double> area_simplify_threshold = properties["area_simplify_threshold"];
             if (area_simplify_threshold != sol::nullopt)
                 context.properties.area_simplify_threshold = area_simplify_threshold.value();
+
+            sol::optional<double> area_smoothing_margin = properties["area_smoothing_margin"];
+            if (area_smoothing_margin != sol::nullopt)
+                context.properties.area_smoothing_margin = area_smoothing_margin.value();
         }
     };
 

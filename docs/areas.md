@@ -74,6 +74,32 @@ would collapse is left as it is.
 
 The bundled foot profile sets this to 1.0 when meshing is on.
 
+### Smoothing the drawn path
+
+The shortest way across a plaza bends exactly on the corners it passes: the route hugs
+the fountain, turns on its kerb, and heads for the next corner. That is what a person
+walks and not what they draw, and on a map it reads as a route that clips every obstacle
+it meets. With a comfort margin set, the engine hands each leg drawn across an area to an
+elastic band that holds the line that far off the geometry and rounds the corners it
+turns, in metres:
+
+```lua
+properties.area_smoothing_margin = 2.0
+```
+
+Zero, the default, draws the shortest path exactly as the planner found it, and every
+existing route is unchanged. The smoothed leg is longer than the taut one, by
+construction, and its reported distance and duration follow the drawn line rather than
+the taut path; the band never crosses geometry, so the route still passes each obstacle
+on the side the planner chose, and a shape the band cannot prove legal is left as it was.
+
+Three things to know before turning it on. The band is measured against every ring edge
+of the area and costs milliseconds a leg, which `src/benchmarks/area_band.cpp` reports;
+a /table cell is not smoothed and still reports the taut length, so with a margin set the
+distance of a route and the matching cell of a table disagree by the rounding; and a point
+the band computed lies on no node of the graph, so `annotations=nodes` books it to the
+corner it is rounding.
+
 ### Adding it to your own profile
 
 To opt-in to this feature, you must declare an algorithm to be used for area meshing.

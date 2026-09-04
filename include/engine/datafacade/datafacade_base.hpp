@@ -174,6 +174,14 @@ class BaseDataFacade
                              const Approach /*approach*/) const
     { return {}; }
 
+    /**
+     * @brief The comfort margin, in metres, a route across an open area is smoothed to.
+     *
+     * Zero means the taut path is drawn as the planner found it.  Not pure, for the same
+     * reason as GetOpenAreasAt: a dataset with no areas has nothing to smooth.
+     */
+    virtual double GetAreaSmoothingMargin() const { return 0.0; }
+
     virtual std::vector<PhantomNodeWithDistance>
     NearestPhantomNodesInRange(const util::Coordinate input_coordinate,
                                const double max_distance,

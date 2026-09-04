@@ -483,4 +483,116 @@ BOOST_AUTO_TEST_CASE(resampling_keeps_the_corners_it_turns)
     }
 }
 
+// ---- smooth_coordinates(): the band as the engine calls it -------------------------
+
+namespace
+{
+
+//! Metres per degree at the equator, so a fixture can be laid out in metres.
+constexpr double METRES_PER_DEGREE = 111194.9;
+
+util::Coordinate at_metres(const double x, const double y)
+{
+    return {util::FloatLongitude{x / METRES_PER_DEGREE},
+            util::FloatLatitude{y / METRES_PER_DEGREE}};
+}
+
+// The Blocked fixture above, laid out in coordinates: a 100 m square with a 20 m block
+// in the middle, and the taut path from the low corner to the high one, which turns on
+// the block's south-east corner.
+struct BlockedInCoordinates
+{
+    std::vector<util::Coordinate> outer{
+        at_metres(0, 0), at_metres(100, 0), at_metres(100, 100), at_metres(0, 100)};
+    std::vector<util::Coordinate> block{
+        at_metres(40, 40), at_metres(60, 40), at_metres(60, 60), at_metres(40, 60)};
+    std::vector<std::span<const util::Coordinate>> rings;
+    std::vector<util::Coordinate> taut{at_metres(20, 20), at_metres(60, 40), at_metres(80, 80)};
+    BlockedInCoordinates()
+    {
+        rings.emplace_back(outer);
+        rings.emplace_back(block);
+    }
+    std::vector<Ring> projected_rings() const
+    {
+        return {Ring{projected_outer}, Ring{projected_block}};
+    }
+    std::vector<Point> projected_outer = projected(outer);
+    std::vector<Point> projected_block = projected(block);
+    static std::vector<Point> projected(const std::vector<util::Coordinate> &coordinates)
+    {
+        std::vector<Point> points;
+        for (const auto c : coordinates)
+        {
+            points.push_back(project(c));
+        }
+        return points;
+    }
+};
+
+} // namespace
+
+BOOST_AUTO_TEST_CASE(no_margin_draws_the_path_as_given)
+{
+    const BlockedInCoordinates plaza;
+    BOOST_CHECK(!smooth_coordinates(plaza.rings, plaza.taut, 0.0));
+    BOOST_CHECK(!smooth_coordinates(plaza.rings, plaza.taut, -1.0));
+}
+
+BOOST_AUTO_TEST_CASE(a_straight_line_across_the_open_is_not_redrawn)
+{
+    // Nothing within the margin of the line, so the band is a straight line sampled
+    // every quarter margin.  That is the same drawing, and the answer says so rather
+    // than hand back forty collinear points to be carried as computed.
+    const BlockedInCoordinates plaza;
+    const std::vector<util::Coordinate> line{at_metres(5, 5), at_metres(30, 5)};
+    BOOST_CHECK(!smooth_coordinates(plaza.rings, line, 2.0));
+}
+
+BOOST_AUTO_TEST_CASE(a_corner_is_rounded_and_the_anchors_are_kept_exactly)
+{
+    const BlockedInCoordinates plaza;
+    const auto drawn = smooth_coordinates(plaza.rings, plaza.taut, 2.0);
+    BOOST_REQUIRE(drawn);
+    BOOST_CHECK_GT(drawn->size(), plaza.taut.size());
+
+    // Anchors are the traveller's own coordinates and do not drift by a projection.
+    BOOST_CHECK(drawn->front() == plaza.taut.front());
+    BOOST_CHECK(drawn->back() == plaza.taut.back());
+
+    // Every point is on legal ground, and the corner it rounds is rounded: the sharpest
+    // turn is gentler than the 37 degrees the taut path turns at the block's corner.
+    const auto rings = plaza.projected_rings();
+    std::vector<Point> points;
+    for (const auto c : *drawn)
+    {
+        points.push_back(project(c));
+    }
+    for (const auto &p : points)
+    {
+        BOOST_CHECK(in_closed_area(p, rings, ON_GEOMETRY));
+    }
+    std::vector<Point> taut;
+    for (const auto c : plaza.taut)
+    {
+        taut.push_back(project(c));
+    }
+    BOOST_CHECK_LT(sharpest_turn(points), sharpest_turn(taut));
+    // and longer, which is the trade
+    BOOST_CHECK_GE(path_length(points), path_length(taut));
+}
+
+BOOST_AUTO_TEST_CASE(smooth_coordinates_is_deterministic)
+{
+    const BlockedInCoordinates plaza;
+    const auto once = smooth_coordinates(plaza.rings, plaza.taut, 2.0);
+    const auto twice = smooth_coordinates(plaza.rings, plaza.taut, 2.0);
+    BOOST_REQUIRE(once && twice);
+    BOOST_REQUIRE_EQUAL(once->size(), twice->size());
+    for (std::size_t i = 0; i < once->size(); ++i)
+    {
+        BOOST_CHECK((*once)[i] == (*twice)[i]);
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()

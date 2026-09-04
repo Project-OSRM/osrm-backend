@@ -22,6 +22,14 @@ local enable_area_meshing = enable_area_meshing or false
 -- Set to 0 to keep the outline exactly as drawn. See docs/areas.md.
 local area_simplify_threshold = area_simplify_threshold or 1.0
 
+-- How far, in metres, a route drawn across a plaza is held off its walls and obstacles,
+-- with the corners it turns rounded to match. The shortest path bends exactly on the
+-- corners it passes, which is what a person walks but not what they draw; this is the
+-- margin the drawn line keeps instead. Zero draws the shortest path as found. Off by
+-- default: it changes the shape of every plaza route and costs milliseconds a leg, and
+-- a /table cell still reports the taut length. See docs/areas.md.
+local area_smoothing_margin = area_smoothing_margin or 0
+
 function setup()
   local walking_speed = 5
 
@@ -41,6 +49,7 @@ function setup()
       -- preserve short road crossings for pedestrian safety analysis
       max_collapse_distance         = 10,
       area_simplify_threshold       = enable_area_meshing and area_simplify_threshold or 0,
+      area_smoothing_margin         = enable_area_meshing and area_smoothing_margin or 0,
     },
 
     default_mode            = mode.walking,

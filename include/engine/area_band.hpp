@@ -3,7 +3,10 @@
 
 #include "engine/area_visibility.hpp"
 
+#include "util/coordinate.hpp"
+
 #include <cstddef>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -159,6 +162,29 @@ Band smooth(std::span<const Point> path,
  * its caller for any part of the path.
  */
 bool certificate_holds(const Band &band, std::span<const Ring> rings);
+
+/**
+ * @brief smooth(), for a path and an area given as coordinates.
+ *
+ * This is the band as the engine calls it.  The rings and the path are projected once,
+ * the comfort margin is converted from metres at the path's own latitude, and the result
+ * is projected back.  The two anchors come back exactly as they went in, so a leg's
+ * endpoints do not drift by a rounding.
+ *
+ * The result is thinned first, by Douglas-Peucker to a decimetre.  The band is sampled
+ * every quarter margin whether or not the path bends there, and a straight run across an
+ * open square would otherwise come back as forty points on a line.  A decimetre is the
+ * finest the API draws, so a node that moves the line by less than that draws nothing.
+ *
+ * @param comfort_metres  the margin; zero or less means do nothing
+ * @return the whole smoothed path, anchors included, or nothing when there is nothing to
+ *         draw differently: the band declined, or what it produced is the input to within
+ *         a decimetre.  Nothing always means "draw the path as it was given".
+ */
+std::optional<std::vector<util::Coordinate>>
+smooth_coordinates(const std::vector<std::span<const util::Coordinate>> &rings,
+                   std::span<const util::Coordinate> path,
+                   double comfort_metres);
 
 } // namespace osrm::engine::area
 

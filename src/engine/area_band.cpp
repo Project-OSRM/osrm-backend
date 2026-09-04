@@ -2,6 +2,8 @@
 
 #include "engine/area_clearance.hpp"
 
+#include "util/web_mercator.hpp"
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
@@ -804,6 +806,147 @@ Band smooth(std::span<const Point> path,
         band.certified = certificate_holds(band, rings);
     }
     return band;
+}
+
+namespace
+{
+
+//! Below this, in metres, a node's departure from the line drawn without it is drawing
+//! nothing: a decimetre is the finest the API emits, polyline6, and the band samples
+//! every quarter margin whether or not the path bends there.
+constexpr double DRAWS_NOTHING_METRES = 0.1;
+
+/**
+ * Douglas-Peucker: keep the fewest nodes that leave every dropped one within the
+ * tolerance of the line drawn through the kept ones.  Recursive on the farthest point,
+ * which is the textbook form and is deterministic, since the farthest point is chosen by
+ * strict comparison and a tie goes to the earlier index.
+ */
+void thin_between(std::span<const Point> points,
+                  const std::size_t first,
+                  const std::size_t last,
+                  const double tolerance,
+                  std::vector<bool> &kept)
+{
+    if (last <= first + 1)
+    {
+        return;
+    }
+    auto farthest = first;
+    auto farthest_squared = 0.0;
+    for (std::size_t i = first + 1; i < last; ++i)
+    {
+        const auto off = nearest_on_segment(points[i], points[first], points[last]);
+        if (off.distance_squared > farthest_squared)
+        {
+            farthest_squared = off.distance_squared;
+            farthest = i;
+        }
+    }
+    if (farthest_squared > tolerance * tolerance)
+    {
+        kept[farthest] = true;
+        thin_between(points, first, farthest, tolerance, kept);
+        thin_between(points, farthest, last, tolerance, kept);
+    }
+}
+
+std::vector<Point> thin(std::span<const Point> points, const double tolerance)
+{
+    std::vector<Point> out;
+    if (points.empty())
+    {
+        return out;
+    }
+    std::vector<bool> kept(points.size(), false);
+    kept.front() = kept.back() = true;
+    thin_between(points, 0, points.size() - 1, tolerance, kept);
+    for (std::size_t i = 0; i < points.size(); ++i)
+    {
+        if (kept[i])
+        {
+            out.push_back(points[i]);
+        }
+    }
+    return out;
+}
+
+} // namespace
+
+std::optional<std::vector<util::Coordinate>>
+smooth_coordinates(const std::vector<std::span<const util::Coordinate>> &rings,
+                   std::span<const util::Coordinate> path,
+                   const double comfort_metres)
+{
+    if (!(comfort_metres > 0.0) || path.size() < 2)
+    {
+        return std::nullopt;
+    }
+
+    std::vector<std::vector<Point>> storage;
+    storage.reserve(rings.size());
+    for (const auto &ring : rings)
+    {
+        std::vector<Point> points;
+        points.reserve(ring.size());
+        for (const auto coordinate : ring)
+        {
+            points.push_back(project(coordinate));
+        }
+        storage.push_back(std::move(points));
+    }
+    // only now that storage has stopped growing, so the spans stay valid
+    std::vector<Ring> views;
+    views.reserve(storage.size());
+    for (const auto &points : storage)
+    {
+        views.emplace_back(points);
+    }
+
+    std::vector<Point> taut;
+    taut.reserve(path.size());
+    for (const auto coordinate : path)
+    {
+        taut.push_back(project(coordinate));
+    }
+
+    const auto metres_per_unit =
+        metres_per_projected_unit(static_cast<double>(util::toFloating(path.front().lat)));
+    BandParameters parameters;
+    parameters.comfort = comfort_metres / metres_per_unit;
+
+    const auto band = smooth(taut, views, parameters);
+    if (!band.certified)
+    {
+        return std::nullopt;
+    }
+    const auto tolerance = DRAWS_NOTHING_METRES / metres_per_unit;
+    const auto drawn = thin(band.points, tolerance);
+
+    // The same shape as it was given, to within what can be drawn: say so, rather than
+    // hand back a copy that differs in the last decimal and gets carried as computed.
+    if (drawn.size() == taut.size())
+    {
+        auto same = true;
+        for (std::size_t i = 0; i < drawn.size() && same; ++i)
+        {
+            same = length(drawn[i] - taut[i]) <= tolerance;
+        }
+        if (same)
+        {
+            return std::nullopt;
+        }
+    }
+
+    std::vector<util::Coordinate> out;
+    out.reserve(drawn.size());
+    out.push_back(path.front());
+    for (std::size_t i = 1; i + 1 < drawn.size(); ++i)
+    {
+        out.emplace_back(util::FloatLongitude{drawn[i].x}, util::web_mercator::yToLat(drawn[i].y));
+    }
+    out.push_back(path.back());
+    return out;
 }
 
 } // namespace osrm::engine::area
