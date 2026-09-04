@@ -7,8 +7,9 @@
  * on anywhere: a /route pays it once per leg, a /table would pay it per cell.
  *
  * This times smooth() over taut paths threading a grid of square obstacles, at the
- * comfort margins a profile would set.  Units are metres throughout, which is what the
- * band sees after metres_per_projected_unit() has been applied.
+ * comfort margins a profile would set, and beside it round_corners(), the straight-lines-
+ * and-arcs construction that replaced the band as what the engine draws.  Units are
+ * metres throughout, which is what both see after metres_per_projected_unit().
  *
  * The paths are 1.25 km long, far longer than any plaza leg, so that the per-node cost
  * shows and the totals are read as rates rather than as what a request pays: about 1.7
@@ -18,6 +19,7 @@
  * to more than the gate's slack; plaza-length paths do not reach that.
  */
 #include "engine/area_band.hpp"
+#include "engine/area_fillet.hpp"
 
 #include <chrono>
 #include <cmath>
@@ -95,7 +97,8 @@ int main()
     std::cout << "smooth() over a taut path threading a grid of obstacles, per band\n\n"
               << std::setw(8) << "vertices" << std::setw(7) << "bends" << std::setw(9)
               << "margin" << std::setw(10) << "nodes" << std::setw(11) << "certified"
-              << std::setw(10) << "length" << std::setw(12) << "microsec" << '\n';
+              << std::setw(10) << "length" << std::setw(12) << "microsec" << std::setw(14)
+              << "arcs microsec" << '\n';
 
     for (const std::size_t per_side : {1, 2, 3, 4, 6})
     {
@@ -123,12 +126,24 @@ int main()
                                      .count() /
                                  RUNS;
 
+            const auto started_arcs = std::chrono::steady_clock::now();
+            for (int run = 0; run < RUNS; ++run)
+            {
+                const auto rounded = round_corners(plaza.taut, plaza.rings, margin);
+                (void)rounded;
+            }
+            const auto elapsed_arcs = std::chrono::duration<double, std::micro>(
+                                          std::chrono::steady_clock::now() - started_arcs)
+                                          .count() /
+                                      RUNS;
+
             std::cout << std::setw(8) << plaza.vertices() << std::setw(7)
                       << plaza.taut.size() - 2 << std::setw(8) << std::fixed
                       << std::setprecision(0) << margin << "m" << std::setw(10) << nodes
                       << std::setw(11) << (certified ? "yes" : "no") << std::setw(9)
                       << std::setprecision(3) << ratio << "x" << std::setw(12)
-                      << std::setprecision(0) << elapsed << '\n';
+                      << std::setprecision(0) << elapsed << std::setw(14) << elapsed_arcs
+                      << '\n';
         }
     }
     return 0;

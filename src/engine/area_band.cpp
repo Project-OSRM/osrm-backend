@@ -1,6 +1,7 @@
 #include "engine/area_band.hpp"
 
 #include "engine/area_clearance.hpp"
+#include "engine/area_fillet.hpp"
 
 #include "util/web_mercator.hpp"
 
@@ -968,11 +969,6 @@ namespace
 //! every quarter margin whether or not the path bends there.
 constexpr double DRAWS_NOTHING_METRES = 0.1;
 
-//! The precision the geometry was drawn to.  An OSM plaza outline is hand traced to
-//! about half a metre, and a bend that moves the line by less than that is not one a
-//! map reader can see; see BandParameters::reversal_floor.
-constexpr double DRAWING_PRECISION_METRES = 0.5;
-
 /**
  * Douglas-Peucker: keep the fewest nodes that leave every dropped one within the
  * tolerance of the line drawn through the kept ones.  Recursive on the farthest point,
@@ -1069,11 +1065,9 @@ smooth_coordinates(const std::vector<std::span<const util::Coordinate>> &rings,
 
     const auto metres_per_unit =
         metres_per_projected_unit(static_cast<double>(util::toFloating(path.front().lat)));
-    BandParameters parameters;
-    parameters.comfort = comfort_metres / metres_per_unit;
-    parameters.reversal_floor = DRAWING_PRECISION_METRES / metres_per_unit;
-
-    const auto band = smooth(taut, views, parameters);
+    // The shape is straight lines and tangent arcs, not the relaxed band: see
+    // area_fillet.hpp for why.  The band stays as a pure function, measured beside it.
+    const auto band = round_corners(taut, views, comfort_metres / metres_per_unit);
     if (!band.certified)
     {
         return std::nullopt;

@@ -199,11 +199,11 @@ double reversal_turning(std::span<const Point> points, double floor = 0.0);
 std::size_t rings_in_reach(std::span<const Point> points, std::span<const Ring> rings, double reach);
 
 /**
- * @brief smooth(), for a path and an area given as coordinates.
+ * @brief The smoothed shape of a path, for a path and an area given as coordinates.
  *
- * This is the band as the engine calls it.  The rings and the path are projected once,
- * the comfort margin is converted from metres at the path's own latitude, and the result
- * is projected back.  The two anchors come back exactly as they went in, so a leg's
+ * This is what the engine calls.  The rings and the path are projected once, the margin
+ * is converted from metres at the path's own latitude, the corners are rounded by
+ * round_corners() in area_fillet.hpp, and the result is projected back.  The two anchors come back exactly as they went in, so a leg's
  * endpoints do not drift by a rounding.
  *
  * The result is thinned first, by Douglas-Peucker to a decimetre.  The band is sampled

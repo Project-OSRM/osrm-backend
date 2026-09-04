@@ -79,26 +79,30 @@ The bundled foot profile sets this to 1.0 when meshing is on.
 The shortest way across a plaza bends exactly on the corners it passes: the route hugs
 the fountain, turns on its kerb, and heads for the next corner. That is what a person
 walks and not what they draw, and on a map it reads as a route that clips every obstacle
-it meets. With a comfort margin set, the engine hands each leg drawn across an area to an
-elastic band that holds the line that far off the geometry and rounds the corners it
-turns, in metres:
+it meets. With a margin set, the engine redraws each leg across an area the way a road is
+set out: every corner is moved out so that the runs either side sit the margin off the
+edges they were grazing, as far as there is room, and is then replaced by a circular arc
+tangent to both. Straight runs stay straight, corners become curves, and nothing else
+changes. In metres:
 
 ```lua
 properties.area_smoothing_margin = 2.0
 ```
 
 Zero, the default, draws the shortest path exactly as the planner found it, and every
-existing route is unchanged. The smoothed leg is longer than the taut one, by
-construction, and its reported distance and duration follow the drawn line rather than
-the taut path; the band never crosses geometry, so the route still passes each obstacle
-on the side the planner chose, and a shape the band cannot prove legal is left as it was.
+existing route is unchanged. The rounded leg is a little longer than the taut one, about
+3% at the median on real plazas, and its reported distance and duration follow the drawn
+line rather than the taut path. Every segment of it is tested against the area's
+geometry; where an arc or an offset would leave the free space, that corner is pulled
+back towards the taut corner until it fits, so the route still passes each obstacle on
+the side the planner chose. In a passage narrower than twice the margin the line settles
+on whatever offset fits, which is the centreline.
 
-Three things to know before turning it on. The band is measured against every ring edge
-of the area and costs milliseconds a leg, which `src/benchmarks/area_band.cpp` reports;
-a /table cell is not smoothed and still reports the taut length, so with a margin set the
-distance of a route and the matching cell of a table disagree by the rounding; and a point
-the band computed lies on no node of the graph, so `annotations=nodes` books it to the
-corner it is rounding.
+Two things to know before turning it on. A /table cell is not rounded and still reports
+the taut length, so with a margin set the distance of a route and the matching cell of a
+table disagree by the rounding; and a computed point lies on no node of the graph, so
+`annotations=nodes` books it to the corner it is rounding. The cost is microseconds a
+leg; `src/benchmarks/area_band.cpp` reports it beside the elastic band it replaced.
 
 ### Adding it to your own profile
 

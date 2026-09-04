@@ -22,9 +22,9 @@ Feature: Foot - Smoothing a route drawn across a plaza
     # The same plaza and obstacle as area_snapping.feature's "with an obstacle in the
     # way", where the taut route is 312 m: up to the obstacle's corner, 200 m along its
     # edge, and down from the other corner, turning 63 degrees at each.  Smoothed at a
-    # 10 m margin it leaves p on a curve, passes each corner 10 m off it, and runs the
-    # length of the obstacle 10 m off its edge: 28 points against the taut path's 4, and
-    # 24 m longer, which is what holding the margin costs.
+    # 10 m margin it is straight lines and arcs: a straight run from p, a 10 m arc past
+    # each corner, and a straight run about 10 m off the obstacle's edge between them, 15
+    # points against the taut path's 4 and 19 m longer, which is what the margin costs.
     Scenario: Foot - The corners of an obstacle are rounded and the margin is held
         Given the node map
             """
@@ -50,4 +50,4 @@ Feature: Foot - Smoothing a route drawn across a plaza
 
         When I route I should get
             | from | to | geometry                                                              | distance |
-            | p    | q  | kcbEembEWKKCGAGAKCKAKAEAEAAAAAAEAC?C?uA?eG?G@E@A@CDCB?LAJANERE\K             | 335m +-2 |
+            | p    | q  | kcbEembE}A_@CAAAACAA?AAC?aJ@C?C@CBA@A~A_@ | 331m +-2 |
