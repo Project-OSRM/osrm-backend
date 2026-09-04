@@ -143,19 +143,6 @@ class BaseDataFacade
     { return {}; }
 
     /**
-     * @brief The phantoms standing on one vertex of an open area.
-     *
-     * Which edge-based nodes end on a vertex is recorded at extraction, so this is a
-     * lookup rather than a search.  Asking the r-tree instead cost one traversal per
-     * visible vertex, which was most of the time spent snapping into an area.
-     *
-     * @param area    the area the vertex belongs to
-     * @param vertex  its position among that area's vertices, outer ring first
-     *
-     * Not pure, for the same reason as GetOpenAreasAt.  An empty answer means nothing
-     * stands here, which is also what a vertex the graph compressed away gives.
-     */
-    /**
      * @brief The vertices of an open area that one of its vertices can see.
      *
      * The visibility graph the mesher computed, as in-area indices.  A journey with both
@@ -168,6 +155,19 @@ class BaseDataFacade
                           const std::uint32_t /*vertex*/) const
     { return {}; }
 
+    /**
+     * @brief The phantoms standing on one vertex of an open area.
+     *
+     * Which edge-based nodes end on a vertex is recorded at extraction, so this is a
+     * lookup rather than a search.  Asking the r-tree instead cost one traversal per
+     * visible vertex, which was most of the time spent snapping into an area.
+     *
+     * @param area    the area the vertex belongs to
+     * @param vertex  its position among that area's vertices, outer ring first
+     *
+     * Not pure, for the same reason as GetOpenAreasAt.  An empty answer means nothing
+     * stands here, which is also what a vertex the graph compressed away gives.
+     */
     virtual std::vector<PhantomNodeWithDistance>
     PhantomNodesOnAreaVertex(const extractor::AreaPolygonSegment & /*area*/,
                              const std::uint32_t /*vertex*/,

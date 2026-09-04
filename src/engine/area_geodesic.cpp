@@ -281,8 +281,6 @@ std::optional<Geodesic> shortest(const SolvedArea &area,
     return result;
 }
 
-} // namespace
-
 /**
  * The graph the mesher wrote down, if it wrote one.
  *
@@ -308,6 +306,8 @@ bool adopt_stored_visibility(SolvedArea &area, const StoredVisibility &stored)
     }
     return any;
 }
+
+} // namespace
 
 std::optional<Geodesic>
 geodesic_between(std::uint32_t dataset,

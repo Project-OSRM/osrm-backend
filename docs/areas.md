@@ -17,8 +17,10 @@ the perimeter of a plaza and the sides of an obstacle walkable in their own righ
 entry point is where another way connects to the perimeter of the area.
 
 Set `area_emit_visibility_graph = true` in your profile's properties to keep the whole
-graph instead. The only journey that needs it is one that both begins and ends inside the
-same area, which wants a path between two arbitrary vertices rather than a path out.
+graph instead. This is a debugging aid, useful for looking at what the mesher saw, and not
+how a journey between two arbitrary vertices is served: the extractor stores the visibility
+graph beside the mesh, and the engine solves such a journey over that. Emitting it as ways
+costs a way per line of sight where storing it costs two integers.
 
 This feature is still EXPERIMENTAL.
 
@@ -46,6 +48,31 @@ left behind by an earlier extraction under the same name, so that a dataset buil
 profile cannot carry the areas of another. The profile then behaves exactly as it did
 before the feature existed. The rest of this section is for adding meshing to a profile of
 your own.
+
+### Simplifying the outline
+
+An OSM plaza is drawn to be looked at rather than routed across. Its outline follows
+kerbstones and planting beds at a resolution nothing downstream can use: Ile-de-France has
+a pedestrian area with 2739 nodes around 228 by 209 metres, one every 30 cm. Every vertex
+is then paid for again on each request, because snapping a coordinate into the area tests
+every vertex against every ring edge.
+
+So the extractor drops the vertices that carry no shape, by Visvalingam-Whyatt. It ranks a
+vertex by the area of the triangle it makes with its two neighbours and drops the ones
+whose triangle is smaller than a threshold, in square metres:
+
+```lua
+properties.area_simplify_threshold = 1.0
+```
+
+The threshold says directly how much of the plaza a dropped vertex is allowed to add or
+remove, so 1.0 means a square metre. Zero switches simplification off and keeps the outline
+exactly as drawn. Entry points are never dropped, whatever their triangle: an entrance
+simplified away leaves the area unreachable from the way that met it, which is not a loss
+of detail but a loss of the graph. No ring is reduced below three vertices, and a ring that
+would collapse is left as it is.
+
+The bundled foot profile sets this to 1.0 when meshing is on.
 
 ### Adding it to your own profile
 

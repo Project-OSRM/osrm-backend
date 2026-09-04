@@ -14,12 +14,14 @@ namespace osrm::extractor::area
  * has a pedestrian area with 2739 nodes around 228 by 209 metres, one every 30 cm.  Three
  * separate costs are paid per vertex, and all of them are paid per query rather than once:
  *
- *  * `SnapInsideOpenArea` asks the r-tree for the phantoms standing on each vertex the
- *    coordinate can see, one nearest-neighbour traversal each;
- *  * the engine's visibility graph is cubic in the vertex count, which is why
- *    `GEODESIC_MAX_VERTICES` has to stop at 256;
+ *  * `SnapInsideOpenArea` runs `visible_vertices` for the coordinate, which tests every
+ *    vertex against every ring edge and so costs the square of the vertex count, once
+ *    per coordinate of a request;
+ *  * an area the mesher declined has no stored visibility graph, so the engine builds
+ *    one per request at a cost cubic in the vertex count, which is what
+ *    `GEODESIC_MAX_VERTICES` caps at 256;
  *  * the mesher declines an area over `AreaMesher::max_vertices` obstacle vertices
- *    outright, and 153 of Ile-de-France's 1234 areas hit that.
+ *    outright.
  *
  * Visvalingam-Whyatt is the right shape of algorithm here because it ranks a vertex by the
  * *area* of the triangle it makes with its neighbours, so it removes what does not change

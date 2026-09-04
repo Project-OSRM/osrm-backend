@@ -218,8 +218,6 @@ double bubble_radius(const Point &at, std::span<const Ring> rings)
     return here.inside ? here.distance : 0.0;
 }
 
-} // namespace
-
 /**
  * How much of the repulsion applies, as a function of distance along the band from the
  * nearer anchor.
@@ -289,6 +287,8 @@ double reversal_turning(std::span<const Point> points)
     }
     return total;
 }
+
+} // namespace
 
 bool certificate_holds(const Band &band, std::span<const Ring> rings)
 {

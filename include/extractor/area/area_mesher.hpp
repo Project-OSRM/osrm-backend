@@ -91,7 +91,11 @@ class AreaMesher
      * than O(vertices squared).
      *
      * The one thing it cannot promise is a journey that begins and ends inside the same
-     * area, which wants a path between two arbitrary vertices.  That is what this is for.
+     * area, which wants a path between two arbitrary vertices.  The engine no longer asks
+     * the mesh for that: Extractor::WriteOpenAreas stores the whole visibility graph
+     * beside the mesh and the geodesic is solved over it.  So this is a debugging knob --
+     * it shows the graph as ways one can look at -- and not the way to serve that
+     * journey, which costs a way per line of sight where storing it costs two integers.
      *
      * Either way the ring edges are emitted -- see with_ring_edges().  See docs/areas.md.
      */
