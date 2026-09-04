@@ -88,6 +88,17 @@ struct BandParameters
      * differently under one compiler.
      */
     std::size_t sweeps = 30;
+
+    /**
+     * How much more doubling back than the input, in degrees, a result may show and
+     * still be handed back.  Above this the input is returned as it was.
+     *
+     * Legal is not the same as better: a wobble stays in free space the whole time it
+     * is making the path worse, and what a wobble is made of is turning that changes
+     * sign.  Twenty degrees is two inflections' worth, which is what a band that bulges
+     * off one obstacle needs at its two anchors; see the gate in smooth().
+     */
+    double reversal_slack = 20.0;
 };
 
 /**

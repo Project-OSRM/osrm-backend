@@ -27,17 +27,6 @@ constexpr std::size_t MAX_NODES = 2000;
 //! How much finer than the requested spacing insertion may go to satisfy the certificate.
 constexpr double FINEST = 0.5;
 
-/**
- * How much extra doubling back, in radians, counts as no worse.
- *
- * Twenty degrees, which is two inflections' worth.  A band that bulges off an obstacle has
- * to reverse where the bulge meets each anchor, since the anchor does not move and the
- * middle of the path does; that is the shape working, not wobbling, and it costs about ten
- * degrees an end.  Wobble is nothing like as modest: over the corpus the bands that were
- * making paths worse doubled back by 208 degrees at the median and by 14,450 at the worst.
- */
-constexpr double REVERSAL_SLACK = 20.0 * M_PI / 180.0;
-
 Point operator-(const Point &a, const Point &b) { return {a.x - b.x, a.y - b.y}; }
 Point operator+(const Point &a, const Point &b) { return {a.x + b.x, a.y + b.y}; }
 Point operator*(const Point &a, const double s) { return {a.x * s, a.y * s}; }
@@ -795,7 +784,14 @@ Band smooth(std::span<const Point> path,
     // rather than the previous level's output.  Each level starts from the one above, so
     // a gate applied per level compares against something already deformed and whatever
     // it allows compounds from one level to the next.
-    if (reversal_turning(band.points) > reversal_turning(path) + REVERSAL_SLACK)
+    // The slack is two inflections' worth by default.  A band that bulges off an obstacle
+    // has to reverse where the bulge meets each anchor, since the anchor does not move and
+    // the middle of the path does; that is the shape working, not wobbling, and it costs
+    // about ten degrees an end.  Wobble is nothing like as modest: over the corpus the
+    // bands that were making paths worse doubled back by 208 degrees at the median and by
+    // 14,450 at the worst.
+    const auto slack = parameters.reversal_slack * M_PI / 180.0;
+    if (reversal_turning(band.points) > reversal_turning(path) + slack)
     {
         band.points.assign(path.begin(), path.end());
         band.radii.assign(band.points.size(), 0.0);
