@@ -83,7 +83,15 @@ std::vector<Point> resample(std::span<const Point> path, const double spacing)
         return out;
     }
 
-    auto carried = 0.0;
+    // Every vertex of the input is kept, and the gaps between them subdivided.
+    //
+    // Sampling at an even stride along the whole polyline instead drops the vertices, and
+    // the vertices are the whole shape: a taut path bends only where it wraps a corner of
+    // the geometry, so a sample that lands either side of a corner and not on it spans a
+    // chord that cuts straight through the obstacle.  That band is illegal, the
+    // certificate says so, and the whole band is discarded -- which is why a path running
+    // along a wall could never be smoothed at all, however much room the nodes were given
+    // to move in.  Every level of every such band on the corpus was thrown away.
     for (std::size_t i = 0; i + 1 < path.size(); ++i)
     {
         const auto from = path[i];
@@ -93,16 +101,23 @@ std::vector<Point> resample(std::span<const Point> path, const double spacing)
         {
             continue;
         }
-        const auto direction = (to - from) * (1.0 / span);
-
-        for (auto at = spacing - carried; at < span; at += spacing)
+        auto pieces = std::size_t{1};
+        if (spacing > 0.0)
         {
-            out.push_back(from + direction * at);
+            pieces = static_cast<std::size_t>(std::ceil(span / spacing));
+            pieces = std::clamp(pieces, std::size_t{1}, MAX_NODES);
         }
-        carried = std::fmod(carried + span, spacing);
+        for (std::size_t k = 1; k < pieces; ++k)
+        {
+            out.push_back(from + (to - from) * (static_cast<double>(k) / pieces));
+        }
+        out.push_back(to);
     }
 
-    out.push_back(path.back());
+    if (out.size() < 2)
+    {
+        out.push_back(path.back());
+    }
     return out;
 }
 

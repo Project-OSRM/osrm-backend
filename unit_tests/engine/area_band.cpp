@@ -5,6 +5,7 @@
 #include <boost/test/unit_test.hpp>
 
 #include <cmath>
+#include <limits>
 #include <span>
 #include <vector>
 
@@ -188,7 +189,17 @@ BOOST_AUTO_TEST_CASE(a_detour_in_the_open_is_pulled_straight)
     // planner chose is the side the result keeps. That is checked over the corpus.
     const auto direct = std::hypot(80.0 - 20.0, 50.0 - 50.0);
     BOOST_CHECK_LT(path_length(band.points), direct * 1.02);
-    BOOST_CHECK_LT(sharpest_turn(band.points), 5.0);
+
+    // What is left at the default sweep budget is the corner itself. Resampling keeps
+    // every vertex of the input, so there is a node sitting exactly on the apex of the
+    // detour, and that node is the last thing to flatten: tension reaches it from both
+    // sides and has the furthest to move it. It is a question of budget and not of where
+    // the band settles, which the next check shows.
+    BOOST_CHECK_LT(sharpest_turn(band.points), 7.0);
+
+    auto patient = defaults();
+    patient.sweeps = 480;
+    BOOST_CHECK_LT(sharpest_turn(smooth(detour, square.rings, patient).points), 0.5);
 }
 
 BOOST_AUTO_TEST_CASE(the_anchors_do_not_move)
@@ -430,6 +441,53 @@ BOOST_AUTO_TEST_CASE(it_returns_nothing_that_doubles_back_more)
 
             // Whatever comes back is legal ground either way.
             BOOST_CHECK(certificate_holds(band, blocked.rings));
+        }
+    }
+}
+
+
+// A path that runs along a wall and turns its corners must survive resampling.
+//
+// The bug this pins: resampling sampled the polyline at an even stride and kept only the
+// two anchors, so a corner the path turned was dropped unless a sample happened to land
+// on it. The chord between the samples either side then cut straight through the
+// obstacle, the certificate refused the whole band, and it was discarded. Every level of
+// every wall-hugging band on the corpus was thrown away that way, which is why a taut
+// path could never be smoothed however much room its nodes were given.
+BOOST_AUTO_TEST_CASE(resampling_keeps_the_corners_it_turns)
+{
+    const Blocked blocked;
+
+    // Up the left side of the block and along its top: legal, and it turns a right angle
+    // at the corner. The two legs are 27 long against a sampling of 10, so the corner
+    // falls between samples rather than on one, which is the ordinary case and the one
+    // that broke.
+    const std::vector<Point> around{{40, 33}, {40, 60}, {67, 60}};
+
+    for (const auto &parameters : {defaults(), BandParameters{}})
+    {
+        auto p = parameters;
+        p.comfort = 5.0;
+        const auto band = smooth(around, blocked.rings, p);
+
+        BOOST_CHECK(certificate_holds(band, blocked.rings));
+
+        // And the band survived, which is the point. Before the fix it did not: the
+        // resampled band cut the corner at (40,60), the certificate rightly refused it,
+        // and smooth() handed the input straight back -- legal, and untouched. So the
+        // symptom was not an illegal path but a band that never did anything.
+        BOOST_CHECK_GT(band.points.size(), around.size());
+
+        // And every vertex of the input is still represented, to within the distance the
+        // relaxation is allowed to move it.
+        for (const auto &vertex : around)
+        {
+            auto nearest = std::numeric_limits<double>::infinity();
+            for (const auto &point : band.points)
+            {
+                nearest = std::min(nearest, std::hypot(point.x - vertex.x, point.y - vertex.y));
+            }
+            BOOST_CHECK_LT(nearest, p.comfort);
         }
     }
 }
