@@ -23,7 +23,7 @@ Feature: Foot - Smoothing a route drawn across a plaza
     # way", where the taut route is 312 m: up to the obstacle's corner, 200 m along its
     # edge, and down from the other corner, turning 63 degrees at each.  Smoothed at a
     # 10 m margin it leaves p on a curve, passes each corner 10 m off it, and runs the
-    # length of the obstacle 10 m off its edge: 32 points against the taut path's 4, and
+    # length of the obstacle 10 m off its edge: 28 points against the taut path's 4, and
     # 24 m longer, which is what holding the margin costs.
     Scenario: Foot - The corners of an obstacle are rounded and the margin is held
         Given the node map
@@ -50,4 +50,4 @@ Feature: Foot - Smoothing a route drawn across a plaza
 
         When I route I should get
             | from | to | geometry                                                              | distance |
-            | p    | q  | kcbEembE_@MKCGCGAIAIAI?C?CAAACCAA?CAA?E?]?{H?I@C@E@ABABAB?JAFAHAFAFAJC^M | 335m +-2 |
+            | p    | q  | kcbEembEWKKCGAGAKCKAKAEAEAAAAAAEAC?C?uA?eG?G@E@A@CDCB?LAJANERE\K             | 335m +-2 |

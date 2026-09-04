@@ -31,24 +31,16 @@ struct BandParameters
      */
     double comfort = 0.0;
 
-    //! Tension. Pulls each node towards its neighbours, which is what shortens and
-    //! straightens the path. Above about two the band starts declining paths it cannot
-    //! certify, and above ten it throws them across the plaza.
+    //! Tension: the weight of the chord between a node's neighbours in deciding where
+    //! the node goes.  What shortens and straightens the path.
     double contraction = 1.5;
 
-    //! How hard obstacles push, relative to the tension. The two are in equilibrium at
-    //! the shape the band settles into, so only their ratio matters.
+    //! The weight of each obstacle within the comfort margin, against the tension.  The
+    //! two are in equilibrium at the shape the band settles into, so only their ratio
+    //! matters.  There is no step size: each sweep puts a node at the exact minimum of
+    //! its own energy given its neighbours, which is a weighted average of the chord and
+    //! the obstacles' targets and cannot overshoot; see relax().
     double repulsion = 1.0;
-
-    /**
-     * How much of the computed force is applied per sweep.
-     *
-     * Not a stability knob, which is what it looks like.  Smaller is worse here: the band
-     * is under-converged rather than overshooting, so halving the step just leaves it
-     * further from equilibrium when the sweeps run out.  Measured over the corpus, 0.02
-     * gives 17 degrees of turn where 0.5 gives 6.
-     */
-    double step = 0.5;
 
     /**
      * Target distance between nodes.  Left at zero it follows the comfort margin, which

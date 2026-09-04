@@ -7,6 +7,8 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <utility>
+#include <vector>
 
 namespace osrm::engine::area
 {
@@ -109,7 +111,7 @@ std::vector<Point> resample(std::span<const Point> path, const double spacing)
 /**
  * @brief The push away from everything nearby, not only from the nearest thing.
  *
- * Summed over every segment within the influence distance, each contributing
+ * Summed over every obstacle within the influence distance, each contributing
  * `(influence - distance)` along the direction away from it.
  *
  * Taking only the nearest feature, which is what the textbook force does, makes the
@@ -124,15 +126,31 @@ std::vector<Point> resample(std::span<const Point> path, const double spacing)
  * whole field is continuous and the medial axis stops being a feature of it.  This is the
  * Voronoi field of Dolgov et al. in the form this band needs.
  */
-Point repulsion_from_everything(const Point &at,
-                                std::span<const Ring> rings,
-                                const double influence)
+/**
+ * The obstacles within reach of a point: where they would each like it to be, summed, and
+ * how many of them there are.
+ *
+ * Each term is the displacement to that obstacle's target, the point `influence` away
+ * from it along the normal through the nearest point.  Summed it is the repulsion force;
+ * with the count it is enough to solve for the node exactly, see relax().
+ */
+struct Push
 {
     Point total{0.0, 0.0};
+    std::size_t count = 0;
+};
+
+Push repulsion_from_everything(const Point &at,
+                               std::span<const Ring> rings,
+                               const double influence,
+                               const double blend)
+{
+    Push push;
     if (!(influence > 0.0))
     {
-        return total;
+        return push;
     }
+    std::vector<std::pair<double, Point>> near; // distance and direction, per segment in reach
 
     for (const auto &ring : rings)
     {
@@ -162,15 +180,28 @@ Point repulsion_from_everything(const Point &at,
         // introduced for: the single nearest feature changes identity across the medial
         // axis and takes the force direction with it, and adding up everything in range
         // crosses that axis smoothly.
+        //
+        // Within one ring the same jump was still there, and it was most of the wobble.
+        // A corridor is one ring with two walls, so the nearest point flips from one wall
+        // to the other across the middle of it and the push flips with it; a concave
+        // corner of a plaza swings the normal through ninety degrees in one step.  So
+        // the magnitude is the ring's true nearest distance, which does not depend on
+        // how the ring is tessellated, and the direction is the softmin blend of every
+        // segment in reach, weighted by how close to nearest each is on the scale of the
+        // node spacing.  Two walls at equal distance then cancel to nothing instead of
+        // pushing at full strength either way, and a node passing a vertex sees the
+        // normal turn rather than jump.  Over the corpus at a five metre margin the gate
+        // was refusing 78% of bands before this, and the refused ones doubled back by
+        // 370 degrees at the median.
+        near.clear();
         auto nearest_squared = std::numeric_limits<double>::infinity();
-        Point nearest{0.0, 0.0};
         for (std::size_t i = 0; i < ring.size(); ++i)
         {
             const auto found = nearest_on_segment(at, ring[i], ring[(i + 1) % ring.size()]);
-            if (found.distance_squared < nearest_squared)
+            nearest_squared = std::min(nearest_squared, found.distance_squared);
+            if (found.distance_squared < influence * influence && found.distance_squared > 0.0)
             {
-                nearest_squared = found.distance_squared;
-                nearest = found.at;
+                near.emplace_back(std::sqrt(found.distance_squared), unit(at - found.at));
             }
         }
 
@@ -181,9 +212,21 @@ Point repulsion_from_everything(const Point &at,
         {
             continue;
         }
-        total = total + unit(at - nearest) * (influence - distance);
+        Point direction{0.0, 0.0};
+        auto weight_sum = 0.0;
+        for (const auto &[d, u] : near)
+        {
+            const auto weight = blend > 0.0 ? std::exp(-(d - distance) / blend) : (d == distance);
+            direction = direction + u * weight;
+            weight_sum += weight;
+        }
+        if (weight_sum > 0.0)
+        {
+            push.total = push.total + direction * ((influence - distance) / weight_sum);
+            ++push.count;
+        }
     }
-    return total;
+    return push;
 }
 
 /**
@@ -382,23 +425,19 @@ Band relax(std::span<const Point> path,
             const auto &next = band.points[i + 1];
             const auto at = band.points[i];
 
-            // Tension: pull towards the midpoint of the neighbours, so the force grows
-            // with how far the node is off the chord between them.
+            // Tension wants the node on the chord between its neighbours: the target is
+            // the midpoint, and only the part of the way there that is across the path
+            // counts.  The part along it slides nodes towards each other, bunching them
+            // in the middle while the geometry stays exactly as kinked as it was.
             //
             // Quinlan's normalised form, the sum of the two unit vectors, is scale-free
             // and was tried first.  Its magnitude decays with the curvature it is
             // removing, so it crawls exactly where the path is nearly straight, and
             // against a fixed sweep budget it does not arrive: an open square converged
-            // from 61 to 56 in thirty sweeps when the answer was 50.  Spacing is held by
-            // resampling and by the maintenance below, so the property that form buys is
-            // one this band does not need.
-            auto internal = ((previous + next) * 0.5 - at) * parameters.contraction;
-
-            // Only the part across the path changes its shape.  The part along it slides
-            // nodes towards each other, bunching them in the middle while the geometry
-            // stays exactly as kinked as it was.
+            // from 61 to 56 in thirty sweeps when the answer was 50.
             const auto tangent = unit(next - previous);
-            internal = internal - tangent * dot(internal, tangent);
+            const auto pull = (previous + next) * 0.5 - at;
+            const auto across = pull - tangent * dot(pull, tangent);
 
             const auto here = clearance(at, rings);
             // Faded in over the first stretch of the band, so the path leaves an anchor
@@ -406,7 +445,7 @@ Band relax(std::span<const Point> path,
             // it starts.
             const auto strength =
                 parameters.repulsion * anchor_ramp(from_anchor[i], parameters.comfort);
-            auto external = repulsion_from_everything(at, rings, parameters.comfort) * strength;
+            auto push = repulsion_from_everything(at, rings, parameters.comfort, spacing);
             if (here.distance <= ON_GEOMETRY && parameters.comfort > 0.0)
             {
                 // The geometry the node stands on is missing from that sum.  At no
@@ -434,10 +473,31 @@ Band relax(std::span<const Point> path,
                         away = left ? normal : normal * -1.0;
                     }
                 }
-                external = external + away * (parameters.comfort * strength);
+                push.total = push.total + away * parameters.comfort;
+                ++push.count;
             }
 
-            auto move = (internal + external) * parameters.step;
+            // The node goes to the minimum of its own energy given its neighbours, not a
+            // step towards it.  That energy is a sum of quadratics, one per target, so
+            // the minimum is the weighted average of the targets: the chord with the
+            // tension's weight and each obstacle's target with the repulsion's.
+            //
+            // Stepping was what wobbled.  A fixed fraction of the summed force is a
+            // relaxation whose gain is that fraction times the total stiffness, which is
+            // the tension plus one per obstacle in range, and above a gain of one the
+            // node overshoots its equilibrium every sweep.  In the open that gain was
+            // about one and the band worked; in a corridor it was nearly two, and among
+            // tree pits within the margin it was three or more, and the clamp below
+            // turned the divergence into a saw-tooth that ran for the whole sweep budget.
+            // Over the corpus at a five metre margin the gate refused 83% of bands for
+            // it.  Dividing by the stiffness makes the gain exactly one everywhere, which
+            // is the same iteration with the right step per node, and it cannot overshoot.
+            const auto stiffness =
+                parameters.contraction + strength * static_cast<double>(push.count);
+            auto move = stiffness > 0.0
+                            ? (across * parameters.contraction + push.total * strength) *
+                                  (1.0 / stiffness)
+                            : Point{0.0, 0.0};
 
             // Never leave the bubble in one step.  This is what carries the certificate
             // through the whole optimisation: if a node cannot leave its own disc of free

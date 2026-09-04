@@ -79,7 +79,6 @@ BandParameters defaults()
     p.comfort = 5.0;
     p.contraction = 1.0;
     p.repulsion = 1.0;
-    p.step = 0.3;
     p.sweeps = 60;
     // Stated rather than left to the default, because these fixtures are in the regime
     // where the hard margin dominates: a comfort margin of 5 on a 100 wide square is
@@ -247,16 +246,28 @@ BOOST_AUTO_TEST_CASE(it_holds_the_comfort_margin_where_there_is_room)
     const auto band = smooth(path, blocked.rings, parameters);
 
     // Past the block there is room on both sides, so the band should not be hugging it.
-    // Not the full margin: tension is pulling the other way and the equilibrium is
-    // between them. What matters is that it is off the geometry by a visible amount.
-    auto tightest = 1e18;
-    for (std::size_t i = 1; i + 1 < band.points.size(); ++i)
+    // Not the full margin: at a corner the node settles at the weighted average of the
+    // chord and the obstacle's target, so with tension and repulsion at equal weight it
+    // is about halfway out.  What matters is that it is off the geometry by a visible
+    // amount, and that weighting the repulsion more moves it further out.
+    const auto tightest_of = [&](const Band &b)
     {
-        tightest = std::min(tightest, clearance(band.points[i], blocked.rings).distance);
-    }
+        auto tightest = 1e18;
+        for (std::size_t i = 1; i + 1 < b.points.size(); ++i)
+        {
+            tightest = std::min(tightest, clearance(b.points[i], blocked.rings).distance);
+        }
+        return tightest;
+    };
+    const auto tightest = tightest_of(band);
     BOOST_TEST_MESSAGE("tightest clearance " << tightest << " against comfort "
                                              << parameters.comfort);
-    BOOST_CHECK_GT(tightest, parameters.comfort * 0.7);
+    BOOST_CHECK_GT(tightest, parameters.comfort * 0.5);
+
+    parameters.repulsion = 3.0;
+    const auto firmer = tightest_of(smooth(path, blocked.rings, parameters));
+    BOOST_CHECK_GT(firmer, tightest);
+    BOOST_CHECK_GT(firmer, parameters.comfort * 0.7);
 }
 
 BOOST_AUTO_TEST_CASE(running_it_again_changes_almost_nothing)
