@@ -102,7 +102,7 @@ Two things to know before turning it on. A /table cell is not rounded and still 
 the taut length, so with a margin set the distance of a route and the matching cell of a
 table disagree by the rounding; and a computed point lies on no node of the graph, so
 `annotations=nodes` books it to the corner it is rounding. The cost is microseconds a
-leg; `src/benchmarks/area_band.cpp` reports it beside the elastic band it replaced.
+leg; `src/benchmarks/area_fillet.cpp` reports it.
 
 ### Adding it to your own profile
 

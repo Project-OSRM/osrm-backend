@@ -1,6 +1,6 @@
 #include "engine/area_route.hpp"
 
-#include "engine/area_band.hpp"
+#include "engine/area_fillet.hpp"
 #include "engine/area_geodesic.hpp"
 
 #include "util/coordinate_calculation.hpp"
@@ -136,8 +136,8 @@ std::optional<NodeID> nodeAt(const datafacade::BaseDataFacade &facade, const uti
  * @brief One interior point of a leg drawn across an area: where it is, and which node it
  * is booked to.
  *
- * A bend of the taut path *is* a node, so it needs no coordinate of its own.  A point the
- * band computed is not on any node, so it carries its position in PathData::coordinate
+ * A bend of the taut path *is* a node, so it needs no coordinate of its own.  A point on
+ * an arc is not on any node, so it carries its position in PathData::coordinate
  * and is booked to the node of the nearest bend, because the annotations want a node for
  * every point and that is the honest one: it is the corner the point is rounding.
  */
@@ -149,11 +149,11 @@ struct Stop
 };
 
 /**
- * @brief The shape a leg is drawn as: the taut bends, or the band's rounding of them.
+ * @brief The shape a leg is drawn as: the taut bends, or those bends rounded into arcs.
  *
- * With no margin, or when the band declines, the bends are the shape and nothing about
- * the leg changes.  With a margin the taut path is handed to the band; what it certifies
- * is drawn instead, every interior point computed.
+ * With no margin, or when no rounding is legal, the bends are the shape and nothing about
+ * the leg changes.  With a margin the taut path is handed to round_corners(); what comes
+ * back is drawn instead, every interior point computed.
  *
  * A path with no bends still has to book its points somewhere, and the only node in the
  * story is the vertex the traveller's coordinate snapped to.  When that cannot be found
@@ -186,7 +186,7 @@ std::vector<Stop> shapeOf(const datafacade::BaseDataFacade &facade,
     path.insert(path.end(), geodesic.bends.begin(), geodesic.bends.end());
     path.push_back(to);
 
-    const auto smoothed = smooth_coordinates(facade.GetOpenAreaRings(area), path, margin);
+    const auto smoothed = round_corners(facade.GetOpenAreaRings(area), path, margin);
     if (!smoothed)
     {
         return taut;

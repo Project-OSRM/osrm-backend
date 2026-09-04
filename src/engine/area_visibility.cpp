@@ -9,16 +9,6 @@
 namespace osrm::engine::area
 {
 
-namespace
-{
-/** Call `function` for every edge of the ring, closing it. */
-template <typename Fun> void for_each_edge(Ring ring, Fun function)
-{
-    for (std::size_t i = 0; i < ring.size(); ++i)
-        function(ring[i], ring[(i + 1) % ring.size()]);
-}
-
-/** The squared distance from `point` to the segment a..b. */
 double distance_squared_to_segment(const Point &point, const Point &a, const Point &b)
 {
     const auto dx = b.x - a.x, dy = b.y - a.y;
@@ -30,6 +20,15 @@ double distance_squared_to_segment(const Point &point, const Point &a, const Poi
     }
     const auto ex = point.x - (a.x + t * dx), ey = point.y - (a.y + t * dy);
     return ex * ex + ey * ey;
+}
+
+namespace
+{
+/** Call `function` for every edge of the ring, closing it. */
+template <typename Fun> void for_each_edge(Ring ring, Fun function)
+{
+    for (std::size_t i = 0; i < ring.size(); ++i)
+        function(ring[i], ring[(i + 1) % ring.size()]);
 }
 
 /** Whether `point` lies on the boundary of any ring, to within `tolerance`. */
@@ -143,6 +142,26 @@ bool segment_in_closed_area(const Point &from, const Point &to, std::span<const 
         const auto middle = (cuts[i] + cuts[i + 1]) / 2;
         const Point at{from.x + dx * middle, from.y + dy * middle};
         if (!in_closed_area(at, rings, tolerance))
+        {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool path_in_closed_area(std::span<const Point> points, std::span<const Ring> rings)
+{
+    if (points.empty())
+    {
+        return true;
+    }
+    if (points.size() == 1)
+    {
+        return segment_in_closed_area(points.front(), points.front(), rings);
+    }
+    for (std::size_t i = 0; i + 1 < points.size(); ++i)
+    {
+        if (!segment_in_closed_area(points[i], points[i + 1], rings))
         {
             return false;
         }

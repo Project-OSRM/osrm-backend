@@ -11,40 +11,10 @@
 namespace osrm::engine::area
 {
 
-namespace
-{
-
-/**
- * The squared distance from @p p to the segment a..b, by projecting onto the line and
- * clamping to the segment.  A degenerate segment, which OSM rings do produce, collapses
- * to its first point rather than dividing by zero.
- */
-double distance_squared_to_segment(const Point &p, const Point &a, const Point &b)
-{
-    const auto dx = b.x - a.x;
-    const auto dy = b.y - a.y;
-    const auto length_squared = dx * dx + dy * dy;
-
-    auto t = 0.0;
-    if (length_squared > 0.0)
-    {
-        t = std::clamp(((p.x - a.x) * dx + (p.y - a.y) * dy) / length_squared, 0.0, 1.0);
-    }
-
-    const auto ex = p.x - (a.x + t * dx);
-    const auto ey = p.y - (a.y + t * dy);
-    return ex * ex + ey * ey;
-}
-
-} // namespace
-
 Clearance clearance(const Point &point, std::span<const Ring> rings)
 {
     Clearance best;
     auto best_squared = std::numeric_limits<double>::infinity();
-    // The nearest thing that is not what the point is already standing on; see
-    // Clearance::room.
-    auto room_squared = std::numeric_limits<double>::infinity();
 
     for (const auto &ring : rings)
     {
@@ -58,10 +28,6 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
             const auto found =
                 distance_squared_to_segment(point, ring[i], ring[(i + 1) % ring.size()]);
             best_squared = std::min(best_squared, found);
-            if (found > ON_GEOMETRY * ON_GEOMETRY && found < room_squared)
-            {
-                room_squared = found;
-            }
         }
     }
 
@@ -71,7 +37,6 @@ Clearance clearance(const Point &point, std::span<const Ring> rings)
     }
 
     best.distance = std::sqrt(best_squared);
-    best.room = std::isfinite(room_squared) ? std::sqrt(room_squared) : best.distance;
     // Free space is inside the outer ring and outside every obstacle, and which side of
     // the geometry the point is on is settled here rather than left to the caller because
     // the distance is meaningless without it: the two sides of a wall are the same

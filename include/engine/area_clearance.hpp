@@ -11,10 +11,8 @@ namespace osrm::engine::area
 /**
  * @brief How much room there is at a point.
  *
- * This is the quantity an elastic band is built on.  The clearance is the radius of a
- * disc around the point that is guaranteed free of geometry, so a path whose consecutive
- * points have overlapping discs is collision-free without any segment-versus-obstacle
- * test ever being done.
+ * The radius of a disc around the point that is guaranteed free of geometry.  What the
+ * corner offset in round_corners() asks for, to know how far off a wall a corner may go.
  */
 struct Clearance
 {
@@ -36,20 +34,6 @@ struct Clearance
      * answer -- it has no room, and it does not need any.
      */
     bool inside = false;
-    /**
-     * The distance to the nearest geometry the point is not already standing on.
-     *
-     * For a point with room around it this is just the clearance.  For one on the
-     * boundary it is the thing the clearance cannot tell you: standing against a wall,
-     * how far is it to anything else?  That is the room the point actually has to move
-     * in, and a node on a wall has plenty of it while its clearance says zero.
-     *
-     * It is not a free disc and does not certify anything -- the disc it describes
-     * straddles the wall the point is on.  It bounds how far a node may be moved in one
-     * step, which is a question about room and not about proof; a step that leaves the
-     * free space is caught by testing the ground it covers.
-     */
-    double room = 0.0;
 };
 
 /**

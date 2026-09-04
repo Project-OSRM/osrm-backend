@@ -118,6 +118,17 @@ bool in_closed_area(const Point &point, std::span<const Ring> rings, double tole
 bool segment_in_closed_area(const Point &from, const Point &to, std::span<const Ring> rings);
 
 /**
+ * @brief Return true if every segment of the polyline is in the closed free space.
+ *
+ * Empty and single-point paths are legal when their one point is.  This is the test the
+ * drawn shape of a plaza route has to pass, see round_corners() in area_fillet.hpp.
+ */
+bool path_in_closed_area(std::span<const Point> points, std::span<const Ring> rings);
+
+/** The squared distance from @p point to the segment a..b. */
+double distance_squared_to_segment(const Point &point, const Point &a, const Point &b);
+
+/**
  * @brief Return the indices of the area's vertices that the point can see.
  *
  * A vertex is visible when the straight line to it stays inside the area: it crosses no

@@ -61,7 +61,7 @@ BOOST_AUTO_TEST_CASE(a_straight_path_is_handed_back_as_it_is)
     const std::vector<Point> line{{10, 10}, {30, 10}};
     const auto out = round_corners(line, plaza.rings, 5.0);
     BOOST_REQUIRE_EQUAL(out.points.size(), 2u);
-    BOOST_CHECK(out.certified);
+    BOOST_CHECK(out.legal);
 }
 
 BOOST_AUTO_TEST_CASE(a_corner_becomes_an_arc_and_the_runs_stay_straight)
@@ -70,7 +70,7 @@ BOOST_AUTO_TEST_CASE(a_corner_becomes_an_arc_and_the_runs_stay_straight)
     // Round the block's south-east corner, from the low corner of the square to the high.
     const std::vector<Point> taut{{20, 20}, {60, 40}, {80, 80}};
     const auto out = round_corners(taut, plaza.rings, 5.0);
-    BOOST_REQUIRE(out.certified);
+    BOOST_REQUIRE(out.legal);
     BOOST_CHECK_GT(out.points.size(), 3u);
     BOOST_CHECK(out.points.front().x == 20 && out.points.front().y == 20);
     BOOST_CHECK(out.points.back().x == 80 && out.points.back().y == 80);
@@ -107,7 +107,7 @@ BOOST_AUTO_TEST_CASE(a_passage_narrower_than_the_margin_gets_what_fits)
     std::vector<Ring> rings{Ring{outer}, Ring{block}};
     const std::vector<Point> taut{{10, 20}, {30, 6}, {70, 6}, {90, 20}};
     const auto out = round_corners(taut, rings, 5.0);
-    BOOST_REQUIRE(out.certified);
+    BOOST_REQUIRE(out.legal);
     for (const auto &p : out.points)
     {
         BOOST_CHECK(in_closed_area(p, rings, ON_GEOMETRY));
@@ -125,6 +125,195 @@ BOOST_AUTO_TEST_CASE(round_corners_is_deterministic)
     for (std::size_t i = 0; i < once.points.size(); ++i)
     {
         BOOST_CHECK(once.points[i].x == twice.points[i].x && once.points[i].y == twice.points[i].y);
+    }
+}
+
+
+// ---- the legality test the construction relies on ------------------------------------
+
+// An anchor on a corner of the block, with the segment leaving it straight through the
+// block.  A proper-crossing test cannot see this: the anchor is a vertex of the ring and
+// shares an endpoint with the two edges there, which such a test exempts.
+BOOST_AUTO_TEST_CASE(a_segment_from_a_corner_into_the_obstacle_is_not_legal)
+{
+    const Blocked plaza;
+    const std::vector<Point> diagonal{{40, 40}, {60, 60}};
+    BOOST_CHECK(!path_in_closed_area(diagonal, plaza.rings));
+
+    // Leaving the same corner into the open is legal.
+    const std::vector<Point> away{{40, 40}, {20, 20}};
+    BOOST_CHECK(path_in_closed_area(away, plaza.rings));
+
+    // Along an edge of the block: legal ground.  The free space is closed, so a path may
+    // run against an obstacle, which is what a shortest path does.
+    const std::vector<Point> grazing{{40, 40}, {60, 40}};
+    BOOST_CHECK(path_in_closed_area(grazing, plaza.rings));
+
+    // The whole way round the block, touching it for the entire length: still legal.
+    const std::vector<Point> around{{40, 40}, {60, 40}, {60, 60}, {40, 60}, {40, 40}};
+    BOOST_CHECK(path_in_closed_area(around, plaza.rings));
+
+    // Along the outer wall of the square, which is boundary too.
+    const std::vector<Point> wall{{0, 0}, {100, 0}};
+    BOOST_CHECK(path_in_closed_area(wall, plaza.rings));
+
+    // Leaving the plaza altogether is not legal, however much room is on the far side.
+    const std::vector<Point> outside{{50, 10}, {50, -10}};
+    BOOST_CHECK(!path_in_closed_area(outside, plaza.rings));
+
+    // Cutting the corner of the block: legal at both ends, through the obstacle between.
+    const std::vector<Point> corner{{50, 40}, {40, 50}};
+    BOOST_CHECK(!path_in_closed_area(corner, plaza.rings));
+
+    // What round_corners() does with a path through the block: hands it back, saying so.
+    const std::vector<Point> through{{40, 40}, {50, 50}, {60, 60}};
+    const auto out = round_corners(through, plaza.rings, 5.0);
+    BOOST_CHECK(!out.legal);
+    BOOST_CHECK_EQUAL(out.points.size(), through.size());
+
+    // A taut path grazes the geometry, which is legal, and its corners get rounded.  This
+    // one is genuinely taut, the shortest way from one side of the block to the other
+    // below it: the geometry is on the inside of both turns, which is what a shortest
+    // path looks like and what the corner offset assumes.
+    const std::vector<Point> taut{{20, 35}, {40, 40}, {60, 40}, {70, 55}};
+    const auto rounded = round_corners(taut, plaza.rings, 5.0);
+    BOOST_CHECK(rounded.legal);
+    BOOST_CHECK_GT(rounded.points.size(), taut.size());
+}
+
+BOOST_AUTO_TEST_CASE(degenerate_input_is_handed_back)
+{
+    const Blocked plaza;
+    const std::vector<Point> single{{50, 20}};
+    BOOST_CHECK_EQUAL(round_corners(single, plaza.rings, 5.0).points.size(), 1u);
+    const std::vector<Point> pair{{20, 20}, {80, 20}};
+    BOOST_CHECK_EQUAL(round_corners(pair, plaza.rings, 5.0).points.size(), 2u);
+    // Two coincident points: nothing to round.
+    const std::vector<Point> same{{50, 20}, {50, 20}};
+    const auto out = round_corners(same, plaza.rings, 5.0);
+    BOOST_CHECK_EQUAL(out.points.size(), 2u);
+    BOOST_CHECK(out.legal);
+    // No margin: as given.
+    const std::vector<Point> taut{{20, 20}, {60, 40}, {80, 80}};
+    BOOST_CHECK_EQUAL(round_corners(taut, plaza.rings, 0.0).points.size(), 3u);
+}
+
+// ---- round_corners(), for coordinates: what the engine calls ---------------------------
+
+namespace
+{
+
+//! Metres per degree at the equator, so a fixture can be laid out in metres.
+constexpr double METRES_PER_DEGREE = 111194.9;
+
+util::Coordinate at_metres(const double x, const double y)
+{
+    return {util::FloatLongitude{x / METRES_PER_DEGREE},
+            util::FloatLatitude{y / METRES_PER_DEGREE}};
+}
+
+// The Blocked fixture, laid out in coordinates: a 100 m square with a 20 m block in the
+// middle, and the taut path from the low corner to the high one, which turns on the
+// block's south-east corner.
+struct BlockedInCoordinates
+{
+    std::vector<util::Coordinate> outer{
+        at_metres(0, 0), at_metres(100, 0), at_metres(100, 100), at_metres(0, 100)};
+    std::vector<util::Coordinate> block{
+        at_metres(40, 40), at_metres(60, 40), at_metres(60, 60), at_metres(40, 60)};
+    std::vector<std::span<const util::Coordinate>> rings;
+    std::vector<util::Coordinate> taut{at_metres(20, 20), at_metres(60, 40), at_metres(80, 80)};
+    BlockedInCoordinates()
+    {
+        rings.emplace_back(outer);
+        rings.emplace_back(block);
+    }
+    std::vector<Point> projected_outer = projected(outer);
+    std::vector<Point> projected_block = projected(block);
+    std::vector<Ring> projected_rings() const
+    {
+        return {Ring{projected_outer}, Ring{projected_block}};
+    }
+    static std::vector<Point> projected(const std::vector<util::Coordinate> &coordinates)
+    {
+        std::vector<Point> points;
+        for (const auto c : coordinates)
+        {
+            points.push_back(project(c));
+        }
+        return points;
+    }
+};
+
+double path_length(const std::vector<Point> &points)
+{
+    auto total = 0.0;
+    for (std::size_t i = 1; i < points.size(); ++i)
+        total += std::hypot(points[i].x - points[i - 1].x, points[i].y - points[i - 1].y);
+    return total;
+}
+
+} // namespace
+
+BOOST_AUTO_TEST_CASE(no_margin_draws_the_path_as_given)
+{
+    const BlockedInCoordinates plaza;
+    BOOST_CHECK(!round_corners(plaza.rings, plaza.taut, 0.0));
+    BOOST_CHECK(!round_corners(plaza.rings, plaza.taut, -1.0));
+}
+
+BOOST_AUTO_TEST_CASE(a_straight_line_across_the_open_is_not_redrawn)
+{
+    // Nothing to round on a straight line, and the answer says so rather than hand back
+    // a copy to be carried as computed.
+    const BlockedInCoordinates plaza;
+    const std::vector<util::Coordinate> line{at_metres(5, 5), at_metres(30, 5)};
+    BOOST_CHECK(!round_corners(plaza.rings, line, 2.0));
+}
+
+BOOST_AUTO_TEST_CASE(a_corner_is_rounded_and_the_anchors_are_kept_exactly)
+{
+    const BlockedInCoordinates plaza;
+    const auto drawn = round_corners(plaza.rings, plaza.taut, 2.0);
+    BOOST_REQUIRE(drawn);
+    BOOST_CHECK_GT(drawn->size(), plaza.taut.size());
+
+    // Anchors are the traveller's own coordinates and do not drift by a projection.
+    BOOST_CHECK(drawn->front() == plaza.taut.front());
+    BOOST_CHECK(drawn->back() == plaza.taut.back());
+
+    // Every point is on legal ground, and the corner it rounds is rounded: the sharpest
+    // turn is gentler than the 37 degrees the taut path turns at the block's corner.
+    const auto rings = plaza.projected_rings();
+    std::vector<Point> points;
+    for (const auto c : *drawn)
+    {
+        points.push_back(project(c));
+    }
+    for (const auto &p : points)
+    {
+        BOOST_CHECK(in_closed_area(p, rings, ON_GEOMETRY));
+    }
+    std::vector<Point> taut;
+    for (const auto c : plaza.taut)
+    {
+        taut.push_back(project(c));
+    }
+    BOOST_CHECK_LT(sharpest_turn(points), sharpest_turn(taut));
+    // and a little longer, which is what the margin costs
+    BOOST_CHECK_GE(path_length(points), path_length(taut));
+}
+
+BOOST_AUTO_TEST_CASE(rounding_coordinates_is_deterministic)
+{
+    const BlockedInCoordinates plaza;
+    const auto once = round_corners(plaza.rings, plaza.taut, 2.0);
+    const auto twice = round_corners(plaza.rings, plaza.taut, 2.0);
+    BOOST_REQUIRE(once && twice);
+    BOOST_REQUIRE_EQUAL(once->size(), twice->size());
+    for (std::size_t i = 0; i < once->size(); ++i)
+    {
+        BOOST_CHECK((*once)[i] == (*twice)[i]);
     }
 }
 

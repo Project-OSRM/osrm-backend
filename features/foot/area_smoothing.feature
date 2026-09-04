@@ -2,8 +2,8 @@
 Feature: Foot - Smoothing a route drawn across a plaza
 
     # The shortest way across a plaza bends exactly on the corners it passes.  With a
-    # comfort margin set the leg is handed to the elastic band (engine/area_band.hpp),
-    # which holds it that far off the geometry and rounds the corners it turns.
+    # margin set the leg is redrawn as straight lines and arcs (engine/area_fillet.hpp),
+    # each corner moved that far off the geometry and replaced by a tangent arc.
     #
     # Off by default, and every scenario in area_snapping.feature runs with it off; this
     # file is the one place it is on, so the diff that changes the drawn shape of a plaza

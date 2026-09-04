@@ -1,24 +1,15 @@
 /*
- * What does it cost to smooth a plaza path?
+ * What does it cost to round the corners of a plaza path?
  *
- * The elastic band (engine/area_band.hpp) rounds the corners of a taut path and holds it
- * off the geometry by a comfort margin.  The plan's budget for the whole area answer is
- * about a millisecond, and the band has to be measured against that before it is switched
- * on anywhere: a /route pays it once per leg, a /table would pay it per cell.
+ * round_corners() (engine/area_fillet.hpp) redraws a taut path as straight lines and
+ * tangent arcs held a margin off the geometry.  A /route pays it once per leg across an
+ * area; a /table would pay it per cell, which is why it is measured.
  *
- * This times smooth() over taut paths threading a grid of square obstacles, at the
- * comfort margins a profile would set, and beside it round_corners(), the straight-lines-
- * and-arcs construction that replaced the band as what the engine draws.  Units are
- * metres throughout, which is what both see after metres_per_projected_unit().
- *
- * The paths are 1.25 km long, far longer than any plaza leg, so that the per-node cost
- * shows and the totals are read as rates rather than as what a request pays: about 1.7
- * microseconds per node per ring vertex, measured 2026-09-04.  A row whose node count is
- * the taut path's own is one the reversal gate declined after paying the full cost, which
- * happens at the finest margins here because five thousand nodes of sub-degree jitter sum
- * to more than the gate's slack; plaza-length paths do not reach that.
+ * This times it over taut paths threading a grid of square obstacles, at the margins a
+ * profile would set.  Units are metres throughout, which is what it sees after
+ * metres_per_projected_unit() has been applied.  The paths are 1.25 km long, far longer
+ * than any plaza leg, so the totals read as rates.
  */
-#include "engine/area_band.hpp"
 #include "engine/area_fillet.hpp"
 
 #include <chrono>
@@ -32,10 +23,9 @@
 namespace
 {
 
-using osrm::engine::area::BandParameters;
 using osrm::engine::area::Point;
 using osrm::engine::area::Ring;
-using osrm::engine::area::smooth;
+using osrm::engine::area::round_corners;
 
 /** A 1 km square plaza with a grid of 45 m blocks in it, as area_geodesic.cpp lays out. */
 struct Plaza
@@ -94,56 +84,40 @@ double length(std::span<const Point> points)
 
 int main()
 {
-    std::cout << "smooth() over a taut path threading a grid of obstacles, per band\n\n"
+    std::cout << "round_corners() over a taut path threading a grid of obstacles, per path\n\n"
               << std::setw(8) << "vertices" << std::setw(7) << "bends" << std::setw(9)
-              << "margin" << std::setw(10) << "nodes" << std::setw(11) << "certified"
-              << std::setw(10) << "length" << std::setw(12) << "microsec" << std::setw(14)
-              << "arcs microsec" << '\n';
+              << "margin" << std::setw(10) << "points" << std::setw(8) << "legal"
+              << std::setw(10) << "length" << std::setw(12) << "microsec" << '\n';
 
     for (const std::size_t per_side : {1, 2, 3, 4, 6})
     {
         const Plaza plaza(per_side);
         for (const double margin : {1.0, 2.0, 5.0})
         {
-            BandParameters parameters;
-            parameters.comfort = margin;
-
-            // enough runs that the number is the band's and not the clock's
-            constexpr int RUNS = 20;
-            auto nodes = std::size_t{0};
-            auto certified = true;
+            // enough runs that the number is the construction's and not the clock's
+            constexpr int RUNS = 2000;
+            auto points = std::size_t{0};
+            auto legal = true;
             auto ratio = 0.0;
             const auto started = std::chrono::steady_clock::now();
             for (int run = 0; run < RUNS; ++run)
             {
-                const auto band = smooth(plaza.taut, plaza.rings, parameters);
-                nodes = band.points.size();
-                certified = band.certified;
-                ratio = length(band.points) / length(plaza.taut);
+                const auto rounded = round_corners(plaza.taut, plaza.rings, margin);
+                points = rounded.points.size();
+                legal = rounded.legal;
+                ratio = length(rounded.points) / length(plaza.taut);
             }
             const auto elapsed = std::chrono::duration<double, std::micro>(
                                      std::chrono::steady_clock::now() - started)
                                      .count() /
                                  RUNS;
 
-            const auto started_arcs = std::chrono::steady_clock::now();
-            for (int run = 0; run < RUNS; ++run)
-            {
-                const auto rounded = round_corners(plaza.taut, plaza.rings, margin);
-                (void)rounded;
-            }
-            const auto elapsed_arcs = std::chrono::duration<double, std::micro>(
-                                          std::chrono::steady_clock::now() - started_arcs)
-                                          .count() /
-                                      RUNS;
-
             std::cout << std::setw(8) << plaza.vertices() << std::setw(7)
                       << plaza.taut.size() - 2 << std::setw(8) << std::fixed
-                      << std::setprecision(0) << margin << "m" << std::setw(10) << nodes
-                      << std::setw(11) << (certified ? "yes" : "no") << std::setw(9)
+                      << std::setprecision(0) << margin << "m" << std::setw(10) << points
+                      << std::setw(8) << (legal ? "yes" : "no") << std::setw(9)
                       << std::setprecision(3) << ratio << "x" << std::setw(12)
-                      << std::setprecision(0) << elapsed << std::setw(14) << elapsed_arcs
-                      << '\n';
+                      << std::setprecision(1) << elapsed << '\n';
         }
     }
     return 0;
