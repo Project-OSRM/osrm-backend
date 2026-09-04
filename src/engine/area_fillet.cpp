@@ -294,9 +294,40 @@ std::vector<Point> thin(std::span<const Point> points, const double tolerance)
 
 } // namespace
 
-RoundedPath
-round_corners(std::span<const Point> path, std::span<const Ring> rings, const double margin)
+std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> rings)
 {
+    std::vector<Point> pulled;
+    if (path.empty())
+    {
+        return pulled;
+    }
+    pulled.push_back(path.front());
+    const auto n = path.size();
+    std::size_t at = 0;
+    while (at + 1 < n)
+    {
+        // the farthest vertex ahead that can be reached in a straight line; the next
+        // vertex if none can, so a segment of the input that is illegal is kept as it is
+        auto next = at + 1;
+        for (auto k = n - 1; k > at + 1; --k)
+        {
+            if (segment_in_closed_area(path[at], path[k], rings))
+            {
+                next = k;
+                break;
+            }
+        }
+        pulled.push_back(path[next]);
+        at = next;
+    }
+    return pulled;
+}
+
+RoundedPath
+round_corners(std::span<const Point> given, std::span<const Ring> rings, const double margin)
+{
+    const auto pulled = pull_taut(given, rings);
+    const std::span<const Point> path{pulled};
     const auto n = path.size();
     if (n < 3 || !(margin > 0.0))
     {

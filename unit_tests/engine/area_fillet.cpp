@@ -181,6 +181,60 @@ BOOST_AUTO_TEST_CASE(a_segment_from_a_corner_into_the_obstacle_is_not_legal)
     BOOST_CHECK_GT(rounded.points.size(), taut.size());
 }
 
+// ---- pulling taut: what a path from anything but the visibility graph needs first --------
+
+BOOST_AUTO_TEST_CASE(a_wobble_in_the_open_is_pulled_to_a_straight_line)
+{
+    const Blocked plaza;
+    const std::vector<Point> wobble{{10, 10}, {20, 12}, {30, 8}, {40, 12}, {50, 10}};
+    const auto pulled = pull_taut(wobble, plaza.rings);
+    BOOST_REQUIRE_EQUAL(pulled.size(), 2u);
+    BOOST_CHECK(pulled.front().x == 10 && pulled.back().x == 50);
+
+    // and rounding it draws nothing new: a straight line is handed back as it is
+    const auto out = round_corners(wobble, plaza.rings, 5.0);
+    BOOST_CHECK(out.legal);
+    BOOST_CHECK_EQUAL(out.points.size(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(a_staircase_round_the_block_is_pulled_to_the_taut_path)
+{
+    const Blocked plaza;
+    // A grid search's way past the block: steps that a straight line could replace, up
+    // to the corner it has to turn at, then steps again.
+    const std::vector<Point> staircase{
+        {20, 20}, {30, 25}, {40, 30}, {50, 35}, {60, 40}, {65, 50}, {70, 60}, {80, 80}};
+    const std::vector<Point> taut{{20, 20}, {60, 40}, {80, 80}};
+
+    const auto pulled = pull_taut(staircase, plaza.rings);
+    BOOST_REQUIRE_EQUAL(pulled.size(), 3u);
+    BOOST_CHECK(pulled[1].x == 60 && pulled[1].y == 40);
+
+    // So the staircase is drawn exactly as the taut path is.
+    const auto from_stairs = round_corners(staircase, plaza.rings, 5.0);
+    const auto from_taut = round_corners(taut, plaza.rings, 5.0);
+    BOOST_REQUIRE(from_stairs.legal && from_taut.legal);
+    BOOST_REQUIRE_EQUAL(from_stairs.points.size(), from_taut.points.size());
+    for (std::size_t i = 0; i < from_taut.points.size(); ++i)
+    {
+        BOOST_CHECK_SMALL(from_stairs.points[i].x - from_taut.points[i].x, 1e-9);
+        BOOST_CHECK_SMALL(from_stairs.points[i].y - from_taut.points[i].y, 1e-9);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(a_taut_path_is_left_alone_by_pulling)
+{
+    const Blocked plaza;
+    // Every vertex forced: the chord across either corner cuts into the block.
+    const std::vector<Point> taut{{20, 45}, {40, 40}, {60, 40}, {70, 55}};
+    const auto pulled = pull_taut(taut, plaza.rings);
+    BOOST_REQUIRE_EQUAL(pulled.size(), taut.size());
+    // and a path through the obstacle is kept as it is, since no shortcut is legal
+    const std::vector<Point> through{{40, 40}, {50, 50}, {60, 60}};
+    BOOST_CHECK_EQUAL(pull_taut(through, plaza.rings).size(), 3u);
+    BOOST_CHECK(!round_corners(through, plaza.rings, 5.0).legal);
+}
+
 BOOST_AUTO_TEST_CASE(degenerate_input_is_handed_back)
 {
     const Blocked plaza;

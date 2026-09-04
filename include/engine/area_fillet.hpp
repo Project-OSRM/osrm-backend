@@ -25,11 +25,31 @@ struct RoundedPath
 };
 
 /**
- * @brief Round the corners of a taut path with tangent arcs, held off the geometry by a
+ * @brief Pull a path taut: drop every vertex that the path can do without.
+ *
+ * From each kept vertex the next kept one is the farthest vertex ahead that a straight
+ * segment can reach through the closed free space; everything between is dropped.
+ * What remains is straight runs between corners the geometry forces, which is what
+ * round_corners() assumes of its input.  A shortest path from the visibility graph is
+ * already that and comes back unchanged.  A path from anything else, a grid search with
+ * its staircase of steps, a mesh path with a collinear vertex, a trace with noise in it,
+ * is not, and rounding it as it stands rounds every step and keeps the wobble.
+ *
+ * Vertices are removed, not moved: a corner that stays is left where it was, which may
+ * be a little off the obstacle it turns around rather than on it.  The rounding does not
+ * mind.  A segment of the input that is itself outside the free space is kept as it is,
+ * and the result's legality is judged downstream.
+ *
+ * The anchors are never dropped.
+ */
+std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> rings);
+
+/**
+ * @brief Round the corners of a path with tangent arcs, held off the geometry by a
  * margin, the way a road is set out.
  *
- * The taut path is straight runs between the corners it turns at, and every corner sits
- * on the geometry.  Each corner is moved out along its bisector, as far as the first
+ * The path is pulled taut first, see pull_taut(), so what is rounded is straight runs
+ * between the corners the geometry forces, each corner on the inside of its turn.  Each corner is moved out along its bisector, as far as the first
  * point with the margin of room around it or the widest point if none has that much, so
  * that the runs either side sit off the edges they were grazing; and it is then replaced
  * by a circular arc tangent to both runs, of the margin's radius where the runs are long
@@ -50,10 +70,11 @@ struct RoundedPath
  * corner went from 46 degrees to 18, the band's best was 37, and the cost per leg from
  * tens of milliseconds to microseconds.
  *
- * @param path    at least two points, the first and last being the anchors
+ * @param path    at least two points, the first and last being the anchors; need not be
+ *                taut
  * @param rings   the area, outer ring first
  * @param margin  how far off the geometry to hold the path, in projected units
- * @return the rounded path, or the taut path as given when no rounding is legal
+ * @return the rounded path, or the pulled path unrounded when no rounding is legal
  */
 RoundedPath
 round_corners(std::span<const Point> path, std::span<const Ring> rings, double margin);
