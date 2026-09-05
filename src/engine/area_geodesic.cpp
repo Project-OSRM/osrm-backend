@@ -355,8 +355,11 @@ geodesic_between(std::uint32_t dataset,
         // near misses the full price of an answer that is about to be thrown away.
         SolvedArea candidate;
         flatten(rings, candidate);
-        if (!inside_area(projected_from, candidate.rings) ||
-            !inside_area(projected_to, candidate.rings))
+        // The closed free space: a point on a ring is legal ground, and the corners of
+        // the geometry are exactly the points a stretch of a path being re-routed
+        // starts and ends on.  The strict test answered arbitrarily for those.
+        if (!in_closed_area(projected_from, candidate.rings, ON_GEOMETRY) ||
+            !in_closed_area(projected_to, candidate.rings, ON_GEOMETRY))
         {
             return std::nullopt;
         }
@@ -372,7 +375,8 @@ geodesic_between(std::uint32_t dataset,
         }
         area = &cache().put(key, std::move(candidate));
     }
-    else if (!inside_area(projected_from, area->rings) || !inside_area(projected_to, area->rings))
+    else if (!in_closed_area(projected_from, area->rings, ON_GEOMETRY) ||
+             !in_closed_area(projected_to, area->rings, ON_GEOMETRY))
     {
         return std::nullopt;
     }

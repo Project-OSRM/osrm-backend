@@ -82,7 +82,7 @@ inline constexpr std::size_t GEODESIC_CACHE_SIZE = 32;
  *                           not apply; without it, or when it is empty for every vertex,
  *                           the graph is built here as before.
  *
- * @return the geodesic, or nothing if either point is outside the area, if no path runs
+ * @return the geodesic, or nothing if either point is outside the closed area, if no path runs
  *         between them, or if the graph has to be built and the area is larger than
  *         GEODESIC_MAX_VERTICES.  Nothing always means "route this the ordinary way",
  *         never "there is no route".

@@ -309,6 +309,50 @@ BOOST_AUTO_TEST_CASE(pulling_hops_an_obstacle_it_wraps_with_several_vertices)
     BOOST_CHECK_EQUAL(pull_taut(wrapped, rings, 3.0).size(), 2u);
 }
 
+BOOST_AUTO_TEST_CASE(pulling_asks_the_planner_when_the_inside_needs_new_corners)
+{
+    // A pit just north of the block, and a path that goes over the pit's north.  The
+    // way past on the pit's south runs along the block's top, by way of two corners the
+    // path does not have, so no chord can find it and a planner is asked.
+    std::vector<Point> outer{{0, 0}, {100, 0}, {100, 100}, {0, 100}};
+    std::vector<Point> block{{40, 40}, {60, 40}, {60, 60}, {40, 60}};
+    std::vector<Point> pit{{45, 66}, {47, 66}, {47, 68}, {45, 68}};
+    std::vector<Ring> rings{Ring{outer}, Ring{block}, Ring{pit}};
+    const std::vector<Point> over_the_pit{{20, 50}, {45, 68}, {47, 68}, {80, 50}};
+
+    auto asked = 0;
+    const auto planner = [&](const Point &a, const Point &b) -> std::optional<std::vector<Point>>
+    {
+        ++asked;
+        if (a.x == 20 && b.x == 80)
+        {
+            return std::vector<Point>{a, {40, 60}, {60, 60}, b};
+        }
+        return std::nullopt;
+    };
+
+    // without a planner the pit is kept on its side, with one the planner's way is taken
+    BOOST_CHECK_EQUAL(pull_taut(over_the_pit, rings, 3.0).size(), 4u);
+    const auto pulled = pull_taut(over_the_pit, rings, 3.0, Replan{planner});
+    BOOST_REQUIRE_EQUAL(pulled.size(), 4u);
+    BOOST_CHECK(pulled[1].x == 40 && pulled[1].y == 60);
+    BOOST_CHECK(pulled[2].x == 60 && pulled[2].y == 60);
+    BOOST_CHECK_GT(asked, 0);
+
+    // but the planner's way is not taken past something bigger than street furniture:
+    // over the block itself, with a hop too small for it, the path stays north
+    asked = 0;
+    const std::vector<Point> over_the_block{{20, 50}, {40, 60}, {60, 60}, {80, 50}};
+    const auto south = [&](const Point &a, const Point &b) -> std::optional<std::vector<Point>>
+    {
+        ++asked;
+        return std::vector<Point>{a, {40, 40}, {60, 40}, b};
+    };
+    const auto kept = pull_taut(over_the_block, rings, 3.0, Replan{south});
+    BOOST_REQUIRE_EQUAL(kept.size(), 4u);
+    BOOST_CHECK_GE(kept[1].y, 60.0 - 1e-9);
+}
+
 BOOST_AUTO_TEST_CASE(pulling_keeps_the_anchors_and_copes_with_nothing)
 {
     const Blocked plaza;

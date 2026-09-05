@@ -336,7 +336,9 @@ bool region_blocks(std::span<const Point> region, std::span<const Ring> rings, c
     // Even-odd ray casting, which also answers for a region the path crosses back over.
     // A point on the region's boundary, which is where the vertices the path stands on
     // are, is neither inside nor outside: it does not poke in, and it does not stop a
-    // ring from counting as wholly enclosed.
+    // ring from counting as wholly enclosed.  On it to the closed free space's own
+    // tolerance, since a path point that came through a coordinate is a tenth of a
+    // millimetre off the ring vertex it stands on.
     enum class Where { outside, on_boundary, inside };
     const auto where = [&](const Point &p)
     {
@@ -345,7 +347,7 @@ bool region_blocks(std::span<const Point> region, std::span<const Ring> rings, c
         {
             const auto &a = region[i];
             const auto &b = region[j];
-            if (distance_squared_to_segment(p, a, b) <= 1e-24)
+            if (distance_squared_to_segment(p, a, b) <= ON_GEOMETRY * ON_GEOMETRY)
             {
                 return Where::on_boundary;
             }
@@ -437,8 +439,72 @@ bool clean_move(const Point &u,
 //! from before the obstacle to after it.
 constexpr std::size_t DROP_AT_ONCE = 6;
 
-std::vector<Point>
-drop_redundant(std::span<const Point> path, std::span<const Ring> rings, const double hop)
+double path_length(std::span<const Point> points)
+{
+    auto total = 0.0;
+    for (std::size_t i = 1; i < points.size(); ++i)
+    {
+        total += length(points[i] - points[i - 1]);
+    }
+    return total;
+}
+
+//! Whether some ring lies wholly within the region and is small enough to hop: the one
+//! case in which asking a planner for a better stretch can pay.
+bool encloses_street_furniture(std::span<const Point> region,
+                               std::span<const Ring> rings,
+                               const double hop)
+{
+    const auto n = region.size();
+    const auto inside_region = [&](const Point &p)
+    {
+        auto inside = false;
+        for (std::size_t i = 0, j = n - 1; i < n; j = i++)
+        {
+            const auto &a = region[i];
+            const auto &b = region[j];
+            if (distance_squared_to_segment(p, a, b) <= ON_GEOMETRY * ON_GEOMETRY)
+            {
+                return true;
+            }
+            if ((a.y > p.y) != (b.y > p.y) &&
+                p.x < a.x + (b.x - a.x) * (p.y - a.y) / (b.y - a.y))
+            {
+                inside = !inside;
+            }
+        }
+        return inside;
+    };
+    for (std::size_t r = 1; r < rings.size(); ++r)
+    {
+        const auto &ring = rings[r];
+        auto low = ring.front(), high = ring.front();
+        for (const auto &p : ring)
+        {
+            low = {std::min(low.x, p.x), std::min(low.y, p.y)};
+            high = {std::max(high.x, p.x), std::max(high.y, p.y)};
+        }
+        if (length(high - low) > hop)
+        {
+            continue;
+        }
+        auto all = true;
+        for (const auto &p : ring)
+        {
+            all = all && inside_region(p);
+        }
+        if (all)
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
+std::vector<Point> drop_redundant(std::span<const Point> path,
+                                  std::span<const Ring> rings,
+                                  const double hop,
+                                  const std::optional<Replan> &replan)
 {
     std::vector<Point> pulled(path.begin(), path.end());
     auto dropped = true;
@@ -450,26 +516,59 @@ drop_redundant(std::span<const Point> path, std::span<const Ring> rings, const d
             // the longest stretch from i that one chord can replace, the region between
             // them holding nothing the path may not hop
             auto replaced = std::size_t{0};
+            std::vector<Point> better;
             for (auto k = std::min(DROP_AT_ONCE, pulled.size() - 1 - i); k >= 1; --k)
             {
                 const auto &u = pulled[i - 1];
                 const auto &w = pulled[i + k];
-                if (!segment_in_closed_area(u, w, rings))
+                const std::span<const Point> old{pulled.data() + (i - 1), k + 2};
+                if (segment_in_closed_area(u, w, rings))
+                {
+                    if (!region_blocks(old, rings, hop))
+                    {
+                        replaced = k;
+                        break;
+                    }
+                    continue;
+                }
+                // No chord will do.  If what the stretch goes round is street furniture,
+                // and a planner is to hand, the shortest way from u to w may pass it on
+                // the other side by way of corners the stretch does not have; it is
+                // taken when it is shorter, legal, and the region between it and the
+                // stretch holds nothing else.
+                if (!replan || !encloses_street_furniture(old, rings, hop))
                 {
                     continue;
                 }
-                const std::span<const Point> region{pulled.data() + (i - 1), k + 2};
-                if (!region_blocks(region, rings, hop))
+                const auto planned = (*replan)(u, w);
+                if (!planned || planned->size() < 2 ||
+                    !(path_length(*planned) < path_length(old) * (1.0 - 1e-9)) ||
+                    !path_in_closed_area(*planned, rings))
                 {
-                    replaced = k;
-                    break;
+                    continue;
                 }
+                std::vector<Point> loop(old.begin(), old.end());
+                for (std::size_t m = planned->size() - 1; m-- > 1;)
+                {
+                    loop.push_back((*planned)[m]);
+                }
+                if (region_blocks(loop, rings, hop))
+                {
+                    continue;
+                }
+                better.assign(planned->begin() + 1, planned->end() - 1);
+                replaced = k;
+                break;
             }
             if (replaced > 0)
             {
                 pulled.erase(pulled.begin() + static_cast<std::ptrdiff_t>(i),
                              pulled.begin() + static_cast<std::ptrdiff_t>(i + replaced));
+                pulled.insert(pulled.begin() + static_cast<std::ptrdiff_t>(i),
+                              better.begin(),
+                              better.end());
                 dropped = true;
+                i += better.size();
             }
             else
             {
@@ -480,22 +579,14 @@ drop_redundant(std::span<const Point> path, std::span<const Ring> rings, const d
     return pulled;
 }
 
-double path_length(std::span<const Point> points)
-{
-    auto total = 0.0;
-    for (std::size_t i = 1; i < points.size(); ++i)
-    {
-        total += length(points[i] - points[i - 1]);
-    }
-    return total;
-}
-
 } // namespace
 
-std::vector<Point>
-pull_taut(std::span<const Point> path, std::span<const Ring> rings, const double hop)
+std::vector<Point> pull_taut(std::span<const Point> path,
+                             std::span<const Ring> rings,
+                             const double hop,
+                             const std::optional<Replan> replan)
 {
-    auto pulled = drop_redundant(path, rings, hop);
+    auto pulled = drop_redundant(path, rings, hop, replan);
 
     // Then tighten.  Dropping vertices leaves each survivor where the input had it,
     // which is off the obstacle it turns around by however far the input wandered, and
@@ -553,7 +644,7 @@ pull_taut(std::span<const Point> path, std::span<const Ring> rings, const double
             }
             pulled[i] = best;
         }
-        pulled = drop_redundant(pulled, rings, hop);
+        pulled = drop_redundant(pulled, rings, hop, replan);
         if (before - path_length(pulled) <= TIGHT_ENOUGH * before)
         {
             break;
@@ -565,9 +656,10 @@ pull_taut(std::span<const Point> path, std::span<const Ring> rings, const double
 RoundedPath round_corners(std::span<const Point> given,
                           std::span<const Ring> rings,
                           const double margin,
-                          const double hop)
+                          const double hop,
+                          const std::optional<Replan> replan)
 {
-    const auto pulled = pull_taut(given, rings, hop);
+    const auto pulled = pull_taut(given, rings, hop, replan);
     const std::span<const Point> path{pulled};
     const auto n = path.size();
     if (n < 3 || !(margin > 0.0))
@@ -665,7 +757,8 @@ RoundedPath round_corners(std::span<const Point> given,
 std::optional<std::vector<util::Coordinate>>
 round_corners(const std::vector<std::span<const util::Coordinate>> &rings,
               std::span<const util::Coordinate> path,
-              const double margin_metres)
+              const double margin_metres,
+              const std::optional<ReplanCoordinates> replan)
 {
     if (!(margin_metres > 0.0) || path.size() < 2)
     {
@@ -701,8 +794,40 @@ round_corners(const std::vector<std::span<const util::Coordinate>> &rings,
 
     const auto metres_per_unit =
         metres_per_projected_unit(static_cast<double>(util::toFloating(path.front().lat)));
-    const auto rounded = round_corners(
-        taut, views, margin_metres / metres_per_unit, STREET_FURNITURE_METRES / metres_per_unit);
+    // the planner speaks coordinates; the construction speaks projected points
+    const auto unproject = [](const Point &p)
+    { return util::Coordinate{util::FloatLongitude{p.x}, util::web_mercator::yToLat(p.y)}; };
+    const auto replan_points = [&](const Point &a, const Point &b) -> std::optional<std::vector<Point>>
+    {
+        const auto planned = (*replan)(unproject(a), unproject(b));
+        if (!planned)
+        {
+            return std::nullopt;
+        }
+        std::vector<Point> out;
+        out.reserve(planned->size());
+        for (const auto coordinate : *planned)
+        {
+            out.push_back(project(coordinate));
+        }
+        // the ends exactly as asked, so the stretch joins what it replaces
+        if (!out.empty())
+        {
+            out.front() = a;
+            out.back() = b;
+        }
+        return out;
+    };
+    std::optional<Replan> replan_projected;
+    if (replan)
+    {
+        replan_projected.emplace(replan_points);
+    }
+    const auto rounded = round_corners(taut,
+                                       views,
+                                       margin_metres / metres_per_unit,
+                                       STREET_FURNITURE_METRES / metres_per_unit,
+                                       replan_projected);
     if (!rounded.legal)
     {
         return std::nullopt;

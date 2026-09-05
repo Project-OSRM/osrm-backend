@@ -186,7 +186,27 @@ std::vector<Stop> shapeOf(const datafacade::BaseDataFacade &facade,
     path.insert(path.end(), geodesic.bends.begin(), geodesic.bends.end());
     path.push_back(to);
 
-    const auto smoothed = round_corners(facade.GetOpenAreaRings(area), path, margin);
+    // The planner that drew the leg, for re-routing a stretch round street furniture.
+    // A geodesic leg has nothing to re-route, so this costs nothing until other paths
+    // are handed in.
+    const auto rings = facade.GetOpenAreaRings(area);
+    const auto stored = [&](const std::uint32_t vertex)
+    { return facade.GetOpenAreaVisibility(area, vertex); };
+    const auto shortest = [&](const util::Coordinate a,
+                              const util::Coordinate b) -> std::optional<std::vector<util::Coordinate>>
+    {
+        const auto planned = geodesic_between(
+            facade.GetCheckSum(), area.vertices_offset, rings, a, b, StoredVisibility{stored});
+        if (!planned)
+        {
+            return std::nullopt;
+        }
+        std::vector<util::Coordinate> out{a};
+        out.insert(out.end(), planned->bends.begin(), planned->bends.end());
+        out.push_back(b);
+        return out;
+    };
+    const auto smoothed = round_corners(rings, path, margin, ReplanCoordinates{shortest});
     if (!smoothed)
     {
         return taut;

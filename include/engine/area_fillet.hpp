@@ -4,6 +4,7 @@
 #include "engine/area_visibility.hpp"
 
 #include "util/coordinate.hpp"
+#include "util/function_ref.hpp"
 
 #include <optional>
 #include <span>
@@ -23,6 +24,19 @@ struct RoundedPath
     //! falls back to may not be, and this says so.
     bool legal = false;
 };
+
+/**
+ * @brief A planner to ask for the shortest legal path between two points of the area,
+ * both ends included, or nothing when it has none.
+ *
+ * pull_taut() uses it to re-route a stretch of the path round street furniture: passing
+ * a planter on the inner side of a corridor junction needs new corners, not fewer, and
+ * no chord across the old ones can supply them.  Without a planner only chords are
+ * tried, and a planter the path wraps with corners of its own is kept on its side.
+ */
+using Replan = util::FunctionRef<std::optional<std::vector<Point>>(const Point &, const Point &)>;
+using ReplanCoordinates =
+    util::FunctionRef<std::optional<std::vector<util::Coordinate>>(util::Coordinate, util::Coordinate)>;
 
 /**
  * @brief Pull a path taut: drop every vertex that the path can do without.
@@ -53,8 +67,10 @@ struct RoundedPath
  *             pit in a corridor junction does not make the path go round it the long
  *             way, while a kiosk-sized thing and anything larger keeps its side.
  */
-std::vector<Point>
-pull_taut(std::span<const Point> path, std::span<const Ring> rings, double hop = 0.0);
+std::vector<Point> pull_taut(std::span<const Point> path,
+                             std::span<const Ring> rings,
+                             double hop = 0.0,
+                             std::optional<Replan> replan = std::nullopt);
 
 /**
  * @brief Round the corners of a path with tangent arcs, held off the geometry by a
@@ -93,7 +109,8 @@ pull_taut(std::span<const Point> path, std::span<const Ring> rings, double hop =
 RoundedPath round_corners(std::span<const Point> path,
                           std::span<const Ring> rings,
                           double margin,
-                          double hop = 0.0);
+                          double hop = 0.0,
+                          std::optional<Replan> replan = std::nullopt);
 
 /**
  * @brief round_corners(), for a path and an area given as coordinates.
@@ -111,7 +128,8 @@ RoundedPath round_corners(std::span<const Point> path,
 std::optional<std::vector<util::Coordinate>>
 round_corners(const std::vector<std::span<const util::Coordinate>> &rings,
               std::span<const util::Coordinate> path,
-              double margin_metres);
+              double margin_metres,
+              std::optional<ReplanCoordinates> replan = std::nullopt);
 
 } // namespace osrm::engine::area
 
