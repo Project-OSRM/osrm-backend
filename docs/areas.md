@@ -82,8 +82,10 @@ walks and not what they draw, and on a map it reads as a route that clips every 
 it meets. With a margin set, the engine redraws each leg across an area the way a road is
 set out. The path is first pulled taut, like a string: every vertex a straight line can
 do without is dropped, and every vertex that remains is drawn onto the corner of the
-geometry it turns around, always on the side of each obstacle the path already took, so
-a path from any planner comes out as the shortest path through the same gaps; then every
+geometry it turns around, on the side of each obstacle the path already took, except that
+street furniture, anything under 8 m across such as a planter or a tree pit, is passed on
+whichever side is shorter; so a path from any planner comes out as the shortest path
+through the same gaps. Then every
 corner is moved out so that the runs either side sit the margin off the edges they were
 grazing, as far as there is room, and is replaced by a circular arc tangent to both. Straight runs stay straight, corners become curves, and
 nothing else changes. In metres:

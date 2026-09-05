@@ -267,6 +267,48 @@ BOOST_AUTO_TEST_CASE(pulling_tightens_the_string_onto_the_corner)
     BOOST_CHECK(path_in_closed_area(round_the_top, plaza.rings));
 }
 
+BOOST_AUTO_TEST_CASE(pulling_hops_a_small_obstacle_but_not_a_large_one)
+{
+    // A tree pit two units across in the middle of the square's south, and a path that
+    // goes round its north.  The chord along y = 15 passes it on the south and is legal.
+    std::vector<Point> outer{{0, 0}, {100, 0}, {100, 100}, {0, 100}};
+    std::vector<Point> pit{{49, 19}, {51, 19}, {51, 21}, {49, 21}};
+    std::vector<Point> block{{40, 40}, {60, 40}, {60, 60}, {40, 60}};
+    std::vector<Ring> rings{Ring{outer}, Ring{pit}, Ring{block}};
+    const std::vector<Point> round_the_pit{{10, 15}, {50, 21.5}, {90, 15}};
+
+    // With no hop the side is kept: the vertex stays, tightened onto the pit's corner.
+    const auto kept = pull_taut(round_the_pit, rings, 0.0);
+    BOOST_REQUIRE_EQUAL(kept.size(), 3u);
+    BOOST_CHECK_GE(kept[1].y, 21.0 - 1e-9);
+    // With a hop at least the pit's size across, the pit is passed on the shorter side.
+    const auto hopped = pull_taut(round_the_pit, rings, 3.0);
+    BOOST_CHECK_EQUAL(hopped.size(), 2u);
+
+    // The block is twenty across and is never hopped at that size: a path over its north
+    // stays north, even though the chord along its south is legal.
+    const std::vector<Point> over_the_block{{20, 35}, {50, 65}, {80, 35}};
+    const auto north = pull_taut(over_the_block, rings, 3.0);
+    BOOST_REQUIRE_EQUAL(north.size(), 3u);
+    BOOST_CHECK_GE(north[1].y, 60.0 - 1e-9);
+    // and round_corners() with the same hop agrees, and without one keeps the side
+    BOOST_CHECK_EQUAL(round_corners(round_the_pit, rings, 3.0, 3.0).points.size(), 2u);
+    BOOST_CHECK_GT(round_corners(round_the_pit, rings, 3.0).points.size(), 2u);
+}
+
+BOOST_AUTO_TEST_CASE(pulling_hops_an_obstacle_it_wraps_with_several_vertices)
+{
+    // The path stands on two corners of the pit, so the chord across either one of them
+    // cuts the pit itself; only a chord from before the pit to after it can pass it on
+    // the other side, and that is the one the pass has to find.
+    std::vector<Point> outer{{0, 0}, {100, 0}, {100, 100}, {0, 100}};
+    std::vector<Point> pit{{49, 19}, {51, 19}, {51, 21}, {49, 21}};
+    std::vector<Ring> rings{Ring{outer}, Ring{pit}};
+    const std::vector<Point> wrapped{{10, 15}, {49, 21}, {51, 21}, {90, 15}};
+    BOOST_CHECK_EQUAL(pull_taut(wrapped, rings, 0.0).size(), 4u);
+    BOOST_CHECK_EQUAL(pull_taut(wrapped, rings, 3.0).size(), 2u);
+}
+
 BOOST_AUTO_TEST_CASE(pulling_keeps_the_anchors_and_copes_with_nothing)
 {
     const Blocked plaza;

@@ -237,6 +237,13 @@ RoundedPath as_given(std::span<const Point> path, std::span<const Ring> rings)
 //! nothing: a decimetre is the finest the API emits, polyline6.
 constexpr double DRAWS_NOTHING_METRES = 0.1;
 
+//! An obstacle no bigger across than this is street furniture, a planter, a tree pit,
+//! a bench, a bollard, and a path may pass it on whichever side is shorter.  Above it
+//! is a kiosk, a fountain, a building, and the path keeps the side it was given.
+//! Measured on Ile-de-France plazas: the planters at corridor junctions are 5 to 7 m
+//! across their bounding box, tree pits about 1 m, the smallest fountains over 10.
+constexpr double STREET_FURNITURE_METRES = 8.0;
+
 /**
  * Douglas-Peucker: keep the fewest points that leave every dropped one within the
  * tolerance of the line drawn through the kept ones.  Recursive on the farthest point,
@@ -306,31 +313,90 @@ constexpr std::size_t TIGHTEN_ROUNDS = 16;
 //! Below this fraction of the path's length, a round's gain is no gain.
 constexpr double TIGHT_ENOUGH = 1e-9;
 
-//! Whether any vertex of any ring lies strictly inside the triangle a, b, c.
-bool triangle_holds_a_vertex(const Point &a,
-                             const Point &b,
-                             const Point &c,
-                             std::span<const Ring> rings)
+/**
+ * Whether geometry inside a region stands in the way of replacing the path round it by
+ * the chord that closes it.  The region is the polygon made of a stretch of the path and
+ * the chord across it; a triangle when one vertex is dropped.
+ *
+ * A ring with some of its vertices inside and some outside pokes into the region, and
+ * since the path and the chord are both legal it can only do so by being what the path
+ * went round: the chord would pass it on the other side.  That blocks.  A ring wholly
+ * inside is an obstacle the chord hops over entirely, which is a change of side too,
+ * and blocks unless the ring is no bigger across than @p hop: a planter in a corridor
+ * junction may be passed on whichever side is shorter, a building may not.  The outer
+ * ring is never hopped.
+ */
+bool region_blocks(std::span<const Point> region, std::span<const Ring> rings, const double hop)
 {
-    const auto orientation = cross(b - a, c - a);
-    if (orientation == 0.0)
+    const auto n = region.size();
+    if (n < 3)
     {
         return false;
     }
-    for (const auto &ring : rings)
+    // Even-odd ray casting, which also answers for a region the path crosses back over.
+    // A point on the region's boundary, which is where the vertices the path stands on
+    // are, is neither inside nor outside: it does not poke in, and it does not stop a
+    // ring from counting as wholly enclosed.
+    enum class Where { outside, on_boundary, inside };
+    const auto where = [&](const Point &p)
     {
+        auto inside = false;
+        for (std::size_t i = 0, j = n - 1; i < n; j = i++)
+        {
+            const auto &a = region[i];
+            const auto &b = region[j];
+            if (distance_squared_to_segment(p, a, b) <= 1e-24)
+            {
+                return Where::on_boundary;
+            }
+            if ((a.y > p.y) != (b.y > p.y) &&
+                p.x < a.x + (b.x - a.x) * (p.y - a.y) / (b.y - a.y))
+            {
+                inside = !inside;
+            }
+        }
+        return inside ? Where::inside : Where::outside;
+    };
+    for (std::size_t r = 0; r < rings.size(); ++r)
+    {
+        const auto &ring = rings[r];
+        auto inside = std::size_t{0}, touching = std::size_t{0};
         for (const auto &p : ring)
         {
-            const auto s1 = cross(b - a, p - a), s2 = cross(c - b, p - b), s3 = cross(a - c, p - c);
-            const auto inside = orientation > 0.0 ? (s1 > 0.0 && s2 > 0.0 && s3 > 0.0)
-                                                  : (s1 < 0.0 && s2 < 0.0 && s3 < 0.0);
-            if (inside)
-            {
-                return true;
-            }
+            const auto w = where(p);
+            inside += w == Where::inside;
+            touching += w == Where::on_boundary;
+        }
+        if (inside == 0)
+        {
+            continue;
+        }
+        if (r == 0 || inside + touching < ring.size())
+        {
+            return true;
+        }
+        auto low = ring.front(), high = ring.front();
+        for (const auto &p : ring)
+        {
+            low = {std::min(low.x, p.x), std::min(low.y, p.y)};
+            high = {std::max(high.x, p.x), std::max(high.y, p.y)};
+        }
+        if (length(high - low) > hop)
+        {
+            return true;
         }
     }
     return false;
+}
+
+bool triangle_blocks(const Point &a,
+                     const Point &b,
+                     const Point &c,
+                     std::span<const Ring> rings,
+                     const double hop)
+{
+    const Point triangle[] = {a, b, c};
+    return region_blocks(triangle, rings, hop);
 }
 
 /**
@@ -344,11 +410,12 @@ bool clean_move(const Point &u,
                 const Point &w,
                 const Point &from,
                 const Point &to,
-                std::span<const Ring> rings)
+                std::span<const Ring> rings,
+                const double hop)
 {
     return segment_in_closed_area(u, to, rings) && segment_in_closed_area(to, w, rings) &&
-           segment_in_closed_area(from, to, rings) && !triangle_holds_a_vertex(u, from, to, rings) &&
-           !triangle_holds_a_vertex(w, from, to, rings);
+           segment_in_closed_area(from, to, rings) && !triangle_blocks(u, from, to, rings, hop) &&
+           !triangle_blocks(w, from, to, rings, hop);
 }
 
 /**
@@ -364,7 +431,14 @@ bool clean_move(const Point &u,
  * triangle's boundary, so a ring inside it has a vertex inside it, and checking the
  * vertices is enough.
  */
-std::vector<Point> drop_redundant(std::span<const Point> path, std::span<const Ring> rings)
+//! How many consecutive vertices one chord may replace.  An obstacle the path wraps
+//! with several vertices on its corners cannot be hopped one vertex at a time, since
+//! the chord across any one of them cuts the obstacle itself; the chord has to reach
+//! from before the obstacle to after it.
+constexpr std::size_t DROP_AT_ONCE = 6;
+
+std::vector<Point>
+drop_redundant(std::span<const Point> path, std::span<const Ring> rings, const double hop)
 {
     std::vector<Point> pulled(path.begin(), path.end());
     auto dropped = true;
@@ -373,12 +447,28 @@ std::vector<Point> drop_redundant(std::span<const Point> path, std::span<const R
         dropped = false;
         for (std::size_t i = 1; i + 1 < pulled.size();)
         {
-            const auto &u = pulled[i - 1];
-            const auto &v = pulled[i];
-            const auto &w = pulled[i + 1];
-            if (segment_in_closed_area(u, w, rings) && !triangle_holds_a_vertex(u, v, w, rings))
+            // the longest stretch from i that one chord can replace, the region between
+            // them holding nothing the path may not hop
+            auto replaced = std::size_t{0};
+            for (auto k = std::min(DROP_AT_ONCE, pulled.size() - 1 - i); k >= 1; --k)
             {
-                pulled.erase(pulled.begin() + static_cast<std::ptrdiff_t>(i));
+                const auto &u = pulled[i - 1];
+                const auto &w = pulled[i + k];
+                if (!segment_in_closed_area(u, w, rings))
+                {
+                    continue;
+                }
+                const std::span<const Point> region{pulled.data() + (i - 1), k + 2};
+                if (!region_blocks(region, rings, hop))
+                {
+                    replaced = k;
+                    break;
+                }
+            }
+            if (replaced > 0)
+            {
+                pulled.erase(pulled.begin() + static_cast<std::ptrdiff_t>(i),
+                             pulled.begin() + static_cast<std::ptrdiff_t>(i + replaced));
                 dropped = true;
             }
             else
@@ -402,9 +492,10 @@ double path_length(std::span<const Point> points)
 
 } // namespace
 
-std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> rings)
+std::vector<Point>
+pull_taut(std::span<const Point> path, std::span<const Ring> rings, const double hop)
 {
-    auto pulled = drop_redundant(path, rings);
+    auto pulled = drop_redundant(path, rings, hop);
 
     // Then tighten.  Dropping vertices leaves each survivor where the input had it,
     // which is off the obstacle it turns around by however far the input wandered, and
@@ -436,7 +527,7 @@ std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> 
             {
                 const auto candidate = v + (foot - v) * (static_cast<double>(step) /
                                                          static_cast<double>(SLIDE_STEPS));
-                if (clean_move(u, w, v, candidate, rings))
+                if (clean_move(u, w, v, candidate, rings, hop))
                 {
                     v = candidate;
                     break;
@@ -453,7 +544,7 @@ std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> 
                 for (const auto &corner : ring)
                 {
                     const auto candidate_length = length(corner - u) + length(w - corner);
-                    if (candidate_length < best_length && clean_move(u, w, v, corner, rings))
+                    if (candidate_length < best_length && clean_move(u, w, v, corner, rings, hop))
                     {
                         best_length = candidate_length;
                         best = corner;
@@ -462,7 +553,7 @@ std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> 
             }
             pulled[i] = best;
         }
-        pulled = drop_redundant(pulled, rings);
+        pulled = drop_redundant(pulled, rings, hop);
         if (before - path_length(pulled) <= TIGHT_ENOUGH * before)
         {
             break;
@@ -471,10 +562,12 @@ std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> 
     return pulled;
 }
 
-RoundedPath
-round_corners(std::span<const Point> given, std::span<const Ring> rings, const double margin)
+RoundedPath round_corners(std::span<const Point> given,
+                          std::span<const Ring> rings,
+                          const double margin,
+                          const double hop)
 {
-    const auto pulled = pull_taut(given, rings);
+    const auto pulled = pull_taut(given, rings, hop);
     const std::span<const Point> path{pulled};
     const auto n = path.size();
     if (n < 3 || !(margin > 0.0))
@@ -608,7 +701,8 @@ round_corners(const std::vector<std::span<const util::Coordinate>> &rings,
 
     const auto metres_per_unit =
         metres_per_projected_unit(static_cast<double>(util::toFloating(path.front().lat)));
-    const auto rounded = round_corners(taut, views, margin_metres / metres_per_unit);
+    const auto rounded = round_corners(
+        taut, views, margin_metres / metres_per_unit, STREET_FURNITURE_METRES / metres_per_unit);
     if (!rounded.legal)
     {
         return std::nullopt;

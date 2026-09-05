@@ -28,8 +28,8 @@ struct RoundedPath
  * @brief Pull a path taut: drop every vertex that the path can do without.
  *
  * A vertex is dropped when the chord across it lies in the closed free space and the
- * triangle it closes holds no geometry, so the path never jumps to the other side of an
- * obstacle it went round.  What remains is straight runs between corners the geometry
+ * triangle it closes holds no geometry it may not hop, so the path never jumps to the
+ * other side of an obstacle it went round, unless that obstacle is small; see @p hop.  What remains is straight runs between corners the geometry
  * forces, which is what round_corners() assumes of its input.  A shortest path from the visibility graph is
  * already that and comes back unchanged.  A path from anything else, a grid search with
  * its staircase of steps, a mesh path with a collinear vertex, a trace with noise in it,
@@ -46,8 +46,15 @@ struct RoundedPath
  * downstream.
  *
  * The anchors are never dropped.
+ *
+ * @param hop  an obstacle no bigger across than this may be passed on whichever side is
+ *             shorter; zero keeps the path on the side of every obstacle it was given.
+ *             The engine passes the size of street furniture, so a planter or a tree
+ *             pit in a corridor junction does not make the path go round it the long
+ *             way, while a kiosk-sized thing and anything larger keeps its side.
  */
-std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> rings);
+std::vector<Point>
+pull_taut(std::span<const Point> path, std::span<const Ring> rings, double hop = 0.0);
 
 /**
  * @brief Round the corners of a path with tangent arcs, held off the geometry by a
@@ -79,10 +86,14 @@ std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> 
  *                taut
  * @param rings   the area, outer ring first
  * @param margin  how far off the geometry to hold the path, in projected units
+ * @param hop     an obstacle no bigger across than this is passed on whichever side is
+ *                shorter; see pull_taut()
  * @return the rounded path, or the pulled path unrounded when no rounding is legal
  */
-RoundedPath
-round_corners(std::span<const Point> path, std::span<const Ring> rings, double margin);
+RoundedPath round_corners(std::span<const Point> path,
+                          std::span<const Ring> rings,
+                          double margin,
+                          double hop = 0.0);
 
 /**
  * @brief round_corners(), for a path and an area given as coordinates.
