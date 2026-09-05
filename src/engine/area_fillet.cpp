@@ -294,31 +294,179 @@ std::vector<Point> thin(std::span<const Point> points, const double tolerance)
 
 } // namespace
 
-std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> rings)
+namespace
 {
-    std::vector<Point> pulled;
-    if (path.empty())
+
+//! How many steps a vertex is walked towards the chord between its neighbours per round.
+constexpr std::size_t SLIDE_STEPS = 8;
+
+//! Rounds of sliding and snapping before the string is called tight.
+constexpr std::size_t TIGHTEN_ROUNDS = 16;
+
+//! Below this fraction of the path's length, a round's gain is no gain.
+constexpr double TIGHT_ENOUGH = 1e-9;
+
+//! Whether any vertex of any ring lies strictly inside the triangle a, b, c.
+bool triangle_holds_a_vertex(const Point &a,
+                             const Point &b,
+                             const Point &c,
+                             std::span<const Ring> rings)
+{
+    const auto orientation = cross(b - a, c - a);
+    if (orientation == 0.0)
     {
-        return pulled;
+        return false;
     }
-    pulled.push_back(path.front());
-    const auto n = path.size();
-    std::size_t at = 0;
-    while (at + 1 < n)
+    for (const auto &ring : rings)
     {
-        // the farthest vertex ahead that can be reached in a straight line; the next
-        // vertex if none can, so a segment of the input that is illegal is kept as it is
-        auto next = at + 1;
-        for (auto k = n - 1; k > at + 1; --k)
+        for (const auto &p : ring)
         {
-            if (segment_in_closed_area(path[at], path[k], rings))
+            const auto s1 = cross(b - a, p - a), s2 = cross(c - b, p - b), s3 = cross(a - c, p - c);
+            const auto inside = orientation > 0.0 ? (s1 > 0.0 && s2 > 0.0 && s3 > 0.0)
+                                                  : (s1 < 0.0 && s2 < 0.0 && s3 < 0.0);
+            if (inside)
             {
-                next = k;
-                break;
+                return true;
             }
         }
-        pulled.push_back(path[next]);
-        at = next;
+    }
+    return false;
+}
+
+/**
+ * Whether moving the vertex between @p u and @p w from @p from to @p to keeps the path
+ * legal and in the same homotopy class: both new segments in the closed free space, and
+ * nothing of the geometry inside the two triangles the move sweeps.  A segment test alone
+ * would let the string jump over a small obstacle that lay wholly between its old and
+ * new positions.
+ */
+bool clean_move(const Point &u,
+                const Point &w,
+                const Point &from,
+                const Point &to,
+                std::span<const Ring> rings)
+{
+    return segment_in_closed_area(u, to, rings) && segment_in_closed_area(to, w, rings) &&
+           segment_in_closed_area(from, to, rings) && !triangle_holds_a_vertex(u, from, to, rings) &&
+           !triangle_holds_a_vertex(w, from, to, rings);
+}
+
+/**
+ * Drop every vertex the path can do without, one at a time: a vertex goes when the
+ * chord across it is in the closed free space and the triangle it closes holds no
+ * geometry, until no vertex goes.
+ *
+ * Not "the farthest vertex a straight line reaches", which was the first version and
+ * changed the answer: a path that went round the north of an obstacle, whose two ends
+ * could see each other along its south, was pulled straight past it.  A chord being
+ * legal says nothing about what lies between the chord and the path it replaces.  With
+ * both segments to the vertex legal as well as the chord, no ring edge can cross the
+ * triangle's boundary, so a ring inside it has a vertex inside it, and checking the
+ * vertices is enough.
+ */
+std::vector<Point> drop_redundant(std::span<const Point> path, std::span<const Ring> rings)
+{
+    std::vector<Point> pulled(path.begin(), path.end());
+    auto dropped = true;
+    while (dropped && pulled.size() > 2)
+    {
+        dropped = false;
+        for (std::size_t i = 1; i + 1 < pulled.size();)
+        {
+            const auto &u = pulled[i - 1];
+            const auto &v = pulled[i];
+            const auto &w = pulled[i + 1];
+            if (segment_in_closed_area(u, w, rings) && !triangle_holds_a_vertex(u, v, w, rings))
+            {
+                pulled.erase(pulled.begin() + static_cast<std::ptrdiff_t>(i));
+                dropped = true;
+            }
+            else
+            {
+                ++i;
+            }
+        }
+    }
+    return pulled;
+}
+
+double path_length(std::span<const Point> points)
+{
+    auto total = 0.0;
+    for (std::size_t i = 1; i < points.size(); ++i)
+    {
+        total += length(points[i] - points[i - 1]);
+    }
+    return total;
+}
+
+} // namespace
+
+std::vector<Point> pull_taut(std::span<const Point> path, std::span<const Ring> rings)
+{
+    auto pulled = drop_redundant(path, rings);
+
+    // Then tighten.  Dropping vertices leaves each survivor where the input had it,
+    // which is off the obstacle it turns around by however far the input wandered, and
+    // a path with that slack in it is not taut however few vertices it has.  So each
+    // survivor is walked towards the chord between its neighbours as far as the move
+    // stays clean, and offered the nearby corners of the geometry as places to stand;
+    // whatever shortens the path and keeps it in its homotopy class is taken.  A vertex
+    // that reaches the chord is redundant and the next round drops it.  This converges
+    // on the locally shortest path through the same gaps the input threaded, which is
+    // the taut string, with every remaining vertex on a corner of the geometry.
+    for (std::size_t round = 0; round < TIGHTEN_ROUNDS && pulled.size() > 2; ++round)
+    {
+        const auto before = path_length(pulled);
+        for (std::size_t i = 1; i + 1 < pulled.size(); ++i)
+        {
+            const auto &u = pulled[i - 1];
+            const auto &w = pulled[i + 1];
+            auto v = pulled[i];
+
+            // slide towards the foot of the perpendicular on the chord, or the nearer
+            // end of the chord when the foot is beyond it
+            const auto chord = w - u;
+            const auto chord_squared = dot(chord, chord);
+            const auto t = chord_squared > 0.0
+                               ? std::clamp(dot(v - u, chord) / chord_squared, 0.0, 1.0)
+                               : 0.0;
+            const auto foot = u + chord * t;
+            for (std::size_t step = SLIDE_STEPS; step > 0; --step)
+            {
+                const auto candidate = v + (foot - v) * (static_cast<double>(step) /
+                                                         static_cast<double>(SLIDE_STEPS));
+                if (clean_move(u, w, v, candidate, rings))
+                {
+                    v = candidate;
+                    break;
+                }
+            }
+
+            // and try the corners of the geometry nearest to where it now stands: a
+            // string tightened against a corner rests on the corner, and the slide
+            // above stops where a segment first grazes it, a little short of that
+            auto best_length = length(v - u) + length(w - v);
+            auto best = v;
+            for (const auto &ring : rings)
+            {
+                for (const auto &corner : ring)
+                {
+                    const auto candidate_length = length(corner - u) + length(w - corner);
+                    if (candidate_length < best_length && clean_move(u, w, v, corner, rings))
+                    {
+                        best_length = candidate_length;
+                        best = corner;
+                    }
+                }
+            }
+            pulled[i] = best;
+        }
+        pulled = drop_redundant(pulled, rings);
+        if (before - path_length(pulled) <= TIGHT_ENOUGH * before)
+        {
+            break;
+        }
     }
     return pulled;
 }

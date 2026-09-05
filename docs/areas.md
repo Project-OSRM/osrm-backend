@@ -80,11 +80,12 @@ The shortest way across a plaza bends exactly on the corners it passes: the rout
 the fountain, turns on its kerb, and heads for the next corner. That is what a person
 walks and not what they draw, and on a map it reads as a route that clips every obstacle
 it meets. With a margin set, the engine redraws each leg across an area the way a road is
-set out. The path is first pulled taut, dropping every vertex a straight line can do
-without, so a path from any planner comes out as straight runs between the corners the
-geometry forces; then every corner is moved out so that the runs either side sit the
-margin off the edges they were grazing, as far as there is room, and is replaced by a
-circular arc tangent to both. Straight runs stay straight, corners become curves, and
+set out. The path is first pulled taut, like a string: every vertex a straight line can
+do without is dropped, and every vertex that remains is drawn onto the corner of the
+geometry it turns around, always on the side of each obstacle the path already took, so
+a path from any planner comes out as the shortest path through the same gaps; then every
+corner is moved out so that the runs either side sit the margin off the edges they were
+grazing, as far as there is room, and is replaced by a circular arc tangent to both. Straight runs stay straight, corners become curves, and
 nothing else changes. In metres:
 
 ```lua

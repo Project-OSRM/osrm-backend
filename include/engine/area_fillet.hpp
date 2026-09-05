@@ -27,18 +27,23 @@ struct RoundedPath
 /**
  * @brief Pull a path taut: drop every vertex that the path can do without.
  *
- * From each kept vertex the next kept one is the farthest vertex ahead that a straight
- * segment can reach through the closed free space; everything between is dropped.
- * What remains is straight runs between corners the geometry forces, which is what
- * round_corners() assumes of its input.  A shortest path from the visibility graph is
+ * A vertex is dropped when the chord across it lies in the closed free space and the
+ * triangle it closes holds no geometry, so the path never jumps to the other side of an
+ * obstacle it went round.  What remains is straight runs between corners the geometry
+ * forces, which is what round_corners() assumes of its input.  A shortest path from the visibility graph is
  * already that and comes back unchanged.  A path from anything else, a grid search with
  * its staircase of steps, a mesh path with a collinear vertex, a trace with noise in it,
  * is not, and rounding it as it stands rounds every step and keeps the wobble.
  *
- * Vertices are removed, not moved: a corner that stays is left where it was, which may
- * be a little off the obstacle it turns around rather than on it.  The rounding does not
- * mind.  A segment of the input that is itself outside the free space is kept as it is,
- * and the result's legality is judged downstream.
+ * Then the string is tightened.  Each surviving vertex is walked towards the chord
+ * between its neighbours as far as the move stays legal and sweeps no geometry, and
+ * offered the corners of the geometry as places to stand; whatever shortens the path in
+ * its own homotopy class is taken, and a vertex that reaches the chord is dropped.  The
+ * result is the locally shortest path through the same gaps the input threaded, with
+ * every remaining corner on the geometry: a wander round an obstacle comes out as the
+ * geodesic round that obstacle, not as the shortcut past it.  A segment of the input that
+ * is itself outside the free space is kept as it is, and the result's legality is judged
+ * downstream.
  *
  * The anchors are never dropped.
  */

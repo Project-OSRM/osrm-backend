@@ -242,6 +242,31 @@ BOOST_AUTO_TEST_CASE(a_taut_path_is_left_alone_by_pulling)
     BOOST_CHECK(!round_corners(through, plaza.rings, 5.0).legal);
 }
 
+BOOST_AUTO_TEST_CASE(pulling_tightens_the_string_onto_the_corner)
+{
+    // A legal path past the block's south-east corner that never touches it: the
+    // vertex at (63,41) is wide of the corner at (60,40), and dropping vertices alone
+    // would leave it there.  Tightening puts the string on the corner: the result is
+    // the geodesic round the block, three vertices, the middle one exactly the corner.
+    const Blocked plaza;
+    const std::vector<Point> loose{{20, 20}, {45, 33}, {63, 41}, {80, 80}};
+    const auto pulled = pull_taut(loose, plaza.rings);
+    BOOST_REQUIRE_EQUAL(pulled.size(), 3u);
+    BOOST_CHECK_SMALL(pulled[1].x - 60.0, 1e-9);
+    BOOST_CHECK_SMALL(pulled[1].y - 40.0, 1e-9);
+
+    // and it does not take the shortcut on the far side: a wander round the block's
+    // north stays north, since sweeping across the block is not a clean move
+    const std::vector<Point> north{{20, 20}, {30, 62}, {50, 66}, {70, 62}, {80, 20}};
+    const auto round_the_top = pull_taut(north, plaza.rings);
+    BOOST_REQUIRE_GE(round_the_top.size(), 3u);
+    for (std::size_t i = 1; i + 1 < round_the_top.size(); ++i)
+    {
+        BOOST_CHECK_GE(round_the_top[i].y, 60.0 - 1e-9);
+    }
+    BOOST_CHECK(path_in_closed_area(round_the_top, plaza.rings));
+}
+
 BOOST_AUTO_TEST_CASE(pulling_keeps_the_anchors_and_copes_with_nothing)
 {
     const Blocked plaza;
@@ -269,17 +294,15 @@ BOOST_AUTO_TEST_CASE(pulling_drops_collinear_vertices_along_a_wall)
     BOOST_CHECK(pulled[1].x == 40 && pulled[2].x == 60);
 }
 
-BOOST_AUTO_TEST_CASE(pulling_takes_the_farthest_reachable_vertex_not_the_first_blocked)
+BOOST_AUTO_TEST_CASE(pulling_drops_vertices_that_a_clean_chord_replaces)
 {
-    // From the start, the last vertex is hidden behind the block but the one before it
-    // is not: visibility along a path is not monotone, and the pass has to look past
-    // the first blocked vertex rather than stop at it.
+    // (30,30) and (35,35) lie on the way to the corner and go; (60,40) is the corner
+    // and stays; the doubling back at the end is pulled straight since the block is
+    // not between the chord and the path there.
     const Blocked plaza;
     const std::vector<Point> path{{20, 20}, {30, 30}, {35, 35}, {60, 40}, {80, 80}, {65, 65}};
     const auto pulled = pull_taut(path, plaza.rings);
-    // From (20,20): the last vertex (65,65) is behind the block, (80,80) is behind it
-    // too, and (60,40) is the farthest that can be reached; that is the first hop.
-    BOOST_REQUIRE_GE(pulled.size(), 3u);
+    BOOST_REQUIRE_EQUAL(pulled.size(), 3u);
     BOOST_CHECK(pulled[1].x == 60 && pulled[1].y == 40);
 }
 
