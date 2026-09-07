@@ -349,3 +349,21 @@ Feature: Basic Routing
             | from | to | route       |
             | a    | c  | Abc,Δεζ,Δεζ |
             | c    | a  | Δεζ,Abc,Abc |
+
+    # A waypoint is named after the ways of its candidates, and at a node where a street
+    # is split into two ways of one name both are candidates: the name is listed once.
+    Scenario: Waypoint at a node shared by two ways of one name
+        Given the node map
+            """
+            a b c
+            """
+
+        And the ways
+            | nodes | name    |
+            | ab    | Main St |
+            | bc    | Main St |
+
+        When I route I should get
+            | from | to | route           | waypoint_names  |
+            | b    | c  | Main St,Main St | Main St;Main St |
+            | a    | c  | Main St,Main St | Main St;Main St |

@@ -12,6 +12,7 @@
 #include <memory>
 #include <ranges>
 #include <sstream>
+#include <unordered_set>
 #include <vector>
 
 namespace osrm::engine::api
@@ -44,6 +45,23 @@ class BaseAPI
     }
 
   protected:
+    template <typename ToName, typename NoEmpty>
+    static std::vector<std::string>
+    uniqueNames(const PhantomNodeCandidates &candidates, ToName to_name, NoEmpty no_empty)
+    {
+        std::vector<std::string> names;
+        std::unordered_set<std::string> seen;
+        for (const auto &phantom : candidates)
+        {
+            auto name = to_name(phantom);
+            if (no_empty(name) && seen.insert(name).second)
+            {
+                names.push_back(std::move(name));
+            }
+        }
+        return names;
+    }
+
     util::json::Object MakeWaypoint(const PhantomNodeCandidates &candidates) const
     {
         // TODO: check forward/reverse
@@ -55,10 +73,11 @@ class BaseAPI
         const auto noEmpty = [](const auto &name) { return !name.empty(); };
 
         // At an intersection we may have multiple phantom node candidates.
-        // Combine them to represent the waypoint name.
-        std::string waypoint_name =
-            join(candidates | std::views::transform(toName) | std::views::filter(noEmpty),
-                 INTERSECTION_DELIMITER);
+        // Combine them to represent the waypoint name, each name once: a street split
+        // into two ways at the node is one street, and a coordinate in an open area is
+        // offered every vertex it sees, whose ways all carry the plaza's name.
+        const std::string waypoint_name =
+            join(uniqueNames(candidates, toName, noEmpty), INTERSECTION_DELIMITER);
 
         const auto &snapped_location = candidatesSnappedLocation(candidates);
         const auto &input_location = candidatesInputLocation(candidates);
@@ -125,10 +144,11 @@ class BaseAPI
         const auto noEmpty = [](const auto &name) { return !name.empty(); };
 
         // At an intersection we may have multiple phantom node candidates.
-        // Combine them to represent the waypoint name.
-        std::string waypoint_name =
-            join(candidates | std::views::transform(toName) | std::views::filter(noEmpty),
-                 INTERSECTION_DELIMITER);
+        // Combine them to represent the waypoint name, each name once: a street split
+        // into two ways at the node is one street, and a coordinate in an open area is
+        // offered every vertex it sees, whose ways all carry the plaza's name.
+        const std::string waypoint_name =
+            join(uniqueNames(candidates, toName, noEmpty), INTERSECTION_DELIMITER);
         auto name_string = builder->CreateString(waypoint_name);
 
         flatbuffers::Offset<flatbuffers::String> hint_string;

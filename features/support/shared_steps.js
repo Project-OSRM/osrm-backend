@@ -197,6 +197,11 @@ export default class SharedSteps {
                 got.waypoints_count = 0;
               }
             }
+            if (headers.has('waypoint_names')) {
+              got.waypoint_names = ('waypoints' in json)
+                ? json.waypoints.map((w) => w.name).join(';')
+                : '';
+            }
             /*
                         if (headers.has('approaches')){
                             got.approaches = (approaches || '').trim();
