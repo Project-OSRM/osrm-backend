@@ -74,6 +74,14 @@ std::vector<NodeID> getBackwardForceNodes(const PhantomEndpointCandidates &endpo
     return res;
 }
 
+std::vector<NodeID> getForceStepNodes(const PhantomEndpointCandidates &endpoint_candidates)
+{
+    auto nodes = getForwardForceNodes(endpoint_candidates);
+    const auto backward = getBackwardForceNodes(endpoint_candidates);
+    nodes.insert(nodes.end(), backward.begin(), backward.end());
+    return nodes;
+}
+
 std::vector<NodeID> getBackwardForceNodes(const PhantomCandidatesToTarget &endpoint_candidates)
 {
     std::vector<NodeID> res;

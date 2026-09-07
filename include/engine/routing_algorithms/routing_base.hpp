@@ -74,6 +74,17 @@ std::vector<NodeID> getForwardForceNodes(const PhantomCandidatesToTarget &candid
 std::vector<NodeID> getBackwardForceNodes(const PhantomEndpointCandidates &candidates);
 std::vector<NodeID> getBackwardForceNodes(const PhantomCandidatesToTarget &candidates);
 
+// Both lists at once, for a search that seeds both directions of every target into one
+// heap.  A source and a target on one edge-based node with the source the further along
+// need a loop, and the direct and alternative searches told them apart at the seed by the
+// sign of the weight alone: the graph part of a source's key is negative, a target's
+// positive, and their sum is negative exactly when the target sits before the source.
+// That holds only while a phantom's weight is nothing but its share of the node; a
+// phantom carrying a cost of its own at either end, as one snapped into an open area
+// is about to, lifts the sum above zero and the seed is taken for a path.  Naming the
+// nodes is what the via search has always done, and costs nothing.
+std::vector<NodeID> getForceStepNodes(const PhantomEndpointCandidates &candidates);
+
 // Find the specific phantom node endpoints for a given path from a list of candidates.
 PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candidates,
                                          const std::vector<NodeID> &path);
