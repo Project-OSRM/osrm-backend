@@ -68,30 +68,48 @@ inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
     return min_level;
 }
 
+// The query level of a node against a source and a target is the lower of its highest
+// different level with either, so over two sets of candidates the minimum over every pair
+// is the minimum over the sources and the minimum over the targets, taken separately.
+// Taken pairwise, the cost is quadratic in the number of candidates, and a coordinate
+// snapped inside an open area carries a candidate per way on every vertex it sees,
+// hundreds on a large plaza: the partition lookups per relaxed node came to outweigh
+// the search itself by an order of magnitude.
+template <typename MultiLevelPartition>
+inline LevelID lowestDifferentLevel(const MultiLevelPartition &partition,
+                                    NodeID node,
+                                    const std::vector<PhantomNode> &phantoms)
+{
+    LevelID level = INVALID_LEVEL_ID;
+    for (const auto &phantom : phantoms)
+    {
+        if (phantom.forward_segment_id.enabled)
+        {
+            level = std::min(
+                level, partition.GetHighestDifferentLevel(phantom.forward_segment_id.id, node));
+        }
+        if (phantom.reverse_segment_id.enabled)
+        {
+            level = std::min(
+                level, partition.GetHighestDifferentLevel(phantom.reverse_segment_id.id, node));
+        }
+        if (level == 0)
+        {
+            break;
+        }
+    }
+    return level;
+}
+
 template <typename MultiLevelPartition>
 inline LevelID getNodeQueryLevel(const MultiLevelPartition &partition,
                                  NodeID node,
                                  const PhantomEndpointCandidates &endpoint_candidates)
 {
-    auto min_level = std::accumulate(
-        endpoint_candidates.source_phantoms.begin(),
-        endpoint_candidates.source_phantoms.end(),
-        INVALID_LEVEL_ID,
-        [&](LevelID level_1, const PhantomNode &source)
-        {
-            return std::min(
-                level_1,
-                std::accumulate(endpoint_candidates.target_phantoms.begin(),
-                                endpoint_candidates.target_phantoms.end(),
-                                level_1,
-                                [&](LevelID level_2, const PhantomNode &target)
-                                {
-                                    return std::min(
-                                        level_2,
-                                        getNodeQueryLevel(partition, node, source, target));
-                                }));
-        });
-    return min_level;
+    // neither set is ever empty, or without an enabled direction, by the time a search
+    // asks; a set that were would answer INVALID_LEVEL_ID, as the pairwise minimum did
+    return std::min(lowestDifferentLevel(partition, node, endpoint_candidates.source_phantoms),
+                    lowestDifferentLevel(partition, node, endpoint_candidates.target_phantoms));
 }
 
 template <typename PhantomCandidateT>
