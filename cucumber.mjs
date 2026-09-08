@@ -61,7 +61,10 @@ export default function() {
         './features/lib/github_summary_formatter.js',
         ['html', htmlReportFilename]
       ],
-      publish: true
+      // The HTML report is uploaded as a workflow artifact; publishing it to
+      // reports.cucumber.io as well made the job fail after every scenario had
+      // passed whenever a runner could not reach that host.
+      publish: false
     },
 
     // patches to base configs
