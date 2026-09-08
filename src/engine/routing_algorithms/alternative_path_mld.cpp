@@ -690,6 +690,7 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
 
     EdgeWeight forward_heap_min = forward_heap.MinKey();
     EdgeWeight reverse_heap_min = reverse_heap.MinKey();
+    const auto force_step_nodes = getForceStepNodes(endpoint_candidates);
 
     while (forward_heap.Size() + reverse_heap.Size() > 0)
     {
@@ -714,7 +715,7 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            reverse_heap,
                                            overlap_via,
                                            overlap_weight,
-                                           {},
+                                           force_step_nodes,
                                            endpoint_candidates);
 
             if (!forward_heap.Empty())
@@ -739,7 +740,7 @@ makeCandidateVias(SearchEngineData<Algorithm> &search_engine_data,
                                            forward_heap,
                                            overlap_via,
                                            overlap_weight,
-                                           {},
+                                           force_step_nodes,
                                            endpoint_candidates);
 
             if (!reverse_heap.Empty())

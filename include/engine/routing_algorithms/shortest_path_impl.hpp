@@ -247,7 +247,12 @@ constructRouteResult(const DataFacade<Algorithm> &facade,
                          source_candidates.end(),
                          [&start_node](const auto &source_phantom)
                          {
-                             return (start_node == source_phantom.forward_segment_id.id ||
+                             // per role, as endpointsFromCandidates: a candidate
+                             // may share its ids with another that serves the
+                             // other role
+                             return (source_phantom.IsValidForwardSource() &&
+                                     start_node == source_phantom.forward_segment_id.id) ||
+                                    (source_phantom.IsValidReverseSource() &&
                                      start_node == source_phantom.reverse_segment_id.id);
                          });
         BOOST_ASSERT(source_it != source_candidates.end());
@@ -257,7 +262,9 @@ constructRouteResult(const DataFacade<Algorithm> &facade,
                          target_candidates.end(),
                          [&end_node](const auto &target_phantom)
                          {
-                             return (end_node == target_phantom.forward_segment_id.id ||
+                             return (target_phantom.IsValidForwardTarget() &&
+                                     end_node == target_phantom.forward_segment_id.id) ||
+                                    (target_phantom.IsValidReverseTarget() &&
                                      end_node == target_phantom.reverse_segment_id.id);
                          });
         BOOST_ASSERT(target_it != target_candidates.end());

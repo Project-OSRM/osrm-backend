@@ -74,6 +74,14 @@ std::vector<NodeID> getBackwardForceNodes(const PhantomEndpointCandidates &endpo
     return res;
 }
 
+std::vector<NodeID> getForceStepNodes(const PhantomEndpointCandidates &endpoint_candidates)
+{
+    auto nodes = getForwardForceNodes(endpoint_candidates);
+    const auto backward = getBackwardForceNodes(endpoint_candidates);
+    nodes.insert(nodes.end(), backward.begin(), backward.end());
+    return nodes;
+}
+
 std::vector<NodeID> getBackwardForceNodes(const PhantomCandidatesToTarget &endpoint_candidates)
 {
     std::vector<NodeID> res;
@@ -95,15 +103,16 @@ PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candid
                      candidates.source_phantoms.end(),
                      [&path](const auto &source_phantom)
                      {
-                         // A disabled direction is not a direction the search
-                         // could have set off in, so its id says nothing about
-                         // which candidate this path came from.  Area snapping
-                         // relies on that: it offers one candidate per way
-                         // leaving a vertex, and the two ends of one way carry
-                         // the same pair of ids.
-                         return (source_phantom.forward_segment_id.enabled &&
+                         // A direction the search could not have set off in says
+                         // nothing about which candidate this path came from, and
+                         // that is per role: area snapping offers one candidate
+                         // per way leaving a vertex, and the two ends of one way
+                         // carry the same pair of ids; two candidates on one pair
+                         // may also differ only in the role they serve, one valid
+                         // as a source and the other as a target.
+                         return (source_phantom.IsValidForwardSource() &&
                                  path.front() == source_phantom.forward_segment_id.id) ||
-                                (source_phantom.reverse_segment_id.enabled &&
+                                (source_phantom.IsValidReverseSource() &&
                                  path.front() == source_phantom.reverse_segment_id.id);
                      });
     BOOST_ASSERT(source_it != candidates.source_phantoms.end());
@@ -113,9 +122,9 @@ PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candid
                      candidates.target_phantoms.end(),
                      [&path](const auto &target_phantom)
                      {
-                         return (target_phantom.forward_segment_id.enabled &&
+                         return (target_phantom.IsValidForwardTarget() &&
                                  path.back() == target_phantom.forward_segment_id.id) ||
-                                (target_phantom.reverse_segment_id.enabled &&
+                                (target_phantom.IsValidReverseTarget() &&
                                  path.back() == target_phantom.reverse_segment_id.id);
                      });
     BOOST_ASSERT(target_it != candidates.target_phantoms.end());

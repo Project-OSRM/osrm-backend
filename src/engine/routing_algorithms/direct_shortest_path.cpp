@@ -33,7 +33,7 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<ch::Algorithm> &en
            reverse_heap,
            weight,
            packed_leg,
-           {},
+           getForceStepNodes(endpoint_candidates),
            endpoint_candidates);
 
     std::vector<NodeID> unpacked_nodes;
@@ -76,7 +76,7 @@ InternalRouteResult directShortestPathSearch(SearchEngineData<mld::Algorithm> &e
                                      facade,
                                      forward_heap,
                                      reverse_heap,
-                                     {},
+                                     getForceStepNodes(endpoint_candidates),
                                      INVALID_EDGE_WEIGHT,
                                      endpoint_candidates);
 
