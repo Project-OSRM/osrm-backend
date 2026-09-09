@@ -2,17 +2,16 @@
 
 ## Installing for production
 
-Pre-built wheels are published to PyPI for Linux (x86\_64), macOS (x86\_64),
-and Windows (amd64). They use the CPython 3.12 stable ABI (`cp312-abi3`) and
-therefore install on Python 3.12+:
+Pre-built wheels are published to PyPI for Linux (x86\_64 and aarch64),
+macOS (arm64), and Windows (amd64). They use the CPython 3.12 stable ABI
+(`cp312-abi3`) and therefore install on Python 3.12+:
 
 ```bash
 pip install osrm-bindings
 ```
 
 The package itself supports Python 3.10+ when built from source — needed for
-3.10/3.11, aarch64 Linux, arm64 macOS, or any platform without a pre-built
-wheel:
+3.10/3.11, x86\_64 macOS, or any platform without a pre-built wheel:
 
 ```bash
 pip install osrm-bindings --no-binary osrm-bindings
@@ -338,8 +337,8 @@ After the run finishes, check:
 
 - Tag `v<version>` exists and the GitHub Release is published.
 - [pypi.org/project/osrm-bindings](https://pypi.org/project/osrm-bindings/) shows
-  the new version with an sdist and three platform wheels (manylinux x86_64,
-  macOS x86_64, win_amd64).
+  the new version with an sdist and four platform wheels (manylinux x86_64,
+  manylinux aarch64, macOS arm64, win_amd64).
 - [npmjs.com/package/@project-osrm/osrm](https://www.npmjs.com/package/@project-osrm/osrm)
   shows the matching version.
 

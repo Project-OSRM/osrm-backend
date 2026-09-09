@@ -51,7 +51,6 @@ jobs:
         include:
           - { os: ubuntu-26.04,    triplet: x64-linux }
           - { os: macos-26,        triplet: arm64-osx }
-          - { os: macos-26-intel,  triplet: x64-osx }
           - { os: windows-2025,    triplet: x64-windows-static-md }
     runs-on: ${{ matrix.os }}
     steps:
