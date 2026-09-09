@@ -63,6 +63,14 @@ class AreaMesher
     /** Speed in m/s for crossing an area, taken from the profile. */
     double area_walking_speed{1.4};
     /**
+     * Effective area, in square metres, below which a vertex is simplified away.
+     *
+     * An OSM plaza is drawn to be looked at: its outline follows kerbstones at a
+     * resolution nothing downstream can use, and every vertex is paid for again on each
+     * query that snaps into the area.  Zero switches it off.  See area/simplify.hpp.
+     */
+    double area_simplify_threshold{0.0};
+    /**
      * Emit the area's whole visibility graph rather than the pruned mesh.
      *
      * run_dijkstra() keeps the shortest-path tree rooted at each entry point, which holds
