@@ -507,7 +507,7 @@ jobs:
             CXXCOMPILER: clang++
             vcpkg_triplet: arm64-osx
 
-          # python & nodeJS release bindings — macos-15 for broad binary compatibility
+          # python & nodeJS release bindings
           - name: macos-15-arm64-release-bindings
             build_bindings: true
             continue-on-error: true

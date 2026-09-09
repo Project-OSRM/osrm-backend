@@ -333,6 +333,36 @@ jobs:
           run-id: ${{ needs.release.outputs.run_id }}
           github-token: ${{ github.token }}
 
+      - name: Verify wheel set is complete
+        run: |
+          # The build-matrix jobs that produce wheels are continue-on-error, so
+          # a failed one leaves the CI run green and its artifact simply absent.
+          # Without this check that silently ships a release missing a platform.
+          missing=0
+          for pattern in \
+            'osrm_bindings-*-manylinux*_x86_64.whl' \
+            'osrm_bindings-*-manylinux*_aarch64.whl' \
+            'osrm_bindings-*-macosx_*_arm64.whl' \
+            'osrm_bindings-*-win_amd64.whl' \
+            'osrm_bindings-*.tar.gz'; do
+            if ! compgen -G "dist/$pattern" > /dev/null; then
+              echo "✗ missing artifact matching $pattern"
+              missing=1
+            fi
+          done
+
+          echo "Artifacts downloaded from the CI run:"
+          ls -1 dist/
+
+          if [ "$missing" -ne 0 ]; then
+            echo "✗ Refusing to publish an incomplete set of artifacts to PyPI."
+            echo "  Check the build-matrix jobs in CI run ${{ needs.release.outputs.run_id }}"
+            echo "  for a bindings job that failed under continue-on-error."
+            exit 1
+          fi
+          echo "✓ All expected platform wheels and the sdist are present"
+        shell: bash
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@v1.14.2
         with:
