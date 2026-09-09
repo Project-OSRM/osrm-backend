@@ -2,6 +2,8 @@
 
 #include "util/to_osm_link.hpp"
 
+#include <boost/assert.hpp>
+
 #include <algorithm>
 #include <cstddef>
 
@@ -43,6 +45,13 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
 
     // finally transfer data to the entry/bearing classes
     std::size_t number = 0;
+    // Only an intersection that cannot be discretized can carry more roads than the
+    // entry class holds: a meshed plaza vertex, where every line of sight is a way.
+    // Counted rather than reported one road at a time, since such a vertex is
+    // classified once per edge arriving at it, which made this the loudest thing in an
+    // extraction log by two orders of magnitude -- 157 094 lines over Ile-de-France,
+    // from 276 vertices.
+    std::size_t unrecorded = 0;
     if (canBeDiscretized)
     {
         if (util::guidance::BearingClass::getDiscreteBearing(
@@ -57,11 +66,11 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
         {
             if (road.entry_allowed)
             {
-                if (!entry_class.activate(number))
-                {
-                    util::Log(logWARNING) << "Road " << number << " was not activated at "
-                                          << util::toOSMLink(location);
-                }
+                // a discretizable intersection has a road per bearing bucket at most,
+                // 24, which is within the capacity
+                const bool recorded = entry_class.activate(number);
+                BOOST_ASSERT(recorded);
+                (void)recorded;
             }
 
             auto discrete_bearing_class = util::guidance::BearingClass::getDiscreteBearing(
@@ -79,13 +88,19 @@ classifyIntersection(Intersection intersection, const osrm::util::Coordinate &lo
             {
                 if (!entry_class.activate(number))
                 {
-                    util::Log(logWARNING) << "Road " << number << " was not activated at "
-                                          << util::toOSMLink(location);
+                    ++unrecorded;
                 }
             }
             bearing_class.add(std::round(road.perceived_bearing));
             ++number;
         }
+    }
+    if (unrecorded > 0)
+    {
+        util::Log(logWARNING) << unrecorded << " roads allowing entry could not be recorded at "
+                              << "an intersection of " << number << " roads (capacity "
+                              << util::guidance::EntryClass::CAPACITY << ") at "
+                              << util::toOSMLink(location);
     }
     return std::make_pair(entry_class, bearing_class);
 }
