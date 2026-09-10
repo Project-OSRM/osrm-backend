@@ -27,7 +27,9 @@ function setup()
       u_turn_penalty                 = 20,
       continue_straight_at_waypoint  = true,
       use_turn_restrictions          = true,
-      left_hand_driving              = false,
+      -- left_hand_driving is deliberately unset. Setting it either way forces
+      -- that side on every way the OSM tags and location data leave open;
+      -- leaving it unset lets the driving side index answer per way.
     },
 
     default_mode              = mode.driving,

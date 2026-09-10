@@ -111,7 +111,7 @@ Attribute                     | Type     | Notes
 ------------------------------|----------|----------------------------------------------------------------------------
 weight_name                   | String   | Name used in output for the routing weight property (default `"duration"`)
 weight_precision              | Unsigned | Decimal precision of edge weights (default `1`)
-left_hand_driving             | Boolean  | Are vehicles assumed to drive on the left? (used in guidance, default `false`)
+left_hand_driving             | Boolean  | Force a driving side on every way the OSM tags and location-dependent data leave open. Leave it unset, as the shipped profiles do, to let the driving-side index answer from each way's coordinates instead. See [Driving side](#driving-side)
 use_turn_restrictions         | Boolean  | Are turn restrictions followed? (default `false`)
 continue_straight_at_waypoint | Boolean  | Must the route continue straight on at a via point, or are U-turns allowed? (default `true`)
 max_speed_for_map_matching    | Float    | Maximum vehicle speed to be assumed in matching (in m/s)
@@ -553,6 +553,39 @@ function process_turn(profile, turn) {
   end
 }
 ```
+
+## Driving side
+
+`is_left_hand_driving` on a way decides which side of the road traffic runs on
+there. It reaches the API as `driving_side` on every route step, tells the
+roundabout handler which way a roundabout turns, and tells `process_turn` which
+of a junction's turns crosses oncoming traffic.
+
+`WayHandlers.driving_side` resolves it from the most specific source available:
+
+1. the way's own `driving_side` tag,
+2. a `driving_side` property from a `--location-dependent-data` GeoJSON,
+3. `profile.properties.left_hand_driving`, if the profile sets it either way,
+4. the driving-side index, which classifies the way from its coordinates,
+5. right, if nothing above answered.
+
+The index is on by default and costs nothing for an extract that lies on one
+side of the world's driving-side boundaries: `osrm-extract` classifies the
+bounding box the input declares once, before reading a single way, and if the
+whole box shares a side then every way takes that side. Only an extract that
+spans a boundary, or one whose input declares no bounding box, falls back to
+classifying each way from its nodes, which requires keeping node locations for
+the whole parse and costs time and memory accordingly. A way that itself
+straddles a boundary is settled on its last node, the same node
+`get_location_tag` uses to place a way.
+
+`--driving-side-index` picks the behaviour: `auto` is the default just
+described, `on` classifies every way regardless of the bounding box, and `off`
+disables the index so that only sources 1 to 3 apply.
+
+Note that a profile setting `left_hand_driving` outranks the index, so a profile
+that sets it to `false` forces right-hand traffic worldwide rather than
+disabling the lookup.
 
 ## Guidance
 The guidance parameters in profiles are currently a work in progress. They can and will change.

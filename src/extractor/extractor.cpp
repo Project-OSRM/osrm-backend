@@ -592,8 +592,13 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
                                       osmium::osm_entity_bits::relation,
                                   read_meta);
 
+        // Settle driving side from the declared extent before any way is read.
+        // An extract that shares one side needs no per-way lookup at all, and
+        // so needs none of the node locations that one would require.
+        scripting_environment.SettleDrivingSide(reader.header().box());
+
         const auto pipeline =
-            scripting_environment.HasLocationDependentData() && config.use_locations_cache
+            scripting_environment.NeedsWayLocations() && config.use_locations_cache
                 ? reader_source(reader) & location_cache_filter & process_elements_filter &
                       extractor_callbacks_filter
                 : reader_source(reader) & process_elements_filter & extractor_callbacks_filter;
