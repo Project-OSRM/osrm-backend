@@ -1,7 +1,7 @@
 {
   "name": "gauche",
   "version-string": "0.1.0",
-  "port-version": 2,
+  "port-version": 3,
   "description": "Left-hand traffic area classifier for point, line, and bbox queries over OSM driving-side data",
   "homepage": "https://github.com/Project-OSRM/gauche-rs",
   "license": "BSD-2-Clause",
