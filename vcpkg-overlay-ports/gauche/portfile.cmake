@@ -1,11 +1,12 @@
-# A commit on main rather than v0.1.0, which predates the scratch allocator fix
-# the extractor needs to classify a whole country's worth of ways without
-# growing guest memory without bound. Move to the next tag once one is cut.
+# A commit on main rather than v0.1.0, which predates both the scratch allocator
+# fix the extractor needs to classify a country's worth of ways without growing
+# guest memory, and the segment rejection that made the line and box queries
+# affordable. Move to the next tag once one is cut.
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO Project-OSRM/gauche-rs
-    REF 093cee8fa8cfcd51248dfe4a6fb2aa06335da32c
-    SHA512 ce2613238aa5c558ea9aa3c5e35dd4acfdcea58112498dd86bbb76c5d2225814d15e3843bdb467669f2ec3bfbadd9c295652a271dc49b55b0a55ffdbfc0629a8
+    REF b1c3af3029975ddbe573bad874c4520db77321d0
+    SHA512 b1ad5bbb45ea714005ffe8c2f34bde694448e507d8307818113b31a7288e6958b747660d614337004ea793b82a5ba1fbe02449dee7d06e271a4527741d147840
     HEAD_REF main
 )
 
