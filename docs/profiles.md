@@ -454,6 +454,7 @@ source_restricted                  | Read          | Boolean                   |
 source_mode                        | Read          | Enum                      | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
 source_is_motorway                 | Read          | Boolean                   | Is the source road a motorway?
 source_is_link                     | Read          | Boolean                   | Is the source road a link?
+source_is_roundabout               | Read          | Boolean                   | Is the source road a roundabout or a circular junction?
 source_number_of_lanes             | Read          | Integer                   | How many lanes does the source road have? (default when not tagged: 0)
 source_highway_turn_classification | Read          | Integer                   | Classification based on highway tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 source_access_turn_classification  | Read          | Integer                   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
@@ -463,6 +464,7 @@ target_restricted                  | Read          | Boolean                   |
 target_mode                        | Read          | Enum                      | Travel mode after the turn. Defined in `include/extractor/travel_mode.hpp`
 target_is_motorway                 | Read          | Boolean                   | Is the target road a motorway?
 target_is_link                     | Read          | Boolean                   | Is the target road a link?
+target_is_roundabout               | Read          | Boolean                   | Is the target road a roundabout or a circular junction?
 target_number_of_lanes             | Read          | Integer                   | How many lanes does the target road have? (default when not tagged: 0)
 target_highway_turn_classification | Read          | Integer                   | Classification based on highway tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 target_access_turn_classification  | Read          | Integer                   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))

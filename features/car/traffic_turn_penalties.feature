@@ -56,21 +56,25 @@ Feature: Traffic - turn penalties
                                                                                 # straight
             | i    | g  | fim,fg,fg       | 55 km/h | 13s +-1   | 13s +-1   |
                                                                                 # right
-            | a    | e  | ad,def,def      | 44 km/h | 16.3s +-1 | 16.3s +-1 |
+            | a    | e  | ad,def,def      | 39 km/h | 18.3s +-1 | 18.3s +-1 |
                                                                                 # left
             | c    | g  | cd,def,fg       | 65 km/h | 22s +-1   | 22s +-1   |
                                                                                 # double straight
             | p    | g  | mp,fim,fg,fg    | 60 km/h | 24s +-1   | 24s +-1   |
                                                                                 # straight-right
-            | a    | l  | ad,dhk,klm,klm  | 53 km/h | 27s +-1   | 27s +-1   |
+            | a    | l  | ad,dhk,klm,klm  | 49 km/h | 29.3s +-1 | 29.3s +-1 |
                                                                                 # straight-left
             | l    | e  | klm,dhk,def,def | 55 km/h | 26s +-1   | 26s +-1   |
                                                                                 # double right
-            | g    | n  | fg,fim,mn,mn    | 44 km/h | 32s +-1   | 32s +-1   |
+            | g    | n  | fg,fim,mn,mn    | 39 km/h | 36.6s +-1 | 36.6s +-1 |
                                                                                 # double left
 
     Scenario: Weighting based on turn penalty file
-        Given the turn penalty file
+        Given the profile file "car" initialized with
+        """
+        profile.oncoming_turn_penalty = 0
+        """
+        And the turn penalty file
             """
             9,6,7,1.8
             9,13,14,24.5

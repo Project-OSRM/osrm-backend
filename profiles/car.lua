@@ -37,6 +37,10 @@ function setup()
     turn_penalty              = 7.5,
     speed_reduction           = 0.8,
     turn_bias                 = 1.075,
+    -- Seconds added to a turn that crosses oncoming traffic: a left turn where
+    -- traffic drives on the right, a right turn where it drives on the left.
+    -- Set to 0 to cost turns purely by turn_bias.
+    oncoming_turn_penalty     = 2.0,
     cardinal_directions       = false,
 
     -- Penalty multiplier for roads with no lane markings (lane_markings=no)
@@ -564,6 +568,34 @@ function process_turn(profile, turn)
       turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 / turn_bias) *  turn.angle/180 - 6.5*turn_bias)))
     else
       turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 * turn_bias) * -turn.angle/180 - 6.5/turn_bias)))
+    end
+
+    -- A turn across oncoming traffic waits for a gap, a turn away from it does
+    -- not. turn_bias already leans that way, but it spends itself on the shape
+    -- of the sigmoid, so its effect peaks near 90 degrees and fades to almost
+    -- nothing at the sharp end, where both branches saturate at turn_penalty.
+    -- This term does not fade there.
+    --
+    -- It only applies where there is oncoming traffic to cross. That means a
+    -- real junction, since number_of_roads is also 2 for a mode change or a
+    -- compressed obstacle node and charging those would tax every ferry
+    -- boarding, and it means neither leg is a roundabout, where traffic runs
+    -- one way and going around is a series of turns against nothing. Within a
+    -- junction it tapers with the same sigmoid shape as the turn penalty, so a
+    -- near-straight manoeuvre pays almost nothing and there is no cliff at the
+    -- point where a bend becomes a turn. U-turns are excluded because
+    -- u_turn_penalty already pays for crossing traffic through 180 degrees.
+    local crosses_oncoming
+    if turn.is_left_hand_driving then
+      crosses_oncoming = turn.angle > 0
+    else
+      crosses_oncoming = turn.angle < 0
+    end
+
+    if crosses_oncoming and not turn.is_u_turn and turn.number_of_roads > 2
+       and not turn.source_is_roundabout and not turn.target_is_roundabout then
+      local sharpness = 1 / (1 + math.exp( -(13 * math.abs(turn.angle)/180 - 3.25)))
+      turn.duration = turn.duration + profile.oncoming_turn_penalty * sharpness
     end
 
     if turn.is_u_turn then
