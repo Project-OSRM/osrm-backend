@@ -55,7 +55,9 @@ gauche::Index *DrivingSideIndex::ThreadIndex() const
     auto &slot = indexes.local();
     if (!slot)
     {
-        slot = gauche::Index::create();
+        // The conversion happens here, where the type is complete, which is what
+        // lets the member hold it behind a forward declaration.
+        slot = std::shared_ptr<gauche::Index>{gauche::Index::create()};
         if (!slot)
             util::Log(logWARNING) << "Could not create a driving side index for this thread; "
                                      "driving side falls back to the profile default";

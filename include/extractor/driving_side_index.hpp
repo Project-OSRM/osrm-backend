@@ -80,7 +80,11 @@ class DrivingSideIndex
     mutable std::atomic<bool> settled{false};
     mutable std::optional<bool> settled_side;
 
-    mutable tbb::enumerable_thread_specific<std::unique_ptr<gauche::Index>> indexes;
+    // shared_ptr, not unique_ptr: the deleter is captured where gauche::Index is
+    // complete, in the .cpp, so this header can keep it an opaque forward
+    // declaration. MSVC instantiates unique_ptr's deleter in every translation
+    // unit that destroys one and rejects the incomplete type there.
+    mutable tbb::enumerable_thread_specific<std::shared_ptr<gauche::Index>> indexes;
 };
 
 } // namespace osrm::extractor
