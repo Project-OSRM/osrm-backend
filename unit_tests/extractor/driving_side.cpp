@@ -32,9 +32,12 @@ void addNodes(osmium::memory::Buffer &buffer, const std::vector<osmium::Location
         osmium::builder::add_node(buffer, _id(id++), _location(location));
 }
 
-const osmium::Way &makeWay(osmium::memory::Buffer &buffer,
-                           osmium::object_id_type id,
-                           const std::vector<osmium::Location> &locations)
+// Returns the position rather than a reference to the way. GCC's
+// -Wdangling-reference cannot tell that the reference points into the buffer
+// rather than at the temporary vector of locations, and warns on every call.
+std::size_t addWay(osmium::memory::Buffer &buffer,
+                   osmium::object_id_type id,
+                   const std::vector<osmium::Location> &locations)
 {
     using namespace osmium::builder::attr;
     std::vector<osmium::NodeRef> nodes;
@@ -43,8 +46,7 @@ const osmium::Way &makeWay(osmium::memory::Buffer &buffer,
     for (const auto &location : locations)
         nodes.emplace_back(node_id++, location);
 
-    const auto pos = osmium::builder::add_way(buffer, _id(id), _nodes(nodes));
-    return buffer.get<osmium::Way>(pos);
+    return osmium::builder::add_way(buffer, _id(id), _nodes(nodes));
 }
 } // namespace
 
@@ -56,8 +58,8 @@ BOOST_AUTO_TEST_CASE(off_answers_nothing)
     BOOST_CHECK(!index.NeedsWayLookups());
 
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
-    const auto &way = makeWay(
-        buffer, 1, {osmium::Location{-0.1290, 51.5072}, osmium::Location{-0.1262, 51.5072}});
+    const auto &way = buffer.get<osmium::Way>(addWay(
+        buffer, 1, {osmium::Location{-0.1290, 51.5072}, osmium::Location{-0.1262, 51.5072}}));
     BOOST_CHECK(!index.IsLeftHandTraffic(way));
 }
 
@@ -73,8 +75,8 @@ BOOST_AUTO_TEST_CASE(a_left_hand_extract_is_settled_by_its_observed_extent)
     // A way whose own coordinates are nowhere near the extract still takes the
     // settled side, because a settled extent means no way is ever classified.
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
-    const auto &way =
-        makeWay(buffer, 1, {osmium::Location{2.3500, 48.8566}, osmium::Location{2.3544, 48.8566}});
+    const auto &way = buffer.get<osmium::Way>(
+        addWay(buffer, 1, {osmium::Location{2.3500, 48.8566}, osmium::Location{2.3544, 48.8566}}));
     const auto side = index.IsLeftHandTraffic(way);
     BOOST_REQUIRE(side.has_value());
     BOOST_CHECK_EQUAL(*side, true);
@@ -89,8 +91,8 @@ BOOST_AUTO_TEST_CASE(a_right_hand_extract_is_settled_by_its_observed_extent)
     index.ObserveNodes(nodes);
 
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
-    const auto &way =
-        makeWay(buffer, 1, {osmium::Location{2.3500, 48.8566}, osmium::Location{2.3544, 48.8566}});
+    const auto &way = buffer.get<osmium::Way>(
+        addWay(buffer, 1, {osmium::Location{2.3500, 48.8566}, osmium::Location{2.3544, 48.8566}}));
     const auto side = index.IsLeftHandTraffic(way);
     BOOST_REQUIRE(side.has_value());
     BOOST_CHECK_EQUAL(*side, false);
@@ -113,8 +115,8 @@ BOOST_AUTO_TEST_CASE(the_extent_comes_from_the_nodes_across_several_buffers)
     index.ObserveNodes(second);
 
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
-    const auto &way = makeWay(
-        buffer, 1, {osmium::Location{139.6503, 35.6762}, osmium::Location{139.6600, 35.6800}});
+    const auto &way = buffer.get<osmium::Way>(addWay(
+        buffer, 1, {osmium::Location{139.6503, 35.6762}, osmium::Location{139.6600, 35.6800}}));
     const auto side = index.IsLeftHandTraffic(way);
     BOOST_REQUIRE(side.has_value());
     BOOST_CHECK_EQUAL(*side, true);
@@ -135,20 +137,20 @@ BOOST_AUTO_TEST_CASE(an_extent_spanning_a_boundary_falls_back_to_per_way_lookups
     index.ObserveNodes(nodes);
 
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
-    const auto &north =
-        makeWay(buffer,
-                1,
-                {osmium::Location{HK_BOUNDARY_LON - 0.002, HK_BOUNDARY_LAT + 0.005},
-                 osmium::Location{HK_BOUNDARY_LON + 0.002, HK_BOUNDARY_LAT + 0.005}});
+    const auto &north = buffer.get<osmium::Way>(
+        addWay(buffer,
+               1,
+               {osmium::Location{HK_BOUNDARY_LON - 0.002, HK_BOUNDARY_LAT + 0.005},
+                osmium::Location{HK_BOUNDARY_LON + 0.002, HK_BOUNDARY_LAT + 0.005}}));
     const auto north_side = index.IsLeftHandTraffic(north);
     BOOST_REQUIRE(north_side.has_value());
     BOOST_CHECK_EQUAL(*north_side, false);
 
-    const auto &south =
-        makeWay(buffer,
-                2,
-                {osmium::Location{HK_BOUNDARY_LON - 0.002, HK_BOUNDARY_LAT - 0.005},
-                 osmium::Location{HK_BOUNDARY_LON + 0.002, HK_BOUNDARY_LAT - 0.005}});
+    const auto &south = buffer.get<osmium::Way>(
+        addWay(buffer,
+               2,
+               {osmium::Location{HK_BOUNDARY_LON - 0.002, HK_BOUNDARY_LAT - 0.005},
+                osmium::Location{HK_BOUNDARY_LON + 0.002, HK_BOUNDARY_LAT - 0.005}}));
     const auto south_side = index.IsLeftHandTraffic(south);
     BOOST_REQUIRE(south_side.has_value());
     BOOST_CHECK_EQUAL(*south_side, true);
@@ -159,8 +161,8 @@ BOOST_AUTO_TEST_CASE(an_extract_with_no_nodes_at_all_cannot_settle)
     DrivingSideIndex index{DrivingSideIndex::Mode::Auto};
 
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
-    const auto &way = makeWay(
-        buffer, 1, {osmium::Location{-0.1290, 51.5072}, osmium::Location{-0.1262, 51.5072}});
+    const auto &way = buffer.get<osmium::Way>(addWay(
+        buffer, 1, {osmium::Location{-0.1290, 51.5072}, osmium::Location{-0.1262, 51.5072}}));
     // Nothing was observed, so it falls through to classifying the way itself.
     const auto side = index.IsLeftHandTraffic(way);
     BOOST_REQUIRE(side.has_value());
@@ -179,8 +181,8 @@ BOOST_AUTO_TEST_CASE(always_never_observes_and_never_settles)
 
     // The London extent is ignored; this Paris way is classified on its own.
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
-    const auto &way =
-        makeWay(buffer, 1, {osmium::Location{2.3500, 48.8566}, osmium::Location{2.3544, 48.8566}});
+    const auto &way = buffer.get<osmium::Way>(
+        addWay(buffer, 1, {osmium::Location{2.3500, 48.8566}, osmium::Location{2.3544, 48.8566}}));
     const auto side = index.IsLeftHandTraffic(way);
     BOOST_REQUIRE(side.has_value());
     BOOST_CHECK_EQUAL(*side, false);
@@ -192,20 +194,20 @@ BOOST_AUTO_TEST_CASE(ways_are_classified_on_either_side_of_a_boundary)
 
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
 
-    const auto &north =
-        makeWay(buffer,
-                1,
-                {osmium::Location{HK_BOUNDARY_LON - 0.002, HK_BOUNDARY_LAT + 0.005},
-                 osmium::Location{HK_BOUNDARY_LON + 0.002, HK_BOUNDARY_LAT + 0.005}});
+    const auto &north = buffer.get<osmium::Way>(
+        addWay(buffer,
+               1,
+               {osmium::Location{HK_BOUNDARY_LON - 0.002, HK_BOUNDARY_LAT + 0.005},
+                osmium::Location{HK_BOUNDARY_LON + 0.002, HK_BOUNDARY_LAT + 0.005}}));
     const auto north_side = index.IsLeftHandTraffic(north);
     BOOST_REQUIRE(north_side.has_value());
     BOOST_CHECK_EQUAL(*north_side, false);
 
-    const auto &south =
-        makeWay(buffer,
-                2,
-                {osmium::Location{HK_BOUNDARY_LON - 0.002, HK_BOUNDARY_LAT - 0.005},
-                 osmium::Location{HK_BOUNDARY_LON + 0.002, HK_BOUNDARY_LAT - 0.005}});
+    const auto &south = buffer.get<osmium::Way>(
+        addWay(buffer,
+               2,
+               {osmium::Location{HK_BOUNDARY_LON - 0.002, HK_BOUNDARY_LAT - 0.005},
+                osmium::Location{HK_BOUNDARY_LON + 0.002, HK_BOUNDARY_LAT - 0.005}}));
     const auto south_side = index.IsLeftHandTraffic(south);
     BOOST_REQUIRE(south_side.has_value());
     BOOST_CHECK_EQUAL(*south_side, true);
@@ -218,19 +220,21 @@ BOOST_AUTO_TEST_CASE(a_straddling_way_is_settled_on_its_last_node)
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
 
     // North to south, so the last node is in Hong Kong.
-    const auto &southbound = makeWay(buffer,
-                                     1,
-                                     {osmium::Location{HK_BOUNDARY_LON, HK_BOUNDARY_LAT + 0.005},
-                                      osmium::Location{HK_BOUNDARY_LON, HK_BOUNDARY_LAT - 0.005}});
+    const auto &southbound = buffer.get<osmium::Way>(
+        addWay(buffer,
+               1,
+               {osmium::Location{HK_BOUNDARY_LON, HK_BOUNDARY_LAT + 0.005},
+                osmium::Location{HK_BOUNDARY_LON, HK_BOUNDARY_LAT - 0.005}}));
     const auto southbound_side = index.IsLeftHandTraffic(southbound);
     BOOST_REQUIRE(southbound_side.has_value());
     BOOST_CHECK_EQUAL(*southbound_side, true);
 
     // The same geometry the other way round ends on the mainland.
-    const auto &northbound = makeWay(buffer,
-                                     2,
-                                     {osmium::Location{HK_BOUNDARY_LON, HK_BOUNDARY_LAT - 0.005},
-                                      osmium::Location{HK_BOUNDARY_LON, HK_BOUNDARY_LAT + 0.005}});
+    const auto &northbound = buffer.get<osmium::Way>(
+        addWay(buffer,
+               2,
+               {osmium::Location{HK_BOUNDARY_LON, HK_BOUNDARY_LAT - 0.005},
+                osmium::Location{HK_BOUNDARY_LON, HK_BOUNDARY_LAT + 0.005}}));
     const auto northbound_side = index.IsLeftHandTraffic(northbound);
     BOOST_REQUIRE(northbound_side.has_value());
     BOOST_CHECK_EQUAL(*northbound_side, false);
@@ -241,7 +245,8 @@ BOOST_AUTO_TEST_CASE(a_way_without_locations_cannot_be_classified)
     DrivingSideIndex index{DrivingSideIndex::Mode::Always};
 
     osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
-    const auto &way = makeWay(buffer, 1, {osmium::Location{}, osmium::Location{}});
+    const auto &way =
+        buffer.get<osmium::Way>(addWay(buffer, 1, {osmium::Location{}, osmium::Location{}}));
     BOOST_CHECK(!index.IsLeftHandTraffic(way));
 }
 
@@ -253,10 +258,10 @@ BOOST_AUTO_TEST_CASE(classification_is_thread_safe_and_does_not_grow)
     DrivingSideIndex index{DrivingSideIndex::Mode::Always};
 
     osmium::memory::Buffer buffer{1024 * 64, osmium::memory::Buffer::auto_grow::yes};
-    const auto &london = makeWay(
-        buffer, 1, {osmium::Location{-0.1290, 51.5072}, osmium::Location{-0.1262, 51.5072}});
-    const auto &paris =
-        makeWay(buffer, 2, {osmium::Location{2.3500, 48.8566}, osmium::Location{2.3544, 48.8566}});
+    const auto &london = buffer.get<osmium::Way>(addWay(
+        buffer, 1, {osmium::Location{-0.1290, 51.5072}, osmium::Location{-0.1262, 51.5072}}));
+    const auto &paris = buffer.get<osmium::Way>(
+        addWay(buffer, 2, {osmium::Location{2.3500, 48.8566}, osmium::Location{2.3544, 48.8566}}));
 
     std::atomic<std::size_t> left{0};
     std::atomic<std::size_t> right{0};
