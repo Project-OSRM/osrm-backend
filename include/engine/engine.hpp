@@ -1,6 +1,7 @@
 #ifndef ENGINE_HPP
 #define ENGINE_HPP
 
+#include "engine/api/isochrone_parameters.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
@@ -10,6 +11,7 @@
 #include "engine/concepts.hpp"
 #include "engine/datafacade_provider.hpp"
 #include "engine/engine_config.hpp"
+#include "engine/plugins/isochrone.hpp"
 #include "engine/plugins/match.hpp"
 #include "engine/plugins/nearest.hpp"
 #include "engine/plugins/table.hpp"
@@ -37,6 +39,8 @@ class EngineInterface
     virtual Status Trip(const api::TripParameters &parameters, api::ResultT &result) const = 0;
     virtual Status Match(const api::MatchParameters &parameters, api::ResultT &result) const = 0;
     virtual Status Tile(const api::TileParameters &parameters, api::ResultT &result) const = 0;
+    virtual Status Isochrone(const api::IsochroneParameters &parameters,
+                             api::ResultT &result) const = 0;
 };
 
 template <routing_algorithms::RoutingAlgorithm Algorithm>
@@ -54,7 +58,14 @@ class Engine final : public EngineInterface
           match_plugin(config.max_locations_map_matching,
                        config.max_radius_map_matching,
                        config.default_radius), //
-          tile_plugin()                        //
+          tile_plugin(),                       //
+          isochrone_plugin(config.default_radius,
+                           static_cast<std::size_t>(config.max_isochrone_search_records),
+                           static_cast<std::size_t>(config.max_isochrone_materialized_points),
+                           static_cast<std::size_t>(config.max_isochrone_rasterization_steps),
+                           static_cast<std::size_t>(config.max_isochrone_output_points),
+                           static_cast<std::size_t>(config.max_isochrone_grid_cells),
+                           static_cast<std::size_t>(config.max_isochrone_contours))
 
     {
         if (config.use_shared_memory)
@@ -107,6 +118,10 @@ class Engine final : public EngineInterface
     Status Tile(const api::TileParameters &params, api::ResultT &result) const override final
     { return tile_plugin.HandleRequest(GetAlgorithms(params), params, result); }
 
+    Status Isochrone(const api::IsochroneParameters &params,
+                     api::ResultT &result) const override final
+    { return isochrone_plugin.HandleRequest(GetAlgorithms(params), params, result); }
+
   private:
     template <typename ParametersT> auto GetAlgorithms(const ParametersT &params) const
     { return RoutingAlgorithms<Algorithm>{heaps, facade_provider->Get(params)}; }
@@ -119,6 +134,7 @@ class Engine final : public EngineInterface
     const plugins::TripPlugin trip_plugin;
     const plugins::MatchPlugin match_plugin;
     const plugins::TilePlugin tile_plugin;
+    const plugins::IsochronePlugin isochrone_plugin;
 };
 } // namespace osrm::engine
 

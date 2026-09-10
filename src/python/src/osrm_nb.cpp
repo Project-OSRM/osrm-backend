@@ -1,5 +1,6 @@
 #include "python/engineconfig_nb.hpp"
 #include "python/parameters/baseparameter_nb.hpp"
+#include "python/parameters/isochroneparameter_nb.hpp"
 #include "python/parameters/matchparameter_nb.hpp"
 #include "python/parameters/nearestparameter_nb.hpp"
 #include "python/parameters/routeparameter_nb.hpp"
@@ -12,6 +13,7 @@
 #include "python/types/jsoncontainer_nb.hpp"
 #include "python/types/optional_nb.hpp"
 #include "python/utility/osrm_utility.hpp"
+#include "engine/api/isochrone_parameters.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
@@ -36,6 +38,7 @@ NB_MODULE(osrm_ext, m)
 
     using osrm::OSRM;
     using osrm::engine::EngineConfig;
+    using osrm::engine::api::IsochroneParameters;
     using osrm::engine::api::MatchParameters;
     using osrm::engine::api::NearestParameters;
     using osrm::engine::api::RouteParameters;
@@ -52,6 +55,7 @@ NB_MODULE(osrm_ext, m)
     init_Optional(m);
 
     init_BaseParameters(m);
+    init_IsochroneParameters(m);
     init_NearestParameters(m);
     init_TableParameters(m);
     init_RouteParameters(m);
@@ -73,6 +77,12 @@ NB_MODULE(osrm_ext, m)
                         max_locations_distance_table = 3,\n\
                         max_locations_map_matching = 3,\n\
                         max_results_nearest = 1,\n\
+                        max_isochrone_search_records = 100000,\n\
+                        max_isochrone_materialized_points = 1000000,\n\
+                        max_isochrone_rasterization_steps = 5000000,\n\
+                        max_isochrone_output_points = 1000000,\n\
+                        max_isochrone_grid_cells = 250000,\n\
+                        max_isochrone_contours = 10,\n\
                         max_alternatives = 1,\n\
                         default_radius = 'unlimited'\n\
                     )\n\n"
@@ -110,6 +120,32 @@ NB_MODULE(osrm_ext, m)
 
                  new (t) OSRM(config);
              })
+        .def(
+            "Isochrone",
+            [](OSRM *t, const IsochroneParameters &params)
+            {
+                if (!params.IsValid())
+                {
+                    throw std::runtime_error("Invalid Isochrone Parameters");
+                }
+
+                json::Object result;
+                const auto status = t->Isochrone(params, result);
+                osrm_nb_util::check_status(status, result);
+
+                return result;
+            },
+            "Computes the region reachable from one coordinate within each supplied "
+            "elapsed-duration "
+            "contour in seconds. Durations are evaluated at decisecond precision.\n\n"
+            "Examples:\n\
+                >>> res = osrm_py.Isochrone(isochrone_params)\n\n"
+            "Args:\n\
+                isochrone_params (osrm.IsochroneParameters): IsochroneParameters Object.\n\n"
+            "Returns:\n\
+                (json): A GeoJSON FeatureCollection.\n\n"
+            "Raises:\n\
+                RuntimeError: On invalid IsochroneParameters.")
         .def(
             "Match",
             [](OSRM *t, const MatchParameters &params)

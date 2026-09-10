@@ -3,6 +3,7 @@
 
 #include "extractor/area_routing_data.hpp"
 #include "extractor/edge_based_edge.hpp"
+#include "extractor/isochrone_transition.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
@@ -11,6 +12,7 @@
 #include "extractor/turn_lane_types.hpp"
 
 #include "util/coordinate.hpp"
+#include "util/exception.hpp"
 #include "util/guidance/bearing_class.hpp"
 #include "util/guidance/entry_class.hpp"
 #include "util/guidance/turn_lanes.hpp"
@@ -89,6 +91,25 @@ void writeEdgeBasedGraph(const std::filesystem::path &path,
     writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
 }
 
+template <typename EdgeBasedEdgeVector>
+void writeEdgeBasedGraph(const std::filesystem::path &path,
+                         EdgeID const number_of_edge_based_nodes,
+                         const EdgeBasedEdgeVector &edge_based_edge_list,
+                         const std::uint32_t connectivity_checksum,
+                         const std::vector<IsochroneTransition> &isochrone_transitions)
+{
+    static_assert(std::is_same<typename EdgeBasedEdgeVector::value_type, EdgeBasedEdge>::value, "");
+
+    storage::tar::FileWriter writer(path, storage::tar::FileWriter::GenerateFingerprint);
+
+    writer.WriteElementCount64("/common/number_of_edge_based_nodes", 1);
+    writer.WriteFrom("/common/number_of_edge_based_nodes", number_of_edge_based_nodes);
+    storage::serialization::write(writer, "/common/edge_based_edge_list", edge_based_edge_list);
+    writer.WriteElementCount64("/common/connectivity_checksum", 1);
+    writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
+    storage::serialization::write(writer, "/common/isochrone_transitions", isochrone_transitions);
+}
+
 // reads .osrm.ebg file
 template <typename EdgeBasedEdgeVector>
 void readEdgeBasedGraph(const std::filesystem::path &path,
@@ -103,6 +124,35 @@ void readEdgeBasedGraph(const std::filesystem::path &path,
     reader.ReadInto("/common/number_of_edge_based_nodes", number_of_edge_based_nodes);
     storage::serialization::read(reader, "/common/edge_based_edge_list", edge_based_edge_list);
     reader.ReadInto("/common/connectivity_checksum", connectivity_checksum);
+}
+
+inline bool readIsochroneTransitions(storage::tar::FileReader &reader,
+                                     std::vector<IsochroneTransition> &isochrone_transitions)
+{
+    constexpr auto transitions_name = "/common/isochrone_transitions";
+    const auto has_transitions = reader.HasEntry(transitions_name);
+    const auto has_count = reader.HasEntry(std::string(transitions_name) + ".meta");
+
+    if (!has_transitions && !has_count)
+    {
+        isochrone_transitions.clear();
+        return false;
+    }
+
+    if (!has_transitions || !has_count)
+        throw util::exception("Incomplete isochrone transitions in edge-based graph");
+
+    storage::serialization::read(reader, transitions_name, isochrone_transitions);
+    if (!isSortedAndUniqueIsochroneTransitions(isochrone_transitions))
+        throw util::exception("Invalid isochrone transitions in edge-based graph");
+    return true;
+}
+
+inline bool readIsochroneTransitions(const std::filesystem::path &path,
+                                     std::vector<IsochroneTransition> &isochrone_transitions)
+{
+    storage::tar::FileReader reader(path, storage::tar::FileReader::VerifyFingerprint);
+    return readIsochroneTransitions(reader, isochrone_transitions);
 }
 
 // reads .osrm.nbg_nodes

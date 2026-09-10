@@ -2,6 +2,7 @@
 #define OSRM_PARTITIONER_RENUMBER_HPP
 
 #include "extractor/edge_based_node_segment.hpp"
+#include "extractor/isochrone_transition.hpp"
 #include "extractor/maneuver_override.hpp"
 #include "extractor/nbg_to_ebg.hpp"
 #include "extractor/node_data_container.hpp"
@@ -77,6 +78,19 @@ inline void renumber(std::vector<NodeID> &node_ids, const std::vector<std::uint3
         if (node_id != SPECIAL_NODEID)
             node_id = permutation[node_id];
     }
+}
+
+inline void renumber(std::vector<extractor::IsochroneTransition> &transitions,
+                     const std::vector<std::uint32_t> &permutation)
+{
+    for (auto &transition : transitions)
+    {
+        BOOST_ASSERT(transition.source < permutation.size());
+        BOOST_ASSERT(transition.target < permutation.size());
+        transition.source = permutation[transition.source];
+        transition.target = permutation[transition.target];
+    }
+    extractor::sortAndUniqueIsochroneTransitions(transitions);
 }
 
 inline void renumber(std::vector<extractor::StorageManeuverOverride> &maneuver_overrides,

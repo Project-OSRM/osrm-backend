@@ -46,6 +46,7 @@ struct PartitionerConfig final : storage::IOConfig
     std::size_t num_optimizing_cuts;
     std::size_t small_component_size;
     std::vector<std::size_t> max_cell_sizes;
+    bool generate_isochrone_data = false;
 };
 } // namespace osrm::partitioner
 

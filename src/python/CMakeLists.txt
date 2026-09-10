@@ -22,6 +22,7 @@ set(SRCS
   src/utility/param_utility.cpp
 
   src/parameters/baseparameter_nb.cpp
+  src/parameters/isochroneparameter_nb.cpp
   src/parameters/routeparameter_nb.cpp
   src/parameters/matchparameter_nb.cpp
   src/parameters/nearestparameter_nb.cpp

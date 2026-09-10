@@ -22,6 +22,12 @@ engine = osrm.OSRM(
     max_locations_distance_table=3,
     max_locations_map_matching=3,
     max_results_nearest=1,
+    max_isochrone_search_records=100_000,
+    max_isochrone_materialized_points=1_000_000,
+    max_isochrone_rasterization_steps=5_000_000,
+    max_isochrone_output_points=1_000_000,
+    max_isochrone_grid_cells=250_000,
+    max_isochrone_contours=10,
     max_alternatives=1,
     default_radius="unlimited",
 )
@@ -43,6 +49,12 @@ engine = osrm.OSRM(use_shared_memory=True)
 - **`max_locations_distance_table`** `int` - Max locations in table queries.
 - **`max_locations_map_matching`** `int` - Max locations in match queries.
 - **`max_results_nearest`** `int` - Max results in nearest queries.
+- **`max_isochrone_search_records`** `int` - Max in-memory isochrone search records, including discovered graph labels and supplemental boundary records. Default: `100000`.
+- **`max_isochrone_materialized_points`** `int` - Per-stage cap for input geometry fragments, expanded geometry points, weighted polylines, and weighted-polyline points. Default: `1000000`.
+- **`max_isochrone_rasterization_steps`** `int` - Max raster cell updates by an isochrone query. Default: `5000000`.
+- **`max_isochrone_output_points`** `int` - Max GeoJSON contour coordinates returned by an isochrone query. Default: `1000000`.
+- **`max_isochrone_grid_cells`** `int` - Max raster grid cells used by an isochrone query. Default: `250000`.
+- **`max_isochrone_contours`** `int` - Max contours requested by an isochrone query. Default: `10`.
 - **`max_alternatives`** `int` - Max alternative routes.
 - **`default_radius`** `float | "unlimited"` - Default search radius in meters.
 
@@ -127,6 +139,31 @@ Inherits all [BaseParameters](#baseparameters).
 
 - **`number_of_results`** `int` - Number of nearest segments to return. Default: `1`.
 
+## Isochrone
+
+Computes the region reachable from one coordinate within each supplied elapsed-duration contour.
+Contours are in seconds and are evaluated at decisecond precision. Each returned feature reports
+the requested `contour` and the quantized `effective_contour` that was evaluated. CH data must be
+prepared with `osrm-contract --generate-isochrone-data` (and the same option on
+`osrm-partition` if partitioning is used). MLD data requires the option on both
+`osrm-partition` and `osrm-customize`.
+
+    params = osrm.IsochroneParameters(
+        coordinates=[(7.41337, 43.72956)],
+        contours=[300.0, 600.0],
+        direction="outbound",
+        polygons=True,
+    )
+    result = engine.Isochrone(params)
+
+### IsochroneParameters
+
+Inherits all [BaseParameters](#baseparameters). Exactly one coordinate is required.
+
+- **`contours`** `list[float]` - Positive elapsed-duration thresholds in seconds.
+- **`direction`** `str` - `"outbound"` or `"inbound"`. Default: `"outbound"`.
+- **`polygons`** `bool` - Return filled polygons rather than contour lines. Default: `True`.
+
 ## Match
 
 Snaps noisy GPS traces to the road network.
@@ -192,7 +229,7 @@ result = engine.Tile(params)  # returns bytes
 
 ## BaseParameters
 
-Shared parameters inherited by Nearest, Table, Route, Match, and Trip.
+Shared parameters inherited by Isochrone, Nearest, Table, Route, Match, and Trip.
 
 - **`coordinates`** `list[tuple[float, float]]` - List of `(longitude, latitude)` pairs.
 - **`hints`** `list[str | None]` - Base64-encoded hints from previous requests.

@@ -74,6 +74,24 @@ void populate_cfg_from_kwargs(const nb::kwargs &kwargs, EngineConfig &config)
                    {"max_results_nearest",
                     [&config](const std::pair<nb::handle, nb::handle> &val)
                     { assign_val(config.max_results_nearest, val); }},
+                   {"max_isochrone_search_records",
+                    [&config](const std::pair<nb::handle, nb::handle> &val)
+                    { assign_val(config.max_isochrone_search_records, val); }},
+                   {"max_isochrone_materialized_points",
+                    [&config](const std::pair<nb::handle, nb::handle> &val)
+                    { assign_val(config.max_isochrone_materialized_points, val); }},
+                   {"max_isochrone_rasterization_steps",
+                    [&config](const std::pair<nb::handle, nb::handle> &val)
+                    { assign_val(config.max_isochrone_rasterization_steps, val); }},
+                   {"max_isochrone_output_points",
+                    [&config](const std::pair<nb::handle, nb::handle> &val)
+                    { assign_val(config.max_isochrone_output_points, val); }},
+                   {"max_isochrone_grid_cells",
+                    [&config](const std::pair<nb::handle, nb::handle> &val)
+                    { assign_val(config.max_isochrone_grid_cells, val); }},
+                   {"max_isochrone_contours",
+                    [&config](const std::pair<nb::handle, nb::handle> &val)
+                    { assign_val(config.max_isochrone_contours, val); }},
                    {"default_radius",
                     [&config](const std::pair<nb::handle, nb::handle> &val)
                     {

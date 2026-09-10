@@ -3,6 +3,8 @@
 
 #include "contractor/query_graph.hpp"
 
+#include "engine/isochrone/duration_graph.hpp"
+
 namespace osrm::contractor
 {
 
@@ -12,6 +14,7 @@ template <storage::Ownership Ownership> struct ContractedMetric
 {
     detail::QueryGraph<Ownership> graph;
     std::vector<util::ViewOrVector<bool, Ownership>> edge_filter;
+    engine::isochrone::detail::DurationGraph<Ownership> isochrone_graph;
 };
 } // namespace detail
 

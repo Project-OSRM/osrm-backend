@@ -64,6 +64,9 @@ return_code parseArguments(int argc,
             ->default_value(0.0),
         "Use with `--segment-speed-file`. Provide an `x` factor, by which Extractor will log edge "
         "weights updated by more than this factor")(
+        "generate-isochrone-data",
+        boost::program_options::bool_switch(&contractor_config.generate_isochrone_data),
+        "Generate the additional CH index required by the isochrone service")(
         "parse-conditionals-from-now",
         boost::program_options::value<std::time_t>(&contractor_config.updater_config.valid_now)
             ->default_value(0),

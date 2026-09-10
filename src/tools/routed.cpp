@@ -187,6 +187,25 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("max-nearest-locations",
          value<int>(&config.max_locations_nearest)->default_value(10),
          "Max. locations supported in nearest query") //
+        ("max-isochrone-search-records",
+         value<int>(&config.max_isochrone_search_records)->default_value(100'000),
+         "Max. in-memory isochrone search records") //
+        ("max-isochrone-materialized-points",
+         value<int>(&config.max_isochrone_materialized_points)->default_value(1'000'000),
+         "Per-stage cap for geometry fragments, expanded points, polylines, and weighted points "
+         "while computing an isochrone") //
+        ("max-isochrone-rasterization-steps",
+         value<int>(&config.max_isochrone_rasterization_steps)->default_value(5'000'000),
+         "Max. raster cell updates while computing an isochrone") //
+        ("max-isochrone-output-points",
+         value<int>(&config.max_isochrone_output_points)->default_value(1'000'000),
+         "Max. GeoJSON contour coordinates returned by an isochrone query") //
+        ("max-isochrone-grid-cells",
+         value<int>(&config.max_isochrone_grid_cells)->default_value(250'000),
+         "Max. raster grid cells used while computing an isochrone") //
+        ("max-isochrone-contours",
+         value<int>(&config.max_isochrone_contours)->default_value(10),
+         "Max. contours requested by an isochrone query") //
         ("max-alternatives",
          value<int>(&config.max_alternatives)->default_value(3),
          "Max. number of alternatives supported in the MLD route query") //

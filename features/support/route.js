@@ -275,7 +275,16 @@ export default class Route {
     params.coordinates = nodes.map((n) => [n.lon, n.lat].join(','));
 
     return this.requestPath('nearest', params, callback);
-  } 
+  }
+
+  requestIsochrone(node, userParams, callback) {
+    const defaults = { output: 'json' },
+      params = this.overwriteParams(defaults, userParams);
+
+    params.coordinates = [[node.lon, node.lat].join(',')];
+
+    return this.requestPath('isochrone', params, callback);
+  }
 
   requestTable(waypoints, userParams, callback) {
     const defaults = {

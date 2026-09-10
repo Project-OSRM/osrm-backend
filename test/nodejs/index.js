@@ -4,6 +4,7 @@ import { OSRM, data_path as monaco_path, test_memory_path as test_memory_file, m
 
 // Import all test modules
 import './route.js';
+import './isochrone.js';
 import './trip.js';
 import './match.js';
 import './tile.js';
@@ -132,10 +133,32 @@ test('constructor: parses custom limits', (assert) => {
     max_locations_distance_table: 1,
     max_locations_map_matching: 1,
     max_results_nearest: 1,
+    max_isochrone_search_records: 100,
+    max_isochrone_materialized_points: 1_000,
+    max_isochrone_rasterization_steps: 5_000,
+    max_isochrone_output_points: 1_000,
+    max_isochrone_grid_cells: 100,
+    max_isochrone_contours: 1,
     max_alternatives: 1,
     default_radius: 1
   });
   assert.ok(osrm);
+});
+
+test('constructor: rejects invalid isochrone limits', (assert) => {
+  assert.plan(6);
+  for (const [option, value] of Object.entries({
+    max_isochrone_search_records: 0,
+    max_isochrone_materialized_points: -1,
+    max_isochrone_rasterization_steps: 1.5,
+    max_isochrone_output_points: 1.5,
+    max_isochrone_grid_cells: Infinity,
+    max_isochrone_contours: 'ten',
+  })) {
+    assert.throws(() => {
+      new OSRM({ path: monaco_mld_path, algorithm: 'MLD', [option]: value });
+    }, new RegExp(`${option} must be a positive integral number`));
+  }
 });
 
 test('constructor: throws on invalid custom limits', (assert) => {

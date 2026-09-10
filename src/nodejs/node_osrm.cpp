@@ -1,4 +1,5 @@
 #include "osrm/engine_config.hpp"
+#include "osrm/isochrone_parameters.hpp"
 #include "osrm/osrm.hpp"
 
 #include "osrm/match_parameters.hpp"
@@ -25,6 +26,7 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
                                       "OSRM",
                                       {
                                           InstanceMethod("route", &Engine::route),
+                                          InstanceMethod("isochrone", &Engine::isochrone),
                                           InstanceMethod("nearest", &Engine::nearest),
                                           InstanceMethod("table", &Engine::table),
                                           InstanceMethod("tile", &Engine::tile),
@@ -76,6 +78,12 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
  * @param {Number} [options.max_locations_map_matching] Max. locations supported in map-matching query (default: unlimited).
  * @param {Number} [options.max_radius_map_matching] Max. radius size supported in map matching query (default: 5).
  * @param {Number} [options.max_results_nearest] Max. results supported in nearest query (default: unlimited).
+ * @param {Number} [options.max_isochrone_search_records] Max. in-memory isochrone search records, including discovered graph labels and supplemental boundary records (default: 100000).
+ * @param {Number} [options.max_isochrone_materialized_points] Per-stage cap for geometry fragments, expanded points, polylines, and weighted points materialized by an isochrone query (default: 1000000).
+ * @param {Number} [options.max_isochrone_rasterization_steps] Max. raster cell updates by an isochrone query (default: 5000000).
+ * @param {Number} [options.max_isochrone_output_points] Max. GeoJSON contour coordinates returned by an isochrone query (default: 1000000).
+ * @param {Number} [options.max_isochrone_grid_cells] Max. raster grid cells used by an isochrone query (default: 250000).
+ * @param {Number} [options.max_isochrone_contours] Max. contours requested by an isochrone query (default: 10).
  * @param {Number} [options.max_alternatives] Max. number of alternatives supported in alternative routes query (default: 3).
  * @param {Number} [options.default_radius] Default radius for queries (default: unlimited).
  *
@@ -312,6 +320,45 @@ Napi::Value Engine::route(const Napi::CallbackInfo &info)
                                          osrm::engine::api::ResultT &result) const =
         &osrm::OSRM::Route;
     async(info, &argumentsToRouteParameter, route_fn, true);
+    return info.Env().Undefined();
+}
+
+// clang-format off
+/**
+ * Computes the region reachable from one coordinate within each supplied elapsed-duration contour.
+ * Contours are in seconds and evaluated at decisecond precision. Each feature reports both the
+ * requested `contour` and the quantized `effective_contour` that was evaluated. CH data must be
+ * prepared with `osrm-contract --generate-isochrone-data` (and the same option on
+ * `osrm-partition` if partitioning is used). MLD data requires the option on both
+ * `osrm-partition` and `osrm-customize`.
+ *
+ * @name isochrone
+ * @memberof OSRM
+ * @param {Object} options Object literal containing parameters for the isochrone query.
+ * @param {Array} options.coordinates Exactly one coordinate as a `[longitude, latitude]` pair.
+ * @param {Array<Number>} options.contours Positive elapsed-duration thresholds in seconds.
+ * @param {String} [options.direction=outbound] Travel direction: `outbound` or `inbound`.
+ * @param {Boolean} [options.polygons=true] Return filled polygons rather than contour lines.
+ * @param {Array} [options.bearings] Limits the coordinate snapping to segments with the given bearing.
+ * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters.
+ * @param {Array} [options.hints] Hint from a previous request to derive position in street network.
+ * @param {Boolean} [options.generate_hints=true] Whether to include a hint for the snapped waypoint.
+ * @param {Array} [options.approaches] Restrict the direction on the road network at the input coordinate.
+ * @param {Array} [options.exclude] List of classes to avoid, order does not matter.
+ * @param {String} [options.format=json] Response format. Only `json` is supported.
+ * @param {String} [options.snapping=default] Which edges can be snapped to, either `default` or `any`.
+ * @param {Boolean} [options.skip_waypoints=false] Remove snapped waypoints from the response.
+ * @param {Function} callback
+ *
+ * @returns {Object} A GeoJSON FeatureCollection with one feature for each requested contour.
+ */
+// clang-format on
+Napi::Value Engine::isochrone(const Napi::CallbackInfo &info)
+{
+    osrm::Status (osrm::OSRM::*isochrone_fn)(const osrm::IsochroneParameters &params,
+                                             osrm::engine::api::ResultT &result) const =
+        &osrm::OSRM::Isochrone;
+    async(info, &argumentsToIsochroneParameter, isochrone_fn, {/*unused*/});
     return info.Env().Undefined();
 }
 

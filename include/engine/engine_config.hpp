@@ -50,6 +50,9 @@ namespace osrm::engine
  *  - Match
  *  - Nearest
  *
+ * Isochrone resource limits are finite and must be positive. They bound the search, each geometry
+ * materialization stage, response, grid, and contour work performed for each request.
+ *
  * In addition, shared memory can be used for datasets loaded with osrm-datastore.
  *
  * You can chose between two algorithms:
@@ -79,6 +82,12 @@ struct EngineConfig final
     int max_locations_nearest = 10;
     double max_radius_map_matching = -1.0;
     int max_results_nearest = -1;
+    int max_isochrone_search_records = 100'000;
+    int max_isochrone_materialized_points = 1'000'000;
+    int max_isochrone_rasterization_steps = 5'000'000;
+    int max_isochrone_output_points = 1'000'000;
+    int max_isochrone_grid_cells = 250'000;
+    int max_isochrone_contours = 10;
     double default_radius = -1.0;
     int max_alternatives = 3; // set an arbitrary upper bound; can be adjusted by user
     bool use_shared_memory = true;

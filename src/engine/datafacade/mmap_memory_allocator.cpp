@@ -4,6 +4,7 @@
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/storage.hpp"
+#include "storage/view_factory.hpp"
 
 #include "util/log.hpp"
 #include "util/mmap_file.hpp"
@@ -65,6 +66,7 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
     }
 
     index = storage::SharedDataIndex{std::move(allocated_regions)};
+    storage::validateIsochroneIndex(index);
 }
 
 MMapMemoryAllocator::~MMapMemoryAllocator() {}

@@ -20,6 +20,7 @@ class Engine final : public Napi::ObjectWrap<Engine>
 
   private:
     Napi::Value route(const Napi::CallbackInfo &info);
+    Napi::Value isochrone(const Napi::CallbackInfo &info);
     Napi::Value nearest(const Napi::CallbackInfo &info);
     Napi::Value table(const Napi::CallbackInfo &info);
     Napi::Value tile(const Napi::CallbackInfo &info);

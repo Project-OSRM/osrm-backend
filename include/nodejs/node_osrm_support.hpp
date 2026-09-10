@@ -7,6 +7,7 @@
 #include "osrm/bearing.hpp"
 #include "osrm/coordinate.hpp"
 #include "osrm/engine_config.hpp"
+#include "osrm/isochrone_parameters.hpp"
 #include "osrm/json_container.hpp"
 #include "osrm/match_parameters.hpp"
 #include "osrm/nearest_parameters.hpp"
@@ -24,7 +25,9 @@
 #include <optional>
 
 #include <algorithm>
+#include <cmath>
 #include <iterator>
+#include <limits>
 #include <stdexcept>
 #include <string>
 #include <variant>
@@ -44,6 +47,7 @@ using tile_parameters_ptr = std::unique_ptr<osrm::TileParameters>;
 using match_parameters_ptr = std::unique_ptr<osrm::MatchParameters>;
 using nearest_parameters_ptr = std::unique_ptr<osrm::NearestParameters>;
 using table_parameters_ptr = std::unique_ptr<osrm::TableParameters>;
+using isochrone_parameters_ptr = std::unique_ptr<osrm::IsochroneParameters>;
 
 struct PluginParameters
 {
@@ -82,6 +86,18 @@ inline bool IsUnsignedInteger(const Napi::Value &value)
     }
     const auto doubleValue = value.ToNumber().DoubleValue();
     return doubleValue >= 0.0 && std::floor(doubleValue) == doubleValue;
+}
+
+inline bool IsPositiveInt32(const Napi::Value &value)
+{
+    if (!value.IsNumber())
+    {
+        return false;
+    }
+    const auto double_value = value.ToNumber().DoubleValue();
+    return std::isfinite(double_value) && double_value > 0.0 &&
+           double_value <= std::numeric_limits<int>::max() &&
+           std::floor(double_value) == double_value;
 }
 
 inline void ParseResult(const osrm::Status &result_status, osrm::json::Object &result)
@@ -312,6 +328,12 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     auto max_locations_distance_table = params.Get("max_locations_distance_table");
     auto max_locations_map_matching = params.Get("max_locations_map_matching");
     auto max_results_nearest = params.Get("max_results_nearest");
+    auto max_isochrone_search_records = params.Get("max_isochrone_search_records");
+    auto max_isochrone_materialized_points = params.Get("max_isochrone_materialized_points");
+    auto max_isochrone_rasterization_steps = params.Get("max_isochrone_rasterization_steps");
+    auto max_isochrone_output_points = params.Get("max_isochrone_output_points");
+    auto max_isochrone_grid_cells = params.Get("max_isochrone_grid_cells");
+    auto max_isochrone_contours = params.Get("max_isochrone_contours");
     auto max_alternatives = params.Get("max_alternatives");
     auto max_radius_map_matching = params.Get("max_radius_map_matching");
     auto default_radius = params.Get("default_radius");
@@ -339,6 +361,41 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
     if (!max_results_nearest.IsUndefined() && !max_results_nearest.IsNumber())
     {
         ThrowError(args.Env(), "max_results_nearest must be an integral number");
+        return engine_config_ptr();
+    }
+    if (!max_isochrone_search_records.IsUndefined() &&
+        !IsPositiveInt32(max_isochrone_search_records))
+    {
+        ThrowError(args.Env(), "max_isochrone_search_records must be a positive integral number");
+        return engine_config_ptr();
+    }
+    if (!max_isochrone_materialized_points.IsUndefined() &&
+        !IsPositiveInt32(max_isochrone_materialized_points))
+    {
+        ThrowError(args.Env(),
+                   "max_isochrone_materialized_points must be a positive integral number");
+        return engine_config_ptr();
+    }
+    if (!max_isochrone_rasterization_steps.IsUndefined() &&
+        !IsPositiveInt32(max_isochrone_rasterization_steps))
+    {
+        ThrowError(args.Env(),
+                   "max_isochrone_rasterization_steps must be a positive integral number");
+        return engine_config_ptr();
+    }
+    if (!max_isochrone_output_points.IsUndefined() && !IsPositiveInt32(max_isochrone_output_points))
+    {
+        ThrowError(args.Env(), "max_isochrone_output_points must be a positive integral number");
+        return engine_config_ptr();
+    }
+    if (!max_isochrone_grid_cells.IsUndefined() && !IsPositiveInt32(max_isochrone_grid_cells))
+    {
+        ThrowError(args.Env(), "max_isochrone_grid_cells must be a positive integral number");
+        return engine_config_ptr();
+    }
+    if (!max_isochrone_contours.IsUndefined() && !IsPositiveInt32(max_isochrone_contours))
+    {
+        ThrowError(args.Env(), "max_isochrone_contours must be a positive integral number");
         return engine_config_ptr();
     }
     if (!max_alternatives.IsUndefined() && !max_alternatives.IsNumber())
@@ -371,6 +428,22 @@ inline engine_config_ptr argumentsToEngineConfig(const Napi::CallbackInfo &args)
             max_locations_map_matching.ToNumber().Int32Value();
     if (max_results_nearest.IsNumber())
         engine_config->max_results_nearest = max_results_nearest.ToNumber().Int32Value();
+    if (max_isochrone_search_records.IsNumber())
+        engine_config->max_isochrone_search_records =
+            max_isochrone_search_records.ToNumber().Int32Value();
+    if (max_isochrone_materialized_points.IsNumber())
+        engine_config->max_isochrone_materialized_points =
+            max_isochrone_materialized_points.ToNumber().Int32Value();
+    if (max_isochrone_rasterization_steps.IsNumber())
+        engine_config->max_isochrone_rasterization_steps =
+            max_isochrone_rasterization_steps.ToNumber().Int32Value();
+    if (max_isochrone_output_points.IsNumber())
+        engine_config->max_isochrone_output_points =
+            max_isochrone_output_points.ToNumber().Int32Value();
+    if (max_isochrone_grid_cells.IsNumber())
+        engine_config->max_isochrone_grid_cells = max_isochrone_grid_cells.ToNumber().Int32Value();
+    if (max_isochrone_contours.IsNumber())
+        engine_config->max_isochrone_contours = max_isochrone_contours.ToNumber().Int32Value();
     if (max_alternatives.IsNumber())
         engine_config->max_alternatives = max_alternatives.ToNumber().Int32Value();
 
@@ -1301,6 +1374,97 @@ inline nearest_parameters_ptr argumentsToNearestParameter(const Napi::CallbackIn
 
             params->number_of_results = number_value;
         }
+    }
+
+    return params;
+}
+
+inline isochrone_parameters_ptr argumentsToIsochroneParameter(const Napi::CallbackInfo &args,
+                                                              bool /*unused*/)
+{
+    auto params = std::make_unique<osrm::IsochroneParameters>();
+    if (!argumentsToParameter(args, params, false))
+    {
+        return isochrone_parameters_ptr();
+    }
+
+    const Napi::Object obj = args[0].As<Napi::Object>();
+
+    const Napi::Value contours = obj.Get("contours");
+    if (contours.IsEmpty())
+    {
+        return isochrone_parameters_ptr();
+    }
+    if (!contours.IsArray())
+    {
+        ThrowError(args.Env(),
+                   "Contours must be a non-empty array of positive finite durations in seconds");
+        return isochrone_parameters_ptr();
+    }
+
+    const Napi::Array contour_array = contours.As<Napi::Array>();
+    if (contour_array.Length() == 0)
+    {
+        ThrowError(args.Env(),
+                   "Contours must be a non-empty array of positive finite durations in seconds");
+        return isochrone_parameters_ptr();
+    }
+    for (uint32_t index = 0; index < contour_array.Length(); ++index)
+    {
+        const Napi::Value contour = contour_array.Get(index);
+        if (!contour.IsNumber())
+        {
+            ThrowError(
+                args.Env(),
+                "Contours must be a non-empty array of positive finite durations in seconds");
+            return isochrone_parameters_ptr();
+        }
+
+        const auto value = contour.ToNumber().DoubleValue();
+        if (!std::isfinite(value) || value <= 0.)
+        {
+            ThrowError(
+                args.Env(),
+                "Contours must be a non-empty array of positive finite durations in seconds");
+            return isochrone_parameters_ptr();
+        }
+        params->contours.push_back(value);
+    }
+
+    if (obj.Has("direction"))
+    {
+        const Napi::Value direction = obj.Get("direction");
+        if (!direction.IsString())
+        {
+            ThrowError(args.Env(), "Direction must be a string: [outbound, inbound]");
+            return isochrone_parameters_ptr();
+        }
+
+        const std::string direction_value = direction.ToString().Utf8Value();
+        if (direction_value == "outbound")
+        {
+            params->direction = osrm::IsochroneParameters::Direction::Outbound;
+        }
+        else if (direction_value == "inbound")
+        {
+            params->direction = osrm::IsochroneParameters::Direction::Inbound;
+        }
+        else
+        {
+            ThrowError(args.Env(), "Direction must be a string: [outbound, inbound]");
+            return isochrone_parameters_ptr();
+        }
+    }
+
+    if (obj.Has("polygons"))
+    {
+        const Napi::Value polygons = obj.Get("polygons");
+        if (!polygons.IsBoolean())
+        {
+            ThrowError(args.Env(), "polygons must be of type Boolean");
+            return isochrone_parameters_ptr();
+        }
+        params->polygons = polygons.ToBoolean().Value();
     }
 
     return params;

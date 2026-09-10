@@ -1,5 +1,6 @@
 #include "server/api/parameters_parser.hpp"
 
+#include "server/api/isochrone_parameter_grammar.hpp"
 #include "server/api/match_parameter_grammar.hpp"
 #include "server/api/nearest_parameter_grammar.hpp"
 #include "server/api/route_parameters_grammar.hpp"
@@ -62,6 +63,14 @@ std::optional<engine::api::TableParameters> parseParameters(std::string::iterato
 {
     return detail::parseParameters<engine::api::TableParameters>(
         iter, end, table_grammar::root_rule);
+}
+
+template <>
+std::optional<engine::api::IsochroneParameters> parseParameters(std::string::iterator &iter,
+                                                                const std::string::iterator end)
+{
+    return detail::parseParameters<engine::api::IsochroneParameters>(
+        iter, end, isochrone_grammar::root_rule);
 }
 
 template <>

@@ -17,7 +17,7 @@ GET /{service}/{version}/{profile}/{coordinates}[.{format}]?option=value&option=
 
 | Parameter | Description |
 | --- | --- |
-| `service` | One of the following values: [`route`](#route-service), [`nearest`](#nearest-service), [`table`](#table-service), [`match`](#match-service), [`trip`](#trip-service), [`tile`](#tile-service) |
+| `service` | One of the following values: [`route`](#route-service), [`nearest`](#nearest-service), [`table`](#table-service), [`match`](#match-service), [`trip`](#trip-service), [`isochrone`](#isochrone-service), [`tile`](#tile-service) |
 | `version` | Version of the protocol implemented by the service. `v1` for all OSRM 5.x installations |
 | `profile` | Mode of transportation, is determined statically by the Lua profile that is used to prepare the data using `osrm-extract`. Typically `car`, `bike` or `foot` if using one of the supplied profiles. |
 | `coordinates`| String of format `{longitude},{latitude};{longitude},{latitude}[;{longitude},{latitude} ...]` or `polyline({polyline}) or polyline6({polyline6})`. |
@@ -157,6 +157,7 @@ Every response object has a `code` property containing one of the strings below 
 | `NoSegment`       | One of the supplied input coordinates could not snap to the street segment.      |
 | `TooBig`          | The request size violates one of the service-specific request size restrictions. |
 | `DisabledDataset` | The request tried to access a disabled dataset.                                  |
+| `InternalError`   | An unrecoverable internal data or arithmetic error occurred.                     |
 
 - `message` is an **optional** human-readable error message. All other status types are service-dependent.
 - In case of an error the HTTP status code will be `400`. Otherwise, the HTTP status code will be `200` and `code` will be `Ok`.
@@ -270,6 +271,139 @@ Two coordinates (`13.388860,52.517037;0,0?number=1`), where the second coordinat
       }
    ],
    "code" : "Ok"
+}
+```
+
+### Isochrone service
+
+Computes the area reachable from one coordinate within one or more elapsed-duration limits.
+Every `contours` value is a duration in seconds. Isochrones use the dataset's duration metric,
+independently of the route-search weight, which can include profile-specific biases.
+
+```endpoint
+GET /isochrone/v1/{profile}/{longitude},{latitude}?contours={seconds}[,{seconds} ...]&direction={outbound|inbound}&polygons={true|false}
+```
+
+Exactly one coordinate and at least one positive, finite `contours` value are required. This
+service accepts JSON only; `.flatbuffers` is not supported. OSRM stores durations in
+deciseconds: it converts each requested limit to `floor(contour * 10)`. Geometry is therefore
+calculated with the effective cutoff `floor(contour * 10) / 10` seconds. A contour that floors
+below one decisecond cannot be represented and returns `InvalidValue`. For a successful,
+quantized contour, `properties.contour` retains the original requested value.
+
+In addition to the [general options](#general-options), the following options are supported:
+
+|Option|Values|Description|
+|---|---|---|
+|contours|One or more comma-separated `double > 0` values (required)|Elapsed-duration limits in seconds. A feature is returned for every value, in request order.|
+|direction|`outbound` (default), `inbound`|For `outbound`, the geometry represents locations reachable from the input coordinate. For `inbound`, it represents locations that can reach the input coordinate. Directed access restrictions and one-way streets apply in both cases.|
+|polygons|`true` (default), `false`|Return filled `MultiPolygon` boundaries, or their closed `MultiLineString` boundaries.|
+
+The result is a rasterized reachable-network coverage footprint. Reachable road geometry is
+projected onto a local plane centered on the request coordinate, rasterized into fixed 100-metre
+cells, and contoured. When an input is snapped inside a meshed open area, the service also
+represents the straight-line approaches from the input to its selected visible mesh vertices. It
+does not model unrestricted free-space reachability across the entire open area.
+
+Each polygon is the boundary of the union of reachable raster cells, using a fixed four-connected
+reachable-cell policy at diagonal contacts. Consequently, the result is a useful service-area
+approximation rather than an exact representation of every reachable point on the road network.
+A returned cell can extend approximately `sqrt(2) * 100` metres from the reachable geometry that
+caused it to be included, in addition to local-projection distortion and OSRM coordinate
+quantization. Clients must not use the result as an exact geofence. At diagonal contacts,
+four-connected occupied cells remain separate, but their closed boundaries can share a single
+vertex. Similarly, an unreachable hole can touch the exterior at a corner. These tangent
+components and holes are representable in GeoJSON, but topology validators differ on whether
+corner-touching rings are valid. Clients that require a stricter topology model should normalize
+or validate the returned geometry with their chosen library.
+Antimeridian-crossing road geometry, geometry whose raster cell begins at the +180° longitude
+world boundary, and grid extents that touch a pole are unsupported in this MVP and return
+`NotImplemented`.
+
+The service has independent configured limits for search records, geometry materialization,
+returned contour coordinates, raster cells, and requested contours. The materialization option is
+applied as a separate per-stage cap to input fragments, expanded geometry points, weighted
+polylines, and weighted-polyline points. In particular, the fixed-resolution grid is bounded by
+`--max-isochrone-grid-cells`; an extent that exceeds this cap returns `TooBig` rather than using a
+coarser grid. A request exceeding any resource limit returns `TooBig`; it is never silently
+truncated. The `--max-isochrone-search-records` option caps all in-memory search records,
+including discovered graph labels and supplemental boundary records. These limits are configured
+with `osrm-routed`'s `--max-isochrone-search-records`, `--max-isochrone-materialized-points`,
+`--max-isochrone-rasterization-steps`, `--max-isochrone-output-points`,
+`--max-isochrone-grid-cells`, and `--max-isochrone-contours` options.
+
+Isochrone data is opt-in because its independent directed duration graph increases artifact and
+runtime memory use. CH data must be prepared with
+`osrm-contract --generate-isochrone-data`; when the CH pipeline also runs `osrm-partition`, that
+step must use `--generate-isochrone-data` as well. MLD requires the option on both
+`osrm-partition` and `osrm-customize`. A legacy dataset, or one prepared without the complete
+opt-in sequence, continues to support all existing services but returns `NotImplemented` for an
+isochrone request. To retain an elapsed-duration interpretation, the generating
+`osrm-contract` or `osrm-customize` invocation rejects any enabled negative turn-duration
+penalty, including a value supplied by a profile or a turn-penalty file. This opt-in
+preprocessing restriction does not change feature-disabled pipelines or any existing service.
+
+#### Example requests
+
+```bash
+# Return five- and ten-minute duration contours from a server whose dataset
+# was preprocessed with --generate-isochrone-data.
+curl 'http://localhost:5000/isochrone/v1/driving/13.388860,52.517037?contours=300,600'
+
+# Return inbound boundaries as lines instead of filled polygons:
+curl 'http://localhost:5000/isochrone/v1/driving/13.388860,52.517037?contours=600&direction=inbound&polygons=false'
+```
+
+#### Response
+
+The successful response is a GeoJSON `FeatureCollection` with OSRM response metadata:
+
+- `code`: `Ok` on success.
+- `type`: `FeatureCollection`.
+- `features`: One GeoJSON `Feature` per requested contour, in request order. Every feature has a
+  numeric `properties.contour` equal to its requested duration in seconds, a numeric
+  `properties.effective_contour` equal to the decisecond-quantized duration actually evaluated,
+  and either a `MultiPolygon` or `MultiLineString` geometry, according to `polygons`.
+- `waypoints`: A one-element array describing the snapped input coordinate, unless
+  `skip_waypoints=true` was supplied.
+
+If no reachable road geometry can be rasterized for a contour—including when the snapped input has
+no legal traversal in the requested direction—its feature keeps the selected geometry type with an
+empty `coordinates` array. The snapped input remains available in `waypoints` unless omitted.
+
+As with other services, `data_version` is included when it was supplied during extraction.
+
+In addition to the [general response codes](#code), this service can return:
+
+|Type|Description|
+|---|---|
+|`InvalidValue`|A contour cannot be represented at OSRM's decisecond duration precision.|
+|`NotImplemented`|The requested output format is unsupported, the dataset was prepared without isochrone search data, or the geometry cannot be rasterized at the antimeridian, longitude world boundary, or a pole.|
+|`TooBig`|The request exceeded an isochrone resource limit.|
+
+#### Example response
+
+```json
+{
+  "code": "Ok",
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {"contour": 300, "effective_contour": 300},
+      "geometry": {
+        "type": "MultiPolygon",
+        "coordinates": [[[[13.38, 52.51], [13.39, 52.51], [13.39, 52.52], [13.38, 52.52], [13.38, 52.51]]]]
+      }
+    }
+  ],
+  "waypoints": [
+    {
+      "name": "",
+      "location": [13.388860, 52.517037],
+      "distance": 0
+    }
+  ]
 }
 ```
 

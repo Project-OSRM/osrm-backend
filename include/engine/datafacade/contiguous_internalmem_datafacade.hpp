@@ -61,6 +61,7 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
     using GraphEdge = QueryGraph::EdgeArrayEntry;
 
     QueryGraph m_query_graph;
+    isochrone::DurationGraphView m_isochrone_graph;
 
     // allocator that keeps the allocation data
     std::shared_ptr<ContiguousBlockAllocator> allocator;
@@ -79,6 +80,8 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
     {
         m_query_graph =
             make_filtered_graph_view(index, "/ch/metrics/" + metric_name, exclude_index);
+        m_isochrone_graph =
+            make_contracted_metric_view(index, "/ch/metrics/" + metric_name).isochrone_graph;
     }
 
     // search graph access
@@ -97,6 +100,30 @@ class ContiguousInternalMemoryAlgorithmDataFacade<CH> : public datafacade::Algor
 
     EdgeRange GetAdjacentEdgeRange(const NodeID edge_based_node_id) const override final
     { return m_query_graph.GetAdjacentEdgeRange(edge_based_node_id); }
+
+    bool HasIsochroneGraph() const override final
+    {
+        return m_isochrone_graph.forward_offsets.size() ==
+               static_cast<std::size_t>(m_query_graph.GetNumberOfNodes()) + 1;
+    }
+
+    IsochroneEdgeRange
+    GetIsochroneForwardEdgeRange(const NodeID edge_based_node_id) const override final
+    {
+        if (!HasIsochroneGraph())
+            return {};
+        BOOST_ASSERT(edge_based_node_id < m_query_graph.GetNumberOfNodes());
+        return m_isochrone_graph.getForwardRange(edge_based_node_id);
+    }
+
+    IsochroneEdgeRange
+    GetIsochroneReverseEdgeRange(const NodeID edge_based_node_id) const override final
+    {
+        if (!HasIsochroneGraph())
+            return {};
+        BOOST_ASSERT(edge_based_node_id < m_query_graph.GetNumberOfNodes());
+        return m_isochrone_graph.getReverseRange(edge_based_node_id);
+    }
 
     // searches for a specific edge
     EdgeID FindEdge(const NodeID edge_based_node_from,
@@ -631,6 +658,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
     using GraphEdge = QueryGraph::EdgeArrayEntry;
 
     QueryGraph query_graph;
+    isochrone::DurationGraphView m_isochrone_graph;
 
     void InitializeInternalPointers(const storage::SharedDataIndex &index,
                                     const std::string &metric_name,
@@ -641,6 +669,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
             make_filtered_cell_metric_view(index, "/mld/metrics/" + metric_name, exclude_index);
         mld_cell_storage = make_cell_storage_view(index, "/mld/cellstorage");
         query_graph = make_multi_level_graph_view(index, "/mld/multilevelgraph");
+        m_isochrone_graph = query_graph.GetIsochroneGraph();
     }
 
     // allocator that keeps the allocation data
@@ -673,6 +702,30 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
 
     EdgeRange GetAdjacentEdgeRange(const NodeID edge_based_node_id) const override final
     { return query_graph.GetAdjacentEdgeRange(edge_based_node_id); }
+
+    bool HasIsochroneGraph() const override final
+    {
+        return m_isochrone_graph.forward_offsets.size() ==
+               static_cast<std::size_t>(query_graph.GetNumberOfNodes()) + 1;
+    }
+
+    IsochroneEdgeRange
+    GetIsochroneForwardEdgeRange(const NodeID edge_based_node_id) const override final
+    {
+        if (!HasIsochroneGraph())
+            return {};
+        BOOST_ASSERT(edge_based_node_id < query_graph.GetNumberOfNodes());
+        return m_isochrone_graph.getForwardRange(edge_based_node_id);
+    }
+
+    IsochroneEdgeRange
+    GetIsochroneReverseEdgeRange(const NodeID edge_based_node_id) const override final
+    {
+        if (!HasIsochroneGraph())
+            return {};
+        BOOST_ASSERT(edge_based_node_id < query_graph.GetNumberOfNodes());
+        return m_isochrone_graph.getReverseRange(edge_based_node_id);
+    }
 
     EdgeWeight GetNodeWeight(const NodeID edge_based_node_id) const override final
     { return query_graph.GetNodeWeight(edge_based_node_id); }

@@ -74,6 +74,9 @@ return_code parseArguments(int argc,
                 ->default_value(""),
             "Required for conditional turn restriction parsing, provide a geojson file containing "
             "time zone boundaries")(
+            "generate-isochrone-data",
+            boost::program_options::bool_switch(&customization_config.generate_isochrone_data),
+            "Generate the additional MLD data required by the isochrone service")(
             "output,o",
             boost::program_options::value<std::filesystem::path>(&customization_config.output_path),
             "Output base path for generated files (default: same as input)");

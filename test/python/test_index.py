@@ -1,6 +1,7 @@
-import pytest
-import osrm
 import constants
+import pytest
+
+import osrm
 
 data_path = constants.data_path
 mld_data_path = constants.mld_data_path
@@ -98,6 +99,12 @@ class TestIndex:
             max_locations_distance_table=3,
             max_locations_map_matching=3,
             max_results_nearest=1,
+            max_isochrone_search_records=100,
+            max_isochrone_materialized_points=1_000,
+            max_isochrone_rasterization_steps=5_000,
+            max_isochrone_output_points=1_000,
+            max_isochrone_grid_cells=100,
+            max_isochrone_contours=1,
             max_alternatives=1,
             default_radius=1,
         )
@@ -116,3 +123,29 @@ class TestIndex:
                 default_radius="10",
             )
         assert "Invalid type passed for argument" in str(ex.value)
+
+    def test_invalidisochronelimits(self):
+        with pytest.raises(RuntimeError) as ex:
+            osrm.OSRM(
+                storage_config=mld_data_path,
+                algorithm="MLD",
+                use_shared_memory=False,
+                max_isochrone_search_records=0,
+            )
+        assert str(ex.value) == "Config Parameters are Invalid"
+
+    def test_engineconfigexposesisochronelimits(self):
+        config = osrm.EngineConfig(
+            max_isochrone_search_records=100,
+            max_isochrone_materialized_points=1_000,
+            max_isochrone_rasterization_steps=5_000,
+            max_isochrone_output_points=1_000,
+            max_isochrone_grid_cells=100,
+            max_isochrone_contours=1,
+        )
+        assert config.max_isochrone_search_records == 100
+        assert config.max_isochrone_materialized_points == 1_000
+        assert config.max_isochrone_rasterization_steps == 5_000
+        assert config.max_isochrone_output_points == 1_000
+        assert config.max_isochrone_grid_cells == 100
+        assert config.max_isochrone_contours == 1

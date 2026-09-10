@@ -5,6 +5,10 @@
 #include "customizer/edge_based_graph.hpp"
 #include "customizer/files.hpp"
 
+#include "engine/isochrone/duration_graph_builder.hpp"
+
+#include "extractor/files.hpp"
+#include "extractor/isochrone_transition.hpp"
 #include "partitioner/cell_statistics.hpp"
 #include "partitioner/cell_storage.hpp"
 #include "partitioner/edge_based_graph_reader.hpp"
@@ -15,6 +19,7 @@
 
 #include "updater/updater.hpp"
 
+#include "util/exception.hpp"
 #include "util/exclude_flag.hpp"
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
@@ -76,15 +81,44 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
                                     std::vector<EdgeWeight> &node_weights,
                                     std::vector<EdgeDuration> &node_durations,
                                     std::vector<EdgeDistance> &node_distances,
-                                    std::uint32_t &connectivity_checksum)
+                                    std::uint32_t &connectivity_checksum,
+                                    engine::isochrone::DurationGraph *isochrone_graph)
 {
     updater::Updater updater(config.updater_config);
 
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
+    std::vector<extractor::IsochroneTransition> transitions;
+    updater::TurnPenaltyMetrics turn_penalties;
+    std::vector<EdgeDuration> node_duration_lower_bounds;
+    updater::EdgeExpandedGraphUpdateOptions update_options;
+    if (isochrone_graph != nullptr)
+    {
+        if (!extractor::files::readIsochroneTransitions(config.GetPath(".osrm.ebg"), transitions))
+        {
+            throw util::exception("Cannot generate exact MLD isochrone data without preserved "
+                                  "transitions. Re-run osrm-partition with "
+                                  "--generate-isochrone-data." +
+                                  std::string(SOURCE_REF));
+        }
+        update_options = {&transitions, &turn_penalties, nullptr, &node_duration_lower_bounds};
+    }
+
     EdgeID num_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
-        edge_based_edge_list, node_weights, node_durations, connectivity_checksum);
+        edge_based_edge_list, node_weights, node_durations, connectivity_checksum, update_options);
 
     extractor::files::readEdgeBasedNodeDistances(config.GetPath(".osrm.enw"), node_distances);
+
+    if (isochrone_graph != nullptr)
+    {
+        *isochrone_graph = engine::isochrone::buildDurationGraph(num_nodes,
+                                                                 transitions,
+                                                                 node_weights,
+                                                                 node_durations,
+                                                                 turn_penalties.weight_penalties,
+                                                                 turn_penalties.duration_penalties,
+                                                                 node_duration_lower_bounds);
+        std::vector<extractor::IsochroneTransition>{}.swap(transitions);
+    }
 
     auto directed = partitioner::splitBidirectionalEdges(edge_based_edge_list);
 
@@ -130,9 +164,17 @@ int Customizer::Run(const CustomizationConfig &config)
     std::vector<EdgeDuration> node_durations; // TODO: remove when durations are optional
     std::vector<EdgeDistance> node_distances; // TODO: remove when distances are optional
     std::uint32_t connectivity_checksum = 0;
-    auto graph = LoadAndUpdateEdgeExpandedGraph(
-        config, mlp, node_weights, node_durations, node_distances, connectivity_checksum);
+    engine::isochrone::DurationGraph isochrone_graph;
+    auto graph =
+        LoadAndUpdateEdgeExpandedGraph(config,
+                                       mlp,
+                                       node_weights,
+                                       node_durations,
+                                       node_distances,
+                                       connectivity_checksum,
+                                       config.generate_isochrone_data ? &isochrone_graph : nullptr);
     BOOST_ASSERT(graph.GetNumberOfNodes() == node_weights.size());
+
     std::for_each(
         node_weights.begin(), node_weights.end(), [](auto &w) { w &= EdgeWeight{0x7fffffff}; });
     util::Log() << "Loaded edge based graph: " << graph.GetNumberOfEdges() << " edges, "
@@ -174,7 +216,8 @@ int Customizer::Run(const CustomizationConfig &config)
     MultiLevelEdgeBasedGraph shaved_graph{std::move(graph),
                                           std::move(node_weights),
                                           std::move(node_durations),
-                                          std::move(node_distances)};
+                                          std::move(node_distances),
+                                          std::move(isochrone_graph)};
     customizer::files::writeGraph(
         config.GetOutputPath(".osrm.mldgr"), shaved_graph, connectivity_checksum);
     TIMER_STOP(writing_graph);

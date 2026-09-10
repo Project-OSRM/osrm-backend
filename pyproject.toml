@@ -68,10 +68,10 @@ test-requires = "pytest"
 test-command = [
   "cd {project}/test/data && python -m osrm extract -p {project}/profiles/car.lua monaco.osm.pbf",
   "mkdir -p {project}/test/data/ch && cp {project}/test/data/monaco.osrm* {project}/test/data/ch/",
-  "python -m osrm contract {project}/test/data/ch/monaco.osrm",
+  "python -m osrm contract --generate-isochrone-data {project}/test/data/ch/monaco.osrm",
   "mkdir -p {project}/test/data/mld && cp {project}/test/data/monaco.osrm* {project}/test/data/mld/",
-  "python -m osrm partition {project}/test/data/mld/monaco.osrm",
-  "python -m osrm customize {project}/test/data/mld/monaco.osrm",
+  "python -m osrm partition --generate-isochrone-data {project}/test/data/mld/monaco.osrm",
+  "python -m osrm customize --generate-isochrone-data {project}/test/data/mld/monaco.osrm",
   "python -m osrm datastore {project}/test/data/ch/monaco",
   "pytest {project}/test/python"
 ]

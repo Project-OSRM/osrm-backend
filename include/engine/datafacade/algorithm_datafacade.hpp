@@ -5,6 +5,7 @@
 #include "customizer/edge_based_graph.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "engine/algorithm.hpp"
+#include "engine/isochrone/duration_graph.hpp"
 
 #include "partitioner/cell_storage.hpp"
 #include "partitioner/multi_level_partition.hpp"
@@ -12,6 +13,8 @@
 #include "util/filtered_graph.hpp"
 #include "util/function_ref.hpp"
 #include "util/integer_range.hpp"
+
+#include <span>
 
 namespace osrm::engine::datafacade
 {
@@ -27,6 +30,7 @@ template <> class AlgorithmDataFacade<CH>
   public:
     using EdgeData = contractor::QueryEdge::EdgeData;
     using EdgeRange = util::filtered_range<EdgeID, util::vector_view<bool>>;
+    using IsochroneEdgeRange = std::span<const isochrone::DurationGraphArc>;
 
     virtual ~AlgorithmDataFacade() = default;
 
@@ -42,6 +46,14 @@ template <> class AlgorithmDataFacade<CH>
     virtual const EdgeData &GetEdgeData(const EdgeID edge_based_edge_id) const = 0;
 
     virtual EdgeRange GetAdjacentEdgeRange(const NodeID edge_based_node_id) const = 0;
+
+    virtual bool HasIsochroneGraph() const = 0;
+
+    virtual IsochroneEdgeRange
+    GetIsochroneForwardEdgeRange(const NodeID edge_based_node_id) const = 0;
+
+    virtual IsochroneEdgeRange
+    GetIsochroneReverseEdgeRange(const NodeID edge_based_node_id) const = 0;
 
     // searches for a specific edge
     virtual EdgeID FindEdge(const NodeID edge_based_node_from,
@@ -64,6 +76,7 @@ template <> class AlgorithmDataFacade<MLD>
   public:
     using EdgeData = customizer::EdgeBasedGraphEdgeData;
     using EdgeRange = util::range<EdgeID>;
+    using IsochroneEdgeRange = std::span<const isochrone::DurationGraphArc>;
 
     virtual ~AlgorithmDataFacade() = default;
 
@@ -101,6 +114,14 @@ template <> class AlgorithmDataFacade<MLD>
 
     virtual EdgeRange GetBorderEdgeRange(const LevelID level,
                                          const NodeID edge_based_node_id) const = 0;
+
+    virtual bool HasIsochroneGraph() const = 0;
+
+    virtual IsochroneEdgeRange
+    GetIsochroneForwardEdgeRange(const NodeID edge_based_node_id) const = 0;
+
+    virtual IsochroneEdgeRange
+    GetIsochroneReverseEdgeRange(const NodeID edge_based_node_id) const = 0;
 
     // searches for a specific edge
     virtual EdgeID FindEdge(const NodeID edge_based_node_from,

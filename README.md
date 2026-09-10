@@ -11,6 +11,7 @@ The following services are available via HTTP API, C++ library interface and Nod
 - Table - Computes the duration or distances of the fastest route between all pairs of supplied coordinates
 - Match - Snaps noisy GPS traces to the road network in the most plausible way
 - Trip - Solves the Traveling Salesman Problem using a greedy heuristic
+- Isochrone - Computes duration-bounded reachable areas (requires opt-in preprocessing)
 - Tile - Generates Mapbox Vector Tiles with internal routing metadata
 
 To quickly try OSRM use our [demo server](http://map.project-osrm.org) which comes with both the backend and a frontend on top.

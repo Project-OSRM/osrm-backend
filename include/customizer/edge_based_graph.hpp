@@ -4,6 +4,7 @@
 #include "extractor/edge_based_edge.hpp"
 #include "partitioner/edge_based_graph.hpp"
 #include "partitioner/multi_level_graph.hpp"
+#include "engine/isochrone/duration_graph.hpp"
 #include "util/static_graph.hpp"
 #include "util/typedefs.hpp"
 
@@ -42,6 +43,7 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
     using PartitionerGraphT = partitioner::MultiLevelGraph<partitioner::EdgeBasedGraphEdgeData,
                                                            storage::Ownership::Container>;
     template <typename T> using Vector = util::ViewOrVector<T, Ownership>;
+    using IsochroneGraph = engine::isochrone::detail::DurationGraph<Ownership>;
 
   public:
     using NodeArrayEntry = SuperT::NodeArrayEntry;
@@ -57,9 +59,10 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
     MultiLevelGraph(PartitionerGraphT &&graph,
                     Vector<EdgeWeight> node_weights_,
                     Vector<EdgeDuration> node_durations_,
-                    Vector<EdgeDistance> node_distances_)
+                    Vector<EdgeDistance> node_distances_,
+                    IsochroneGraph isochrone_graph_ = {})
         : node_weights(std::move(node_weights_)), node_durations(std::move(node_durations_)),
-          node_distances(std::move(node_distances_))
+          node_distances(std::move(node_distances_)), isochrone_graph(std::move(isochrone_graph_))
     {
         util::ViewOrVector<PartitionerGraphT::EdgeArrayEntry, storage::Ownership::Container>
             original_edge_array;
@@ -85,11 +88,12 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
                     Vector<EdgeDuration> node_durations_,
                     Vector<EdgeDistance> node_distances_,
                     Vector<bool> is_forward_edge_,
-                    Vector<bool> is_backward_edge_)
+                    Vector<bool> is_backward_edge_,
+                    IsochroneGraph isochrone_graph_ = {})
         : SuperT(std::move(node_array_), std::move(edge_array_), std::move(node_to_edge_offset_)),
           node_weights(std::move(node_weights_)), node_durations(std::move(node_durations_)),
           node_distances(std::move(node_distances_)), is_forward_edge(is_forward_edge_),
-          is_backward_edge(is_backward_edge_)
+          is_backward_edge(is_backward_edge_), isochrone_graph(std::move(isochrone_graph_))
     {
     }
 
@@ -102,6 +106,8 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
     bool IsForwardEdge(EdgeID edge) const { return is_forward_edge[edge]; }
 
     bool IsBackwardEdge(EdgeID edge) const { return is_backward_edge[edge]; }
+
+    const IsochroneGraph &GetIsochroneGraph() const { return isochrone_graph; }
 
     friend void
     serialization::read<EdgeDataT, Ownership>(storage::tar::FileReader &reader,
@@ -118,6 +124,7 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
     Vector<EdgeDistance> node_distances;
     Vector<bool> is_forward_edge;
     Vector<bool> is_backward_edge;
+    IsochroneGraph isochrone_graph;
 };
 
 using MultiLevelEdgeBasedGraph =

@@ -230,6 +230,22 @@ class BasePlugin
     std::vector<PhantomCandidateAlternatives>
     GetPhantomNodes(const datafacade::BaseDataFacade &facade,
                     const api::BaseParameters &parameters) const
+    { return GetPhantomNodes(facade, parameters, std::nullopt); }
+
+    std::vector<PhantomCandidateAlternatives>
+    GetPhantomNodesForRole(const datafacade::BaseDataFacade &facade,
+                           const api::BaseParameters &parameters,
+                           const area::ApproachRole role) const
+    {
+        BOOST_ASSERT(parameters.coordinates.size() == 1);
+        return GetPhantomNodes(facade, parameters, role);
+    }
+
+  private:
+    std::vector<PhantomCandidateAlternatives>
+    GetPhantomNodes(const datafacade::BaseDataFacade &facade,
+                    const api::BaseParameters &parameters,
+                    const std::optional<area::ApproachRole> single_coordinate_role) const
     {
         std::vector<PhantomCandidateAlternatives> alternatives(parameters.coordinates.size());
 
@@ -252,9 +268,10 @@ class BasePlugin
             // The first coordinate is only ever departed from and the last only ever
             // arrived at.  Everything in between is both at once and takes the departing
             // shape; the walk it costs is charged either way.
-            const auto role = (i + 1 == parameters.coordinates.size()) ? area::ApproachRole::Arrival
-                              : (i == 0) ? area::ApproachRole::Departure
-                                         : area::ApproachRole::Via;
+            const auto role = single_coordinate_role.value_or(
+                (i + 1 == parameters.coordinates.size()) ? area::ApproachRole::Arrival
+                : (i == 0)                               ? area::ApproachRole::Departure
+                                                         : area::ApproachRole::Via);
             if (auto in_area =
                     area::SnapInsideOpenArea(facade, parameters.coordinates[i], approach, role))
             {
@@ -286,6 +303,7 @@ class BasePlugin
         return alternatives;
     }
 
+  protected:
     std::string
     MissingPhantomErrorMessage(const std::vector<PhantomCandidateAlternatives> &alternatives,
                                const std::vector<util::Coordinate> &coordinates) const

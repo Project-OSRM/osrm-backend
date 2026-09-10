@@ -66,6 +66,7 @@ struct ContractorConfig final : storage::IOConfig
 
     std::filesystem::path output_path;
     unsigned requested_num_threads = 0;
+    bool generate_isochrone_data = false;
 };
 } // namespace osrm::contractor
 

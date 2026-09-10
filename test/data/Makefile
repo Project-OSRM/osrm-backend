@@ -40,12 +40,12 @@ $(DATA_NAME).osrm: $(DATA_NAME).osm.pbf $(DATA_NAME).poly $(PROFILE) $(OSRM_EXTR
 
 ch/$(DATA_NAME).osrm.hsgr: ch/$(DATA_NAME).osrm $(PROFILE) $(OSRM_CONTRACT)
 	@echo "Running osrm-contract..."
-	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) $<
+	$(TIMER) "osrm-contract\t$@" $(OSRM_CONTRACT) --generate-isochrone-data $<
 
 mld/$(DATA_NAME).osrm.partition: mld/$(DATA_NAME).osrm $(PROFILE) $(OSRM_PARTITION)
 	@echo "Running osrm-partition..."
-	$(TIMER) "osrm-partition\t$@" $(OSRM_PARTITION) $<
-	$(TIMER) "osrm-customize\t$@" $(OSRM_CUSTOMIZE) $<
+	$(TIMER) "osrm-partition\t$@" $(OSRM_PARTITION) --generate-isochrone-data $<
+	$(TIMER) "osrm-customize\t$@" $(OSRM_CUSTOMIZE) --generate-isochrone-data $<
 
 $(DATA_NAME).requests: $(DATA_NAME).poly
 	$(POLY2REQ) $(DATA_NAME).poly > $(DATA_NAME).requests

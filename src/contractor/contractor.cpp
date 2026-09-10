@@ -3,16 +3,21 @@
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
 
+#include "engine/isochrone/duration_graph_builder.hpp"
+
 #include "extractor/files.hpp"
+#include "extractor/isochrone_transition.hpp"
 
 #include "updater/updater.hpp"
 
+#include "util/exception.hpp"
 #include "util/exclude_flag.hpp"
 #include "util/log.hpp"
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
 
 #include <cstdint>
+#include <filesystem>
 #include <vector>
 
 #include <tbb/global_control.h>
@@ -36,10 +41,63 @@ int Contractor::Run()
 
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
+    std::vector<extractor::IsochroneTransition> transitions;
+    bool has_preserved_transitions = false;
+    if (config.generate_isochrone_data)
+    {
+        has_preserved_transitions =
+            extractor::files::readIsochroneTransitions(config.GetPath(".osrm.ebg"), transitions);
+        if (!has_preserved_transitions)
+        {
+            if (std::filesystem::exists(config.base_path.string() + ".osrm.partition"))
+            {
+                throw util::exception(
+                    "Cannot generate exact isochrone data from a partitioned graph without "
+                    "preserved transitions. Re-run osrm-partition with "
+                    "--generate-isochrone-data." +
+                    std::string(SOURCE_REF));
+            }
+        }
+    }
+
     updater::Updater updater(config.updater_config);
+    updater::TurnPenaltyMetrics turn_penalties;
+    std::vector<EdgeDuration> node_duration_lower_bounds;
+    updater::EdgeExpandedGraphUpdateOptions update_options;
+    if (config.generate_isochrone_data)
+    {
+        if (has_preserved_transitions)
+            update_options.isochrone_transitions = &transitions;
+        else
+            update_options.generated_isochrone_transitions = &transitions;
+        update_options.turn_penalties = &turn_penalties;
+        update_options.node_duration_lower_bounds = &node_duration_lower_bounds;
+    }
     std::uint32_t connectivity_checksum = 0;
-    EdgeID number_of_edge_based_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
-        edge_based_edge_list, node_weights, connectivity_checksum);
+    engine::isochrone::DurationGraph isochrone_graph;
+    EdgeID number_of_edge_based_nodes;
+    if (config.generate_isochrone_data)
+    {
+        std::vector<EdgeDuration> node_durations;
+        number_of_edge_based_nodes = updater.LoadAndUpdateEdgeExpandedGraph(edge_based_edge_list,
+                                                                            node_weights,
+                                                                            node_durations,
+                                                                            connectivity_checksum,
+                                                                            update_options);
+        isochrone_graph = engine::isochrone::buildDurationGraph(number_of_edge_based_nodes,
+                                                                transitions,
+                                                                node_weights,
+                                                                node_durations,
+                                                                turn_penalties.weight_penalties,
+                                                                turn_penalties.duration_penalties,
+                                                                node_duration_lower_bounds);
+        std::vector<extractor::IsochroneTransition>{}.swap(transitions);
+    }
+    else
+    {
+        number_of_edge_based_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
+            edge_based_edge_list, node_weights, connectivity_checksum);
+    }
 
     // Contracting the edge-expanded graph
 
@@ -70,7 +128,8 @@ int Contractor::Run()
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
     std::unordered_map<std::string, ContractedMetric> metrics = {
-        {metric_name, {std::move(query_graph), std::move(edge_filters)}}};
+        {metric_name,
+         {std::move(query_graph), std::move(edge_filters), std::move(isochrone_graph)}}};
 
     files::writeGraph(config.GetOutputPath(".osrm.hsgr"), metrics, connectivity_checksum);
 

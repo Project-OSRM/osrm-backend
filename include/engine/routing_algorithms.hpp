@@ -4,13 +4,17 @@
 #include "engine/algorithm.hpp"
 #include "engine/concepts.hpp"
 #include "engine/internal_route_result.hpp"
+#include "engine/isochrone/search_result.hpp"
 #include "engine/phantom_node.hpp"
 #include "engine/routing_algorithms/alternative_path.hpp"
+#include "engine/routing_algorithms/bounded_duration_one_to_all.hpp"
 #include "engine/routing_algorithms/direct_shortest_path.hpp"
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/routing_algorithms/map_matching.hpp"
 #include "engine/routing_algorithms/shortest_path.hpp"
 #include "engine/routing_algorithms/tile_turns.hpp"
+
+#include <cstddef>
 
 namespace osrm::engine
 {
@@ -48,6 +52,12 @@ class RoutingAlgorithmsInterface
     GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
                  const std::vector<std::size_t> &sorted_edge_indexes) const = 0;
 
+    virtual isochrone::SearchResult
+    IsochroneSearch(const PhantomNodeCandidates &endpoint_candidates,
+                    EdgeDuration duration_cutoff,
+                    std::size_t max_search_records,
+                    bool inbound) const = 0;
+
     virtual const DataFacadeBase &GetFacade() const = 0;
 
     virtual bool HasAlternativePathSearch() const = 0;
@@ -55,6 +65,7 @@ class RoutingAlgorithmsInterface
     virtual bool HasDirectShortestPathSearch() const = 0;
     virtual bool HasMapMatching() const = 0;
     virtual bool HasManyToManySearch() const = 0;
+    virtual bool HasIsochroneSearch() const = 0;
     virtual bool SupportsDistanceAnnotationType() const = 0;
     virtual bool HasGetTileTurns() const = 0;
     virtual bool HasExcludeFlags() const = 0;
@@ -102,6 +113,11 @@ class RoutingAlgorithms final : public RoutingAlgorithmsInterface
     GetTileTurns(const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
                  const std::vector<std::size_t> &sorted_edge_indexes) const final override;
 
+    isochrone::SearchResult IsochroneSearch(const PhantomNodeCandidates &endpoint_candidates,
+                                            EdgeDuration duration_cutoff,
+                                            std::size_t max_search_records,
+                                            bool inbound) const final override;
+
     const DataFacadeBase &GetFacade() const final override { return *facade; }
 
     bool HasAlternativePathSearch() const final override
@@ -118,6 +134,8 @@ class RoutingAlgorithms final : public RoutingAlgorithmsInterface
 
     bool HasManyToManySearch() const final override
     { return routing_algorithms::HasManyToManySearch<Algorithm>::value; }
+
+    bool HasIsochroneSearch() const final override { return facade && facade->HasIsochroneGraph(); }
 
     bool SupportsDistanceAnnotationType() const final override
     { return routing_algorithms::SupportsDistanceAnnotationType<Algorithm>::value; }
@@ -211,6 +229,24 @@ inline std::vector<routing_algorithms::TurnData> RoutingAlgorithms<Algorithm>::G
     const std::vector<datafacade::BaseDataFacade::RTreeLeaf> &edges,
     const std::vector<std::size_t> &sorted_edge_indexes) const
 { return routing_algorithms::getTileTurns(*facade, edges, sorted_edge_indexes); }
+
+template <routing_algorithms::RoutingAlgorithm Algorithm>
+isochrone::SearchResult
+RoutingAlgorithms<Algorithm>::IsochroneSearch(const PhantomNodeCandidates &endpoint_candidates,
+                                              const EdgeDuration duration_cutoff,
+                                              const std::size_t max_search_records,
+                                              const bool inbound) const
+{
+    BOOST_ASSERT(facade->HasIsochroneGraph());
+    if (inbound)
+    {
+        return routing_algorithms::boundedDurationOneToAllSearch<
+            routing_algorithms::REVERSE_DIRECTION>(
+            *facade, endpoint_candidates, duration_cutoff, max_search_records);
+    }
+    return routing_algorithms::boundedDurationOneToAllSearch<routing_algorithms::FORWARD_DIRECTION>(
+        *facade, endpoint_candidates, duration_cutoff, max_search_records);
+}
 
 } // namespace osrm::engine
 

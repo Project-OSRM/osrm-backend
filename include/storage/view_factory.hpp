@@ -29,6 +29,8 @@
 #include "partitioner/multi_level_partition.hpp"
 
 #include "util/coordinate.hpp"
+#include "util/exception.hpp"
+#include "util/filtered_graph.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
 #include "util/static_graph.hpp"
@@ -36,7 +38,11 @@
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
-#include "util/filtered_graph.hpp"
+#include <array>
+#include <iterator>
+#include <string_view>
+#include <vector>
+
 namespace osrm::storage
 {
 
@@ -278,7 +284,48 @@ inline auto make_contracted_metric_view(const SharedDataIndex &index, const std:
                    [&](const auto &filter_name)
                    { edge_filter.push_back(make_vector_view<bool>(index, filter_name)); }));
 
-    return contractor::ContractedMetricView{{node_list, edge_list}, std::move(edge_filter)};
+    const std::array isochrone_names = {name + "/isochrone/forward_offsets",
+                                        name + "/isochrone/forward_arcs",
+                                        name + "/isochrone/reverse_offsets",
+                                        name + "/isochrone/reverse_arcs"};
+    const auto present =
+        std::count_if(isochrone_names.begin(),
+                      isochrone_names.end(),
+                      [&index](const auto &block) { return index.HasBlock(block); });
+    if (present != 0 && present != isochrone_names.size())
+        throw util::exception("Incomplete isochrone duration graph in contracted metric");
+
+    engine::isochrone::DurationGraphView isochrone_graph;
+    if (present == isochrone_names.size())
+    {
+        isochrone_graph = {
+            make_vector_view<EdgeID>(index, isochrone_names[0]),
+            make_vector_view<engine::isochrone::DurationGraphArc>(index, isochrone_names[1]),
+            make_vector_view<EdgeID>(index, isochrone_names[2]),
+            make_vector_view<engine::isochrone::DurationGraphArc>(index, isochrone_names[3])};
+
+        if (isochrone_graph.empty())
+            throw util::exception("Empty isochrone duration graph in contracted metric");
+    }
+
+    return contractor::ContractedMetricView{
+        {node_list, edge_list}, std::move(edge_filter), std::move(isochrone_graph)};
+}
+
+inline void validateChIsochroneIndex(const SharedDataIndex &index)
+{
+    std::vector<std::string> metric_names;
+    index.List("/ch/metrics/", std::back_inserter(metric_names));
+
+    for (const auto &metric_name : metric_names)
+    {
+        const auto metric = make_contracted_metric_view(index, metric_name);
+        if (!engine::isochrone::isValidDurationGraph(metric.isochrone_graph,
+                                                     metric.graph.GetNumberOfNodes()))
+        {
+            throw util::exception("Invalid isochrone duration graph in contracted metric");
+        }
+    }
 }
 
 inline auto make_partition_view(const SharedDataIndex &index, const std::string &name)
@@ -360,6 +407,30 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
     auto is_forward_edge = make_vector_view<bool>(index, name + "/is_forward_edge");
     auto is_backward_edge = make_vector_view<bool>(index, name + "/is_backward_edge");
 
+    const std::array isochrone_names = {name + "/isochrone/forward_offsets",
+                                        name + "/isochrone/forward_arcs",
+                                        name + "/isochrone/reverse_offsets",
+                                        name + "/isochrone/reverse_arcs"};
+    const auto present =
+        std::count_if(isochrone_names.begin(),
+                      isochrone_names.end(),
+                      [&index](const auto &block) { return index.HasBlock(block); });
+    if (present != 0 && present != isochrone_names.size())
+        throw util::exception("Incomplete isochrone duration graph in MLD graph");
+
+    engine::isochrone::DurationGraphView isochrone_graph;
+    if (present == isochrone_names.size())
+    {
+        isochrone_graph = {
+            make_vector_view<EdgeID>(index, isochrone_names[0]),
+            make_vector_view<engine::isochrone::DurationGraphArc>(index, isochrone_names[1]),
+            make_vector_view<EdgeID>(index, isochrone_names[2]),
+            make_vector_view<engine::isochrone::DurationGraphArc>(index, isochrone_names[3])};
+
+        if (isochrone_graph.empty())
+            throw util::exception("Empty isochrone duration graph in MLD graph");
+    }
+
     return customizer::MultiLevelEdgeBasedGraphView(node_list,
                                                     edge_list,
                                                     node_to_offset,
@@ -367,7 +438,28 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
                                                     node_durations,
                                                     node_distances,
                                                     is_forward_edge,
-                                                    is_backward_edge);
+                                                    is_backward_edge,
+                                                    std::move(isochrone_graph));
+}
+
+inline void validateMldIsochroneIndex(const SharedDataIndex &index)
+{
+    constexpr auto graph_name = "/mld/multilevelgraph/node_array";
+    if (!index.HasBlock(graph_name))
+        return;
+
+    const auto graph = make_multi_level_graph_view(index, "/mld/multilevelgraph");
+    if (!engine::isochrone::isValidDurationGraph(graph.GetIsochroneGraph(),
+                                                 graph.GetNumberOfNodes()))
+    {
+        throw util::exception("Invalid isochrone duration graph in MLD graph");
+    }
+}
+
+inline void validateIsochroneIndex(const SharedDataIndex &index)
+{
+    validateChIsochroneIndex(index);
+    validateMldIsochroneIndex(index);
 }
 
 inline auto make_maneuver_overrides_views(const SharedDataIndex &index, const std::string &name)

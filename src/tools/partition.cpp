@@ -117,6 +117,9 @@ return_code parseArguments(int argc,
              MaxCellSizesArgument{config.max_cell_sizes}),
          "Maximum cell sizes starting from the level 1. The first cell size value is a bisection "
          "termination criterion")(
+            "generate-isochrone-data",
+            boost::program_options::bool_switch(&config.generate_isochrone_data),
+            "Generate the additional isochrone data required by the isochrone service")(
             "output,o",
             boost::program_options::value<std::filesystem::path>(&config.output_path),
             "Output base path for generated files (default: same as input)");

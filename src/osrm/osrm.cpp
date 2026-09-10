@@ -1,6 +1,7 @@
 #include "osrm/osrm.hpp"
 
 #include "engine/algorithm.hpp"
+#include "engine/api/isochrone_parameters.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"
 #include "engine/api/route_parameters.hpp"
@@ -118,5 +119,17 @@ Status OSRM::Tile(const engine::api::TileParameters &params, std::string &str_re
 
 Status OSRM::Tile(const engine::api::TileParameters &params, engine::api::ResultT &result) const
 { return engine_->Tile(params, result); }
+
+Status OSRM::Isochrone(const engine::api::IsochroneParameters &params,
+                       json::Object &json_result) const
+{
+    osrm::engine::api::ResultT result = json::Object();
+    auto status = engine_->Isochrone(params, result);
+    json_result = std::move(std::get<json::Object>(result));
+    return status;
+}
+
+Status OSRM::Isochrone(const IsochroneParameters &params, engine::api::ResultT &result) const
+{ return engine_->Isochrone(params, result); }
 
 } // namespace osrm

@@ -77,7 +77,13 @@ int Partitioner::Run(const PartitionerConfig &config)
     extractor::files::readNBGMapping(config.GetPath(".osrm.cnbg_to_ebg").string(), mapping);
     util::Log() << "Loaded node based graph to edge based graph mapping";
 
-    auto edge_based_graph = LoadEdgeBasedGraph(config.GetPath(".osrm.ebg").string());
+    std::vector<extractor::IsochroneTransition> isochrone_transitions;
+    const auto was_already_partitioned = std::filesystem::exists(config.GetPath(".osrm.partition"));
+    auto edge_based_graph = config.generate_isochrone_data
+                                ? LoadEdgeBasedGraph(config.GetPath(".osrm.ebg").string(),
+                                                     isochrone_transitions,
+                                                     was_already_partitioned)
+                                : LoadEdgeBasedGraph(config.GetPath(".osrm.ebg").string());
     util::Log() << "Loaded edge based graph for mapping partition ids: "
                 << edge_based_graph.GetNumberOfEdges() << " edges, "
                 << edge_based_graph.GetNumberOfNodes() << " nodes";
@@ -124,6 +130,8 @@ int Partitioner::Run(const PartitionerConfig &config)
     auto permutation = makePermutation(edge_based_graph, partitions);
     renumber(edge_based_graph, permutation);
     renumber(partitions, permutation);
+    if (config.generate_isochrone_data)
+        renumber(isochrone_transitions, permutation);
     {
         renumber(mapping, permutation);
         extractor::files::writeNBGMapping(config.GetOutputPath(".osrm.cnbg_to_ebg").string(),
@@ -202,10 +210,22 @@ int Partitioner::Run(const PartitionerConfig &config)
     TIMER_START(writing_mld_data);
     files::writePartition(config.GetOutputPath(".osrm.partition"), mlp);
     files::writeCells(config.GetOutputPath(".osrm.cells"), storage);
-    extractor::files::writeEdgeBasedGraph(config.GetOutputPath(".osrm.ebg"),
-                                          edge_based_graph.GetNumberOfNodes(),
-                                          graphToEdges(edge_based_graph),
-                                          edge_based_graph.connectivity_checksum);
+    const auto edge_based_edges = graphToEdges(edge_based_graph);
+    if (config.generate_isochrone_data)
+    {
+        extractor::files::writeEdgeBasedGraph(config.GetOutputPath(".osrm.ebg"),
+                                              edge_based_graph.GetNumberOfNodes(),
+                                              edge_based_edges,
+                                              edge_based_graph.connectivity_checksum,
+                                              isochrone_transitions);
+    }
+    else
+    {
+        extractor::files::writeEdgeBasedGraph(config.GetOutputPath(".osrm.ebg"),
+                                              edge_based_graph.GetNumberOfNodes(),
+                                              edge_based_edges,
+                                              edge_based_graph.connectivity_checksum);
+    }
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD data writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 

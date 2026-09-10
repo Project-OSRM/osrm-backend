@@ -71,9 +71,9 @@ XCOPY %test_region%.osrm ch\
 MKDIR mld
 XCOPY %test_region%.osrm.* mld\
 XCOPY %test_region%.osrm mld\
-%CONFIGURATION%\osrm-contract.exe %test_region_ch%.osrm
-%CONFIGURATION%\osrm-partition.exe %test_region_mld%.osrm
-%CONFIGURATION%\osrm-customize.exe %test_region_mld%.osrm
+%CONFIGURATION%\osrm-contract.exe --generate-isochrone-data %test_region_ch%.osrm
+%CONFIGURATION%\osrm-partition.exe --generate-isochrone-data %test_region_mld%.osrm
+%CONFIGURATION%\osrm-customize.exe --generate-isochrone-data %test_region_mld%.osrm
 XCOPY /Y ch\*.* ..\test\data\ch\
 XCOPY /Y mld\*.* ..\test\data\mld\
 unit_tests\%CONFIGURATION%\library-tests.exe

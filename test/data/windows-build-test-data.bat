@@ -19,15 +19,15 @@ MKDIR mld
 XCOPY %test_region%.osrm.* mld\
 XCOPY %test_region%.osrm mld\
 
-SET CMD=python -m osrm contract %test_region_ch%.osrm
+SET CMD=python -m osrm contract --generate-isochrone-data %test_region_ch%.osrm
 %CMD%
 IF !ERRORLEVEL! NEQ 0 (SET EL=!ERRORLEVEL! & GOTO ERROR)
 
-SET CMD=python -m osrm partition %test_region_mld%.osrm
+SET CMD=python -m osrm partition --generate-isochrone-data %test_region_mld%.osrm
 %CMD%
 IF !ERRORLEVEL! NEQ 0 (SET EL=!ERRORLEVEL! & GOTO ERROR)
 
-SET CMD=python -m osrm customize %test_region_mld%.osrm
+SET CMD=python -m osrm customize --generate-isochrone-data %test_region_mld%.osrm
 %CMD%
 IF !ERRORLEVEL! NEQ 0 (SET EL=!ERRORLEVEL! & GOTO ERROR)
 

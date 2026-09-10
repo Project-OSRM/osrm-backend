@@ -38,6 +38,9 @@ features:
   - icon: 📍
     title: Nearest Service
     details: Snap coordinates to the street network and find the nearest road segments.
+  - icon: ⏱️
+    title: Isochrone Service
+    details: Compute duration-bounded reachable areas from opt-in CH or MLD datasets.
   - icon: 🎨
     title: Tile Service
     details: Generate vector tiles for visualizing the road network and routing data.

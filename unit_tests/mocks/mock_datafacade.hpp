@@ -185,6 +185,11 @@ class MockAlgorithmDataFacade<engine::datafacade::CH>
     const EdgeData &GetEdgeData(const EdgeID /* e */) const override { return foo; }
     EdgeRange GetAdjacentEdgeRange(const NodeID /* node */) const override
     { return EdgeRange(static_cast<EdgeID>(0), static_cast<EdgeID>(0), {}); }
+    bool HasIsochroneGraph() const override { return false; }
+    IsochroneEdgeRange GetIsochroneForwardEdgeRange(const NodeID /* node */) const override
+    { return {}; }
+    IsochroneEdgeRange GetIsochroneReverseEdgeRange(const NodeID /* node */) const override
+    { return {}; }
     EdgeID FindEdge(const NodeID /* from */, const NodeID /* to */) const override
     { return SPECIAL_EDGEID; }
     EdgeID FindEdgeInEitherDirection(const NodeID /* from */, const NodeID /* to */) const override

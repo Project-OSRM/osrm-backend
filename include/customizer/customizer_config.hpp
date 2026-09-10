@@ -41,6 +41,7 @@ struct CustomizationConfig final : storage::IOConfig
 
     std::filesystem::path output_path;
     unsigned requested_num_threads;
+    bool generate_isochrone_data = false;
 
     updater::UpdaterConfig updater_config;
 };

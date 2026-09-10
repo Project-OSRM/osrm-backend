@@ -203,6 +203,36 @@ inline DynamicEdgeBasedGraph LoadEdgeBasedGraph(const std::filesystem::path &pat
     return DynamicEdgeBasedGraph(number_of_edge_based_nodes, tidied, checksum);
 }
 
+inline DynamicEdgeBasedGraph
+LoadEdgeBasedGraph(const std::filesystem::path &path,
+                   std::vector<extractor::IsochroneTransition> &isochrone_transitions,
+                   const bool require_preserved_transitions = false)
+{
+    EdgeID number_of_edge_based_nodes;
+    std::vector<extractor::EdgeBasedEdge> edges;
+    std::uint32_t checksum;
+    extractor::files::readEdgeBasedGraph(path, number_of_edge_based_nodes, edges, checksum);
+
+    if (!extractor::files::readIsochroneTransitions(path, isochrone_transitions))
+    {
+        if (require_preserved_transitions)
+        {
+            throw util::exception(
+                "Cannot recover exact isochrone transitions from an already partitioned graph. "
+                "Re-run osrm-extract, then osrm-partition with --generate-isochrone-data.");
+        }
+        isochrone_transitions = extractor::makeIsochroneTransitions(edges);
+    }
+
+    if (!extractor::isValidIsochroneTransitions(isochrone_transitions, number_of_edge_based_nodes))
+        throw util::exception("Invalid isochrone transitions in edge-based graph");
+
+    auto directed = splitBidirectionalEdges(edges);
+    auto tidied = prepareEdgesForUsageInGraph<DynamicEdgeBasedGraphEdge>(std::move(directed));
+
+    return DynamicEdgeBasedGraph(number_of_edge_based_nodes, tidied, checksum);
+}
+
 } // namespace osrm::partitioner
 
 #endif
