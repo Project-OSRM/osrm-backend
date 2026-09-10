@@ -97,8 +97,8 @@ Returns **[Object][2]** An array of [Waypoint][9] objects representing all waypo
 Computes the region reachable from one coordinate within each supplied elapsed-duration contour.
 The search minimizes the dataset profile's weight; among equal-total-weight paths it minimizes
 elapsed duration, then applies the contour to that selected duration. Contours are in seconds
-and evaluated at decisecond precision. Each feature reports both the requested `contour` and
-the quantized `effective_contour` that was evaluated. CH data must be prepared with
+and evaluated at decisecond precision. Each feature reports both the requested `contour_seconds`
+and the quantized `effective_contour_seconds` that was evaluated. CH data must be prepared with
 `osrm-contract --generate-isochrone-data` (and the same option on
 `osrm-partition` if partitioning is used). MLD data requires the option on both
 `osrm-partition` and `osrm-customize`.
@@ -108,9 +108,11 @@ the quantized `effective_contour` that was evaluated. CH data must be prepared w
 *   `options` **[Object][2]** Object literal containing parameters for the isochrone query.
 
     *   `options.coordinates` **[Array][5]** Exactly one coordinate as a `[longitude, latitude]` pair.
-    *   `options.contours` **[Array][5]<[Number][6]>** Positive elapsed-duration thresholds in seconds.
+    *   `options.contours_seconds` **[Array][5]<[Number][6]>** Positive elapsed-duration thresholds in seconds.
     *   `options.direction` **[String][3]** Travel direction: `outbound` or `inbound`. (optional, default `outbound`)
     *   `options.polygons` **[Boolean][4]** Return filled polygons rather than contour lines. (optional, default `true`)
+    *   `options.generalize` **[Number][6]?** Simplify contour geometry using this finite, nonnegative tolerance in metres. Omit or set to zero to preserve the unsimplified geometry.
+    *   `options.denoise` **[Number][6]?** Remove components and holes whose raw area ratio to the largest component is below this value from zero to one. Omit or set to zero to retain every ring.
     *   `options.bearings` **[Array][5]?** Limits the coordinate snapping to segments with the given bearing.
     *   `options.radiuses` **[Array][5]?** Limits the coordinate snapping to streets in the given radius in meters.
     *   `options.hints` **[Array][5]?** Hint from a previous request to derive position in street network.

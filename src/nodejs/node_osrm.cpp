@@ -328,8 +328,8 @@ Napi::Value Engine::route(const Napi::CallbackInfo &info)
  * Computes the region reachable from one coordinate within each supplied elapsed-duration contour.
  * The search minimizes the dataset profile's weight; among equal-total-weight paths it minimizes
  * elapsed duration, then applies the contour to that selected duration. Contours are in seconds
- * and evaluated at decisecond precision. Each feature reports both the requested `contour` and
- * the quantized `effective_contour` that was evaluated. CH data must be prepared with
+ * and evaluated at decisecond precision. Each feature reports both the requested `contour_seconds`
+ * and the quantized `effective_contour_seconds` that was evaluated. CH data must be prepared with
  * `osrm-contract --generate-isochrone-data` (and the same option on
  * `osrm-partition` if partitioning is used). MLD data requires the option on both
  * `osrm-partition` and `osrm-customize`.
@@ -338,9 +338,11 @@ Napi::Value Engine::route(const Napi::CallbackInfo &info)
  * @memberof OSRM
  * @param {Object} options Object literal containing parameters for the isochrone query.
  * @param {Array} options.coordinates Exactly one coordinate as a `[longitude, latitude]` pair.
- * @param {Array<Number>} options.contours Positive elapsed-duration thresholds in seconds.
+ * @param {Array<Number>} options.contours_seconds Positive elapsed-duration thresholds in seconds.
  * @param {String} [options.direction=outbound] Travel direction: `outbound` or `inbound`.
  * @param {Boolean} [options.polygons=true] Return filled polygons rather than contour lines.
+ * @param {Number} [options.generalize] Simplify contour geometry using this finite, nonnegative tolerance in metres. Omit or set to zero to preserve the unsimplified geometry.
+ * @param {Number} [options.denoise] Remove components and holes whose raw area ratio to the largest component is below this value from zero to one. Omit or set to zero to retain every ring.
  * @param {Array} [options.bearings] Limits the coordinate snapping to segments with the given bearing.
  * @param {Array} [options.radiuses] Limits the coordinate snapping to streets in the given radius in meters.
  * @param {Array} [options.hints] Hint from a previous request to derive position in street network.

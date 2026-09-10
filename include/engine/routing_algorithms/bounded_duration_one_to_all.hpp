@@ -248,7 +248,7 @@ struct DurationCandidateTargets
         bool has_duration_label = false;
         std::optional<std::int64_t> partial_upper_weight;
         std::optional<std::int64_t> full_upper_weight;
-        std::int64_t maximum_geometry_weight = 0;
+        std::optional<std::int64_t> maximum_geometry_weight;
         std::optional<std::int64_t> current_weight_limit;
     };
 
@@ -327,17 +327,12 @@ DurationCandidateTargets::Geometry *getOrAddCandidateGeometry(DurationCandidateT
         return &found->second;
 
     const auto maximum_weight = maximumGeometryWeight(facade, geometry_id);
-    if (!maximum_weight)
-    {
-        targets.status = isochrone::SearchStatus::ArithmeticOverflow;
-        return nullptr;
-    }
     if (!reserveDurationCandidateRecord(targets, max_search_records))
         return nullptr;
     const auto [inserted, was_inserted] = targets.geometries.emplace(
         geometry_id,
         DurationCandidateTargets::Geometry{
-            false, std::nullopt, std::nullopt, *maximum_weight, std::nullopt});
+            false, std::nullopt, std::nullopt, maximum_weight, std::nullopt});
     BOOST_ASSERT(was_inserted);
     return &inserted->second;
 }
@@ -353,6 +348,14 @@ bool addDurationCandidateTarget(DurationCandidateTargets &targets,
         getOrAddCandidateGeometry(targets, facade, geometry_index.id, max_search_records);
     if (geometry == nullptr)
         return false;
+    // A duration label represents a complete directed geometry. Reverse-search pruning needs a
+    // finite upper bound for that geometry; unlike a snapped target prefix, no invalid suffix can
+    // be ignored here.
+    if (!geometry->maximum_geometry_weight)
+    {
+        targets.status = isochrone::SearchStatus::ArithmeticOverflow;
+        return false;
+    }
     geometry->has_duration_label = true;
     return true;
 }
@@ -364,16 +367,17 @@ bool addPhantomCandidateTarget(DurationCandidateTargets &targets,
                                const EdgeWeight seed_weight,
                                const std::size_t max_search_records)
 {
-    const auto directed_weight = directedGeometryWeight(facade, node);
-    if (!directed_weight)
-    {
-        targets.status = isochrone::SearchStatus::ArithmeticOverflow;
-        return false;
-    }
-
     auto upper_weight = static_cast<std::int64_t>(from_alias<EdgeWeight::value_type>(seed_weight));
     if constexpr (DIRECTION == FORWARD_DIRECTION)
     {
+        // Source validity covers the complete remaining directed geometry. Its cost converts the
+        // negative source seed into an upper bound at the far end of that geometry.
+        const auto directed_weight = directedGeometryWeight(facade, node);
+        if (!directed_weight)
+        {
+            targets.status = isochrone::SearchStatus::ArithmeticOverflow;
+            return false;
+        }
         if (upper_weight > std::numeric_limits<std::int64_t>::max() - *directed_weight)
             upper_weight = std::numeric_limits<std::int64_t>::max();
         else
@@ -627,12 +631,18 @@ std::int64_t adjustedCandidateWeightLimit(const DurationCandidateTargets::Geomet
 {
     if constexpr (DIRECTION == REVERSE_DIRECTION)
     {
+        // A target phantom may be valid only over the prefix ending at the snapped point. If a
+        // later traffic closure makes both complete directions invalid, there is no finite whole-
+        // geometry bound to add. Disabling early termination is conservative and keeps the valid
+        // prefix instead of turning the query into an internal error.
+        if (!geometry.maximum_geometry_weight)
+            return std::numeric_limits<std::int64_t>::max();
         if (upper_weight >
-            std::numeric_limits<std::int64_t>::max() - geometry.maximum_geometry_weight)
+            std::numeric_limits<std::int64_t>::max() - *geometry.maximum_geometry_weight)
         {
             return std::numeric_limits<std::int64_t>::max();
         }
-        upper_weight += geometry.maximum_geometry_weight;
+        upper_weight += *geometry.maximum_geometry_weight;
     }
     return upper_weight;
 }

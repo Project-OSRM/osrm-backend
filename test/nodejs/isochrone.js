@@ -6,8 +6,10 @@ test('isochrone: returns a GeoJSON FeatureCollection on MLD', (assert) => {
   const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
   osrm.isochrone({
     coordinates: [two_test_coordinates[0]],
-    contours: [300, 600],
+    contours_seconds: [300, 600],
     polygons: false,
+    generalize: 25,
+    denoise: 0.1,
   }, (err, result) => {
     assert.ifError(err);
     assert.equal(result.type, 'FeatureCollection');
@@ -17,8 +19,8 @@ test('isochrone: returns a GeoJSON FeatureCollection on MLD', (assert) => {
     assert.ok(result.features.every((feature) =>
       feature.type === 'Feature' && feature.geometry.type === 'MultiLineString' &&
       Array.isArray(feature.geometry.coordinates) &&
-      Number.isFinite(feature.properties.effective_contour) &&
-      feature.properties.effective_contour <= feature.properties.contour));
+      Number.isFinite(feature.properties.effective_contour_seconds) &&
+      feature.properties.effective_contour_seconds <= feature.properties.contour_seconds));
   });
 });
 
@@ -27,35 +29,39 @@ test('isochrone: reports the decisecond duration contour that was evaluated', (a
   const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
   osrm.isochrone({
     coordinates: [two_test_coordinates[0]],
-    contours: [0.15],
+    contours_seconds: [0.15],
   }, (err, result) => {
     assert.ifError(err);
     assert.equal(result.features.length, 1);
-    assert.equal(result.features[0].properties.effective_contour, 0.1);
+    assert.equal(result.features[0].properties.effective_contour_seconds, 0.1);
   });
 });
 
 test('isochrone: parses parameters and rejects invalid arguments', (assert) => {
-  assert.plan(7);
+  assert.plan(22);
   const osrm = new OSRM({path: mld_data_path, algorithm: 'MLD'});
   const options = { coordinates: [two_test_coordinates[0]] };
 
   assert.throws(() => { osrm.isochrone(options, () => {}); },
-    /Contours must be a non-empty array of positive finite durations in seconds/);
-
-  options.contours = [];
-  assert.throws(() => { osrm.isochrone(options, () => {}); },
-    /Contours must be a non-empty array of positive finite durations in seconds/);
-
-  options.contours = [0];
-  assert.throws(() => { osrm.isochrone(options, () => {}); },
-    /Contours must be a non-empty array of positive finite durations in seconds/);
-
-  options.contours = [Infinity];
-  assert.throws(() => { osrm.isochrone(options, () => {}); },
-    /Contours must be a non-empty array of positive finite durations in seconds/);
+    /contours_seconds must be a non-empty array of positive finite durations in seconds/);
 
   options.contours = [300];
+  assert.throws(() => { osrm.isochrone(options, () => {}); },
+    /contours_seconds must be a non-empty array of positive finite durations in seconds/);
+
+  options.contours_seconds = [];
+  assert.throws(() => { osrm.isochrone(options, () => {}); },
+    /contours_seconds must be a non-empty array of positive finite durations in seconds/);
+
+  options.contours_seconds = [0];
+  assert.throws(() => { osrm.isochrone(options, () => {}); },
+    /contours_seconds must be a non-empty array of positive finite durations in seconds/);
+
+  options.contours_seconds = [Infinity];
+  assert.throws(() => { osrm.isochrone(options, () => {}); },
+    /contours_seconds must be a non-empty array of positive finite durations in seconds/);
+
+  options.contours_seconds = [300];
   options.direction = 'sideways';
   assert.throws(() => { osrm.isochrone(options, () => {}); },
     /Direction must be a string: \[outbound, inbound\]/);
@@ -67,6 +73,30 @@ test('isochrone: parses parameters and rejects invalid arguments', (assert) => {
 
   options.polygons = false;
   assert.doesNotThrow(() => { osrm.isochrone(options, () => {}); });
+
+  options.generalize = 0;
+  assert.doesNotThrow(() => { osrm.isochrone(options, () => {}); });
+
+  options.generalize = 25;
+  assert.doesNotThrow(() => { osrm.isochrone(options, () => {}); });
+
+  for (const invalidGeneralize of [-1, Infinity, NaN, '25']) {
+    options.generalize = invalidGeneralize;
+    assert.throws(() => { osrm.isochrone(options, () => {}); },
+      /Generalize must be a finite nonnegative tolerance in metres/);
+  }
+
+  delete options.generalize;
+  for (const denoise of [0, 0.25, 1]) {
+    options.denoise = denoise;
+    assert.doesNotThrow(() => { osrm.isochrone(options, () => {}); });
+  }
+
+  for (const invalidDenoise of [-0.1, 1.1, Infinity, NaN, '0.25']) {
+    options.denoise = invalidDenoise;
+    assert.throws(() => { osrm.isochrone(options, () => {}); },
+      /Denoise must be a finite number between zero and one/);
+  }
 });
 
 test('isochrone: rejects flatbuffers output asynchronously', (assert) => {
@@ -75,7 +105,7 @@ test('isochrone: rejects flatbuffers output asynchronously', (assert) => {
 
   osrm.isochrone({
     coordinates: [two_test_coordinates[0]],
-    contours: [300],
+    contours_seconds: [300],
     format: 'flatbuffers',
   }, (err) => {
     assert.equal(err.message, 'The isochrone service only supports JSON/GeoJSON output.');

@@ -41,22 +41,29 @@ class IsochroneAPI final : public BaseAPI
                                 util::json::Object &response) const
     {
         util::json::Array features;
-        features.values.reserve(parameters.contours.size());
+        features.values.reserve(parameters.contours_seconds.size());
         std::size_t output_points = 0;
+        std::size_t raw_output_points = 0;
 
-        for (const auto contour : parameters.contours)
+        for (const auto contour_seconds : parameters.contours_seconds)
         {
             // Graph durations have decisecond precision. Keep contouring on
             // the exact limit used by the bounded search.
-            const auto duration_cutoff = isochrone::durationCutoffFromSeconds(contour);
+            const auto duration_cutoff = isochrone::durationCutoffFromSeconds(contour_seconds);
             BOOST_ASSERT(duration_cutoff);
-            const auto effective_contour = isochrone::durationToSeconds(*duration_cutoff);
-            auto polygons =
-                grid.buildContours(effective_contour, maximum_output_points - output_points);
+            const auto effective_contour_seconds = isochrone::durationToSeconds(*duration_cutoff);
+            std::size_t raw_contour_points = 0;
+            auto polygons = grid.buildContours(effective_contour_seconds,
+                                               maximum_output_points - raw_output_points,
+                                               parameters.generalize.value_or(0.),
+                                               parameters.denoise.value_or(0.),
+                                               raw_contour_points);
             if (!polygons || !countCoordinates(*polygons, maximum_output_points, output_points))
                 return ResponseStatus::TooBig;
+            raw_output_points += raw_contour_points;
 
-            auto feature = makeFeature(std::move(*polygons), contour, effective_contour);
+            auto feature =
+                makeFeature(std::move(*polygons), contour_seconds, effective_contour_seconds);
             features.values.emplace_back(std::move(feature));
         }
 
@@ -153,12 +160,12 @@ class IsochroneAPI final : public BaseAPI
     }
 
     util::json::Object makeFeature(std::vector<isochrone::CoordinatePolygon> polygons,
-                                   const double contour,
-                                   const double effective_contour) const
+                                   const double contour_seconds,
+                                   const double effective_contour_seconds) const
     {
         util::json::Object properties;
-        properties.values["contour"] = contour;
-        properties.values["effective_contour"] = effective_contour;
+        properties.values["contour_seconds"] = contour_seconds;
+        properties.values["effective_contour_seconds"] = effective_contour_seconds;
 
         util::json::Object feature;
         feature.values["type"] = "Feature";

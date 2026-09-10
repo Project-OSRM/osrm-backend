@@ -140,7 +140,8 @@ class OSRM final
     Status Tile(const TileParameters &parameters, engine::api::ResultT &result) const;
 
     /**
-     * Isochrone queries for locations reachable within duration contours in seconds.
+     * Isochrone queries for locations reachable within elapsed-duration thresholds expressed by
+     * IsochroneParameters::contours_seconds.
      * Paths minimize total profile weight and, among equal-total-weight paths,
      * deterministically minimize elapsed duration before applying each contour.
      *

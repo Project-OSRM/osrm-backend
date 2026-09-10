@@ -1,6 +1,8 @@
 #include "engine/isochrone/weighted_polyline_grid.hpp"
 
 #include "engine/isochrone/cell_contours.hpp"
+#include "engine/isochrone/grid_polygon_denoising.hpp"
+#include "engine/isochrone/grid_polygon_generalization.hpp"
 
 #include <boost/assert.hpp>
 
@@ -394,14 +396,72 @@ std::vector<CoordinatePolygon> WeightedGrid::buildContours(const double cutoff) 
 
 std::optional<std::vector<CoordinatePolygon>>
 WeightedGrid::buildContours(const double cutoff, const std::size_t maximum_coordinates) const
+{ return buildContours(cutoff, maximum_coordinates, 0.); }
+
+std::optional<std::vector<CoordinatePolygon>>
+WeightedGrid::buildContours(const double cutoff,
+                            const std::size_t maximum_coordinates,
+                            const double generalize_metres) const
+{
+    std::size_t raw_coordinate_count = 0;
+    return buildContours(cutoff, maximum_coordinates, generalize_metres, 0., raw_coordinate_count);
+}
+
+std::optional<std::vector<CoordinatePolygon>>
+WeightedGrid::buildContours(const double cutoff,
+                            const std::size_t maximum_coordinates,
+                            const double generalize_metres,
+                            const double denoise) const
+{
+    std::size_t raw_coordinate_count = 0;
+    return buildContours(
+        cutoff, maximum_coordinates, generalize_metres, denoise, raw_coordinate_count);
+}
+
+std::optional<std::vector<CoordinatePolygon>>
+WeightedGrid::buildContours(const double cutoff,
+                            const std::size_t maximum_coordinates,
+                            const double generalize_metres,
+                            std::size_t &raw_coordinate_count) const
+{ return buildContours(cutoff, maximum_coordinates, generalize_metres, 0., raw_coordinate_count); }
+
+std::optional<std::vector<CoordinatePolygon>>
+WeightedGrid::buildContours(const double cutoff,
+                            const std::size_t maximum_coordinates,
+                            const double generalize_metres,
+                            const double denoise,
+                            std::size_t &raw_coordinate_count) const
 {
     BOOST_ASSERT(width == 0 || height <= std::numeric_limits<std::size_t>::max() / width);
     BOOST_ASSERT(values.size() == width * height);
 
-    const auto grid_polygons =
-        buildCellContours(values, width, height, cutoff, maximum_coordinates);
+    auto grid_polygons = buildCellContours(values, width, height, cutoff, maximum_coordinates);
     if (!grid_polygons)
         return std::nullopt;
+
+    raw_coordinate_count = 0;
+    for (const auto &polygon : *grid_polygons)
+    {
+        raw_coordinate_count += polygon.outer.size();
+        for (const auto &hole : polygon.holes)
+            raw_coordinate_count += hole.size();
+    }
+
+    if (denoise > 0.)
+    {
+        const auto denoised = denoiseGridPolygons(*grid_polygons, denoise);
+        BOOST_ASSERT(denoised);
+        static_cast<void>(denoised);
+    }
+
+    if (generalize_metres > 0. && cell_size > 0.)
+    {
+        const auto grid_tolerance = generalize_metres / cell_size;
+        generalizeGridPolygons(*grid_polygons,
+                               std::isfinite(grid_tolerance) ? grid_tolerance
+                                                             : std::numeric_limits<double>::max());
+    }
+
     std::vector<CoordinatePolygon> polygons;
     polygons.reserve(grid_polygons->size());
     for (const auto &grid_polygon : *grid_polygons)

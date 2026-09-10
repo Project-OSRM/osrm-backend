@@ -277,30 +277,44 @@ Two coordinates (`13.388860,52.517037;0,0?number=1`), where the second coordinat
 ### Isochrone service
 
 Computes the area reachable from one coordinate within one or more elapsed-duration limits.
-Every `contours` value is a duration in seconds. Isochrone search minimizes the profile's total
-routing weight; among equal-total-weight paths, it deterministically minimizes elapsed duration.
-Each contour is then applied to the elapsed duration of that selected path. This is not an
+Every `contours_seconds` value is a duration in seconds. Isochrone search minimizes the profile's
+total routing weight; among equal-total-weight paths, it deterministically minimizes elapsed
+duration. Each contour is then applied to the elapsed duration of that selected path. This is not an
 independently fastest-path calculation: a physically faster path with a higher configured profile
 weight does not expand the contour.
 
 ```endpoint
-GET /isochrone/v1/{profile}/{longitude},{latitude}?contours={seconds}[,{seconds} ...]&direction={outbound|inbound}&polygons={true|false}
+GET /isochrone/v1/{profile}/{longitude},{latitude}?contours_seconds={seconds}[,{seconds} ...]&direction={outbound|inbound}&polygons={true|false}&denoise={ratio}&generalize={meters}
 ```
 
-Exactly one coordinate and at least one positive, finite `contours` value are required. This
-service accepts JSON only; `.flatbuffers` is not supported. OSRM stores durations in
-deciseconds: it converts each requested limit to `floor(contour * 10)`. Geometry is therefore
-calculated with the effective cutoff `floor(contour * 10) / 10` seconds. A contour that floors
-below one decisecond cannot be represented and returns `InvalidValue`. For a successful,
-quantized contour, `properties.contour` retains the original requested value.
+Exactly one coordinate and at least one positive, finite `contours_seconds` value are required.
+The generic `contours` query parameter is not supported. This service accepts JSON only;
+`.flatbuffers` is not supported. OSRM stores durations in deciseconds: it converts each requested
+limit to `floor(contour_seconds * 10)`. Geometry is therefore calculated with the effective cutoff
+`floor(contour_seconds * 10) / 10` seconds. A contour that floors below one decisecond cannot be
+represented and returns `InvalidValue`. For a successful, quantized contour,
+`properties.contour_seconds` retains the original requested value.
 
 In addition to the [general options](#general-options), the following options are supported:
 
 |Option|Values|Description|
 |---|---|---|
-|contours|One or more comma-separated `double > 0` values (required)|Elapsed-duration limits in seconds, evaluated after minimizing profile weight and then elapsed duration on equal-weight paths. A feature is returned for every value, in request order.|
+|contours_seconds|One or more comma-separated `double > 0` values (required)|Elapsed-duration limits in seconds, evaluated after minimizing profile weight and then elapsed duration on equal-weight paths. A feature is returned for every value, in request order.|
 |direction|`outbound` (default), `inbound`|For `outbound`, the geometry represents locations reachable from the input coordinate. For `inbound`, it represents locations that can reach the input coordinate. Directed access restrictions and one-way streets apply in both cases.|
 |polygons|`true` (default), `false`|Return filled `MultiPolygon` boundaries, or their closed `MultiLineString` boundaries.|
+|denoise|Finite `double` from `0` to `1` (optional)|Remove complete components and holes whose absolute raw area divided by the largest outer-ring area for that contour is below this threshold. Omitted or `0` retains every ring. A value of `1` retains only components tied for the largest outer area and removes all smaller rings.|
+|generalize|Finite `double >= 0` in metres (optional)|Simplify only the emitted contour boundaries. Omitted or `0` preserves the raw output exactly. A positive tolerance does not change graph search, reachability, contour eligibility, profile weights, or elapsed durations; it can change the boundary's shape and area.|
+
+Denoising uses raw raster-ring area and runs before generalization. It does not classify why a ring
+exists: a removed ring can be a raster artifact, a disconnected reachable component, or an
+unreachable hole. Deleting a hole fills that hole in polygon output. Denoising therefore changes
+only emitted geometry, not graph search or routing costs, and is lossless by default.
+
+Generalization is topology-safe, bounded best effort: shared contacts are retained, and if the
+requested tolerance would change ring validity, boundary intersections, or nesting, progressively
+smaller tolerances are tried within fixed work limits. If no useful safe candidate fits those
+limits, the contour falls back to its post-denoise unsimplified geometry. A positive tolerance
+therefore does not guarantee fewer returned coordinates.
 
 The result is a rasterized reachable-network coverage footprint. Reachable road geometry is
 projected onto a local plane centered on the request coordinate, rasterized into fixed 100-metre
@@ -335,6 +349,8 @@ and supplemental boundary records. These limits are configured with `osrm-routed
 `--max-isochrone-search-records`, `--max-isochrone-materialized-points`,
 `--max-isochrone-rasterization-steps`, `--max-isochrone-output-points`,
 `--max-isochrone-grid-cells`, and `--max-isochrone-contours` options.
+The raw contour-coordinate limit is applied before `denoise` and `generalize`; post-processing
+cannot make a request that exceeds the raw output limit succeed.
 
 Isochrone data is opt-in because its dedicated directed search graph retains both profile weight
 and elapsed duration, increasing artifact and runtime memory use. CH data must be prepared with
@@ -352,10 +368,16 @@ preprocessing restriction does not change feature-disabled pipelines or any exis
 ```bash
 # Return five- and ten-minute duration contours from a server whose dataset
 # was preprocessed with --generate-isochrone-data.
-curl 'http://localhost:5000/isochrone/v1/driving/13.388860,52.517037?contours=300,600'
+curl 'http://localhost:5000/isochrone/v1/driving/13.388860,52.517037?contours_seconds=300,600'
 
 # Return inbound boundaries as lines instead of filled polygons:
-curl 'http://localhost:5000/isochrone/v1/driving/13.388860,52.517037?contours=600&direction=inbound&polygons=false'
+curl 'http://localhost:5000/isochrone/v1/driving/13.388860,52.517037?contours_seconds=600&direction=inbound&polygons=false'
+
+# Simplify only the emitted ten-minute boundary with a 200-metre tolerance:
+curl 'http://localhost:5000/isochrone/v1/driving/13.388860,52.517037?contours_seconds=600&generalize=200'
+
+# Drop rings smaller than one percent of the largest component, then simplify the survivors:
+curl 'http://localhost:5000/isochrone/v1/driving/13.388860,52.517037?contours_seconds=600&denoise=0.01&generalize=200'
 ```
 
 #### Response
@@ -365,9 +387,9 @@ The successful response is a GeoJSON `FeatureCollection` with OSRM response meta
 - `code`: `Ok` on success.
 - `type`: `FeatureCollection`.
 - `features`: One GeoJSON `Feature` per requested contour, in request order. Every feature has a
-  numeric `properties.contour` equal to its requested duration in seconds, a numeric
-  `properties.effective_contour` equal to the decisecond-quantized duration actually evaluated,
-  and either a `MultiPolygon` or `MultiLineString` geometry, according to `polygons`.
+  numeric `properties.contour_seconds` equal to its requested duration in seconds, a numeric
+  `properties.effective_contour_seconds` equal to the decisecond-quantized duration actually
+  evaluated, and either a `MultiPolygon` or `MultiLineString` geometry, according to `polygons`.
 - `waypoints`: A one-element array describing the snapped input coordinate, unless
   `skip_waypoints=true` was supplied.
 
@@ -394,7 +416,7 @@ In addition to the [general response codes](#code), this service can return:
   "features": [
     {
       "type": "Feature",
-      "properties": {"contour": 300, "effective_contour": 300},
+      "properties": {"contour_seconds": 300, "effective_contour_seconds": 300},
       "geometry": {
         "type": "MultiPolygon",
         "coordinates": [[[[13.38, 52.51], [13.39, 52.51], [13.39, 52.52], [13.38, 52.52], [13.38, 52.51]]]]

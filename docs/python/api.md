@@ -146,16 +146,18 @@ Isochrone search minimizes total profile weight and, among equal-total-weight pa
 deterministically minimizes elapsed duration before applying the contour. It is not an
 independently fastest-path calculation, so a lower-duration, higher-weight alternative does not
 expand the region. Contours are in seconds and are evaluated at decisecond precision. Each
-returned feature reports the requested `contour` and the quantized `effective_contour` that was
+returned feature reports the requested `contour_seconds` and the quantized `effective_contour_seconds` that was
 evaluated. CH data must be prepared with `osrm-contract --generate-isochrone-data` (and the same option on
 `osrm-partition` if partitioning is used). MLD data requires the option on both
 `osrm-partition` and `osrm-customize`.
 
     params = osrm.IsochroneParameters(
         coordinates=[(7.41337, 43.72956)],
-        contours=[300.0, 600.0],
+        contours_seconds=[300.0, 600.0],
         direction="outbound",
         polygons=True,
+        generalize=25.0,
+        denoise=0.01,
     )
     result = engine.Isochrone(params)
 
@@ -163,9 +165,14 @@ evaluated. CH data must be prepared with `osrm-contract --generate-isochrone-dat
 
 Inherits all [BaseParameters](#baseparameters). Exactly one coordinate is required.
 
-- **`contours`** `list[float]` - Positive elapsed-duration thresholds in seconds.
+- **`contours_seconds`** `list[float]` - Positive elapsed-duration thresholds in seconds.
 - **`direction`** `str` - `"outbound"` or `"inbound"`. Default: `"outbound"`.
 - **`polygons`** `bool` - Return filled polygons rather than contour lines. Default: `True`.
+- **`generalize`** `float | None` - Finite, nonnegative contour simplification tolerance in metres.
+  Omit or use `0` to preserve unsimplified geometry. Default: `None`.
+- **`denoise`** `float | None` - Finite threshold from `0` to `1` that removes complete components
+  and holes whose raw area ratio to the largest component is smaller. Omit or use `0` to retain
+  every ring. Default: `None`.
 
 ## Match
 

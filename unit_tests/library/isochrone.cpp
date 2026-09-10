@@ -24,7 +24,7 @@ osrm::IsochroneParameters validParameters()
 {
     osrm::IsochroneParameters parameters;
     parameters.coordinates.push_back(get_dummy_location());
-    parameters.contours = {300.};
+    parameters.contours_seconds = {300.};
     return parameters;
 }
 
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(json_api_rejects_invalid_parameters)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
     auto parameters = validParameters();
-    parameters.contours.clear();
+    parameters.contours_seconds.clear();
     osrm::json::Object result;
 
     const auto status = osrm.Isochrone(parameters, result);
@@ -216,7 +216,7 @@ BOOST_AUTO_TEST_CASE(json_api_rejects_a_contour_below_the_duration_precision)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
     auto parameters = validParameters();
-    parameters.contours = {0.01};
+    parameters.contours_seconds = {0.01};
     osrm::json::Object result;
 
     const auto status = osrm.Isochrone(parameters, result);
@@ -231,7 +231,7 @@ BOOST_AUTO_TEST_CASE(json_api_accepts_a_contour_at_exactly_one_decisecond)
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
     auto parameters = validParameters();
-    parameters.contours = {0.1};
+    parameters.contours_seconds = {0.1};
     osrm::json::Object result;
 
     const auto status = osrm.Isochrone(parameters, result);
@@ -244,7 +244,7 @@ BOOST_AUTO_TEST_CASE(json_api_rejects_a_contour_that_overflows_the_internal_dura
 {
     auto osrm = getOSRM(OSRM_TEST_DATA_DIR "/mld/monaco.osrm", osrm::EngineConfig::Algorithm::MLD);
     auto parameters = validParameters();
-    parameters.contours = {std::numeric_limits<double>::max()};
+    parameters.contours_seconds = {std::numeric_limits<double>::max()};
     osrm::json::Object result;
 
     const auto status = osrm.Isochrone(parameters, result);
@@ -265,14 +265,15 @@ BOOST_AUTO_TEST_CASE(json_api_enforces_the_configured_contour_limit)
     osrm::OSRM routing_machine{config};
 
     auto parameters = validParameters();
-    parameters.contours = {300., 600.};
+    parameters.contours_seconds = {300., 600.};
     osrm::json::Object result;
 
     const auto status = routing_machine.Isochrone(parameters, result);
 
     BOOST_CHECK(status == osrm::Status::Error);
     BOOST_CHECK_EQUAL(code(result), "TooBig");
-    BOOST_CHECK_EQUAL(message(result), "Number of contours is higher than current maximum (1)");
+    BOOST_CHECK_EQUAL(message(result),
+                      "Number of contours_seconds is higher than current maximum (1)");
 }
 
 BOOST_AUTO_TEST_CASE(generic_api_rejects_non_json_result_types)

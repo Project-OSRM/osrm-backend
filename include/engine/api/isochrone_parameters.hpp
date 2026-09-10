@@ -32,6 +32,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 #include <algorithm>
 #include <cmath>
+#include <optional>
 #include <vector>
 
 namespace osrm::engine::api
@@ -40,7 +41,7 @@ namespace osrm::engine::api
 /**
  * Parameters specific to the OSRM Isochrone service.
  *
- * Contours are elapsed-duration thresholds in seconds.
+ * The contours_seconds member contains elapsed-duration thresholds in seconds.
  */
 struct IsochroneParameters : public BaseParameters
 {
@@ -50,20 +51,24 @@ struct IsochroneParameters : public BaseParameters
         Inbound
     };
 
-    std::vector<double> contours;
+    std::vector<double> contours_seconds;
     Direction direction = Direction::Outbound;
     bool polygons = true;
+    std::optional<double> generalize = std::nullopt;
+    std::optional<double> denoise = std::nullopt;
 
     bool operator==(const IsochroneParameters &) const = default;
 
     bool IsValid() const
     {
-        return BaseParameters::IsValid() && coordinates.size() == 1 && !contours.empty() &&
+        return BaseParameters::IsValid() && coordinates.size() == 1 && !contours_seconds.empty() &&
                (direction == Direction::Outbound || direction == Direction::Inbound) &&
-               std::all_of(contours.begin(),
-                           contours.end(),
-                           [](const double contour)
-                           { return std::isfinite(contour) && contour > 0.; });
+               (!generalize || (std::isfinite(*generalize) && *generalize >= 0.)) &&
+               (!denoise || (std::isfinite(*denoise) && *denoise >= 0. && *denoise <= 1.)) &&
+               std::all_of(contours_seconds.begin(),
+                           contours_seconds.end(),
+                           [](const double contour_seconds)
+                           { return std::isfinite(contour_seconds) && contour_seconds > 0.; });
     }
 };
 

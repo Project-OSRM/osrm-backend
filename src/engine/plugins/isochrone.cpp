@@ -43,23 +43,23 @@ Status IsochronePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorith
             "NotImplemented", "The isochrone service only supports JSON/GeoJSON output.", result);
     }
 
-    if (parameters.contours.size() > max_contours)
+    if (parameters.contours_seconds.size() > max_contours)
     {
         return Error("TooBig",
-                     "Number of contours is higher than current maximum (" +
+                     "Number of contours_seconds is higher than current maximum (" +
                          std::to_string(max_contours) + ")",
                      result);
     }
 
     const auto &facade = algorithms.GetFacade();
     EdgeDuration maximum_duration{0};
-    for (const auto contour : parameters.contours)
+    for (const auto contour_seconds : parameters.contours_seconds)
     {
-        const auto contour_duration = isochrone::durationCutoffFromSeconds(contour);
+        const auto contour_duration = isochrone::durationCutoffFromSeconds(contour_seconds);
         if (!contour_duration || *contour_duration < EdgeDuration{1})
         {
             const auto truncated_contour =
-                std::floor(contour * isochrone::INTERNAL_DURATION_UNITS_PER_SECOND);
+                std::floor(contour_seconds * isochrone::INTERNAL_DURATION_UNITS_PER_SECOND);
             if (std::isfinite(truncated_contour) && truncated_contour < 1.)
             {
                 return Error("InvalidValue",

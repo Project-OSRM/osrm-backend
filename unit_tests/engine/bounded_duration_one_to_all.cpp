@@ -696,6 +696,26 @@ BOOST_AUTO_TEST_CASE(reverse_search_uses_target_validity_and_backward_edges)
     BOOST_CHECK(forward_result.nodes.empty());
 }
 
+BOOST_AUTO_TEST_CASE(inbound_target_prefix_ignores_an_invalid_geometry_suffix)
+{
+    auto facade = makeFacade(2, {}, {}, {false, false});
+    facade.geometry_indices = {GeometryID{0, true}, GeometryID{0, false}};
+    // The snapped target is on the valid first forward segment. A closure after it makes neither
+    // complete direction usable, but does not invalidate the legal prefix ending at the target.
+    facade.forward_geometry_weights = {{SegmentWeight{10}, INVALID_SEGMENT_WEIGHT}};
+    facade.reverse_geometry_weights = {{INVALID_SEGMENT_WEIGHT, SegmentWeight{10}}};
+    const auto target = makePhantom(0, 1, {0}, {0}, {0}, {0}, false, true, false, false);
+
+    const auto result =
+        boundedDurationOneToAllSearch<REVERSE_DIRECTION>(facade, {target}, EdgeDuration{10}, 100);
+
+    BOOST_CHECK(result.isComplete());
+    BOOST_CHECK(result.nodes.empty());
+    BOOST_REQUIRE_EQUAL(result.phantom_partials.size(), 1);
+    BOOST_CHECK(result.phantom_partials.front().kind ==
+                isochrone::PhantomTraversalKind::InboundTerminal);
+}
+
 BOOST_AUTO_TEST_CASE(source_offsets_and_an_exact_cutoff_are_preserved)
 {
     auto facade = makeFacade(2, {{0, 1, 200}}, {}, {false, false});

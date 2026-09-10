@@ -3,19 +3,21 @@ import assert from 'node:assert';
 
 import { Then, When } from '@cucumber/cucumber';
 
-function parseContours(contours) {
-  const values = contours.split(',').map(Number);
+function parseContourSeconds(contoursSeconds) {
+  const values = contoursSeconds.split(',').map(Number);
   values.forEach((value) => {
-    assert.ok(Number.isFinite(value), `invalid contour in test: ${contours}`);
+    assert.ok(Number.isFinite(value), `invalid contours_seconds value in test: ${contoursSeconds}`);
   });
   return values;
 }
 
-async function requestIsochrone(world, nodeName, contours, options = {}) {
+async function requestIsochrone(world, nodeName, contoursSeconds, options = {}) {
   const node = world.findNodeByName(nodeName);
   assert.ok(node, `unknown isochrone input node "${nodeName}"`);
 
-  const parameters = Object.assign({}, world.queryParams, options, { contours });
+  const parameters = Object.assign({}, world.queryParams, options, {
+    contours_seconds: contoursSeconds,
+  });
   const { response, body } = await new Promise((resolve, reject) => {
     world.requestIsochrone(node, parameters, (err, response, body) => {
       if (err) return reject(err);
@@ -106,6 +108,22 @@ function geometryContainsPoint(geometry, point) {
   });
 }
 
+function getSingleMultiPolygonGeometry(result) {
+  assertFeatureCollection(result, 1, 'MultiPolygon');
+  return result.json.features[0].geometry;
+}
+
+function countPolygonRings(geometry) {
+  return geometry.coordinates.reduce((count, polygon) => count + polygon.length, 0);
+}
+
+function countPolygonCoordinates(geometry) {
+  return geometry.coordinates.reduce(
+    (count, polygon) => count + polygon.reduce((ringCount, ring) => ringCount + ring.length, 0),
+    0,
+  );
+}
+
 function assertFeatureCollection(result, featureCount, geometryType) {
   assert.strictEqual(result.response.statusCode, 200, `unexpected response: ${result.body}`);
   assert.strictEqual(result.json.code, 'Ok', `unexpected response: ${result.body}`);
@@ -118,26 +136,75 @@ function assertFeatureCollection(result, featureCount, geometryType) {
   result.json.features.forEach((feature) => {
     assert.strictEqual(feature.type, 'Feature');
     assert.ok(feature.properties, 'expected feature properties');
-    assert.ok(Number.isFinite(feature.properties.contour), 'expected numeric contour property');
-    assert.ok(Number.isFinite(feature.properties.effective_contour),
-      'expected numeric effective contour property');
-    assert.ok(feature.properties.effective_contour <= feature.properties.contour,
-      'effective contour must not exceed the requested contour');
+    assert.ok(Number.isFinite(feature.properties.contour_seconds),
+      'expected numeric contour_seconds property');
+    assert.ok(Number.isFinite(feature.properties.effective_contour_seconds),
+      'expected numeric effective_contour_seconds property');
+    assert.ok(feature.properties.effective_contour_seconds <= feature.properties.contour_seconds,
+      'effective_contour_seconds must not exceed the requested contours_seconds value');
     assertGeometry(feature.geometry, geometryType);
   });
 }
 
-When(/^I request an isochrone from "([a-z0-9])" with contours "([^"]+)"$/, async function (node, contours) {
+When(/^I request an isochrone from "([a-z0-9])" with contours_seconds "([^"]+)"$/, async function (node, contoursSeconds) {
   await this.reprocessAndLoadData();
-  this.isochroneResponse = await requestIsochrone(this, node, contours);
+  this.isochroneResponse = await requestIsochrone(this, node, contoursSeconds);
 });
 
-When(/^I request outbound and inbound isochrones from "([a-z0-9])" with contour "([^"]+)"$/, async function (node, contour) {
+When(/^I request an isochrone from "([a-z0-9])" with contours_seconds "([^"]+)" and generalize "([^"]+)"$/, async function (node, contoursSeconds, generalize) {
   await this.reprocessAndLoadData();
-  this.outboundIsochroneResponse = await requestIsochrone(this, node, contour, {
+  this.isochroneResponse = await requestIsochrone(this, node, contoursSeconds, { generalize });
+});
+
+When(/^I request an isochrone from "([a-z0-9])" with contours_seconds "([^"]+)" and denoise "([^"]+)"$/, async function (node, contoursSeconds, denoise) {
+  await this.reprocessAndLoadData();
+  this.isochroneResponse = await requestIsochrone(this, node, contoursSeconds, { denoise });
+});
+
+When(/^I request equivalent omitted and zero-generalize isochrones from "([a-z0-9])" with contours_seconds "([^"]+)"$/, async function (node, contoursSeconds) {
+  await this.reprocessAndLoadData();
+  this.isochroneResponse = await requestIsochrone(this, node, contoursSeconds);
+  this.zeroGeneralizeIsochroneResponse = await requestIsochrone(this, node, contoursSeconds, {
+    generalize: '0',
+  });
+});
+
+When(/^I request equivalent omitted and zero-denoise isochrones from "([a-z0-9])" with contours_seconds "([^"]+)"$/, async function (node, contoursSeconds) {
+  await this.reprocessAndLoadData();
+  this.isochroneResponse = await requestIsochrone(this, node, contoursSeconds);
+  this.zeroDenoiseIsochroneResponse = await requestIsochrone(this, node, contoursSeconds, {
+    denoise: '0',
+  });
+});
+
+When(/^I request raw and denoised isochrones from "([a-z0-9])" with contours_seconds "([^"]+)" and denoise "([^"]+)"$/, async function (node, contoursSeconds, denoise) {
+  await this.reprocessAndLoadData();
+  this.rawIsochroneResponse = await requestIsochrone(this, node, contoursSeconds);
+  this.denoisedIsochroneResponse = await requestIsochrone(this, node, contoursSeconds, { denoise });
+});
+
+When(/^I request raw and generalized isochrones from "([a-z0-9])" with contours_seconds "([^"]+)" and generalize "([^"]+)"$/, async function (node, contoursSeconds, generalize) {
+  await this.reprocessAndLoadData();
+  this.rawIsochroneResponse = await requestIsochrone(this, node, contoursSeconds);
+  this.generalizedIsochroneResponse = await requestIsochrone(this, node, contoursSeconds, { generalize });
+});
+
+When(/^I request raw, denoised, and combined isochrones from "([a-z0-9])" with contours_seconds "([^"]+)", denoise "([^"]+)", and generalize "([^"]+)"$/, async function (node, contoursSeconds, denoise, generalize) {
+  await this.reprocessAndLoadData();
+  this.rawIsochroneResponse = await requestIsochrone(this, node, contoursSeconds);
+  this.denoisedIsochroneResponse = await requestIsochrone(this, node, contoursSeconds, { denoise });
+  this.combinedIsochroneResponse = await requestIsochrone(this, node, contoursSeconds, {
+    denoise,
+    generalize,
+  });
+});
+
+When(/^I request outbound and inbound isochrones from "([a-z0-9])" with contour_seconds "([^"]+)"$/, async function (node, contourSeconds) {
+  await this.reprocessAndLoadData();
+  this.outboundIsochroneResponse = await requestIsochrone(this, node, contourSeconds, {
     direction: 'outbound',
   });
-  this.inboundIsochroneResponse = await requestIsochrone(this, node, contour, {
+  this.inboundIsochroneResponse = await requestIsochrone(this, node, contourSeconds, {
     direction: 'inbound',
   });
 });
@@ -147,12 +214,57 @@ Then(/^the isochrone response should be a GeoJSON FeatureCollection with "(\d+)"
   assertFeatureCollection(this.isochroneResponse, Number(featureCount), geometryType);
 });
 
-Then(/^the isochrone contours should be "([^"]+)"$/, function (contours) {
+Then(/^the isochrone contour_seconds properties should be "([^"]+)"$/, function (contoursSeconds) {
   assert.ok(this.isochroneResponse, 'no isochrone response was recorded');
   assert.deepStrictEqual(
-    this.isochroneResponse.json.features.map((feature) => feature.properties.contour),
-    parseContours(contours),
+    this.isochroneResponse.json.features.map((feature) => feature.properties.contour_seconds),
+    parseContourSeconds(contoursSeconds),
   );
+});
+
+Then(/^the omitted and zero-generalize isochrone responses should be identical$/, function () {
+  assert.ok(this.isochroneResponse, 'no omitted-generalize response was recorded');
+  assert.ok(this.zeroGeneralizeIsochroneResponse, 'no zero-generalize response was recorded');
+  assert.deepStrictEqual(
+    this.zeroGeneralizeIsochroneResponse.json,
+    this.isochroneResponse.json,
+  );
+});
+
+Then(/^the omitted and zero-denoise isochrone responses should be identical$/, function () {
+  assert.ok(this.isochroneResponse, 'no omitted-denoise response was recorded');
+  assert.ok(this.zeroDenoiseIsochroneResponse, 'no zero-denoise response was recorded');
+  assert.deepStrictEqual(
+    this.zeroDenoiseIsochroneResponse.json,
+    this.isochroneResponse.json,
+  );
+});
+
+Then(/^denoising should remove at least one polygon ring$/, function () {
+  const raw = getSingleMultiPolygonGeometry(this.rawIsochroneResponse);
+  const denoised = getSingleMultiPolygonGeometry(this.denoisedIsochroneResponse);
+  assert.ok(countPolygonRings(denoised) < countPolygonRings(raw),
+    'expected denoising to remove a component or hole');
+});
+
+Then(/^generalization should reduce the polygon coordinate count$/, function () {
+  const raw = getSingleMultiPolygonGeometry(this.rawIsochroneResponse);
+  const generalized = getSingleMultiPolygonGeometry(this.generalizedIsochroneResponse);
+  assert.ok(countPolygonCoordinates(generalized) < countPolygonCoordinates(raw),
+    'expected generalization to reduce polygon coordinates');
+});
+
+Then(/^combined denoising and generalization should apply both transformations$/, function () {
+  const raw = getSingleMultiPolygonGeometry(this.rawIsochroneResponse);
+  const denoised = getSingleMultiPolygonGeometry(this.denoisedIsochroneResponse);
+  const combined = getSingleMultiPolygonGeometry(this.combinedIsochroneResponse);
+
+  assert.ok(countPolygonRings(denoised) < countPolygonRings(raw),
+    'expected denoising to remove a component or hole');
+  assert.strictEqual(countPolygonRings(combined), countPolygonRings(denoised),
+    'expected generalization to preserve the rings retained by denoising');
+  assert.ok(countPolygonCoordinates(combined) < countPolygonCoordinates(denoised),
+    'expected generalization to reduce coordinates after denoising');
 });
 
 Then(/^the isochrone response should have "(\d+)" waypoint$/, function (waypointCount) {

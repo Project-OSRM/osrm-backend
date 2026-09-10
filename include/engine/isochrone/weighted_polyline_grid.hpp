@@ -63,6 +63,23 @@ struct WeightedGrid
     std::vector<CoordinatePolygon> buildContours(double cutoff) const;
     std::optional<std::vector<CoordinatePolygon>>
     buildContours(double cutoff, std::size_t maximum_coordinates) const;
+    std::optional<std::vector<CoordinatePolygon>>
+    buildContours(double cutoff, std::size_t maximum_coordinates, double generalize_metres) const;
+    std::optional<std::vector<CoordinatePolygon>> buildContours(double cutoff,
+                                                                std::size_t maximum_coordinates,
+                                                                double generalize_metres,
+                                                                double denoise) const;
+    std::optional<std::vector<CoordinatePolygon>>
+    buildContours(double cutoff,
+                  std::size_t maximum_coordinates,
+                  double generalize_metres,
+                  std::size_t &raw_coordinate_count) const;
+    std::optional<std::vector<CoordinatePolygon>>
+    buildContours(double cutoff,
+                  std::size_t maximum_coordinates,
+                  double generalize_metres,
+                  double denoise,
+                  std::size_t &raw_coordinate_count) const;
 };
 
 enum class RasterizationError

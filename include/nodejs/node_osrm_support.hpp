@@ -1390,23 +1390,25 @@ inline isochrone_parameters_ptr argumentsToIsochroneParameter(const Napi::Callba
 
     const Napi::Object obj = args[0].As<Napi::Object>();
 
-    const Napi::Value contours = obj.Get("contours");
-    if (contours.IsEmpty())
+    const Napi::Value contours_seconds = obj.Get("contours_seconds");
+    if (contours_seconds.IsEmpty())
     {
         return isochrone_parameters_ptr();
     }
-    if (!contours.IsArray())
+    if (!contours_seconds.IsArray())
     {
-        ThrowError(args.Env(),
-                   "Contours must be a non-empty array of positive finite durations in seconds");
+        ThrowError(
+            args.Env(),
+            "contours_seconds must be a non-empty array of positive finite durations in seconds");
         return isochrone_parameters_ptr();
     }
 
-    const Napi::Array contour_array = contours.As<Napi::Array>();
+    const Napi::Array contour_array = contours_seconds.As<Napi::Array>();
     if (contour_array.Length() == 0)
     {
-        ThrowError(args.Env(),
-                   "Contours must be a non-empty array of positive finite durations in seconds");
+        ThrowError(
+            args.Env(),
+            "contours_seconds must be a non-empty array of positive finite durations in seconds");
         return isochrone_parameters_ptr();
     }
     for (uint32_t index = 0; index < contour_array.Length(); ++index)
@@ -1414,21 +1416,21 @@ inline isochrone_parameters_ptr argumentsToIsochroneParameter(const Napi::Callba
         const Napi::Value contour = contour_array.Get(index);
         if (!contour.IsNumber())
         {
-            ThrowError(
-                args.Env(),
-                "Contours must be a non-empty array of positive finite durations in seconds");
+            ThrowError(args.Env(),
+                       "contours_seconds must be a non-empty array of positive finite durations in "
+                       "seconds");
             return isochrone_parameters_ptr();
         }
 
         const auto value = contour.ToNumber().DoubleValue();
         if (!std::isfinite(value) || value <= 0.)
         {
-            ThrowError(
-                args.Env(),
-                "Contours must be a non-empty array of positive finite durations in seconds");
+            ThrowError(args.Env(),
+                       "contours_seconds must be a non-empty array of positive finite durations in "
+                       "seconds");
             return isochrone_parameters_ptr();
         }
-        params->contours.push_back(value);
+        params->contours_seconds.push_back(value);
     }
 
     if (obj.Has("direction"))
@@ -1465,6 +1467,42 @@ inline isochrone_parameters_ptr argumentsToIsochroneParameter(const Napi::Callba
             return isochrone_parameters_ptr();
         }
         params->polygons = polygons.ToBoolean().Value();
+    }
+
+    if (obj.Has("generalize"))
+    {
+        const Napi::Value generalize = obj.Get("generalize");
+        if (!generalize.IsNumber())
+        {
+            ThrowError(args.Env(), "Generalize must be a finite nonnegative tolerance in metres");
+            return isochrone_parameters_ptr();
+        }
+
+        const auto value = generalize.ToNumber().DoubleValue();
+        if (!std::isfinite(value) || value < 0.)
+        {
+            ThrowError(args.Env(), "Generalize must be a finite nonnegative tolerance in metres");
+            return isochrone_parameters_ptr();
+        }
+        params->generalize = value;
+    }
+
+    if (obj.Has("denoise"))
+    {
+        const Napi::Value denoise = obj.Get("denoise");
+        if (!denoise.IsNumber())
+        {
+            ThrowError(args.Env(), "Denoise must be a finite number between zero and one");
+            return isochrone_parameters_ptr();
+        }
+
+        const auto value = denoise.ToNumber().DoubleValue();
+        if (!std::isfinite(value) || value < 0. || value > 1.)
+        {
+            ThrowError(args.Env(), "Denoise must be a finite number between zero and one");
+            return isochrone_parameters_ptr();
+        }
+        params->denoise = value;
     }
 
     return params;

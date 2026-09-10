@@ -39,15 +39,26 @@ std::string getWrongOptionHelp(const engine::api::IsochroneParameters &parameter
 
     if (!parameter_size_mismatch && parameters.coordinates.size() != 1)
         help = "Exactly one coordinate is required.";
-    else if (!parameter_size_mismatch && parameters.contours.empty())
-        help = "At least one contour is required.";
+    else if (!parameter_size_mismatch && parameters.contours_seconds.empty())
+        help = "At least one contours_seconds value is required.";
     else if (!parameter_size_mismatch &&
-             std::any_of(parameters.contours.begin(),
-                         parameters.contours.end(),
-                         [](const double contour)
-                         { return !std::isfinite(contour) || contour <= 0.; }))
+             std::any_of(parameters.contours_seconds.begin(),
+                         parameters.contours_seconds.end(),
+                         [](const double contour_seconds)
+                         { return !std::isfinite(contour_seconds) || contour_seconds <= 0.; }))
     {
-        help = "Contours must be finite durations in seconds and greater than zero.";
+        help = "contours_seconds must contain finite durations in seconds greater than zero.";
+    }
+    else if (!parameter_size_mismatch && parameters.generalize &&
+             (!std::isfinite(*parameters.generalize) || *parameters.generalize < 0.))
+    {
+        help = "Generalize must be a finite nonnegative tolerance in metres.";
+    }
+    else if (!parameter_size_mismatch && parameters.denoise &&
+             (!std::isfinite(*parameters.denoise) || *parameters.denoise < 0. ||
+              *parameters.denoise > 1.))
+    {
+        help = "Denoise must be a finite number between zero and one.";
     }
 
     return help;

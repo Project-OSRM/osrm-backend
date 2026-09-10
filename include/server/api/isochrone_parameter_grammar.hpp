@@ -20,10 +20,10 @@ inline const auto direction_type = []()
     return sym;
 }();
 
-inline const auto contours_rule =
-    x3::lit("contours=") >
+inline const auto contours_seconds_rule =
+    x3::lit("contours_seconds=") >
     (base_grammar::json_double %
-     ',')[([](auto &ctx) { x3::get<params_tag>(ctx).get().contours = x3::_attr(ctx); })];
+     ',')[([](auto &ctx) { x3::get<params_tag>(ctx).get().contours_seconds = x3::_attr(ctx); })];
 
 inline const auto direction_rule =
     x3::lit("direction=") >
@@ -33,9 +33,21 @@ inline const auto polygons_rule =
     x3::lit("polygons=") >
     x3::bool_[([](auto &ctx) { x3::get<params_tag>(ctx).get().polygons = x3::_attr(ctx); })];
 
+inline const auto generalize_rule =
+    x3::lit("generalize=") >
+    base_grammar::json_double[([](auto &ctx)
+                               { x3::get<params_tag>(ctx).get().generalize = x3::_attr(ctx); })];
+
+inline const auto denoise_rule =
+    x3::lit("denoise=") >
+    base_grammar::json_double[([](auto &ctx)
+                               { x3::get<params_tag>(ctx).get().denoise = x3::_attr(ctx); })];
+
 inline const auto root_rule = x3::rule<struct isochrone_root_tag>{"isochrone_root"} =
     base_grammar::query_rule > base_grammar::format_rule >
-    -('?' > (contours_rule | direction_rule | polygons_rule | base_grammar::base_options) % '&');
+    -('?' > (contours_seconds_rule | direction_rule | polygons_rule | generalize_rule |
+             denoise_rule | base_grammar::base_options) %
+                '&');
 
 } // namespace osrm::server::api::isochrone_grammar
 

@@ -207,10 +207,6 @@ MaterializationError readGeometry(const datafacade::BaseDataFacade &facade,
 
     for (std::size_t index = 0; index < geometry.segment_durations.size(); ++index)
     {
-        if (geometry.segment_weights[index] == INVALID_SEGMENT_WEIGHT ||
-            geometry.segment_durations[index] == INVALID_SEGMENT_DURATION)
-            return MaterializationError::InvalidSegmentDuration;
-
         const auto error =
             validateSegment(geometry.coordinates[index], geometry.coordinates[index + 1]);
         if (error != MaterializationError::None)
@@ -240,6 +236,15 @@ buildClippedGeometry(const GeometryData &geometry,
         !canonicalizePosition(last, segment_count, last_from_segment_start_duration.has_value()) ||
         !precedesOrEquals(first, last))
         return MaterializationError::InvalidGeometry;
+
+    // A phantom source/target may legally cover only one side of a geometry whose other side was
+    // closed by a traffic update. Complete labels still span and validate the entire geometry.
+    for (std::size_t index = first.segment_index; index <= last.segment_index; ++index)
+    {
+        if (geometry.segment_weights[index] == INVALID_SEGMENT_WEIGHT ||
+            geometry.segment_durations[index] == INVALID_SEGMENT_DURATION)
+            return MaterializationError::InvalidSegmentDuration;
+    }
 
     if ((first_to_segment_end_duration &&
          !isValidNonnegativeDuration(*first_to_segment_end_duration)) ||

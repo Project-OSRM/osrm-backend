@@ -508,7 +508,12 @@ BOOST_AUTO_TEST_CASE(clips_reverse_phantom_geometry_in_legal_direction)
 
 BOOST_AUTO_TEST_CASE(materializes_an_inbound_phantom_prefix)
 {
-    const GeometryFacade facade;
+    GeometryFacade facade;
+    // A traffic closure after the snapped point does not invalidate the target prefix. Both the
+    // weight and duration use their packed invalid sentinels in real traffic updates.
+    facade.setDirectionWeights(10, from_alias<std::uint32_t>(INVALID_SEGMENT_WEIGHT), 40, 30);
+    facade.setDirectionDurations(
+        100, from_alias<std::uint32_t>(INVALID_SEGMENT_DURATION), 700, 500);
     const auto location =
         osrm::util::Coordinate{osrm::util::FloatLongitude{0.4}, osrm::util::FloatLatitude{0.}};
     auto phantom = makePhantom(0,
