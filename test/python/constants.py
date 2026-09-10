@@ -10,7 +10,7 @@ three_test_coordinates = [(7.41337, 43.72956), (7.41546, 43.73077), (7.41862, 43
 
 two_test_coordinates = three_test_coordinates[0:2]
 
-test_tile = {"at": [17059, 11948, 15], "size": 159125}
+test_tile = {"at": [17059, 11948, 15], "size": 159260}
 
 data_path = str(path.joinpath("ch", "monaco.osrm").absolute())
 mld_data_path = str(path.joinpath("mld", "monaco.osrm").absolute())
