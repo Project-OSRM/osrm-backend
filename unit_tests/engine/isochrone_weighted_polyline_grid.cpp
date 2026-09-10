@@ -69,6 +69,94 @@ BOOST_AUTO_TEST_CASE(rasterizes_interpolated_segment_durations_in_fixed_metre_ce
     BOOST_CHECK_CLOSE(result.grid->values[3], 50., 0.1);
 }
 
+BOOST_AUTO_TEST_CASE(intentionally_merges_unrelated_geometry_that_shares_a_raster_cell)
+{
+    const auto source = pointAtMetres(0., 0., 0., 0., 0.);
+    const auto nearby = pointAtMetres(0., 0., 20., 20., 30.);
+    const std::vector<WeightedPolyline> polylines = {
+        {{source.coordinate, source.duration, 100., PackedGeometryID{1}}},
+        {{nearby.coordinate, nearby.duration, 1., PackedGeometryID{2}}}};
+
+    const auto result =
+        osrm::engine::isochrone::rasterizeWeightedPolylines(polylines, {}, source.coordinate);
+
+    BOOST_REQUIRE(result.grid);
+    BOOST_REQUIRE_EQUAL(result.grid->width, 1);
+    BOOST_REQUIRE_EQUAL(result.grid->height, 1);
+    // Distinct GeometryIDs in one 100 m cell are deliberately a coverage approximation. They
+    // are not target alternatives, so the earlier duration owns the cell despite its weight.
+    BOOST_CHECK_SMALL(result.grid->values.front(), 1e-9);
+}
+
+BOOST_AUTO_TEST_CASE(selects_the_lower_weight_for_opposite_directions_of_one_geometry)
+{
+    const auto west = pointAtMetres(0., 0., 0., 0., 0.);
+    const auto east = pointAtMetres(0., 0., 20., 0., 0.);
+    constexpr PackedGeometryID shared_geometry = 7;
+    const std::vector<WeightedPolyline> polylines = {
+        {{east.coordinate, 20., 1., shared_geometry}, {west.coordinate, 20., 1., shared_geometry}},
+        {{west.coordinate, 1., 100., shared_geometry},
+         {east.coordinate, 1., 100., shared_geometry}}};
+
+    const auto result =
+        osrm::engine::isochrone::rasterizeWeightedPolylines(polylines, {}, west.coordinate);
+
+    BOOST_REQUIRE(result.grid);
+    BOOST_REQUIRE_EQUAL(result.grid->width, 1);
+    BOOST_REQUIRE_EQUAL(result.grid->height, 1);
+    BOOST_CHECK_CLOSE(result.grid->values.front(), 20., 1e-9);
+}
+
+BOOST_AUTO_TEST_CASE(breaks_shared_geometry_weight_ties_by_duration)
+{
+    const auto west = pointAtMetres(0., 0., 0., 0., 0.);
+    const auto east = pointAtMetres(0., 0., 20., 0., 0.);
+    constexpr PackedGeometryID shared_geometry = 9;
+    const std::vector<WeightedPolyline> polylines = {
+        {{east.coordinate, 20., 10., shared_geometry},
+         {west.coordinate, 20., 10., shared_geometry}},
+        {{west.coordinate, 10., 10., shared_geometry},
+         {east.coordinate, 10., 10., shared_geometry}}};
+
+    const auto result =
+        osrm::engine::isochrone::rasterizeWeightedPolylines(polylines, {}, west.coordinate);
+
+    BOOST_REQUIRE(result.grid);
+    BOOST_REQUIRE_EQUAL(result.grid->width, 1);
+    BOOST_REQUIRE_EQUAL(result.grid->height, 1);
+    // The slower direction is deliberately first, so preserving input order is not sufficient.
+    BOOST_CHECK_CLOSE(result.grid->values.front(), 10., 1e-9);
+}
+
+BOOST_AUTO_TEST_CASE(allows_the_shared_geometry_winner_to_change_by_road_location)
+{
+    const auto west = pointAtMetres(0., 0., 10., 0., 0.);
+    const auto middle = pointAtMetres(0., 0., 110., 0., 0.);
+    const auto east = pointAtMetres(0., 0., 210., 0., 0.);
+    constexpr PackedGeometryID shared_geometry = 11;
+    const std::vector<WeightedPolyline> polylines = {
+        // This is the lower-weight direction on the eastern two cells.
+        {{east.coordinate, 30., 50., shared_geometry},
+         {middle.coordinate, 40., 51., shared_geometry},
+         {west.coordinate, 50., 52., shared_geometry}},
+        // This direction is lower weight near the western endpoint only.
+        {{west.coordinate, 1., 0., shared_geometry},
+         {middle.coordinate, 2., 100., shared_geometry},
+         {east.coordinate, 3., 200., shared_geometry}}};
+
+    const auto result =
+        osrm::engine::isochrone::rasterizeWeightedPolylines(polylines, {}, west.coordinate);
+
+    BOOST_REQUIRE(result.grid);
+    BOOST_REQUIRE_EQUAL(result.grid->width, 3);
+    BOOST_REQUIRE_EQUAL(result.grid->height, 1);
+    // A 10 s contour may retain the western cell, where the quick direction wins, but not the
+    // eastern cells, where the slower direction is lexicographically lower weight.
+    BOOST_CHECK_LE(result.grid->values[0], 10.);
+    BOOST_CHECK_GT(result.grid->values[1], 10.);
+    BOOST_CHECK_GT(result.grid->values[2], 10.);
+}
+
 BOOST_AUTO_TEST_CASE(uses_the_same_metre_grid_at_different_latitudes)
 {
     const auto rasterize = [](const double latitude)
@@ -190,6 +278,25 @@ BOOST_AUTO_TEST_CASE(supercovers_grid_corner_crossings_in_both_directions)
 
     check({pointAtMetres(0., 0., -50., -50., 0.), pointAtMetres(0., 0., 150., 150., 40.)});
     check({pointAtMetres(0., 0., 150., 150., 40.), pointAtMetres(0., 0., -50., -50., 0.)});
+}
+
+BOOST_AUTO_TEST_CASE(supercovers_an_outer_grid_corner_endpoint_without_stepping_outside_the_grid)
+{
+    const auto source = pointAtMetres(0., 0., 0., 0., 40.);
+    const auto other = pointAtMetres(0., 0., 250., -150., 0.);
+    const auto check = [&](const WeightedPolyline &polyline)
+    {
+        const auto result = osrm::engine::isochrone::rasterizeWeightedPolylines(
+            {&polyline, 1}, {}, source.coordinate);
+
+        BOOST_REQUIRE(result.grid);
+        BOOST_REQUIRE_EQUAL(result.grid->width, 3);
+        BOOST_REQUIRE_EQUAL(result.grid->height, 3);
+        BOOST_REQUIRE_EQUAL(result.grid->buildContours(40.).size(), 1);
+    };
+
+    check({other, source});
+    check({source, other});
 }
 
 BOOST_AUTO_TEST_CASE(returns_wgs84_contours_with_holes)

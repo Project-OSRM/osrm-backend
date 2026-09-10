@@ -80,7 +80,7 @@ osrm-partition <input.osrm> [options]
 | `--boundary <fraction>` | `0.25` | Fraction of nodes to use as boundary sources/sinks during contraction. |
 | `--optimizing-cuts <n>` | `10` | Number of candidate cuts evaluated when optimizing a single bisection. |
 | `--small-component-size <n>` | `1000` | Node-count threshold below which a component is treated as small. |
-| `--generate-isochrone-data` | off | Preserve the original directed transition topology needed to generate exact duration isochrone data later. This increases the `.osrm.ebg` artifact size. It must be enabled before `osrm-customize --generate-isochrone-data`, and before `osrm-contract --generate-isochrone-data` when CH preprocessing includes partitioning. |
+| `--generate-isochrone-data` | off | Preserve the original directed transition topology needed to generate the isochrone search graph, which retains profile weights and elapsed durations. This increases the `.osrm.ebg` artifact size. It must be enabled before `osrm-customize --generate-isochrone-data`, and before `osrm-contract --generate-isochrone-data` when CH preprocessing includes partitioning. |
 
 ---
 
@@ -98,7 +98,7 @@ osrm-customize <input.osrm> [options]
 | `--segment-speed-file <file>` | | CSV with `nodeA,nodeB,speed` columns to override edge weights. Repeatable. |
 | `--turn-penalty-file <file>` | | CSV with `from_node,via_node,to_node,penalty` to override turn weights. Repeatable. |
 | `--edge-weight-updates-over-factor <x>` | `0` (disabled) | Log edges whose weight changed by more than factor `x` (requires `--segment-speed-file`). |
-| `--generate-isochrone-data` | off | Generate and store the independent directed duration graph required by the MLD isochrone service. Requires an input prepared with `osrm-partition --generate-isochrone-data` and increases the MLD artifact and runtime memory footprint. |
+| `--generate-isochrone-data` | off | Generate and store the dedicated directed isochrone graph, containing profile weights and elapsed durations, required by the MLD isochrone service. Requires an input prepared with `osrm-partition --generate-isochrone-data` and increases the MLD artifact and runtime memory footprint. |
 | `--parse-conditionals-from-now <utc_timestamp>` | `0` (disabled) | UTC Unix timestamp from which to evaluate conditional turn restrictions. |
 | `--time-zone-file <file>` | | GeoJSON file with time-zone boundaries, required for conditional restriction parsing. |
 
@@ -118,7 +118,7 @@ osrm-contract <input.osrm> [options]
 | `--segment-speed-file <file>` | | CSV with `nodeA,nodeB,speed` columns to override edge weights. Repeatable. |
 | `--turn-penalty-file <file>` | | CSV with `from_node,via_node,to_node,penalty` to override turn weights. Repeatable. |
 | `--edge-weight-updates-over-factor <x>` | `0` (disabled) | Log edges whose weight changed by more than factor `x`. |
-| `--generate-isochrone-data` | off | Generate and store the independent directed duration graph required by the CH isochrone service. If the input has been partitioned, that partition step must also use this option. This increases the CH artifact and runtime memory footprint. |
+| `--generate-isochrone-data` | off | Generate and store the dedicated directed isochrone graph, containing profile weights and elapsed durations, required by the CH isochrone service. If the input has been partitioned, that partition step must also use this option. This increases the CH artifact and runtime memory footprint. |
 | `--parse-conditionals-from-now <utc_timestamp>` | `0` (disabled) | UTC Unix timestamp for evaluating conditional turn restrictions. |
 | `--time-zone-file <file>` | | GeoJSON file with time-zone boundaries, required for conditional restriction parsing. |
 

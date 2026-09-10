@@ -18,7 +18,8 @@ DurationGraph build(const std::vector<IsochroneTransition> &transitions,
                     const std::vector<EdgeDuration> &node_durations,
                     const std::vector<TurnPenalty> &turn_weight_penalties,
                     const std::vector<TurnPenalty> &turn_duration_penalties,
-                    const std::vector<EdgeDuration> &node_duration_lower_bounds = {})
+                    const std::vector<EdgeDuration> &node_duration_lower_bounds = {},
+                    const std::vector<EdgeWeight> &node_weight_lower_bounds = {})
 {
     return buildDurationGraph(static_cast<EdgeID>(node_weights.size()),
                               transitions,
@@ -26,24 +27,54 @@ DurationGraph build(const std::vector<IsochroneTransition> &transitions,
                               node_durations,
                               turn_weight_penalties,
                               turn_duration_penalties,
-                              node_duration_lower_bounds);
+                              node_duration_lower_bounds,
+                              node_weight_lower_bounds);
 }
 
 } // namespace
 
 BOOST_AUTO_TEST_SUITE(duration_graph_builder)
 
-BOOST_AUTO_TEST_CASE(parallel_transitions_keep_the_duration_winner)
+BOOST_AUTO_TEST_CASE(parallel_transitions_keep_the_primary_weight_winner)
 {
     const auto graph =
-        build({{0, 1, 0}, {0, 1, 1}}, {{100}, {0}}, {{10}, {0}}, {{0}, {0}}, {{50}, {5}});
+        build({{0, 1, 0}, {0, 1, 1}}, {{100}, {0}}, {{10}, {0}}, {{0}, {20}}, {{50}, {5}});
 
     BOOST_REQUIRE_EQUAL(graph.forward_arcs.size(), 1);
     BOOST_CHECK_EQUAL(graph.forward_arcs.front().node, 1);
-    BOOST_CHECK_EQUAL(graph.forward_arcs.front().duration, EdgeDuration{15});
+    BOOST_CHECK_EQUAL(graph.forward_arcs.front().weight, EdgeWeight{100});
+    BOOST_CHECK_EQUAL(graph.forward_arcs.front().duration, EdgeDuration{60});
     BOOST_REQUIRE_EQUAL(graph.reverse_arcs.size(), 1);
     BOOST_CHECK_EQUAL(graph.reverse_arcs.front().node, 0);
-    BOOST_CHECK_EQUAL(graph.reverse_arcs.front().duration, EdgeDuration{15});
+    BOOST_CHECK_EQUAL(graph.reverse_arcs.front().weight, EdgeWeight{100});
+    BOOST_CHECK_EQUAL(graph.reverse_arcs.front().duration, EdgeDuration{60});
+}
+
+BOOST_AUTO_TEST_CASE(parallel_transitions_break_primary_weight_ties_by_duration)
+{
+    const auto graph =
+        build({{0, 1, 0}, {0, 1, 1}}, {{100}, {0}}, {{10}, {0}}, {{5}, {5}}, {{50}, {5}});
+
+    BOOST_REQUIRE_EQUAL(graph.forward_arcs.size(), 1);
+    BOOST_CHECK_EQUAL(graph.forward_arcs.front().weight, EdgeWeight{105});
+    BOOST_CHECK_EQUAL(graph.forward_arcs.front().duration, EdgeDuration{15});
+}
+
+BOOST_AUTO_TEST_CASE(masks_the_oneway_marker_from_a_node_weight)
+{
+    const auto oneway_weight = EdgeWeight{static_cast<EdgeWeight::value_type>(0x8000000AU)};
+    const auto graph = build({{0, 1, 0}}, {oneway_weight, {0}}, {{10}, {0}}, {{0}}, {{0}});
+
+    BOOST_REQUIRE_EQUAL(graph.forward_arcs.size(), 1);
+    BOOST_CHECK_EQUAL(graph.forward_arcs.front().weight, EdgeWeight{10});
+}
+
+BOOST_AUTO_TEST_CASE(clamps_a_nonpositive_primary_weight_like_the_routing_graph)
+{
+    const auto graph = build({{0, 1, 0}}, {{1}, {0}}, {{10}, {0}}, {{-10}}, {{0}});
+
+    BOOST_REQUIRE_EQUAL(graph.forward_arcs.size(), 1);
+    BOOST_CHECK_EQUAL(graph.forward_arcs.front().weight, EdgeWeight{1});
 }
 
 BOOST_AUTO_TEST_CASE(preserves_asymmetric_transition_durations_in_both_csrs)
@@ -53,14 +84,18 @@ BOOST_AUTO_TEST_CASE(preserves_asymmetric_transition_durations_in_both_csrs)
 
     BOOST_REQUIRE_EQUAL(graph.forward_arcs.size(), 2);
     BOOST_CHECK_EQUAL(graph.forward_arcs[0].node, 1);
+    BOOST_CHECK_EQUAL(graph.forward_arcs[0].weight, EdgeWeight{100});
     BOOST_CHECK_EQUAL(graph.forward_arcs[0].duration, EdgeDuration{11});
     BOOST_CHECK_EQUAL(graph.forward_arcs[1].node, 0);
+    BOOST_CHECK_EQUAL(graph.forward_arcs[1].weight, EdgeWeight{100});
     BOOST_CHECK_EQUAL(graph.forward_arcs[1].duration, EdgeDuration{102});
 
     BOOST_REQUIRE_EQUAL(graph.reverse_arcs.size(), 2);
     BOOST_CHECK_EQUAL(graph.reverse_arcs[0].node, 1);
+    BOOST_CHECK_EQUAL(graph.reverse_arcs[0].weight, EdgeWeight{100});
     BOOST_CHECK_EQUAL(graph.reverse_arcs[0].duration, EdgeDuration{102});
     BOOST_CHECK_EQUAL(graph.reverse_arcs[1].node, 0);
+    BOOST_CHECK_EQUAL(graph.reverse_arcs[1].weight, EdgeWeight{100});
     BOOST_CHECK_EQUAL(graph.reverse_arcs[1].duration, EdgeDuration{11});
 }
 
@@ -74,6 +109,7 @@ BOOST_AUTO_TEST_CASE(omits_a_transition_disabled_by_a_conditional_restriction)
 
     BOOST_REQUIRE_EQUAL(graph.forward_arcs.size(), 1);
     BOOST_CHECK_EQUAL(graph.forward_arcs.front().node, 2);
+    BOOST_CHECK_EQUAL(graph.forward_arcs.front().weight, EdgeWeight{100});
     BOOST_CHECK_EQUAL(graph.forward_arcs.front().duration, EdgeDuration{15});
 }
 
@@ -92,10 +128,11 @@ BOOST_AUTO_TEST_CASE(uses_metrics_after_traffic_reopens_an_initially_unavailable
     BOOST_CHECK(before_traffic.forward_arcs.empty());
 
     // The updater replaces an unavailable source metric when a speed update reopens its
-    // geometry.  The duration graph is built from those post-update metrics.
+    // geometry. The isochrone graph is built from those post-update metrics.
     const auto after_traffic = build(transitions, {{25}, {0}}, {{25}, {0}}, {{0}}, {{0}});
     BOOST_REQUIRE_EQUAL(after_traffic.forward_arcs.size(), 1);
     BOOST_CHECK_EQUAL(after_traffic.forward_arcs.front().node, 1);
+    BOOST_CHECK_EQUAL(after_traffic.forward_arcs.front().weight, EdgeWeight{25});
     BOOST_CHECK_EQUAL(after_traffic.forward_arcs.front().duration, EdgeDuration{25});
 }
 
@@ -123,9 +160,23 @@ BOOST_AUTO_TEST_CASE(applies_the_node_lower_bound_before_a_turn_when_the_route_c
     BOOST_CHECK_EQUAL(graph.forward_arcs.front().duration, EdgeDuration{4});
 }
 
+BOOST_AUTO_TEST_CASE(applies_the_weight_lower_bound_before_a_turn_when_the_route_clamp_triggers)
+{
+    const auto graph = build({{0, 1, 0}}, {{1}, {0}}, {{10}, {0}}, {{1}}, {{0}}, {}, {{3}, {0}});
+
+    BOOST_REQUIRE_EQUAL(graph.forward_arcs.size(), 1);
+    BOOST_CHECK_EQUAL(graph.forward_arcs.front().weight, EdgeWeight{4});
+}
+
 BOOST_AUTO_TEST_CASE(rejects_duration_lower_bounds_with_the_wrong_node_count)
 {
     BOOST_CHECK_THROW(build({{0, 1, 0}}, {{100}, {0}}, {{1}, {0}}, {{0}}, {{0}}, {{2}}),
+                      osrm::util::exception);
+}
+
+BOOST_AUTO_TEST_CASE(rejects_weight_lower_bounds_with_the_wrong_node_count)
+{
+    BOOST_CHECK_THROW(build({{0, 1, 0}}, {{100}, {0}}, {{1}, {0}}, {{0}}, {{0}}, {}, {{2}}),
                       osrm::util::exception);
 }
 

@@ -141,6 +141,8 @@ class OSRM final
 
     /**
      * Isochrone queries for locations reachable within duration contours in seconds.
+     * Paths minimize total profile weight and, among equal-total-weight paths,
+     * deterministically minimize elapsed duration before applying each contour.
      *
      * The response contains GeoJSON in a JSON object.
      *

@@ -213,6 +213,20 @@ class FileReader
                 path.string(), ErrorCode::FileOpenError, SOURCE_REF, errmsg.c_str());
         }
 
+        const auto checkArchiveRead = [&](const int status, const std::string &name)
+        {
+            try
+            {
+                detail::checkArchiveError(a, status, path, name);
+            }
+            catch (...)
+            {
+                archive_read_free(a);
+                a = nullptr;
+                throw;
+            }
+        };
+
         struct archive_entry *ae;
 
         // Collect header positions for all entries in order.
@@ -233,8 +247,13 @@ class FileReader
         };
         std::vector<RawEntry> all_entries;
 
-        while (archive_read_next_header(a, &ae) == ARCHIVE_OK)
+        while (true)
         {
+            ret = archive_read_next_header(a, &ae);
+            if (ret == ARCHIVE_EOF)
+                break;
+            checkArchiveRead(ret, "read next header");
+
             std::int64_t pos = archive_read_header_position(a);
             bool is_reg = (archive_entry_filetype(ae) == AE_IFREG);
             std::string name;
@@ -245,7 +264,7 @@ class FileReader
                 size = static_cast<std::size_t>(archive_entry_size(ae));
             }
             all_entries.push_back({std::move(name), size, pos, is_reg});
-            archive_read_data_skip(a);
+            checkArchiveRead(archive_read_data_skip(a), "skip entry data");
         }
 
         // After ARCHIVE_EOF, header_position points to the end-of-archive marker

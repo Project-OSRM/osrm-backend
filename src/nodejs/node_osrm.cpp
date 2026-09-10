@@ -78,7 +78,7 @@ Napi::Object Engine::Init(Napi::Env env, Napi::Object exports)
  * @param {Number} [options.max_locations_map_matching] Max. locations supported in map-matching query (default: unlimited).
  * @param {Number} [options.max_radius_map_matching] Max. radius size supported in map matching query (default: 5).
  * @param {Number} [options.max_results_nearest] Max. results supported in nearest query (default: unlimited).
- * @param {Number} [options.max_isochrone_search_records] Max. in-memory isochrone search records, including discovered graph labels and supplemental boundary records (default: 100000).
+ * @param {Number} [options.max_isochrone_search_records] Max. in-memory isochrone candidate or weighted-search records, including labels retained beyond the requested contour (default: 100000).
  * @param {Number} [options.max_isochrone_materialized_points] Per-stage cap for geometry fragments, expanded points, polylines, and weighted points materialized by an isochrone query (default: 1000000).
  * @param {Number} [options.max_isochrone_rasterization_steps] Max. raster cell updates by an isochrone query (default: 5000000).
  * @param {Number} [options.max_isochrone_output_points] Max. GeoJSON contour coordinates returned by an isochrone query (default: 1000000).
@@ -326,9 +326,11 @@ Napi::Value Engine::route(const Napi::CallbackInfo &info)
 // clang-format off
 /**
  * Computes the region reachable from one coordinate within each supplied elapsed-duration contour.
- * Contours are in seconds and evaluated at decisecond precision. Each feature reports both the
- * requested `contour` and the quantized `effective_contour` that was evaluated. CH data must be
- * prepared with `osrm-contract --generate-isochrone-data` (and the same option on
+ * The search minimizes the dataset profile's weight; among equal-total-weight paths it minimizes
+ * elapsed duration, then applies the contour to that selected duration. Contours are in seconds
+ * and evaluated at decisecond precision. Each feature reports both the requested `contour` and
+ * the quantized `effective_contour` that was evaluated. CH data must be prepared with
+ * `osrm-contract --generate-isochrone-data` (and the same option on
  * `osrm-partition` if partitioning is used). MLD data requires the option on both
  * `osrm-partition` and `osrm-customize`.
  *

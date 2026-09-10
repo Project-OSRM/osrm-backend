@@ -27,10 +27,12 @@ struct EdgeExpandedGraphUpdateOptions
     // can remove or invalidate its entries. This is needed for an unpartitioned CH dataset,
     // where there is no sidecar carrying the original transitions.
     std::vector<extractor::IsochroneTransition> *generated_isochrone_transitions = nullptr;
-    // Traffic and turn updates enforce a lower bound on the total duration of each updated
-    // transition.  Keep that build-only information separate from node_durations: storing the
-    // lower bound as a node duration would incorrectly add it to positive turn penalties.
+    // Traffic and turn updates enforce lower bounds on the primary weight and auxiliary elapsed
+    // duration of each updated transition. Keep that build-only data separate from the shared
+    // node metrics: storing a bound in either node metric would incorrectly add it to positive
+    // turn penalties.
     std::vector<EdgeDuration> *node_duration_lower_bounds = nullptr;
+    std::vector<EdgeWeight> *node_weight_lower_bounds = nullptr;
 };
 
 class Updater

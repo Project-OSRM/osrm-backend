@@ -28,6 +28,7 @@ struct DirectedLabel
     NodeID node;
     EdgeDuration duration;
     DurationAnchor anchor;
+    EdgeWeight weight{0};
 };
 
 struct GeometryPosition
@@ -51,12 +52,15 @@ struct GeometryClip
     // geometric fraction, because phantom partial durations are integral.
     std::optional<EdgeDuration> first_to_segment_end_duration = std::nullopt;
     std::optional<EdgeDuration> last_from_segment_start_duration = std::nullopt;
+    std::optional<EdgeWeight> first_to_segment_end_weight = std::nullopt;
+    std::optional<EdgeWeight> last_from_segment_start_weight = std::nullopt;
 };
 
 struct WeightedApproachPoint
 {
     util::Coordinate coordinate;
     EdgeDuration duration;
+    EdgeWeight weight{0};
 };
 
 using WeightedApproach = std::vector<WeightedApproachPoint>;
@@ -73,6 +77,9 @@ struct MaterializationOptions
 {
     EdgeDuration maximum_duration{0};
     MaterializationLimits limits;
+    // Retain complete road fragments until paths that share a physical geometry have been
+    // compared by profile weight during rasterization. Input approaches are always clipped.
+    bool clip_to_maximum_duration = true;
 };
 
 enum class MaterializationError
@@ -98,7 +105,7 @@ struct MaterializationResult
 // and the input-location-to-phantom approaches.  Arithmetic and clipping use
 // internal EdgeDuration units; output durations are converted to seconds.
 // Complete labels are deterministically deduplicated by (node, anchor),
-// retaining the lowest duration. Explicit clips and
+// retaining the lexicographically lowest (weight, duration). Explicit clips and
 // approaches are intentionally not deduplicated because they can represent
 // distinct source or loop-reentry coverage.
 MaterializationResult materializeWeightedPolylines(const datafacade::BaseDataFacade &facade,

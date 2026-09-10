@@ -1,4 +1,5 @@
 #include "engine/isochrone/search_result_materialization.hpp"
+#include "engine/routing_algorithms/bounded_duration_one_to_all.hpp"
 
 #include "mocks/mock_datafacade.hpp"
 
@@ -7,6 +8,7 @@
 
 #include <array>
 #include <cstdint>
+#include <span>
 
 namespace
 {
@@ -38,8 +40,8 @@ class GeometryFacade final : public osrm::test::MockBaseDataFacade
 
     GeometryID GetGeometryIndex(const NodeID node) const override
     {
-        BOOST_ASSERT(node < 2);
-        return {0, node == 0};
+        BOOST_ASSERT(node < 4);
+        return {node < 2 ? 0U : 1U, node % 2 == 0};
     }
 
     NodeForwardRange GetUncompressedForwardGeometry(const PackedGeometryID) const override
@@ -64,6 +66,20 @@ class GeometryFacade final : public osrm::test::MockBaseDataFacade
     {
         return DurationReverseRange{
             DurationForwardRange{reverse_durations.begin(), reverse_durations.end()}};
+    }
+
+    unsigned GetNumberOfNodes() const { return 4; }
+
+    bool HasIsochroneGraph() const { return true; }
+
+    std::span<const osrm::engine::isochrone::DurationGraphArc>
+    GetIsochroneForwardEdgeRange(const NodeID node) const
+    {
+        if (node == 2)
+            return {isochrone_forward_arcs.data(), 1};
+        if (node == 3)
+            return {isochrone_forward_arcs.data() + 1, 1};
+        return {};
     }
 
   private:
@@ -94,6 +110,27 @@ class GeometryFacade final : public osrm::test::MockBaseDataFacade
     osrm::extractor::SegmentDataView::SegmentWeightVector reverse_weights;
     osrm::extractor::SegmentDataView::SegmentDurationVector forward_durations;
     osrm::extractor::SegmentDataView::SegmentDurationVector reverse_durations;
+    std::array<osrm::engine::isochrone::DurationGraphArc, 2> isochrone_forward_arcs = {
+        osrm::engine::isochrone::DurationGraphArc{0, EdgeWeight{100}, EdgeDuration{10}},
+        osrm::engine::isochrone::DurationGraphArc{1, EdgeWeight{1}, EdgeDuration{200}}};
+
+    void setDirectionWeights(const std::uint32_t forward_first,
+                             const std::uint32_t forward_second,
+                             const std::uint32_t reverse_first,
+                             const std::uint32_t reverse_second)
+    {
+        forward_weight_storage[0] = packWeights(forward_first, forward_second);
+        reverse_weight_storage[0] = packWeights(reverse_first, reverse_second);
+    }
+
+    void setDirectionDurations(const std::uint32_t forward_first,
+                               const std::uint32_t forward_second,
+                               const std::uint32_t reverse_first,
+                               const std::uint32_t reverse_second)
+    {
+        forward_duration_storage[0] = packDurations(forward_first, forward_second);
+        reverse_duration_storage[0] = packDurations(reverse_first, reverse_second);
+    }
 };
 
 osrm::engine::PhantomNode makePhantom(const NodeID forward_segment,
@@ -185,6 +222,190 @@ BOOST_AUTO_TEST_CASE(normalizes_inbound_labels_to_the_last_coordinate)
     BOOST_CHECK_CLOSE(result.polylines[0][2].duration, 10., 1e-9);
 }
 
+BOOST_AUTO_TEST_CASE(rejects_a_fast_high_weight_direction_when_its_reverse_shares_the_geometry)
+{
+    const GeometryFacade facade;
+    const auto source_coordinate =
+        osrm::util::Coordinate{osrm::util::FloatLongitude{0.}, osrm::util::FloatLatitude{0.}};
+    const auto source = makePhantom(2,
+                                    3,
+                                    EdgeWeight{0},
+                                    EdgeWeight{0},
+                                    EdgeDuration{0},
+                                    EdgeDuration{0},
+                                    0,
+                                    source_coordinate,
+                                    source_coordinate);
+
+    // Nodes 0 and 1 are the forward and reverse edge-based states of GeometryID 0. The
+    // forward direction reaches the shared road in 1 s at weight 100; the reverse direction
+    // reaches the same road in 20 s at weight 1. A route to any shared point chooses the latter
+    // (after its local target cost), so a 10 s weight-first contour must not include the former.
+    auto search_result = osrm::engine::routing_algorithms::boundedDurationOneToAllSearch<
+        osrm::engine::routing_algorithms::FORWARD_DIRECTION>(
+        facade, {source}, EdgeDuration{100}, 100);
+    // The slow direction settles first in primary-cost order. Its maximum weight over the entire
+    // physical geometry is still below the fast direction's entry weight, so the bounded search
+    // can prove the fast label is dominated without settling it.
+    BOOST_CHECK(search_result.nodes.empty());
+    BOOST_REQUIRE_EQUAL(search_result.competitors.size(), 1);
+    BOOST_CHECK_EQUAL(search_result.competitors.front().node, 1);
+    BOOST_CHECK_EQUAL(osrm::from_alias<int>(search_result.competitors.front().duration), 200);
+    BOOST_CHECK_EQUAL(osrm::from_alias<int>(search_result.competitors.front().weight), 1);
+
+    // Source-phantom clips describe direct access, not the conflicting normal network states
+    // under test. Keep only the SearchResult-to-materialization boundary here.
+    search_result.phantom_partials.clear();
+    const auto materialization = materialize(facade, search_result, false, EdgeDuration{100});
+
+    BOOST_REQUIRE(materialization.error == osrm::engine::isochrone::MaterializationError::None);
+    BOOST_REQUIRE_EQUAL(materialization.polylines.size(), 1);
+    const auto rasterization = osrm::engine::isochrone::rasterizeWeightedPolylines(
+        materialization.polylines, {}, source_coordinate);
+
+    BOOST_REQUIRE(rasterization.grid);
+    BOOST_CHECK(rasterization.grid->buildContours(10.).empty());
+}
+
+BOOST_AUTO_TEST_CASE(over_cutoff_direct_phantom_competes_without_becoming_output)
+{
+    const GeometryFacade facade;
+    const auto source_coordinate =
+        osrm::util::Coordinate{osrm::util::FloatLongitude{0.}, osrm::util::FloatLatitude{0.}};
+
+    // A reaches the forward direction of GeometryID 0 through the graph.  It is in range, but
+    // carries a high profile weight.
+    auto candidate_a = makePhantom(2,
+                                   3,
+                                   EdgeWeight{0},
+                                   EdgeWeight{0},
+                                   EdgeDuration{0},
+                                   EdgeDuration{0},
+                                   0,
+                                   source_coordinate,
+                                   source_coordinate);
+    candidate_a.reverse_segment_id.enabled = false;
+
+    // B starts directly on the reverse direction of the same GeometryID.  Its elapsed duration
+    // is already over the cutoff and it has no outgoing isochrone arc, but its lower profile
+    // weight must still suppress A where their road fragments overlap.
+    auto competitor_b = makePhantom(0,
+                                    1,
+                                    EdgeWeight{0},
+                                    EdgeWeight{0},
+                                    EdgeDuration{0},
+                                    EdgeDuration{0},
+                                    1,
+                                    facade.coordinates[2],
+                                    facade.coordinates[2]);
+    competitor_b.forward_segment_id.enabled = false;
+    competitor_b.approach_weight = EdgeWeight{1};
+    competitor_b.approach_duration = EdgeDuration{200};
+
+    const auto phantom_only = osrm::engine::routing_algorithms::boundedDurationOneToAllSearch<
+        osrm::engine::routing_algorithms::FORWARD_DIRECTION>(
+        facade, {competitor_b}, EdgeDuration{100}, 100);
+    BOOST_CHECK(phantom_only.isComplete());
+    BOOST_CHECK(phantom_only.nodes.empty());
+    BOOST_REQUIRE_EQUAL(phantom_only.phantom_partials.size(), 1);
+    BOOST_CHECK(!phantom_only.phantom_partials.front().reaches_network);
+
+    auto search_result = osrm::engine::routing_algorithms::boundedDurationOneToAllSearch<
+        osrm::engine::routing_algorithms::FORWARD_DIRECTION>(
+        facade, {candidate_a, competitor_b}, EdgeDuration{100}, 100);
+    BOOST_REQUIRE(search_result.isComplete());
+    BOOST_REQUIRE_EQUAL(search_result.nodes.size(), 1);
+    BOOST_CHECK_EQUAL(search_result.nodes.front().node, 0);
+    BOOST_CHECK_EQUAL(osrm::from_alias<int>(search_result.nodes.front().weight), 100);
+
+    // Candidate A's source-geometry clip is unrelated to the shared road under test.  Keep B's
+    // direct, over-cutoff partial at node 1 and the actual network label at node 0.
+    search_result.phantom_partials.erase(std::remove_if(search_result.phantom_partials.begin(),
+                                                        search_result.phantom_partials.end(),
+                                                        [](const auto &partial)
+                                                        { return partial.node == 2; }),
+                                         search_result.phantom_partials.end());
+    BOOST_REQUIRE_EQUAL(search_result.phantom_partials.size(), 1);
+    BOOST_CHECK_EQUAL(search_result.phantom_partials.front().node, 1);
+    BOOST_CHECK(!search_result.phantom_partials.front().reaches_network);
+
+    const auto materialization = materialize(facade, search_result, false, EdgeDuration{100});
+    BOOST_REQUIRE(materialization.error == osrm::engine::isochrone::MaterializationError::None);
+    BOOST_REQUIRE_EQUAL(materialization.polylines.size(), 2);
+
+    const auto rasterization = osrm::engine::isochrone::rasterizeWeightedPolylines(
+        materialization.polylines, {}, source_coordinate);
+    BOOST_REQUIRE(rasterization.grid);
+    BOOST_CHECK(rasterization.grid->buildContours(10.).empty());
+}
+
+BOOST_AUTO_TEST_CASE(reconciles_near_limit_weight_labels_without_overflow)
+{
+    const GeometryFacade facade;
+    const auto invalid_weight = osrm::from_alias<std::int32_t>(INVALID_EDGE_WEIGHT);
+    osrm::engine::isochrone::SearchResult search_result;
+    search_result.nodes.push_back({0,
+                                   EdgeDuration{10},
+                                   osrm::engine::isochrone::NodeProvenance::Network,
+                                   EdgeWeight{invalid_weight - 40}});
+    search_result.competitors.push_back({1,
+                                         EdgeDuration{200},
+                                         osrm::engine::isochrone::NodeProvenance::Network,
+                                         EdgeWeight{invalid_weight - 120}});
+
+    // Both labels and their complete segment prefixes remain below INVALID_EDGE_WEIGHT. The
+    // reverse geometry is still lower weight at every shared physical position, even though the
+    // forward label is far quicker. Reconciliation must not overflow and reverse that ordering.
+    const auto materialization = materialize(facade, search_result, false, EdgeDuration{100});
+
+    BOOST_REQUIRE(materialization.error == osrm::engine::isochrone::MaterializationError::None);
+    BOOST_REQUIRE_EQUAL(materialization.polylines.size(), 2);
+    const auto rasterization = osrm::engine::isochrone::rasterizeWeightedPolylines(
+        materialization.polylines,
+        {},
+        osrm::util::Coordinate{osrm::util::FloatLongitude{0.}, osrm::util::FloatLatitude{0.}});
+
+    BOOST_REQUIRE(rasterization.grid);
+    BOOST_CHECK(rasterization.grid->buildContours(10.).empty());
+}
+
+BOOST_AUTO_TEST_CASE(retains_an_over_cutoff_competitor_settled_after_the_reachable_target)
+{
+    GeometryFacade facade;
+    facade.setDirectionWeights(100, 100, 1, 1);
+    facade.setDirectionDurations(10, 10, 10, 10);
+    facade.isochrone_forward_arcs = {
+        osrm::engine::isochrone::DurationGraphArc{0, EdgeWeight{100}, EdgeDuration{10}},
+        osrm::engine::isochrone::DurationGraphArc{1, EdgeWeight{101}, EdgeDuration{200}}};
+    const auto source_coordinate =
+        osrm::util::Coordinate{osrm::util::FloatLongitude{0.}, osrm::util::FloatLatitude{0.}};
+    const auto source = makePhantom(2,
+                                    3,
+                                    EdgeWeight{0},
+                                    EdgeWeight{0},
+                                    EdgeDuration{0},
+                                    EdgeDuration{0},
+                                    0,
+                                    source_coordinate,
+                                    source_coordinate);
+
+    // Node 0 reaches the western endpoint first and exhausts the duration-candidate target set.
+    // Node 1 is then next in weight order, but is over the duration cutoff. Its reverse segment
+    // weights are much smaller, so it wins over node 0 through the middle and eastern portions of
+    // the shared GeometryID. Stopping at node 0 would lose a necessary physical-road competitor.
+    const auto search_result = osrm::engine::routing_algorithms::boundedDurationOneToAllSearch<
+        osrm::engine::routing_algorithms::FORWARD_DIRECTION>(
+        facade, {source}, EdgeDuration{100}, 100);
+
+    BOOST_REQUIRE_EQUAL(search_result.nodes.size(), 1);
+    BOOST_CHECK_EQUAL(search_result.nodes.front().node, 0);
+    BOOST_CHECK_EQUAL(osrm::from_alias<int>(search_result.nodes.front().weight), 100);
+    BOOST_REQUIRE_EQUAL(search_result.competitors.size(), 1);
+    BOOST_CHECK_EQUAL(search_result.competitors.front().node, 1);
+    BOOST_CHECK_EQUAL(osrm::from_alias<int>(search_result.competitors.front().duration), 200);
+    BOOST_CHECK_EQUAL(osrm::from_alias<int>(search_result.competitors.front().weight), 101);
+}
+
 BOOST_AUTO_TEST_CASE(rejects_an_invalid_duration_before_inbound_normalization)
 {
     const GeometryFacade facade;
@@ -198,7 +419,7 @@ BOOST_AUTO_TEST_CASE(rejects_an_invalid_duration_before_inbound_normalization)
     BOOST_CHECK(result.polylines.empty());
 }
 
-BOOST_AUTO_TEST_CASE(materializes_the_reachable_suffix_of_an_inbound_frontier)
+BOOST_AUTO_TEST_CASE(retains_a_complete_inbound_frontier_for_weight_reconciliation)
 {
     const GeometryFacade facade;
     osrm::engine::isochrone::SearchResult search_result;
@@ -209,14 +430,15 @@ BOOST_AUTO_TEST_CASE(materializes_the_reachable_suffix_of_an_inbound_frontier)
 
     BOOST_REQUIRE(result.error == osrm::engine::isochrone::MaterializationError::None);
     BOOST_REQUIRE_EQUAL(result.polylines.size(), 1);
-    BOOST_REQUIRE_EQUAL(result.polylines[0].size(), 2);
-    // The inbound label is anchored at x=2 with duration 12 s. Its preceding
-    // 30 s segment starts at 42 s, so a 20 s cutoff is at x=1+22/30. OSRM
-    // coordinates are fixed to six decimal places.
-    BOOST_CHECK_SMALL(longitude(result.polylines[0][0]) - 1.7333333333333334, 1e-6);
-    BOOST_CHECK_CLOSE(result.polylines[0][0].duration, 20., 1e-9);
-    BOOST_CHECK_CLOSE(longitude(result.polylines[0][1]), 2., 1e-9);
-    BOOST_CHECK_CLOSE(result.polylines[0][1].duration, 12., 1e-9);
+    BOOST_REQUIRE_EQUAL(result.polylines[0].size(), 3);
+    // Materialization retains the over-cutoff prefix so alternatives on the same physical
+    // geometry can be compared by weight before rasterization applies the 20 s contour.
+    BOOST_CHECK_CLOSE(longitude(result.polylines[0][0]), 0., 1e-9);
+    BOOST_CHECK_CLOSE(result.polylines[0][0].duration, 52., 1e-9);
+    BOOST_CHECK_CLOSE(longitude(result.polylines[0][1]), 1., 1e-9);
+    BOOST_CHECK_CLOSE(result.polylines[0][1].duration, 42., 1e-9);
+    BOOST_CHECK_CLOSE(longitude(result.polylines[0][2]), 2., 1e-9);
+    BOOST_CHECK_CLOSE(result.polylines[0][2].duration, 12., 1e-9);
 }
 
 BOOST_AUTO_TEST_CASE(clips_forward_phantom_geometry_at_the_exact_snap)

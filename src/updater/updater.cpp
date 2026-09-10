@@ -565,6 +565,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     const auto *isochrone_transitions = options.isochrone_transitions;
     if (options.node_duration_lower_bounds != nullptr)
         options.node_duration_lower_bounds->clear();
+    if (options.node_weight_lower_bounds != nullptr)
+        options.node_weight_lower_bounds->clear();
     if (options.generated_isochrone_transitions != nullptr)
     {
         if (isochrone_transitions != nullptr)
@@ -585,9 +587,11 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
         throw util::exception("Invalid isochrone transitions for edge-expanded graph" +
                               std::string(SOURCE_REF));
     }
-    if (options.node_duration_lower_bounds != nullptr && isochrone_transitions == nullptr)
+    if ((options.node_duration_lower_bounds != nullptr ||
+         options.node_weight_lower_bounds != nullptr) &&
+        isochrone_transitions == nullptr)
     {
-        throw util::exception("Cannot generate isochrone duration lower bounds without "
+        throw util::exception("Cannot generate isochrone metric lower bounds without "
                               "isochrone transitions" +
                               std::string(SOURCE_REF));
     }
@@ -932,6 +936,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                 options.node_duration_lower_bounds->assign(number_of_edge_based_nodes,
                                                            EdgeDuration{0});
             }
+            if (options.node_weight_lower_bounds != nullptr)
+            {
+                options.node_weight_lower_bounds->assign(number_of_edge_based_nodes, EdgeWeight{0});
+            }
             std::vector<bool> isochrone_nodes(number_of_edge_based_nodes, false);
             for (const auto &transition : *isochrone_transitions)
             {
@@ -953,12 +961,22 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                         if (find_updated_node_metrics(node_id, new_weight, new_duration))
                         {
                             update_node_metrics(node_id, new_weight, new_duration);
-                            if (options.node_duration_lower_bounds != nullptr)
+                            if (options.node_duration_lower_bounds != nullptr ||
+                                options.node_weight_lower_bounds != nullptr)
                             {
                                 const auto geometry_id = node_data.GetGeometryID(node_id);
-                                (*options.node_duration_lower_bounds)[node_id] =
-                                    to_alias<EdgeDuration>(
-                                        segment_data.GetForwardGeometry(geometry_id.id).size());
+                                const auto lower_bound =
+                                    segment_data.GetForwardGeometry(geometry_id.id).size();
+                                if (options.node_duration_lower_bounds != nullptr)
+                                {
+                                    (*options.node_duration_lower_bounds)[node_id] =
+                                        to_alias<EdgeDuration>(lower_bound);
+                                }
+                                if (options.node_weight_lower_bounds != nullptr)
+                                {
+                                    (*options.node_weight_lower_bounds)[node_id] =
+                                        to_alias<EdgeWeight>(lower_bound);
+                                }
                             }
                         }
                     }

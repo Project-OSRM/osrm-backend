@@ -96,14 +96,16 @@ BOOST_AUTO_TEST_CASE(rejects_an_mld_graph_with_malformed_isochrone_data)
         writeGraphWithChecksum(writer, makeGraph());
         storage::serialization::write(
             writer, "/mld/multilevelgraph/isochrone/forward_offsets", std::vector<EdgeID>{0, 2, 2});
-        storage::serialization::write(writer,
-                                      "/mld/multilevelgraph/isochrone/forward_arcs",
-                                      std::vector<engine::isochrone::DurationGraphArc>{{1, {15}}});
+        storage::serialization::write(
+            writer,
+            "/mld/multilevelgraph/isochrone/forward_arcs",
+            std::vector<engine::isochrone::DurationGraphArc>{{1, {1}, {15}}});
         storage::serialization::write(
             writer, "/mld/multilevelgraph/isochrone/reverse_offsets", std::vector<EdgeID>{0, 0, 1});
-        storage::serialization::write(writer,
-                                      "/mld/multilevelgraph/isochrone/reverse_arcs",
-                                      std::vector<engine::isochrone::DurationGraphArc>{{0, {15}}});
+        storage::serialization::write(
+            writer,
+            "/mld/multilevelgraph/isochrone/reverse_arcs",
+            std::vector<engine::isochrone::DurationGraphArc>{{0, {1}, {15}}});
     }
 
     customizer::MultiLevelEdgeBasedGraph loaded;
@@ -111,17 +113,18 @@ BOOST_AUTO_TEST_CASE(rejects_an_mld_graph_with_malformed_isochrone_data)
     BOOST_CHECK_THROW(customizer::files::readGraph(file.path, loaded, checksum), util::exception);
 }
 
-BOOST_AUTO_TEST_CASE(parallel_transitions_preserve_the_shortest_duration_not_the_route_edge)
+BOOST_AUTO_TEST_CASE(parallel_transitions_preserve_the_primary_weight_winner)
 {
-    // MLD normally coalesces these same-endpoint transitions by routing weight. The isochrone
-    // graph must retain the shortest effective duration independently of that selection.
+    // MLD coalesces same-endpoint transitions by routing weight. The isochrone sidecar retains
+    // the matching duration for that primary-metric winner.
     const std::vector<extractor::IsochroneTransition> transitions = {{0, 1, 0}, {0, 1, 1}};
     const auto isochrone_graph = engine::isochrone::buildDurationGraph(
-        2, transitions, {{100}, {0}}, {{10}, {0}}, {{0}, {0}}, {{50}, {5}});
+        2, transitions, {{100}, {0}}, {{10}, {0}}, {{0}, {20}}, {{50}, {5}});
 
     BOOST_REQUIRE_EQUAL(isochrone_graph.forward_arcs.size(), 1);
     BOOST_CHECK_EQUAL(isochrone_graph.forward_arcs.front().node, 1);
-    BOOST_CHECK_EQUAL(isochrone_graph.forward_arcs.front().duration, EdgeDuration{15});
+    BOOST_CHECK_EQUAL(isochrone_graph.forward_arcs.front().weight, EdgeWeight{100});
+    BOOST_CHECK_EQUAL(isochrone_graph.forward_arcs.front().duration, EdgeDuration{60});
 
     const auto graph = makeGraph(isochrone_graph);
     BOOST_REQUIRE_EQUAL(graph.GetNumberOfNodes(), 2);
@@ -136,7 +139,8 @@ BOOST_AUTO_TEST_CASE(parallel_transitions_preserve_the_shortest_duration_not_the
     const auto &loaded_isochrone_graph = loaded.GetIsochroneGraph();
     BOOST_REQUIRE_EQUAL(loaded_isochrone_graph.forward_arcs.size(), 1);
     BOOST_CHECK_EQUAL(loaded_isochrone_graph.forward_arcs.front().node, 1);
-    BOOST_CHECK_EQUAL(loaded_isochrone_graph.forward_arcs.front().duration, EdgeDuration{15});
+    BOOST_CHECK_EQUAL(loaded_isochrone_graph.forward_arcs.front().weight, EdgeWeight{100});
+    BOOST_CHECK_EQUAL(loaded_isochrone_graph.forward_arcs.front().duration, EdgeDuration{60});
 }
 
 BOOST_AUTO_TEST_SUITE_END()

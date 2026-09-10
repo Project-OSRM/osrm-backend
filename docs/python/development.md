@@ -202,7 +202,7 @@ cd test/data && make
 cd test\data && windows-build-test-data.bat
 ```
 
-These test-data commands opt in to the additional duration graph used by the
+These test-data commands opt in to the additional weight-and-duration graph used by the
 isochrone binding tests. Production datasets only need
 `--generate-isochrone-data` when the isochrone service is required.
 

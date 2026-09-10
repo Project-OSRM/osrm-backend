@@ -18,12 +18,16 @@ namespace osrm::engine::isochrone
 struct DurationGraphArc
 {
     NodeID node;
+    // The nonnegative primary routing cost used to choose paths.  The elapsed duration is
+    // retained separately because a profile's routing weight need not be travel time.
+    EdgeWeight weight;
     EdgeDuration duration;
 
     bool operator==(const DurationGraphArc &) const = default;
 };
 
-static_assert(sizeof(DurationGraphArc) == sizeof(NodeID) + sizeof(EdgeDuration));
+static_assert(sizeof(DurationGraphArc) ==
+              sizeof(NodeID) + sizeof(EdgeWeight) + sizeof(EdgeDuration));
 static_assert(std::is_trivially_copyable_v<DurationGraphArc>);
 
 namespace detail
@@ -107,7 +111,8 @@ bool isValidDurationGraph(const detail::DurationGraph<Ownership> &graph,
             for (auto index = offsets[source]; index < offsets[source + 1]; ++index)
             {
                 const auto &arc = arcs[index];
-                if (arc.node >= number_of_nodes || arc.duration < EdgeDuration{0} ||
+                if (arc.node >= number_of_nodes || arc.weight < EdgeWeight{1} ||
+                    arc.weight == INVALID_EDGE_WEIGHT || arc.duration < EdgeDuration{0} ||
                     arc.duration == INVALID_EDGE_DURATION ||
                     (previous != SPECIAL_NODEID && arc.node <= previous))
                 {
@@ -136,7 +141,7 @@ bool isValidDurationGraph(const detail::DurationGraph<Ownership> &graph,
                                                 [](const auto &arc, const NodeID node)
                                                 { return arc.node < node; });
             if (match == reverse.end() || match->node != source ||
-                match->duration != forward.duration)
+                match->weight != forward.weight || match->duration != forward.duration)
             {
                 return false;
             }

@@ -48,7 +48,14 @@ namespace osrm::storage
 
 template <typename T>
 util::vector_view<T> make_vector_view(const SharedDataIndex &index, const std::string &name)
-{ return util::vector_view<T>(index.GetBlockPtr<T>(name), index.GetBlockEntries(name)); }
+{
+    const auto entries = index.GetBlockEntries(name);
+    const auto byte_size = index.GetBlockSize(name);
+    if (byte_size % sizeof(T) != 0 || entries != byte_size / sizeof(T))
+        throw util::exception("Data block " + name + " has an inconsistent element count");
+
+    return util::vector_view<T>(index.GetBlockPtr<T>(name), entries);
+}
 
 template <>
 inline util::vector_view<bool> make_vector_view(const SharedDataIndex &index,

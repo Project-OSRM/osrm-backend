@@ -63,6 +63,7 @@ int Contractor::Run()
     updater::Updater updater(config.updater_config);
     updater::TurnPenaltyMetrics turn_penalties;
     std::vector<EdgeDuration> node_duration_lower_bounds;
+    std::vector<EdgeWeight> node_weight_lower_bounds;
     updater::EdgeExpandedGraphUpdateOptions update_options;
     if (config.generate_isochrone_data)
     {
@@ -72,6 +73,7 @@ int Contractor::Run()
             update_options.generated_isochrone_transitions = &transitions;
         update_options.turn_penalties = &turn_penalties;
         update_options.node_duration_lower_bounds = &node_duration_lower_bounds;
+        update_options.node_weight_lower_bounds = &node_weight_lower_bounds;
     }
     std::uint32_t connectivity_checksum = 0;
     engine::isochrone::DurationGraph isochrone_graph;
@@ -90,7 +92,8 @@ int Contractor::Run()
                                                                 node_durations,
                                                                 turn_penalties.weight_penalties,
                                                                 turn_penalties.duration_penalties,
-                                                                node_duration_lower_bounds);
+                                                                node_duration_lower_bounds,
+                                                                node_weight_lower_bounds);
         std::vector<extractor::IsochroneTransition>{}.swap(transitions);
     }
     else

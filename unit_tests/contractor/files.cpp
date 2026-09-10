@@ -22,21 +22,21 @@ using osrm::from_alias;
 osrm::engine::isochrone::DurationGraph makeIsochroneGraph()
 {
     return {{0, 2, 4, 4, 5, 6, 7},
-            {{1, EdgeDuration{10}},
-             {5, EdgeDuration{20}},
-             {3, EdgeDuration{30}},
-             {4, EdgeDuration{40}},
-             {1, EdgeDuration{50}},
-             {3, EdgeDuration{60}},
-             {1, EdgeDuration{70}}},
+            {{1, EdgeWeight{10}, EdgeDuration{10}},
+             {5, EdgeWeight{20}, EdgeDuration{20}},
+             {3, EdgeWeight{30}, EdgeDuration{30}},
+             {4, EdgeWeight{40}, EdgeDuration{40}},
+             {1, EdgeWeight{50}, EdgeDuration{50}},
+             {3, EdgeWeight{60}, EdgeDuration{60}},
+             {1, EdgeWeight{70}, EdgeDuration{70}}},
             {0, 0, 3, 3, 5, 6, 7},
-            {{0, EdgeDuration{10}},
-             {3, EdgeDuration{50}},
-             {5, EdgeDuration{70}},
-             {1, EdgeDuration{30}},
-             {4, EdgeDuration{60}},
-             {1, EdgeDuration{40}},
-             {0, EdgeDuration{20}}}};
+            {{0, EdgeWeight{10}, EdgeDuration{10}},
+             {3, EdgeWeight{50}, EdgeDuration{50}},
+             {5, EdgeWeight{70}, EdgeDuration{70}},
+             {1, EdgeWeight{30}, EdgeDuration{30}},
+             {4, EdgeWeight{60}, EdgeDuration{60}},
+             {1, EdgeWeight{40}, EdgeDuration{40}},
+             {0, EdgeWeight{20}, EdgeDuration{20}}}};
 }
 
 void checkIsochroneGraphsEqual(const osrm::engine::isochrone::DurationGraph &actual,
@@ -49,9 +49,13 @@ void checkIsochroneGraphsEqual(const osrm::engine::isochrone::DurationGraph &act
     for (std::size_t index = 0; index < expected.forward_arcs.size(); ++index)
     {
         BOOST_CHECK_EQUAL(actual.forward_arcs[index].node, expected.forward_arcs[index].node);
+        BOOST_CHECK_EQUAL(from_alias<int>(actual.forward_arcs[index].weight),
+                          from_alias<int>(expected.forward_arcs[index].weight));
         BOOST_CHECK_EQUAL(from_alias<int>(actual.forward_arcs[index].duration),
                           from_alias<int>(expected.forward_arcs[index].duration));
         BOOST_CHECK_EQUAL(actual.reverse_arcs[index].node, expected.reverse_arcs[index].node);
+        BOOST_CHECK_EQUAL(from_alias<int>(actual.reverse_arcs[index].weight),
+                          from_alias<int>(expected.reverse_arcs[index].weight));
         BOOST_CHECK_EQUAL(from_alias<int>(actual.reverse_arcs[index].duration),
                           from_alias<int>(expected.reverse_arcs[index].duration));
     }

@@ -64,6 +64,54 @@ Feature: Isochrone service
         Then the isochrone response should be a GeoJSON FeatureCollection with "1" "MultiPolygon" features
         And the isochrone should contain "b" and not contain "c"
 
+    Scenario: Follow profile-weight-optimal paths when weights differ from durations
+        Given a grid size of 500 meters
+        And the profile file
+            """
+            local functions = require('testbot')
+            functions.setup_testbot = functions.setup
+
+            functions.setup = function()
+              local profile = functions.setup_testbot()
+              profile.properties.weight_name = 'steps'
+              profile.properties.traffic_signal_penalty = 0
+              profile.properties.u_turn_penalty = 0
+              return profile
+            end
+
+            functions.process_way = function(profile, way, result)
+              result.forward_mode = mode.driving
+              result.backward_mode = mode.driving
+              result.name = way:get_value_by_key('name')
+              result.duration = tonumber(way:get_value_by_key('duration'))
+              result.weight = tonumber(way:get_value_by_key('weight'))
+            end
+
+            return functions
+            """
+        And the node map
+            """
+            a x
+             y m t
+            """
+        And the ways
+            | nodes | duration | weight |
+            | axm   | 5        | 100    |
+            | aym   | 15       | 1      |
+            | mt    | 5        | 1      |
+
+        # The path via x reaches t in 10 seconds but has weight 101. Route and
+        # table select the 20-second path via y because its weight is 2.
+        When I route I should get
+            | from | to | route   | time | weight |
+            | a    | t  | aym,mt,mt | 20s  | 2      |
+        When I request an isochrone from "a" with contours "10"
+        Then the isochrone response should be a GeoJSON FeatureCollection with "1" "MultiPolygon" features
+        And the isochrone should contain "y" and not contain "t"
+        When I request a travel time matrix I should get
+            |   | a | t  |
+            | a | 0 | 20 |
+
     Scenario: Use durations updated by a segment speed file
         Given the node locations
             | node | lon   | lat | id |
@@ -179,6 +227,27 @@ Feature: Isochrone service
 
         When I request an isochrone from "a" with contours "200"
         Then the isochrone should contain "b" and not contain "c"
+
+    Scenario: Exclude a source-adjacent motorway bridge
+        Given a grid size of 500 meters
+        And the query options
+            | exclude | motorway |
+        And the node map
+            """
+            a b c
+            |
+            d
+            """
+        And the ways
+            | nodes | highway  |
+            | ab    | motorway |
+            | bc    | primary  |
+            | ad    | primary  |
+
+        # The excluded first hop is the only bridge to b and c. The source's
+        # primary branch must still be reachable through the selected facade.
+        When I request an isochrone from "a" with contours "200"
+        Then the isochrone should contain "d" and not contain "b"
 
     Scenario: Reject geometry crossing the antimeridian
         Given the node locations

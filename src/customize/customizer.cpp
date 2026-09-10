@@ -90,6 +90,7 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
     std::vector<extractor::IsochroneTransition> transitions;
     updater::TurnPenaltyMetrics turn_penalties;
     std::vector<EdgeDuration> node_duration_lower_bounds;
+    std::vector<EdgeWeight> node_weight_lower_bounds;
     updater::EdgeExpandedGraphUpdateOptions update_options;
     if (isochrone_graph != nullptr)
     {
@@ -100,7 +101,11 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
                                   "--generate-isochrone-data." +
                                   std::string(SOURCE_REF));
         }
-        update_options = {&transitions, &turn_penalties, nullptr, &node_duration_lower_bounds};
+        update_options = {&transitions,
+                          &turn_penalties,
+                          nullptr,
+                          &node_duration_lower_bounds,
+                          &node_weight_lower_bounds};
     }
 
     EdgeID num_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
@@ -116,7 +121,8 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
                                                                  node_durations,
                                                                  turn_penalties.weight_penalties,
                                                                  turn_penalties.duration_penalties,
-                                                                 node_duration_lower_bounds);
+                                                                 node_duration_lower_bounds,
+                                                                 node_weight_lower_bounds);
         std::vector<extractor::IsochroneTransition>{}.swap(transitions);
     }
 

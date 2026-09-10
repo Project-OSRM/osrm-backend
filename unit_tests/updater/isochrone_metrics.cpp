@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE(returns_the_final_in_memory_penalty_after_a_traffic_only_cl
     BOOST_CHECK_EQUAL(edge_based_edges.front().data.duration, 2);
 }
 
-BOOST_AUTO_TEST_CASE(returns_the_duration_lower_bound_applied_to_a_traffic_update)
+BOOST_AUTO_TEST_CASE(returns_metric_lower_bounds_applied_to_a_traffic_update)
 {
     TemporaryDirectory directory;
     const auto base = directory.path / "test";
@@ -312,11 +312,12 @@ BOOST_AUTO_TEST_CASE(returns_the_duration_lower_bound_applied_to_a_traffic_updat
     std::vector<EdgeWeight> node_weights;
     std::vector<EdgeDuration> node_durations;
     std::vector<EdgeDuration> node_duration_lower_bounds;
+    std::vector<EdgeWeight> node_weight_lower_bounds;
     std::uint32_t checksum = 0;
     const std::vector<osrm::extractor::IsochroneTransition> transitions = {{0, 1, 0}};
     osrm::updater::TurnPenaltyMetrics penalties;
     const osrm::updater::EdgeExpandedGraphUpdateOptions options{
-        &transitions, &penalties, nullptr, &node_duration_lower_bounds};
+        &transitions, &penalties, nullptr, &node_duration_lower_bounds, &node_weight_lower_bounds};
 
     const auto number_of_nodes = osrm::updater::Updater{config}.LoadAndUpdateEdgeExpandedGraph(
         edge_based_edges, node_weights, node_durations, checksum, options);
@@ -325,6 +326,8 @@ BOOST_AUTO_TEST_CASE(returns_the_duration_lower_bound_applied_to_a_traffic_updat
     BOOST_CHECK_EQUAL(edge_based_edges.front().data.duration, 2);
     BOOST_REQUIRE_EQUAL(node_duration_lower_bounds.size(), 2);
     BOOST_CHECK_EQUAL(node_duration_lower_bounds[0], EdgeDuration{2});
+    BOOST_REQUIRE_EQUAL(node_weight_lower_bounds.size(), 2);
+    BOOST_CHECK_EQUAL(node_weight_lower_bounds[0], EdgeWeight{2});
 
     const auto graph = osrm::engine::isochrone::buildDurationGraph(number_of_nodes,
                                                                    transitions,
@@ -332,8 +335,10 @@ BOOST_AUTO_TEST_CASE(returns_the_duration_lower_bound_applied_to_a_traffic_updat
                                                                    node_durations,
                                                                    penalties.weight_penalties,
                                                                    penalties.duration_penalties,
-                                                                   node_duration_lower_bounds);
+                                                                   node_duration_lower_bounds,
+                                                                   node_weight_lower_bounds);
     BOOST_REQUIRE_EQUAL(graph.forward_arcs.size(), 1);
+    BOOST_CHECK_EQUAL(graph.forward_arcs.front().weight, edge_based_edges.front().data.weight);
     BOOST_CHECK_EQUAL(graph.forward_arcs.front().duration,
                       EdgeDuration{edge_based_edges.front().data.duration});
 }

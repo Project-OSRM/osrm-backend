@@ -67,10 +67,11 @@ void writeIsochroneGraph(const std::filesystem::path &base, const bool corrupt)
                                                             {1, 2, QueryEdge::EdgeData{}}};
     const QueryGraph graph{3, input_edges};
     const std::vector<::EdgeID> forward_offsets = {0, 1, 2, 2};
-    const std::vector<Arc> forward_arcs = {{1, ::EdgeDuration{10}}, {2, ::EdgeDuration{20}}};
+    const std::vector<Arc> forward_arcs = {{1, ::EdgeWeight{10}, ::EdgeDuration{10}},
+                                           {2, ::EdgeWeight{20}, ::EdgeDuration{20}}};
     const std::vector<::EdgeID> reverse_offsets = {0, 0, 1, 2};
-    const std::vector<Arc> reverse_arcs = {{0, ::EdgeDuration{corrupt ? 11 : 10}},
-                                           {1, ::EdgeDuration{20}}};
+    const std::vector<Arc> reverse_arcs = {{0, ::EdgeWeight{10}, ::EdgeDuration{corrupt ? 11 : 10}},
+                                           {1, ::EdgeWeight{20}, ::EdgeDuration{20}}};
 
     // The process-memory loader also validates this value against the copied
     // edge-based graph.  Preserve it when replacing the CH archive below so

@@ -277,8 +277,11 @@ Two coordinates (`13.388860,52.517037;0,0?number=1`), where the second coordinat
 ### Isochrone service
 
 Computes the area reachable from one coordinate within one or more elapsed-duration limits.
-Every `contours` value is a duration in seconds. Isochrones use the dataset's duration metric,
-independently of the route-search weight, which can include profile-specific biases.
+Every `contours` value is a duration in seconds. Isochrone search minimizes the profile's total
+routing weight; among equal-total-weight paths, it deterministically minimizes elapsed duration.
+Each contour is then applied to the elapsed duration of that selected path. This is not an
+independently fastest-path calculation: a physically faster path with a higher configured profile
+weight does not expand the contour.
 
 ```endpoint
 GET /isochrone/v1/{profile}/{longitude},{latitude}?contours={seconds}[,{seconds} ...]&direction={outbound|inbound}&polygons={true|false}
@@ -295,7 +298,7 @@ In addition to the [general options](#general-options), the following options ar
 
 |Option|Values|Description|
 |---|---|---|
-|contours|One or more comma-separated `double > 0` values (required)|Elapsed-duration limits in seconds. A feature is returned for every value, in request order.|
+|contours|One or more comma-separated `double > 0` values (required)|Elapsed-duration limits in seconds, evaluated after minimizing profile weight and then elapsed duration on equal-weight paths. A feature is returned for every value, in request order.|
 |direction|`outbound` (default), `inbound`|For `outbound`, the geometry represents locations reachable from the input coordinate. For `inbound`, it represents locations that can reach the input coordinate. Directed access restrictions and one-way streets apply in both cases.|
 |polygons|`true` (default), `false`|Return filled `MultiPolygon` boundaries, or their closed `MultiLineString` boundaries.|
 
@@ -327,13 +330,14 @@ polylines, and weighted-polyline points. In particular, the fixed-resolution gri
 `--max-isochrone-grid-cells`; an extent that exceeds this cap returns `TooBig` rather than using a
 coarser grid. A request exceeding any resource limit returns `TooBig`; it is never silently
 truncated. The `--max-isochrone-search-records` option caps all in-memory search records,
-including discovered graph labels and supplemental boundary records. These limits are configured
-with `osrm-routed`'s `--max-isochrone-search-records`, `--max-isochrone-materialized-points`,
+including labels beyond a duration cutoff that are retained while selecting minimum-weight paths,
+and supplemental boundary records. These limits are configured with `osrm-routed`'s
+`--max-isochrone-search-records`, `--max-isochrone-materialized-points`,
 `--max-isochrone-rasterization-steps`, `--max-isochrone-output-points`,
 `--max-isochrone-grid-cells`, and `--max-isochrone-contours` options.
 
-Isochrone data is opt-in because its independent directed duration graph increases artifact and
-runtime memory use. CH data must be prepared with
+Isochrone data is opt-in because its dedicated directed search graph retains both profile weight
+and elapsed duration, increasing artifact and runtime memory use. CH data must be prepared with
 `osrm-contract --generate-isochrone-data`; when the CH pipeline also runs `osrm-partition`, that
 step must use `--generate-isochrone-data` as well. MLD requires the option on both
 `osrm-partition` and `osrm-customize`. A legacy dataset, or one prepared without the complete

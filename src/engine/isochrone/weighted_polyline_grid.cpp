@@ -9,6 +9,9 @@
 #include <cstddef>
 #include <cstdint>
 #include <limits>
+#include <numeric>
+#include <optional>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -48,7 +51,10 @@ struct GridBounds
 };
 
 bool isUsable(const WeightedPolylinePoint &point)
-{ return point.coordinate.IsValid() && std::isfinite(point.duration); }
+{
+    return point.coordinate.IsValid() && std::isfinite(point.duration) &&
+           std::isfinite(point.weight);
+}
 
 double longitude(const util::Coordinate coordinate)
 { return static_cast<double>(util::toFloating(coordinate.lon)); }
@@ -191,28 +197,30 @@ double gridPosition(const double value,
     return std::clamp(position, 0., std::nextafter(static_cast<double>(dimension), 0.));
 }
 
-bool updateCell(WeightedGrid &grid,
-                const std::size_t x,
-                const std::size_t y,
-                const double value,
-                std::size_t &rasterization_steps,
-                const std::size_t maximum_rasterization_steps)
+struct RasterLabel
 {
-    BOOST_ASSERT(x < grid.width);
-    BOOST_ASSERT(y < grid.height);
-    if (rasterization_steps >= maximum_rasterization_steps)
-        return false;
-    auto &cell = grid.values[y * grid.width + x];
-    cell = std::min(cell, value);
-    ++rasterization_steps;
-    return true;
+    double weight = std::numeric_limits<double>::infinity();
+    double duration = std::numeric_limits<double>::infinity();
+};
+
+RasterLabel
+labelAt(const WeightedPolylinePoint &from, const WeightedPolylinePoint &to, const double fraction)
+{
+    return {from.weight + (to.weight - from.weight) * fraction,
+            from.duration + (to.duration - from.duration) * fraction};
 }
 
-bool rasterizeSegment(WeightedGrid &grid,
+RasterLabel betterLabel(const RasterLabel left, const RasterLabel right)
+{
+    return std::tie(left.weight, left.duration) < std::tie(right.weight, right.duration) ? left
+                                                                                         : right;
+}
+
+template <typename UpdateCell>
+bool rasterizeSegment(const WeightedGrid &grid,
                       const WeightedPolylinePoint &from,
                       const WeightedPolylinePoint &to,
-                      std::size_t &rasterization_steps,
-                      const std::size_t maximum_rasterization_steps)
+                      UpdateCell &&update_cell)
 {
     const auto projection = makeProjection(grid);
     const auto from_point = projection.project(from.coordinate);
@@ -231,12 +239,7 @@ bool rasterizeSegment(WeightedGrid &grid,
 
     if (dx == 0. && dy == 0.)
     {
-        return updateCell(grid,
-                          x,
-                          y,
-                          std::min(from.duration, to.duration),
-                          rasterization_steps,
-                          maximum_rasterization_steps);
+        return update_cell(x, y, betterLabel(labelAt(from, to, 0.), labelAt(from, to, 1.)));
     }
 
     const auto step_x = dx > 0. ? 1 : dx < 0. ? -1 : 0;
@@ -259,14 +262,8 @@ bool rasterizeSegment(WeightedGrid &grid,
     for (std::size_t step = 0; step <= grid.width + grid.height; ++step)
     {
         const auto next_t = std::min({t_max_x, t_max_y, 1.});
-        const auto from_duration = from.duration + (to.duration - from.duration) * t;
-        const auto to_duration = from.duration + (to.duration - from.duration) * next_t;
-        if (!updateCell(grid,
-                        x,
-                        y,
-                        std::min(from_duration, to_duration),
-                        rasterization_steps,
-                        maximum_rasterization_steps))
+        const auto next_label = labelAt(from, to, next_t);
+        if (!update_cell(x, y, betterLabel(labelAt(from, to, t), next_label)))
         {
             return false;
         }
@@ -274,8 +271,39 @@ bool rasterizeSegment(WeightedGrid &grid,
         if (x == end_x && y == end_y)
             return true;
 
-        const auto crosses_x = t_max_x <= t_max_y;
-        const auto crosses_y = t_max_y <= t_max_x;
+        const auto crosses_x = t_max_x <= t_max_y && t_max_x <= 1.;
+        const auto crosses_y = t_max_y <= t_max_x && t_max_y <= 1.;
+
+        if (next_t == 1.)
+        {
+            auto endpoint_updated = false;
+            if (crosses_x && crosses_y)
+            {
+                // An endpoint on a grid corner can have a supercover neighbour outside the
+                // bounded grid. Mark the in-bounds neighbours, then finish at the endpoint
+                // without advancing the DDA beyond the segment.
+                const auto side_x = static_cast<std::int64_t>(x) + step_x;
+                const auto side_y = static_cast<std::int64_t>(y) + step_y;
+                if (side_x >= 0 && side_x < static_cast<std::int64_t>(grid.width))
+                {
+                    const auto side_x_index = static_cast<std::size_t>(side_x);
+                    if (!update_cell(side_x_index, y, next_label))
+                        return false;
+                    endpoint_updated = side_x_index == end_x && y == end_y;
+                }
+                if (side_y >= 0 && side_y < static_cast<std::int64_t>(grid.height))
+                {
+                    const auto side_y_index = static_cast<std::size_t>(side_y);
+                    if (!update_cell(x, side_y_index, next_label))
+                        return false;
+                    endpoint_updated = endpoint_updated || (x == end_x && side_y_index == end_y);
+                }
+            }
+            if (!endpoint_updated && !update_cell(end_x, end_y, next_label))
+                return false;
+            return true;
+        }
+
         BOOST_ASSERT(crosses_x || crosses_y);
         if (crosses_x && crosses_y)
         {
@@ -288,18 +316,8 @@ bool rasterizeSegment(WeightedGrid &grid,
             BOOST_ASSERT(side_x < static_cast<std::int64_t>(grid.width));
             BOOST_ASSERT(side_y >= 0);
             BOOST_ASSERT(side_y < static_cast<std::int64_t>(grid.height));
-            if (!updateCell(grid,
-                            static_cast<std::size_t>(side_x),
-                            y,
-                            to_duration,
-                            rasterization_steps,
-                            maximum_rasterization_steps) ||
-                !updateCell(grid,
-                            x,
-                            static_cast<std::size_t>(side_y),
-                            to_duration,
-                            rasterization_steps,
-                            maximum_rasterization_steps))
+            if (!update_cell(static_cast<std::size_t>(side_x), y, next_label) ||
+                !update_cell(x, static_cast<std::size_t>(side_y), next_label))
             {
                 return false;
             }
@@ -319,6 +337,32 @@ bool rasterizeSegment(WeightedGrid &grid,
 
     BOOST_ASSERT(false);
     return false;
+}
+
+struct PolylineGroup
+{
+    std::optional<PackedGeometryID> geometry_id;
+    std::size_t independent_id;
+};
+
+bool sameGroup(const PolylineGroup &left, const PolylineGroup &right)
+{
+    if (left.geometry_id && right.geometry_id)
+        return left.geometry_id == right.geometry_id;
+    return !left.geometry_id && !right.geometry_id && left.independent_id == right.independent_id;
+}
+
+bool lessGroup(const PolylineGroup &left, const PolylineGroup &right)
+{
+    if (left.geometry_id != right.geometry_id)
+    {
+        if (!left.geometry_id)
+            return false;
+        if (!right.geometry_id)
+            return true;
+        return *left.geometry_id < *right.geometry_id;
+    }
+    return !left.geometry_id && left.independent_id < right.independent_id;
 }
 
 util::Coordinate coordinateAt(const WeightedGrid &grid, const GridPoint point)
@@ -464,42 +508,97 @@ rasterizeWeightedPolylines(const std::span<const WeightedPolyline> polylines,
         static_cast<double>(static_cast<long double>(bounds_in_cells->min_x) * options.cell_size),
         static_cast<double>(static_cast<long double>(bounds_in_cells->min_y) * options.cell_size)};
 
-    std::size_t rasterization_steps = 0;
-    for (const auto &polyline : polylines)
+    std::vector<PolylineGroup> groups;
+    groups.reserve(polylines.size());
+    for (std::size_t index = 0; index < polylines.size(); ++index)
     {
-        const WeightedPolylinePoint *previous = nullptr;
-        for (const auto &point : polyline)
+        std::optional<std::optional<PackedGeometryID>> geometry_id;
+        for (const auto &point : polylines[index])
         {
             if (!isUsable(point))
-            {
-                previous = nullptr;
                 continue;
-            }
-
-            if (previous == nullptr)
-            {
-                if (!rasterizeSegment(grid,
-                                      point,
-                                      point,
-                                      rasterization_steps,
-                                      options.maximum_rasterization_steps))
-                {
-                    return {{}, RasterizationError::TooBig};
-                }
-            }
-            else
-            {
-                if (!rasterizeSegment(grid,
-                                      *previous,
-                                      point,
-                                      rasterization_steps,
-                                      options.maximum_rasterization_steps))
-                {
-                    return {{}, RasterizationError::TooBig};
-                }
-            }
-            previous = &point;
+            if (!geometry_id)
+                geometry_id = point.geometry_id;
+            else if (*geometry_id != point.geometry_id)
+                return {{}, RasterizationError::InvalidOptions};
         }
+        groups.push_back({geometry_id.value_or(std::nullopt), index});
+    }
+
+    std::vector<std::size_t> polyline_order(polylines.size());
+    std::iota(polyline_order.begin(), polyline_order.end(), 0);
+    std::sort(polyline_order.begin(),
+              polyline_order.end(),
+              [&](const auto left, const auto right)
+              {
+                  if (lessGroup(groups[left], groups[right]))
+                      return true;
+                  if (lessGroup(groups[right], groups[left]))
+                      return false;
+                  return left < right;
+              });
+
+    std::vector<RasterLabel> group_values(grid.values.size());
+    std::vector<std::size_t> touched_cells;
+    touched_cells.reserve(std::min(grid.values.size(), options.maximum_rasterization_steps));
+    std::size_t rasterization_steps = 0;
+    for (std::size_t order_begin = 0; order_begin < polyline_order.size();)
+    {
+        auto order_end = order_begin + 1;
+        while (order_end < polyline_order.size() &&
+               sameGroup(groups[polyline_order[order_begin]], groups[polyline_order[order_end]]))
+        {
+            ++order_end;
+        }
+
+        const auto update_cell =
+            [&](const std::size_t x, const std::size_t y, const RasterLabel label)
+        {
+            BOOST_ASSERT(x < grid.width);
+            BOOST_ASSERT(y < grid.height);
+            if (rasterization_steps >= options.maximum_rasterization_steps)
+                return false;
+            const auto index = y * grid.width + x;
+            if (!std::isfinite(group_values[index].weight))
+                touched_cells.push_back(index);
+            group_values[index] = betterLabel(group_values[index], label);
+            ++rasterization_steps;
+            return true;
+        };
+
+        for (auto order_index = order_begin; order_index < order_end; ++order_index)
+        {
+            const auto &polyline = polylines[polyline_order[order_index]];
+            const WeightedPolylinePoint *previous = nullptr;
+            for (const auto &point : polyline)
+            {
+                if (!isUsable(point))
+                {
+                    previous = nullptr;
+                    continue;
+                }
+
+                if (previous == nullptr)
+                {
+                    if (!rasterizeSegment(grid, point, point, update_cell))
+                        return {{}, RasterizationError::TooBig};
+                }
+                else
+                {
+                    if (!rasterizeSegment(grid, *previous, point, update_cell))
+                        return {{}, RasterizationError::TooBig};
+                }
+                previous = &point;
+            }
+        }
+
+        for (const auto index : touched_cells)
+        {
+            grid.values[index] = std::min(grid.values[index], group_values[index].duration);
+            group_values[index] = {};
+        }
+        touched_cells.clear();
+        order_begin = order_end;
     }
     return {std::move(grid), RasterizationError::None};
 }

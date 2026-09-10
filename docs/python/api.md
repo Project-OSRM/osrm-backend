@@ -142,9 +142,12 @@ Inherits all [BaseParameters](#baseparameters).
 ## Isochrone
 
 Computes the region reachable from one coordinate within each supplied elapsed-duration contour.
-Contours are in seconds and are evaluated at decisecond precision. Each returned feature reports
-the requested `contour` and the quantized `effective_contour` that was evaluated. CH data must be
-prepared with `osrm-contract --generate-isochrone-data` (and the same option on
+Isochrone search minimizes total profile weight and, among equal-total-weight paths,
+deterministically minimizes elapsed duration before applying the contour. It is not an
+independently fastest-path calculation, so a lower-duration, higher-weight alternative does not
+expand the region. Contours are in seconds and are evaluated at decisecond precision. Each
+returned feature reports the requested `contour` and the quantized `effective_contour` that was
+evaluated. CH data must be prepared with `osrm-contract --generate-isochrone-data` (and the same option on
 `osrm-partition` if partitioning is used). MLD data requires the option on both
 `osrm-partition` and `osrm-customize`.
 

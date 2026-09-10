@@ -174,6 +174,16 @@ void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseData
     std::vector<tar::FileReader::FileEntry> entries;
     reader.List(std::back_inserter(entries));
 
+    const auto file_size = std::filesystem::file_size(path);
+    for (const auto &entry : entries)
+    {
+        if (entry.offset > file_size || entry.size > file_size - entry.offset)
+        {
+            throw util::RuntimeError(
+                path.string() + " : " + entry.name, ErrorCode::UnexpectedEndOfFile, SOURCE_REF);
+        }
+    }
+
     for (const auto &entry : entries)
     {
         const auto name_end = entry.name.rfind(".meta");

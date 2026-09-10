@@ -111,7 +111,7 @@ function assertFeatureCollection(result, featureCount, geometryType) {
   assert.strictEqual(result.json.code, 'Ok', `unexpected response: ${result.body}`);
   assert.strictEqual(result.json.type, 'FeatureCollection');
   assert.ok(!Object.hasOwn(result.json, 'weight_name'),
-    'duration-based isochrones must not expose primary routing weight metadata');
+    'isochrone responses must not expose primary routing weight metadata');
   assert.ok(Array.isArray(result.json.features), 'expected GeoJSON features');
   assert.strictEqual(result.json.features.length, featureCount);
 

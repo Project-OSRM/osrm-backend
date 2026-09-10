@@ -2,6 +2,7 @@
 #define OSRM_ENGINE_ISOCHRONE_WEIGHTED_POLYLINE_GRID_HPP
 
 #include "util/coordinate.hpp"
+#include "util/typedefs.hpp"
 
 #include <cstddef>
 #include <optional>
@@ -15,6 +16,11 @@ struct WeightedPolylinePoint
 {
     util::Coordinate coordinate;
     double duration;
+    double weight = 0.;
+    // Alternatives with the same value represent the same physical road geometry and are
+    // reconciled by (weight, duration) before distinct geometries are unioned into the grid.
+    // No value gives a polyline its own independent coverage group.
+    std::optional<PackedGeometryID> geometry_id = std::nullopt;
 };
 
 using WeightedPolyline = std::vector<WeightedPolylinePoint>;
@@ -74,9 +80,10 @@ struct RasterizationResult
     RasterizationError error = RasterizationError::None;
 };
 
-// Rasterizes each finite duration point and each segment between adjacent finite
-// duration points. A cell stores the lowest linearly interpolated duration that
-// reaches it. Returns a typed error rather than silently reducing resolution
+// Rasterizes each finite point and each segment between adjacent finite points. Alternatives for
+// one physical geometry are first selected lexicographically by profile weight and duration; a
+// cell then stores the lowest selected duration across distinct geometries. Returns a typed error
+// rather than silently reducing resolution
 // when the fixed-size grid cannot represent the request. Cell sizes below OSRM
 // coordinate precision, non-finite sizes, and nonpositive resource limits
 // return InvalidOptions.  Callers that know the request source should supply

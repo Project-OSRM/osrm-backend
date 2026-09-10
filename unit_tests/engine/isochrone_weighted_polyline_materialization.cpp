@@ -267,6 +267,8 @@ BOOST_AUTO_TEST_CASE(preserves_exact_phantom_endpoints_and_partial_durations)
          osrm::util::Coordinate{osrm::util::FloatLongitude{0.5}, osrm::util::FloatLatitude{0.}},
          std::nullopt,
          EdgeDuration{1},
+         std::nullopt,
+         EdgeWeight{1},
          std::nullopt}};
 
     const auto result = materialize(facade, labels, clips, {}, EdgeDuration{1});

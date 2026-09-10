@@ -135,6 +135,33 @@ std::unique_ptr<osrm::storage::BaseDataLayout> makeEmptyMldIsochroneGraphLayout(
     return layout;
 }
 
+std::unique_ptr<osrm::storage::BaseDataLayout> makeLegacyDurationOnlyMetricLayout()
+{
+    auto layout = makeMetricLayout(4);
+    constexpr auto legacy_arc_size = sizeof(::NodeID) + sizeof(::EdgeDuration);
+    layout->SetBlock(std::string(METRIC_PREFIX) + "/isochrone/forward_arcs",
+                     osrm::storage::Block{2, 2 * legacy_arc_size});
+    layout->SetBlock(std::string(METRIC_PREFIX) + "/isochrone/reverse_arcs",
+                     osrm::storage::Block{2, 2 * legacy_arc_size});
+    return layout;
+}
+
+std::unique_ptr<osrm::storage::BaseDataLayout> makeLegacyDurationOnlyMldLayout()
+{
+    constexpr auto GRAPH_NAME = "/mld/multilevelgraph";
+    auto layout = makeEmptyMldIsochroneGraphLayout();
+    constexpr auto legacy_arc_size = sizeof(::NodeID) + sizeof(::EdgeDuration);
+    layout->SetBlock(std::string(GRAPH_NAME) + "/isochrone/forward_offsets",
+                     osrm::storage::make_block<::EdgeID>(4));
+    layout->SetBlock(std::string(GRAPH_NAME) + "/isochrone/forward_arcs",
+                     osrm::storage::Block{2, 2 * legacy_arc_size});
+    layout->SetBlock(std::string(GRAPH_NAME) + "/isochrone/reverse_offsets",
+                     osrm::storage::make_block<::EdgeID>(4));
+    layout->SetBlock(std::string(GRAPH_NAME) + "/isochrone/reverse_arcs",
+                     osrm::storage::Block{2, 2 * legacy_arc_size});
+    return layout;
+}
+
 void writeQueryGraph(ViewIndex &view)
 {
     using NodeArrayEntry = osrm::contractor::QueryGraphView::NodeArrayEntry;
@@ -151,9 +178,11 @@ void writeValidIsochroneGraph(ViewIndex &view)
 {
     using Arc = osrm::engine::isochrone::DurationGraphArc;
     const std::array<::EdgeID, 4> forward_offsets = {0, 1, 2, 2};
-    const std::array<Arc, 2> forward_arcs = {{{1, ::EdgeDuration{10}}, {2, ::EdgeDuration{20}}}};
+    const std::array<Arc, 2> forward_arcs = {
+        {{1, ::EdgeWeight{10}, ::EdgeDuration{10}}, {2, ::EdgeWeight{20}, ::EdgeDuration{20}}}};
     const std::array<::EdgeID, 4> reverse_offsets = {0, 0, 1, 2};
-    const std::array<Arc, 2> reverse_arcs = {{{0, ::EdgeDuration{10}}, {1, ::EdgeDuration{20}}}};
+    const std::array<Arc, 2> reverse_arcs = {
+        {{0, ::EdgeWeight{10}, ::EdgeDuration{10}}, {1, ::EdgeWeight{20}, ::EdgeDuration{20}}}};
 
     view.write(std::string(METRIC_PREFIX) + "/isochrone/forward_offsets", forward_offsets);
     view.write(std::string(METRIC_PREFIX) + "/isochrone/forward_arcs", forward_arcs);
@@ -203,6 +232,25 @@ BOOST_AUTO_TEST_CASE(mmap_mld_graph_view_rejects_a_present_but_empty_isochrone_g
     BOOST_CHECK_THROW(osrm::storage::validateIsochroneIndex(view.get()), osrm::util::exception);
 }
 
+BOOST_AUTO_TEST_CASE(mmap_metric_view_rejects_legacy_duration_only_arc_blocks)
+{
+    ViewIndex view(makeLegacyDurationOnlyMetricLayout());
+
+    BOOST_CHECK_THROW(osrm::storage::make_contracted_metric_view(view.get(), METRIC_PREFIX),
+                      osrm::util::exception);
+    BOOST_CHECK_THROW(osrm::storage::validateIsochroneIndex(view.get()), osrm::util::exception);
+}
+
+BOOST_AUTO_TEST_CASE(mmap_mld_graph_view_rejects_legacy_duration_only_arc_blocks)
+{
+    ViewIndex view(makeLegacyDurationOnlyMldLayout());
+
+    BOOST_CHECK_THROW(
+        osrm::storage::make_multi_level_graph_view(view.get(), "/mld/multilevelgraph"),
+        osrm::util::exception);
+    BOOST_CHECK_THROW(osrm::storage::validateIsochroneIndex(view.get()), osrm::util::exception);
+}
+
 BOOST_AUTO_TEST_CASE(mmap_metric_view_rejects_a_semantically_corrupt_isochrone_graph)
 {
     using Arc = osrm::engine::isochrone::DurationGraphArc;
@@ -213,8 +261,22 @@ BOOST_AUTO_TEST_CASE(mmap_metric_view_rejects_a_semantically_corrupt_isochrone_g
     BOOST_CHECK_NO_THROW(osrm::storage::validateIsochroneIndex(view.get()));
 
     const std::array<Arc, 2> corrupt_reverse_arcs = {
-        {{0, ::EdgeDuration{11}}, {1, ::EdgeDuration{20}}}};
+        {{0, ::EdgeWeight{10}, ::EdgeDuration{11}}, {1, ::EdgeWeight{20}, ::EdgeDuration{20}}}};
     view.write(std::string(METRIC_PREFIX) + "/isochrone/reverse_arcs", corrupt_reverse_arcs);
+    BOOST_CHECK_THROW(osrm::storage::validateIsochroneIndex(view.get()), osrm::util::exception);
+}
+
+BOOST_AUTO_TEST_CASE(mmap_metric_view_rejects_an_isochrone_graph_with_a_nonpositive_weight)
+{
+    using Arc = osrm::engine::isochrone::DurationGraphArc;
+    ViewIndex view(makeMetricLayout(4));
+    writeQueryGraph(view);
+    writeValidIsochroneGraph(view);
+
+    const std::array<Arc, 2> invalid_forward_arcs = {
+        {{1, ::EdgeWeight{0}, ::EdgeDuration{10}}, {2, ::EdgeWeight{20}, ::EdgeDuration{20}}}};
+    view.write(std::string(METRIC_PREFIX) + "/isochrone/forward_arcs", invalid_forward_arcs);
+
     BOOST_CHECK_THROW(osrm::storage::validateIsochroneIndex(view.get()), osrm::util::exception);
 }
 
