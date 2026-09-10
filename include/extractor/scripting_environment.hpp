@@ -10,7 +10,6 @@
 #include "extractor/restriction.hpp"
 
 #include <osmium/memory/buffer.hpp>
-#include <osmium/osm/box.hpp>
 
 #include <optional>
 #include <string>
@@ -85,10 +84,10 @@ class ScriptingEnvironment
     // for location-dependent data or for the driving side index.
     virtual bool NeedsWayLocations() const = 0;
 
-    // Classify the whole extract once, before any way is read. Returns the side
-    // when the extract shares one, nullopt when ways have to be classified
-    // individually or the index is off.
-    virtual std::optional<bool> SettleDrivingSide(const osmium::Box &box) = 0;
+    // True when the driving side index measures the extract's extent from the
+    // nodes as they go past, which it has to do before the first way arrives.
+    virtual bool ObservesNodesForDrivingSide() const = 0;
+    virtual void ObserveNodesForDrivingSide(const osmium::memory::Buffer &buffer) = 0;
 
     /** The `relations` parameter to @ref process_way etc. */
     ExtractionRelationContainer m_relations_stash;

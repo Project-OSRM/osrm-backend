@@ -103,8 +103,10 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     bool NeedsWayLocations() const override
     { return HasLocationDependentData() || driving_side_index.NeedsWayLookups(); }
 
-    std::optional<bool> SettleDrivingSide(const osmium::Box &box) override
-    { return driving_side_index.SettleExtent(box); }
+    bool ObservesNodesForDrivingSide() const override { return driving_side_index.ObservesNodes(); }
+
+    void ObserveNodesForDrivingSide(const osmium::memory::Buffer &buffer) override
+    { driving_side_index.ObserveNodes(buffer); }
 
   private:
     LuaScriptingContext &GetSol2Context();

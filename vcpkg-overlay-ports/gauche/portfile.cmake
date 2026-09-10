@@ -1,11 +1,11 @@
-# TODO: repin to the release tag once Project-OSRM/gauche-rs#10 lands. Until then
-# this is that PR's head, which carries the scratch allocator fix the extractor
-# needs to classify a planet's worth of ways without growing guest memory.
+# A commit on main rather than v0.1.0, which predates the scratch allocator fix
+# the extractor needs to classify a whole country's worth of ways without
+# growing guest memory without bound. Move to the next tag once one is cut.
 vcpkg_from_github(
     OUT_SOURCE_PATH SOURCE_PATH
     REPO Project-OSRM/gauche-rs
-    REF 515f8fe6c99f66fcf965f3bb8dc583d02e1f103e
-    SHA512 ce971484712bd97fa0971b437a6373b5b3907d8635db147d3e4d3df7c37facdf476a9e4ab935e86acc7a25d172c699942f217e662fd1151cf323c8618d30c5f3
+    REF 093cee8fa8cfcd51248dfe4a6fb2aa06335da32c
+    SHA512 ce2613238aa5c558ea9aa3c5e35dd4acfdcea58112498dd86bbb76c5d2225814d15e3843bdb467669f2ec3bfbadd9c295652a271dc49b55b0a55ffdbfc0629a8
     HEAD_REF main
 )
 

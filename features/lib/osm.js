@@ -35,20 +35,6 @@ class DB {
     const xml = builder.create('osm', { encoding: 'UTF-8' });
     xml.att('generator', 'osrm-test').att('version', '0.6');
 
-    // Real extracts declare their extent, and osrm-extract uses it to settle
-    // questions that hold for the whole file, driving side among them. Without
-    // it every scenario takes the per-way path instead.
-    if (this.nodes.length) {
-      const lons = this.nodes.map((n) => parseFloat(n.lon));
-      const lats = this.nodes.map((n) => parseFloat(n.lat));
-      xml.ele('bounds', {
-        minlon: ensureDecimal(Math.min(...lons)),
-        minlat: ensureDecimal(Math.min(...lats)),
-        maxlon: ensureDecimal(Math.max(...lons)),
-        maxlat: ensureDecimal(Math.max(...lats)),
-      });
-    }
-
     this.nodes.forEach((n) => {
       const node = xml.ele('node', {
         id: n.id,

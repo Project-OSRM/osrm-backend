@@ -3,11 +3,15 @@
 
 #include <tbb/enumerable_thread_specific.h>
 
+#include <osmium/memory/buffer.hpp>
 #include <osmium/osm/box.hpp>
 #include <osmium/osm/way.hpp>
 
+#include <atomic>
 #include <memory>
+#include <mutex>
 #include <optional>
+#include <string>
 
 namespace gauche
 {
@@ -30,8 +34,8 @@ class DrivingSideIndex
     enum class Mode
     {
         Off,    // never consulted, driving side comes from tags and the profile
-        Auto,   // settle the extract from its bounding box, per-way only if it straddles
-        Always, // per-way lookups regardless of what the bounding box says
+        Auto,   // settle the whole extract if it lies on one side, else per way
+        Always, // classify every way from its own nodes
     };
 
     static std::optional<Mode> ParseMode(const std::string &name);
@@ -44,15 +48,17 @@ class DrivingSideIndex
 
     bool Enabled() const { return mode != Mode::Off; }
 
-    // Classify the whole extract once, before any way is read. Returns the side
-    // when every coordinate in the box shares one, which is the common case for
-    // a single-country extract and settles the question without ever looking at
-    // a way. Returns nullopt when the box straddles a boundary, when the box is
-    // missing or invalid, or in Mode::Always, and then NeedsWayLookups() is
-    // true and the extractor has to keep node locations around for the ways.
-    std::optional<bool> SettleExtent(const osmium::Box &box);
+    // Auto has to know the extract's extent before it classifies the first way,
+    // and the extent the file declares in its header is not evidence: a hand cut
+    // extract can carry a box that does not contain its own data, and settling
+    // on a box smaller than the ways in it would put ways on the wrong side.
+    // So the extent is measured from the nodes themselves.
+    bool ObservesNodes() const { return mode == Mode::Auto; }
+    void ObserveNodes(const osmium::memory::Buffer &buffer);
 
-    bool NeedsWayLookups() const { return needs_way_lookups; }
+    // Both remaining modes may end up classifying ways one at a time, so both
+    // need the way's nodes to carry their locations.
+    bool NeedsWayLookups() const { return mode != Mode::Off; }
 
     // nullopt when the index is off, when the way has no usable coordinates, or
     // when gauche cannot answer. Callers fall back to their own default.
@@ -61,9 +67,19 @@ class DrivingSideIndex
   private:
     gauche::Index *ThreadIndex() const;
 
+    // Classifies the observed extent, once, on the first way that asks. An OSM
+    // file lists all its nodes before its first way and the observation happens
+    // in a pipeline stage every way has yet to reach, so the extent is complete
+    // by the time this runs.
+    void SettleObservedExtent() const;
+
     Mode mode;
-    bool needs_way_lookups = false;
-    std::optional<bool> settled_side;
+
+    mutable std::mutex extent_mutex;
+    osmium::Box observed_extent;
+    mutable std::atomic<bool> settled{false};
+    mutable std::optional<bool> settled_side;
+
     mutable tbb::enumerable_thread_specific<std::unique_ptr<gauche::Index>> indexes;
 };
 

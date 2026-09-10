@@ -569,19 +569,35 @@ of a junction's turns crosses oncoming traffic.
 4. the driving-side index, which classifies the way from its coordinates,
 5. right, if nothing above answered.
 
-The index is on by default and costs nothing for an extract that lies on one
-side of the world's driving-side boundaries: `osrm-extract` classifies the
-bounding box the input declares once, before reading a single way, and if the
-whole box shares a side then every way takes that side. Only an extract that
-spans a boundary, or one whose input declares no bounding box, falls back to
-classifying each way from its nodes, which requires keeping node locations for
-the whole parse and costs time and memory accordingly. A way that itself
-straddles a boundary is settled on its last node, the same node
-`get_location_tag` uses to place a way.
+`--driving-side-index` picks how the index answers:
 
-`--driving-side-index` picks the behaviour: `auto` is the default just
-described, `on` classifies every way regardless of the bounding box, and `off`
-disables the index so that only sources 1 to 3 apply.
+- `on`, the default, classifies every way from its own nodes.
+- `auto` measures the extract's extent from its nodes as they are parsed. An OSM
+  file lists all its nodes before its first way, so the extent is complete by the
+  time the first way needs an answer. If every node lies where traffic drives on
+  one side then so does every way, and all of them are settled at once without a
+  single way being classified. An extent that spans a boundary falls back to
+  classifying each way. The extent is measured rather than read from the file
+  header, because a hand-cut extract can carry a header box that does not contain
+  its own data, and settling on a box smaller than the ways in it would put ways
+  on the wrong side.
+- `off` disables the index, so only sources 1 to 3 apply.
+
+`auto` is worth it only for an extract cropped tightly to one side. A country
+extract as published is usually not: `germany-latest.osm.pbf` declares a clean
+box over Germany, but its nodes actually reach lon -20.1 to 28.1 and lat 47.1 to
+60.5, and 316 of them sit in the North Sea inside the left-hand area for Britain
+and Ireland. So it does not settle, and `auto` does the extent work and then
+classifies every way anyway. That is why `on` is the default.
+
+Both `auto` and `on` keep node locations for the whole parse, since either may
+end up classifying ways one at a time.
+
+A way is placed by its last node, the same node `get_location_tag` uses, so the
+two sources of driving side agree about where a way is. On a country-sized
+extract the index costs about a tenth of the parse: 787s to 859s on
+`germany-latest.osm.pbf`, nearly all of it the node location cache rather than
+the classification itself.
 
 Note that a profile setting `left_hand_driving` outranks the index, so a profile
 that sets it to `false` forces right-hand traffic worldwide rather than

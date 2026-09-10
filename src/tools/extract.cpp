@@ -80,10 +80,10 @@ return_code parseArguments(int argc,
         "Use internal nodes locations cache for location-dependent data lookups")(
         "driving-side-index",
         boost::program_options::value<std::string>(&extractor_config.driving_side_index)
-            ->default_value("auto"),
+            ->default_value("on"),
         "Resolve driving side from way coordinates where the OSM tags and the profile do not "
-        "answer: auto (settle the extract from its bounding box, classify ways only where it "
-        "spans both sides), on (always classify ways), off")(
+        "answer: on (classify each way), auto (measure the extract's extent from its nodes and "
+        "settle every way at once if it lies on one side, else classify each way), off")(
         "dump-nbg-graph",
         boost::program_options::bool_switch(&extractor_config.dump_nbg_graph)
             ->implicit_value(true)
