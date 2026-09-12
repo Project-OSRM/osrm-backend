@@ -39,6 +39,9 @@ class MockScriptingEnvironment : public extractor::ScriptingEnvironment
     }
 
     bool HasLocationDependentData() const override { return false; };
+    bool NeedsWayLocations() const override { return false; };
+    bool ObservesNodesForDrivingSide() const override { return false; };
+    void ObserveNodesForDrivingSide(const osmium::memory::Buffer &) override {};
 };
 
 } // namespace osrm::test

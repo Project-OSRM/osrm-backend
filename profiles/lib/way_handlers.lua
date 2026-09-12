@@ -750,6 +750,14 @@ function WayHandlers.vehicle_speed_cap(profile,way,result,data)
   end
 end
 
+-- Resolve which side of the road a way is driven on, most specific source
+-- first: the way's own tag, then a driving_side property from
+-- --location-dependent-data, then an explicit profile-wide setting, then the
+-- driving side index built from the way's coordinates.
+--
+-- A profile that sets left_hand_driving either way is making a deliberate
+-- statement and outranks the index. Leaving it unset is what lets the index
+-- answer, which is why the shipped profiles do not set it.
 function WayHandlers.driving_side(profile, way, result, data)
    local driving_side = way:get_value_by_key('driving_side')
    if driving_side == nil then
@@ -758,11 +766,18 @@ function WayHandlers.driving_side(profile, way, result, data)
 
    if driving_side == 'left' then
       result.is_left_hand_driving = true
+      return
    elseif driving_side == 'right' then
       result.is_left_hand_driving = false
-   else
-      result.is_left_hand_driving = profile.properties.left_hand_driving
+      return
    end
+
+   if profile.properties.left_hand_driving ~= nil then
+      result.is_left_hand_driving = profile.properties.left_hand_driving
+      return
+   end
+
+   result.is_left_hand_driving = way:is_left_hand_traffic() == true
 end
 
 -- Handle conveying tag on escalators and moving walkways

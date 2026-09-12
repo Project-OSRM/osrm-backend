@@ -1,6 +1,8 @@
 #include "osrm/exception.hpp"
 #include "osrm/extractor.hpp"
 #include "osrm/extractor_config.hpp"
+
+#include "extractor/driving_side_index.hpp"
 #include "util/exception.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
@@ -76,6 +78,12 @@ return_code parseArguments(int argc,
             ->implicit_value(false)
             ->default_value(true),
         "Use internal nodes locations cache for location-dependent data lookups")(
+        "driving-side-index",
+        boost::program_options::value<std::string>(&extractor_config.driving_side_index)
+            ->default_value("on"),
+        "Resolve driving side from way coordinates where the OSM tags and the profile do not "
+        "answer: on (classify each way), auto (measure the extract's extent from its nodes and "
+        "settle every way at once if it lies on one side, else classify each way), off")(
         "dump-nbg-graph",
         boost::program_options::bool_switch(&extractor_config.dump_nbg_graph)
             ->implicit_value(true)
@@ -152,6 +160,14 @@ return_code parseArguments(int argc,
     {
         std::cout << visible_options;
         return return_code::exit;
+    }
+
+    if (!extractor::DrivingSideIndex::ParseMode(extractor_config.driving_side_index))
+    {
+        util::Log(logERROR) << "Invalid --driving-side-index \""
+                            << extractor_config.driving_side_index
+                            << "\", expected one of auto, on, off";
+        return return_code::fail;
     }
 
     return return_code::ok;

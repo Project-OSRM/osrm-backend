@@ -449,6 +449,24 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
 
     osmium_index_type location_cache;
     osmium_location_handler_type location_handler(location_cache);
+    // A way referencing a node the file does not contain is a broken extract,
+    // not a reason to abort the parse: the handler would otherwise throw
+    // osmium::not_found straight out of the pipeline, before OSRM gets to say
+    // which nodes are missing. Those nodes keep an invalid location, and
+    // everything that reads one checks it.
+    location_handler.ignore_errors();
+
+    // Measures the extract's extent from the nodes themselves, for the driving
+    // side index. Serial and in order, which is what makes the extent complete
+    // before any way reaches process_elements_filter: a buffer cannot enter that
+    // stage until it has left this one, and an OSM file lists its nodes first.
+    tbb::filter<OsmiumBuffer, OsmiumBuffer> extent_filter(
+        tbb::filter_mode::serial_in_order,
+        [&scripting_environment](const OsmiumBuffer &buffer)
+        {
+            scripting_environment.ObserveNodesForDrivingSide(*buffer);
+            return buffer;
+        });
 
     tbb::filter<OsmiumBuffer, OsmiumBuffer> location_cache_filter(
         tbb::filter_mode::serial_in_order,
@@ -592,12 +610,42 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
                                       osmium::osm_entity_bits::relation,
                                   read_meta);
 
-        const auto pipeline =
-            scripting_environment.HasLocationDependentData() && config.use_locations_cache
-                ? reader_source(reader) & location_cache_filter & process_elements_filter &
-                      extractor_callbacks_filter
-                : reader_source(reader) & process_elements_filter & extractor_callbacks_filter;
-        tbb::parallel_pipeline(num_threads, pipeline);
+        // Both optional stages are serial and in order, so neither is spliced in
+        // unless it has work to do: an unused one would still hold every buffer
+        // to a single file at that point in the pipeline.
+        const bool cache_locations =
+            scripting_environment.NeedsWayLocations() && config.use_locations_cache;
+        const bool measure_extent = scripting_environment.ObservesNodesForDrivingSide();
+        const auto tail = process_elements_filter & extractor_callbacks_filter;
+
+        // Without the cache a way's nodes carry no coordinates, so anything that
+        // places a way by them silently stops answering: location-dependent tags
+        // and the driving side index both fall back to the profile instead.
+        if (scripting_environment.NeedsWayLocations() && !config.use_locations_cache)
+        {
+            util::Log(logWARNING) << "The node locations cache is disabled, so ways cannot be "
+                                     "placed by their coordinates. Location-dependent tags and "
+                                     "the driving side index will not answer for any way.";
+        }
+
+        if (measure_extent && cache_locations)
+        {
+            tbb::parallel_pipeline(
+                num_threads, reader_source(reader) & extent_filter & location_cache_filter & tail);
+        }
+        else if (measure_extent)
+        {
+            tbb::parallel_pipeline(num_threads, reader_source(reader) & extent_filter & tail);
+        }
+        else if (cache_locations)
+        {
+            tbb::parallel_pipeline(num_threads,
+                                   reader_source(reader) & location_cache_filter & tail);
+        }
+        else
+        {
+            tbb::parallel_pipeline(num_threads, reader_source(reader) & tail);
+        }
         TIMER_STOP(parse_ways);
         util::Log() << "... in " << TIMER_SEC(parse_ways) << " seconds";
     }

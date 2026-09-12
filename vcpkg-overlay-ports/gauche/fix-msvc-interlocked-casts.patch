@@ -1,0 +1,106 @@
+--- a/c/w2c2/w2c2/w2c2_base.h	2026-09-10 16:56:25
++++ b/c/w2c2/w2c2/w2c2_base.h	2026-09-10 16:56:26
+@@ -1137,15 +1137,15 @@
+ 
+ #include <intrin.h>
+ 
+-#define atomic_load_U8(a) _InterlockedOr8(a, 0)
+-#define atomic_load_U16(a) _InterlockedOr16(a, 0)
+-#define atomic_load_U32(a) _InterlockedOr(a, 0)
+-#define atomic_load_U64(a) _InterlockedOr64(a, 0)
++#define atomic_load_U8(a) _InterlockedOr8((volatile char*)(a), 0)
++#define atomic_load_U16(a) _InterlockedOr16((volatile short*)(a), 0)
++#define atomic_load_U32(a) _InterlockedOr((volatile long*)(a), 0)
++#define atomic_load_U64(a) _InterlockedOr64((volatile __int64*)(a), 0)
+ 
+-#define atomic_store_U8(a, v) _InterlockedExchange8(a, v)
+-#define atomic_store_U16(a, v) _InterlockedExchange16(a, v)
+-#define atomic_store_U32(a, v) _InterlockedExchange(a, v)
+-#define atomic_store_U64(a, v) _InterlockedExchange64(a, v)
++#define atomic_store_U8(a, v) _InterlockedExchange8((volatile char*)(a), (char)(v))
++#define atomic_store_U16(a, v) _InterlockedExchange16((volatile short*)(a), (short)(v))
++#define atomic_store_U32(a, v) _InterlockedExchange((volatile long*)(a), (long)(v))
++#define atomic_store_U64(a, v) _InterlockedExchange64((volatile __int64*)(a), (__int64)(v))
+ 
+ #define atomic_fence() _ReadWriteBarrier()
+ 
+@@ -1170,44 +1170,48 @@
+ 
+ #include <intrin.h>
+ 
+-#define atomic_add_U8(a, v) _InterlockedExchangeAdd8(a, v)
+-#define atomic_add_U16(a, v) _InterlockedExchangeAdd16(a, v)
+-#define atomic_add_U32(a, v) _InterlockedExchangeAdd(a, v)
+-#define atomic_add_U64(a, v) _InterlockedExchangeAdd64(a, v)
++#define atomic_add_U8(a, v) _InterlockedExchangeAdd8((volatile char*)(a), (char)(v))
++#define atomic_add_U16(a, v) _InterlockedExchangeAdd16((volatile short*)(a), (short)(v))
++#define atomic_add_U32(a, v) _InterlockedExchangeAdd((volatile long*)(a), (long)(v))
++#define atomic_add_U64(a, v) _InterlockedExchangeAdd64((volatile __int64*)(a), (__int64)(v))
+ 
+-#define atomic_sub_U8(a, v) _InterlockedExchangeAdd8(a, -(v))
+-#define atomic_sub_U16(a, v) _InterlockedExchangeAdd16(a, -(v))
+-#define atomic_sub_U32(a, v) _InterlockedExchangeAdd(a, -(v))
+-#define atomic_sub_U64(a, v) _InterlockedExchangeAdd64(a, -(v))
++#define atomic_sub_U8(a, v) _InterlockedExchangeAdd8((volatile char*)(a), (char)(-(v)))
++#define atomic_sub_U16(a, v) _InterlockedExchangeAdd16((volatile short*)(a), (short)(-(v)))
++#define atomic_sub_U32(a, v) _InterlockedExchangeAdd((volatile long*)(a), (long)(-(v)))
++#define atomic_sub_U64(a, v) _InterlockedExchangeAdd64((volatile __int64*)(a), (__int64)(-(v)))
+ 
+-#define atomic_and_U8(a, v) _InterlockedAnd8(a, v)
+-#define atomic_and_U16(a, v) _InterlockedAnd16(a, v)
+-#define atomic_and_U32(a, v) _InterlockedAnd(a, v)
+-#define atomic_and_U64(a, v) _InterlockedAnd64(a, v)
+-
+-#define atomic_or_U8(a, v) _InterlockedOr8(a, v)
+-#define atomic_or_U16(a, v) _InterlockedOr16(a, v)
+-#define atomic_or_U32(a, v) _InterlockedOr(a, v)
+-#define atomic_or_U64(a, v) _InterlockedOr64(a, v)
++#define atomic_and_U8(a, v) _InterlockedAnd8((volatile char*)(a), (char)(v))
++#define atomic_and_U16(a, v) _InterlockedAnd16((volatile short*)(a), (short)(v))
++#define atomic_and_U32(a, v) _InterlockedAnd((volatile long*)(a), (long)(v))
++#define atomic_and_U64(a, v) _InterlockedAnd64((volatile __int64*)(a), (__int64)(v))
+ 
+-#define atomic_xor_U8(a, v) _InterlockedXor8(a, v)
+-#define atomic_xor_U16(a, v) _InterlockedXor16(a, v)
+-#define atomic_xor_U32(a, v) _InterlockedXor(a, v)
+-#define atomic_xor_U64(a, v) _InterlockedXor64(a, v)
++#define atomic_or_U8(a, v) _InterlockedOr8((volatile char*)(a), (char)(v))
++#define atomic_or_U16(a, v) _InterlockedOr16((volatile short*)(a), (short)(v))
++#define atomic_or_U32(a, v) _InterlockedOr((volatile long*)(a), (long)(v))
++#define atomic_or_U64(a, v) _InterlockedOr64((volatile __int64*)(a), (__int64)(v))
+ 
+-#define atomic_exchange_U8(a, v) _InterlockedExchange8(a, v)
+-#define atomic_exchange_U16(a, v) _InterlockedExchange16(a, v)
+-#define atomic_exchange_U32(a, v) _InterlockedExchange(a, v)
+-#define atomic_exchange_U64(a, v) _InterlockedExchange64(a, v)
++#define atomic_xor_U8(a, v) _InterlockedXor8((volatile char*)(a), (char)(v))
++#define atomic_xor_U16(a, v) _InterlockedXor16((volatile short*)(a), (short)(v))
++#define atomic_xor_U32(a, v) _InterlockedXor((volatile long*)(a), (long)(v))
++#define atomic_xor_U64(a, v) _InterlockedXor64((volatile __int64*)(a), (__int64)(v))
+ 
+-#define atomic_compare_exchange_U8(a, expected_ptr, desired) \
+-    _InterlockedCompareExchange8(a, desired, *(expected_ptr))
++#define atomic_exchange_U8(a, v) _InterlockedExchange8((volatile char*)(a), (char)(v))
++#define atomic_exchange_U16(a, v) _InterlockedExchange16((volatile short*)(a), (short)(v))
++#define atomic_exchange_U32(a, v) _InterlockedExchange((volatile long*)(a), (long)(v))
++#define atomic_exchange_U64(a, v) _InterlockedExchange64((volatile __int64*)(a), (__int64)(v))
++
++#define atomic_compare_exchange_U8(a, expected_ptr, desired) \
++    _InterlockedCompareExchange8(\
++        (volatile char*)(a), (char)(desired), (char)(*(expected_ptr)))
+ #define atomic_compare_exchange_U16(a, expected_ptr, desired) \
+-    _InterlockedCompareExchange16(a, desired, *(expected_ptr))
+-#define atomic_compare_exchange_U32(a, expected_ptr, desired) \
+-    _InterlockedCompareExchange(a, desired, *(expected_ptr))
++    _InterlockedCompareExchange16(\
++        (volatile short*)(a), (short)(desired), (short)(*(expected_ptr)))
++#define atomic_compare_exchange_U32(a, expected_ptr, desired) \
++    _InterlockedCompareExchange(\
++        (volatile long*)(a), (long)(desired), (long)(*(expected_ptr)))
+ #define atomic_compare_exchange_U64(a, expected_ptr, desired) \
+-    _InterlockedCompareExchange64(a, desired, *(expected_ptr))
++    _InterlockedCompareExchange64(\
++        (volatile __int64*)(a), (__int64)(desired), (__int64)(*(expected_ptr)))
+ 
+ #elif defined(WASM_ATOMICS_GCC)
+ 

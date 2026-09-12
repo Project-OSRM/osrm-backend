@@ -1,6 +1,7 @@
 #ifndef SCRIPTING_ENVIRONMENT_LUA_HPP
 #define SCRIPTING_ENVIRONMENT_LUA_HPP
 
+#include "extractor/driving_side_index.hpp"
 #include "extractor/location_dependent_data.hpp"
 #include "extractor/raster_source.hpp"
 #include "extractor/scripting_environment.hpp"
@@ -22,8 +23,9 @@ namespace osrm::extractor
 
 struct LuaScriptingContext final
 {
-    LuaScriptingContext(const LocationDependentData &location_dependent_data)
-        : location_dependent_data(location_dependent_data),
+    LuaScriptingContext(const LocationDependentData &location_dependent_data,
+                        const DrivingSideIndex &driving_side_index)
+        : location_dependent_data(location_dependent_data), driving_side_index(driving_side_index),
           last_location_point(0., 180.) // assume (0,180) is invalid coordinate
     {
     }
@@ -57,6 +59,7 @@ struct LuaScriptingContext final
 
     // Reference to immutable location dependent data and locations memo
     const LocationDependentData &location_dependent_data;
+    const DrivingSideIndex &driving_side_index;
     LocationDependentData::point_t last_location_point;
     std::vector<std::size_t> last_location_indexes;
 };
@@ -76,7 +79,8 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 
     explicit Sol2ScriptingEnvironment(
         const std::string &file_name,
-        const std::vector<std::filesystem::path> &location_dependent_data_paths);
+        const std::vector<std::filesystem::path> &location_dependent_data_paths,
+        DrivingSideIndex::Mode driving_side_mode = DrivingSideIndex::Mode::Off);
     ~Sol2ScriptingEnvironment() override = default;
 
     const ProfileProperties &GetProfileProperties() override;
@@ -96,6 +100,14 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
 
     bool HasLocationDependentData() const override { return !location_dependent_data.empty(); }
 
+    bool NeedsWayLocations() const override
+    { return HasLocationDependentData() || driving_side_index.NeedsWayLookups(); }
+
+    bool ObservesNodesForDrivingSide() const override { return driving_side_index.ObservesNodes(); }
+
+    void ObserveNodesForDrivingSide(const osmium::memory::Buffer &buffer) override
+    { driving_side_index.ObserveNodes(buffer); }
+
   private:
     LuaScriptingContext &GetSol2Context();
 
@@ -108,6 +120,7 @@ class Sol2ScriptingEnvironment final : public ScriptingEnvironment
     std::string file_name;
     tbb::enumerable_thread_specific<std::unique_ptr<LuaScriptingContext>> script_contexts;
     const LocationDependentData location_dependent_data;
+    DrivingSideIndex driving_side_index;
 };
 } // namespace osrm::extractor
 

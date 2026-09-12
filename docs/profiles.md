@@ -111,7 +111,7 @@ Attribute                     | Type     | Notes
 ------------------------------|----------|----------------------------------------------------------------------------
 weight_name                   | String   | Name used in output for the routing weight property (default `"duration"`)
 weight_precision              | Unsigned | Decimal precision of edge weights (default `1`)
-left_hand_driving             | Boolean  | Are vehicles assumed to drive on the left? (used in guidance, default `false`)
+left_hand_driving             | Boolean  | Force a driving side on every way the OSM tags and location-dependent data leave open. Leave it unset, as the shipped profiles do, to let the driving-side index answer from each way's coordinates instead. See [Driving side](#driving-side)
 use_turn_restrictions         | Boolean  | Are turn restrictions followed? (default `false`)
 continue_straight_at_waypoint | Boolean  | Must the route continue straight on at a via point, or are U-turns allowed? (default `true`)
 max_speed_for_map_matching    | Float    | Maximum vehicle speed to be assumed in matching (in m/s)
@@ -454,6 +454,7 @@ source_restricted                  | Read          | Boolean                   |
 source_mode                        | Read          | Enum                      | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
 source_is_motorway                 | Read          | Boolean                   | Is the source road a motorway?
 source_is_link                     | Read          | Boolean                   | Is the source road a link?
+source_is_roundabout               | Read          | Boolean                   | Is the source road a roundabout or a circular junction?
 source_number_of_lanes             | Read          | Integer                   | How many lanes does the source road have? (default when not tagged: 0)
 source_highway_turn_classification | Read          | Integer                   | Classification based on highway tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 source_access_turn_classification  | Read          | Integer                   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
@@ -463,6 +464,7 @@ target_restricted                  | Read          | Boolean                   |
 target_mode                        | Read          | Enum                      | Travel mode after the turn. Defined in `include/extractor/travel_mode.hpp`
 target_is_motorway                 | Read          | Boolean                   | Is the target road a motorway?
 target_is_link                     | Read          | Boolean                   | Is the target road a link?
+target_is_roundabout               | Read          | Boolean                   | Is the target road a roundabout or a circular junction?
 target_number_of_lanes             | Read          | Integer                   | How many lanes does the target road have? (default when not tagged: 0)
 target_highway_turn_classification | Read          | Integer                   | Classification based on highway tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
 target_access_turn_classification  | Read          | Integer                   | Classification based on access tag defined by user during setup. (default when not set: 0, allowed classification values are: 0-15))
@@ -551,6 +553,55 @@ function process_turn(profile, turn) {
   end
 }
 ```
+
+## Driving side
+
+`is_left_hand_driving` on a way decides which side of the road traffic runs on
+there. It reaches the API as `driving_side` on every route step, tells the
+roundabout handler which way a roundabout turns, and tells `process_turn` which
+of a junction's turns crosses oncoming traffic.
+
+`WayHandlers.driving_side` resolves it from the most specific source available:
+
+1. the way's own `driving_side` tag,
+2. a `driving_side` property from a `--location-dependent-data` GeoJSON,
+3. `profile.properties.left_hand_driving`, if the profile sets it either way,
+4. the driving-side index, which classifies the way from its coordinates,
+5. right, if nothing above answered.
+
+`--driving-side-index` picks how the index answers:
+
+- `on`, the default, classifies every way from its own nodes.
+- `auto` measures the extract's extent from its nodes as they are parsed. An OSM
+  file lists all its nodes before its first way, so the extent is complete by the
+  time the first way needs an answer. If every node lies where traffic drives on
+  one side then so does every way, and all of them are settled at once without a
+  single way being classified. An extent that spans a boundary falls back to
+  classifying each way. The extent is measured rather than read from the file
+  header, because a hand-cut extract can carry a header box that does not contain
+  its own data, and settling on a box smaller than the ways in it would put ways
+  on the wrong side.
+- `off` disables the index, so only sources 1 to 3 apply.
+
+`auto` is worth it only for an extract cropped tightly to one side. A country
+extract as published is usually not: `germany-latest.osm.pbf` declares a clean
+box over Germany, but its nodes actually reach lon -20.1 to 28.1 and lat 47.1 to
+60.5, and 316 of them sit in the North Sea inside the left-hand area for Britain
+and Ireland. So it does not settle, and `auto` does the extent work and then
+classifies every way anyway. That is why `on` is the default.
+
+Both `auto` and `on` keep node locations for the whole parse, since either may
+end up classifying ways one at a time.
+
+A way is placed by its last node, the same node `get_location_tag` uses, so the
+two sources of driving side agree about where a way is. On a country-sized
+extract the index costs about a tenth of the parse: 787s to 859s on
+`germany-latest.osm.pbf`, nearly all of it the node location cache rather than
+the classification itself.
+
+Note that a profile setting `left_hand_driving` outranks the index, so a profile
+that sets it to `false` forces right-hand traffic worldwide rather than
+disabling the lookup.
 
 ## Guidance
 The guidance parameters in profiles are currently a work in progress. They can and will change.

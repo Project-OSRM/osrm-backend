@@ -221,6 +221,23 @@ assert_output_matches "partition/path-with-spaces preserved end-to-end" \
     "$SPACE_DIR/missing\\.osrm" \
     "$PARTITION" "$SPACE_DIR/missing.osrm"
 
+# --- driving side index values ---------------------------------------------
+
+# Valid values parse and get as far as opening the input.
+assert_output_matches "extract/--driving-side-index auto parses" \
+    "Required files are missing|Input file" \
+    "$EXTRACT" --driving-side-index auto /nonexistent.osm.pbf
+assert_output_matches "extract/--driving-side-index off parses" \
+    "Required files are missing|Input file" \
+    "$EXTRACT" --driving-side-index off /nonexistent.osm.pbf
+
+# Garbage must be named in the error and must not reach the extractor.
+assert_exit_nonzero "extract/--driving-side-index bogus exits nonzero" \
+    "$EXTRACT" --driving-side-index bogus /nonexistent.osm.pbf
+assert_output_matches "extract/--driving-side-index bogus names the value" \
+    "expected one of auto, on, off" \
+    "$EXTRACT" --driving-side-index bogus /nonexistent.osm.pbf
+
 # --- unknown option rejection ----------------------------------------------
 
 assert_exit_nonzero "extract/--bogus-flag exits nonzero" \
