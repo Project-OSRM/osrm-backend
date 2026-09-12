@@ -50,6 +50,41 @@ std::size_t addWay(osmium::memory::Buffer &buffer,
 }
 } // namespace
 
+BOOST_AUTO_TEST_CASE(mode_names_round_trip_and_anything_else_is_rejected)
+{
+    BOOST_CHECK(DrivingSideIndex::ParseMode("off") == DrivingSideIndex::Mode::Off);
+    BOOST_CHECK(DrivingSideIndex::ParseMode("auto") == DrivingSideIndex::Mode::Auto);
+    BOOST_CHECK(DrivingSideIndex::ParseMode("on") == DrivingSideIndex::Mode::Always);
+
+    BOOST_CHECK(!DrivingSideIndex::ParseMode("always"));
+    BOOST_CHECK(!DrivingSideIndex::ParseMode("Off"));
+    BOOST_CHECK(!DrivingSideIndex::ParseMode(""));
+    BOOST_CHECK(!DrivingSideIndex::ParseMode("left"));
+}
+
+// A buffer can carry ways and relations and no nodes at all, and the parse hands
+// every buffer to the index regardless.
+BOOST_AUTO_TEST_CASE(a_buffer_without_node_locations_leaves_the_extent_alone)
+{
+    DrivingSideIndex index{DrivingSideIndex::Mode::Auto};
+
+    osmium::memory::Buffer ways{1024, osmium::memory::Buffer::auto_grow::yes};
+    addWay(ways, 1, {osmium::Location{2.3500, 48.8566}, osmium::Location{2.3544, 48.8566}});
+    index.ObserveNodes(ways);
+
+    osmium::memory::Buffer empty{1024, osmium::memory::Buffer::auto_grow::yes};
+    index.ObserveNodes(empty);
+
+    // Neither buffer contributed an extent, so there is nothing to settle and
+    // the way is classified on its own coordinates.
+    osmium::memory::Buffer buffer{1024, osmium::memory::Buffer::auto_grow::yes};
+    const auto &way = buffer.get<osmium::Way>(addWay(
+        buffer, 1, {osmium::Location{-0.1290, 51.5072}, osmium::Location{-0.1262, 51.5072}}));
+    const auto side = index.IsLeftHandTraffic(way);
+    BOOST_REQUIRE(side.has_value());
+    BOOST_CHECK_EQUAL(*side, true);
+}
+
 BOOST_AUTO_TEST_CASE(off_answers_nothing)
 {
     DrivingSideIndex index{DrivingSideIndex::Mode::Off};
