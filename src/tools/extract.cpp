@@ -3,6 +3,7 @@
 #include "osrm/extractor_config.hpp"
 
 #include "extractor/driving_side_index.hpp"
+#include "util/available_threads.hpp"
 #include "util/exception.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
@@ -51,7 +52,7 @@ return_code parseArguments(int argc,
         "Data version. Leave blank to avoid. osmosis - to get timestamp from file")(
         "threads,t",
         boost::program_options::value<unsigned int>(&extractor_config.requested_num_threads)
-            ->default_value(std::thread::hardware_concurrency()),
+            ->default_value(util::GetAvailableThreads()),
         "Number of threads to use")(
         "small-component-size",
         boost::program_options::value<unsigned int>(&extractor_config.small_component_size)
