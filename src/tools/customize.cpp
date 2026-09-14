@@ -1,6 +1,7 @@
 #include "customizer/customizer.hpp"
 
 #include "osrm/exception.hpp"
+#include "util/available_threads.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
 #include "util/version.hpp"
@@ -42,7 +43,7 @@ return_code parseArguments(int argc,
         //
         ("threads,t",
          boost::program_options::value<unsigned int>(&customization_config.requested_num_threads)
-             ->default_value(std::thread::hardware_concurrency()),
+             ->default_value(util::GetAvailableThreads()),
          "Number of threads to use")(
             "segment-speed-file",
             boost::program_options::value<std::vector<std::string>>(

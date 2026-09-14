@@ -1,5 +1,6 @@
 #include "server/header_size.hpp"
 #include "server/server.hpp"
+#include "util/available_threads.hpp"
 #include "util/exception_utils.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
@@ -117,7 +118,7 @@ inline unsigned generateServerProgramOptions(const int argc,
     using boost::program_options::value;
     using std::filesystem::path;
 
-    const auto hardware_threads = std::max<int>(1, std::thread::hardware_concurrency());
+    const auto hardware_threads = std::max<int>(1, static_cast<int>(util::GetAvailableThreads()));
 
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
