@@ -149,7 +149,15 @@ Feature: Continue Instructions
             | a,d       | abc,bd,bd   | depart,turn left,arrive      |
 
     Scenario: Road Loop
-       Given the node map
+       # The loop is small enough that the oncoming penalty would price the
+       # short left turn above going the long way round, leaving the scenario
+       # with no continue-left instruction left to check. Turn it off so this
+       # stays a test of the instruction rather than of the turn cost.
+       Given the profile file "car" initialized with
+       """
+       profile.oncoming_turn_penalty = 0
+       """
+       And the node map
            """
                f - e
                |   |

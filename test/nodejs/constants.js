@@ -10,7 +10,7 @@ export const three_test_coordinates = [[7.41337, 43.72956],
 
 export const two_test_coordinates = three_test_coordinates.slice(0, 2);
 
-export const test_tile = {'at': [17059, 11948, 15], 'size': 159125};
+export const test_tile = {'at': [17059, 11948, 15], 'size': 159260};
 
 const install_dir   = process.env.OSRM_NODEJS_INSTALL_DIR || '.';
 const test_data_dir = process.env.OSRM_DATA_PATH || process.env.OSRM_TEST_DATA_DIR || 'test/data';

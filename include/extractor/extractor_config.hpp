@@ -89,6 +89,8 @@ struct ExtractorConfig final : storage::IOConfig
     bool parse_conditionals = false;
     bool use_locations_cache = true;
     bool dump_nbg_graph = false;
+
+    std::string driving_side_index = "on";
 };
 } // namespace osrm::extractor
 

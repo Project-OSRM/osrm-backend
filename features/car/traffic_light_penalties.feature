@@ -146,53 +146,53 @@ Feature: Car - Handle traffic lights
             | from | to | time   | #                             |
             | a    | b  | 18.7s  | turn with no traffic light    |
             | a    | e  | 22.2s  | no turn with no traffic light |
-            | a    | d  | 21.9s  | turn with no traffic light    |
-            | e    | b  | 21.9s  | turn with no traffic light    |
+            | a    | d  | 23.9s  | turn with no traffic light    |
+            | e    | b  | 23.9s  | turn with no traffic light    |
             | e    | a  | 22.2s  | no turn with no traffic light |
             | e    | d  | 18.7s  | turn with no traffic light    |
-            | d    | e  | 21.9s  | turn with no traffic light    |
+            | d    | e  | 23.9s  | turn with no traffic light    |
             | d    | b  | 11s    | no turn with no traffic light |
             | d    | a  | 18.7s  | turn with no traffic light    |
-            | b    | a  | 21.9s  | turn with no traffic light    |
+            | b    | a  | 23.9s  | turn with no traffic light    |
             | b    | d  | 11s    | no turn with no traffic light |
             | b    | e  | 18.7s  | turn with no traffic light    |
             # All have traffic lights - 2s penalty
             | f    | h  | 20.7s  | turn with traffic light       |
             | f    | j  | 24.2s  | no turn with traffic light    |
-            | f    | i  | 23.9s  | turn with traffic light       |
-            | j    | h  | 23.9s  | turn with traffic light       |
+            | f    | i  | 25.9s  | turn with traffic light       |
+            | j    | h  | 25.9s  | turn with traffic light       |
             | j    | f  | 24.2s  | no turn with traffic light    |
             | j    | i  | 20.7s  | turn with traffic light       |
-            | i    | j  | 23.9s  | turn with traffic light       |
+            | i    | j  | 25.9s  | turn with traffic light       |
             | i    | h  | 13s    | no turn with traffic light    |
             | i    | f  | 20.7s  | turn with traffic light       |
-            | h    | f  | 23.9s  | turn with traffic light       |
+            | h    | f  | 25.9s  | turn with traffic light       |
             | h    | i  | 13s    | no turn with traffic light    |
             | h    | j  | 20.7s  | turn with traffic light       |
             # Front direction have traffic lights - 2s penalty
             | k    | l  | 20.7s  | turn with traffic light       |
             | k    | o  | 24.2s  | no turn with traffic light    |
-            | k    | n  | 23.9s  | turn with traffic light       |
-            | o    | l  | 21.9s  | turn with no traffic light    |
+            | k    | n  | 25.9s  | turn with traffic light       |
+            | o    | l  | 23.9s  | turn with no traffic light    |
             | o    | k  | 22.2s  | no turn with no traffic light |
             | o    | n  | 18.7s  | turn with no traffic light    |
-            | n    | o  | 21.9s  | turn with no traffic light    |
+            | n    | o  | 23.9s  | turn with no traffic light    |
             | n    | l  | 11s    | no turn with no traffic light |
             | n    | k  | 18.7s  | turn with no traffic light    |
-            | l    | k  | 23.9s  | turn with traffic light       |
+            | l    | k  | 25.9s  | turn with traffic light       |
             | l    | n  | 13s    | no turn with traffic light    |
             | l    | o  | 20.7s  | turn with traffic light       |
             # Reverse direction have traffic lights - 2s penalty
             | p    | q  | 18.7s  | turn with no traffic light    |
             | p    | t  | 22.2s  | no turn with no traffic light |
-            | p    | s  | 21.9s  | turn with no traffic light    |
-            | t    | q  | 23.9s  | turn with traffic light       |
+            | p    | s  | 23.9s  | turn with no traffic light    |
+            | t    | q  | 25.9s  | turn with traffic light       |
             | t    | p  | 24.2s  | no turn with traffic light    |
             | t    | s  | 20.7s  | turn with traffic light       |
-            | s    | t  | 23.9s  | turn with traffic light       |
+            | s    | t  | 25.9s  | turn with traffic light       |
             | s    | q  | 13s    | no turn with traffic light    |
             | s    | p  | 20.7s  | turn with traffic light       |
-            | q    | p  | 21.9s  | turn with no traffic light    |
+            | q    | p  | 23.9s  | turn with no traffic light    |
             | q    | s  | 11s    | no turn with no traffic light |
             | q    | t  | 18.7s  | turn with no traffic light    |
 
@@ -421,9 +421,9 @@ Feature: Car - Handle traffic lights
 
         When I route I should get
             | from | to | time   | weight | #                          |
-            | 1    | 2  |  44.2s | 44.2   | turn with no traffic light |
+            | 1    | 2  |  46.2s | 46.2   | turn with no traffic light |
             | 2    | 1  |  41s   | 41     | turn with no traffic light |
-            | 3    | 4  |  46.2s | 46.2   | turn with traffic light    |
+            | 3    | 4  |  48.2s | 48.2   | turn with traffic light    |
             | 4    | 3  |  41s   | 41     | turn with no traffic light |
 
 
@@ -461,5 +461,5 @@ Feature: Car - Handle traffic lights
 
         When I route I should get
             | from | to | time   | weight | #                          |
-            | 1    | 2  |  46.2s | 46.2   | turn with traffic light    |
+            | 1    | 2  |  48.2s | 48.2   | turn with traffic light    |
             | 2    | 1  |  41s   | 41     | turn with no traffic light |

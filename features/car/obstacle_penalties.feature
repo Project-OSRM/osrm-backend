@@ -106,44 +106,44 @@ Feature: Car - Handle obstacle penalties
             | from | to | time    | #                    |
             | a    | b  | 14s +-1 |    turn              |
             | a    | e  | 13s +-1 | no turn              |
-            | a    | d  | 17s +-1 |    turn              |
+            | a    | d  | 19s +-1 |    turn              |
             | e    | d  | 14s +-1 |    turn              |
             | e    | a  | 13s +-1 | no turn              |
-            | e    | b  | 17s +-1 |    turn              |
+            | e    | b  | 19s +-1 |    turn              |
             | d    | a  | 14s +-1 |    turn              |
             | d    | b  | 11s +-1 | no turn              |
-            | d    | e  | 17s +-1 |    turn              |
+            | d    | e  | 19s +-1 |    turn              |
             | b    | e  | 14s +-1 |    turn              |
             | b    | d  | 11s +-1 | no turn              |
-            | b    | a  | 17s +-1 |    turn              |
+            | b    | a  | 19s +-1 |    turn              |
 
             # All roads have stop signs - 2s penalty
             | f    | h  | 16s +-1 |    turn with stop    |
             | f    | j  | 15s +-1 | no turn with stop    |
-            | f    | i  | 19s +-1 |    turn with stop    |
+            | f    | i  | 21s +-1 |    turn with stop    |
             | j    | i  | 16s +-1 |    turn with stop    |
             | j    | f  | 15s +-1 | no turn with stop    |
-            | j    | h  | 19s +-1 |    turn with stop    |
+            | j    | h  | 21s +-1 |    turn with stop    |
             | i    | f  | 16s +-1 |    turn with stop    |
             | i    | h  | 13s +-1 | no turn with stop    |
-            | i    | j  | 19s +-1 |    turn with stop    |
+            | i    | j  | 21s +-1 |    turn with stop    |
             | h    | j  | 16s +-1 |    turn with stop    |
             | h    | i  | 13s +-1 | no turn with stop    |
-            | h    | f  | 19s +-1 |    turn with stop    |
+            | h    | f  | 21s +-1 |    turn with stop    |
 
             # Minor roads have stop signs - 2s penalty
             | k    | l  | 16s +-1 |    turn with minor stop |
             | k    | o  | 15s +-1 | no turn with minor stop |
-            | k    | n  | 19s +-1 |    turn with minor stop |
+            | k    | n  | 21s +-1 |    turn with minor stop |
             | o    | n  | 16s +-1 |    turn with minor stop |
             | o    | k  | 15s +-1 | no turn with minor stop |
-            | o    | l  | 19s +-1 |    turn with minor stop |
+            | o    | l  | 21s +-1 |    turn with minor stop |
             | n    | k  | 14s +-1 |    turn                 |
             | n    | l  | 11s +-1 | no turn                 |
-            | n    | o  | 17s +-1 |    turn                 |
+            | n    | o  | 19s +-1 |    turn                 |
             | l    | o  | 14s +-1 |    turn                 |
             | l    | n  | 11s +-1 | no turn                 |
-            | l    | k  | 17s +-1 |    turn                 |
+            | l    | k  | 19s +-1 |    turn                 |
 
 
     Scenario: Car - Infer stop sign direction
@@ -212,16 +212,16 @@ Feature: Car - Handle obstacle penalties
             | t    | stop    |
 
         When I route I should get
-            | from | to | time    | #    |
-            | a    | d  | 9s +- 1 | stop |
-            | a    | c  | 5s +- 1 | stop |
-            | a    | e  | 6s +- 1 | stop |
-            | c    | e  | 9s +- 1 | stop |
-            | c    | a  | 5s +- 1 | stop |
-            | c    | d  | 6s +- 1 | stop |
-            | d    | c  | 7s +- 1 |      |
-            | d    | e  | 1s +- 1 |      |
-            | d    | a  | 4s +- 1 |      |
-            | e    | a  | 7s +- 1 |      |
-            | e    | d  | 1s +- 1 |      |
-            | e    | c  | 4s +- 1 |      |
+            | from | to | time     | #    |
+            | a    | d  | 11s +- 1 | stop |
+            | a    | c  | 5s +- 1  | stop |
+            | a    | e  | 6s +- 1  | stop |
+            | c    | e  | 11s +- 1 | stop |
+            | c    | a  | 5s +- 1  | stop |
+            | c    | d  | 6s +- 1  | stop |
+            | d    | c  | 9s +- 1  |      |
+            | d    | e  | 1s +- 1  |      |
+            | d    | a  | 4s +- 1  |      |
+            | e    | a  | 9s +- 1  |      |
+            | e    | d  | 1s +- 1  |      |
+            | e    | c  | 4s +- 1  |      |

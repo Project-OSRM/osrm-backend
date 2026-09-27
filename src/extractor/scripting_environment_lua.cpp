@@ -110,8 +110,10 @@ void handle_lua_error(const sol::protected_function_result &luares)
 
 Sol2ScriptingEnvironment::Sol2ScriptingEnvironment(
     const std::string &file_name,
-    const std::vector<std::filesystem::path> &location_dependent_data_paths)
-    : file_name(file_name), location_dependent_data(location_dependent_data_paths)
+    const std::vector<std::filesystem::path> &location_dependent_data_paths,
+    DrivingSideIndex::Mode driving_side_mode)
+    : file_name(file_name), location_dependent_data(location_dependent_data_paths),
+      driving_side_index(driving_side_mode)
 { util::Log() << "Using script " << file_name; }
 
 void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
@@ -359,6 +361,14 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
                                                  sol::base_classes,
                                                  sol::bases<osmium::OSMObject>());
 
+    auto is_left_hand_traffic = [&context](const osmium::Way &way)
+    {
+        const auto side = context.driving_side_index.IsLeftHandTraffic(way);
+        if (!side)
+            return sol::object(context.state);
+        return sol::make_object(context.state, *side);
+    };
+
     context.state.new_usertype<osmium::Way>(
         "Way",
         "size",
@@ -369,6 +379,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         [](const osmium::Way &way) { return sol::as_table(&way.nodes()); },
         "get_location_tag",
         get_location_tag,
+        "is_left_hand_traffic",
+        is_left_hand_traffic,
         sol::base_classes,
         sol::bases<osmium::OSMObject>());
 
@@ -959,6 +971,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::source_is_motorway,
             "source_is_link",
             &ExtractionTurn::source_is_link,
+            "source_is_roundabout",
+            &ExtractionTurn::source_is_roundabout,
             "source_number_of_lanes",
             &ExtractionTurn::source_number_of_lanes,
             "source_highway_turn_classification",
@@ -978,6 +992,8 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
             &ExtractionTurn::target_is_motorway,
             "target_is_link",
             &ExtractionTurn::target_is_link,
+            "target_is_roundabout",
+            &ExtractionTurn::target_is_roundabout,
             "target_number_of_lanes",
             &ExtractionTurn::target_number_of_lanes,
             "target_highway_turn_classification",
@@ -1082,7 +1098,7 @@ LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
-        ref = std::make_unique<LuaScriptingContext>(location_dependent_data);
+        ref = std::make_unique<LuaScriptingContext>(location_dependent_data, driving_side_index);
         InitContext(*ref);
     }
 

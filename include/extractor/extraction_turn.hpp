@@ -88,6 +88,7 @@ struct ExtractionTurn
                    TravelMode source_mode,
                    bool source_is_motorway,
                    bool source_is_link,
+                   bool source_is_roundabout,
                    int source_number_of_lanes,
                    int source_highway_turn_classification,
                    int source_access_turn_classification,
@@ -98,6 +99,7 @@ struct ExtractionTurn
                    TravelMode target_mode,
                    bool target_is_motorway,
                    bool target_is_link,
+                   bool target_is_roundabout,
                    int target_number_of_lanes,
                    int target_highway_turn_classification,
                    int target_access_turn_classification,
@@ -116,6 +118,7 @@ struct ExtractionTurn
 
           source_restricted(source_restricted), source_mode(source_mode),
           source_is_motorway(source_is_motorway), source_is_link(source_is_link),
+          source_is_roundabout(source_is_roundabout),
           source_number_of_lanes(source_number_of_lanes),
           source_highway_turn_classification(source_highway_turn_classification),
           source_access_turn_classification(source_access_turn_classification),
@@ -123,6 +126,7 @@ struct ExtractionTurn
 
           target_restricted(target_restricted), target_mode(target_mode),
           target_is_motorway(target_is_motorway), target_is_link(target_is_link),
+          target_is_roundabout(target_is_roundabout),
           target_number_of_lanes(target_number_of_lanes),
           target_highway_turn_classification(target_highway_turn_classification),
           target_access_turn_classification(target_access_turn_classification),
@@ -157,6 +161,7 @@ struct ExtractionTurn
                          TRAVEL_MODE_DRIVING,
                          false,
                          false,
+                         false,
                          1,
                          0,
                          0,
@@ -165,6 +170,7 @@ struct ExtractionTurn
                          // target
                          false,
                          TRAVEL_MODE_DRIVING,
+                         false,
                          false,
                          false,
                          1,
@@ -194,6 +200,7 @@ struct ExtractionTurn
     const TravelMode source_mode;
     const bool source_is_motorway;
     const bool source_is_link;
+    const bool source_is_roundabout;
     const int source_number_of_lanes;
     const int source_highway_turn_classification;
     const int source_access_turn_classification;
@@ -205,6 +212,7 @@ struct ExtractionTurn
     const TravelMode target_mode;
     const bool target_is_motorway;
     const bool target_is_link;
+    const bool target_is_roundabout;
     const int target_number_of_lanes;
     const int target_highway_turn_classification;
     const int target_access_turn_classification;

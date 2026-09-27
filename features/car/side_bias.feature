@@ -6,6 +6,7 @@ Feature: Testbot - side bias
         """
         profile.properties.left_hand_driving = true
         profile.turn_bias = 1.075
+        profile.oncoming_turn_penalty = 0
         """
         And the node map
             """
@@ -29,6 +30,7 @@ Feature: Testbot - side bias
         """
         profile.properties.left_hand_driving = true
         profile.turn_bias = 1 / 1.075
+        profile.oncoming_turn_penalty = 0
         """
         And the node map
             """
@@ -94,7 +96,7 @@ Feature: Testbot - side bias
         When I route I should get
             | from | to | route    | driving_side   | time       |
             | d    | a  | bd,ab,ab | left,left,left | 24s +-1    |
-            | d    | c  | bd,bc,bc | left,left,left | 27s +-1    |
+            | d    | c  | bd,bc,bc | left,left,left | 29.5s +-1  |
 
 
     Scenario: Left-hand bias via OSM tags
@@ -114,7 +116,7 @@ Feature: Testbot - side bias
 
         When I route I should get
             | from | to | route    | driving_side      | time       |
-            | d    | a  | bd,ab,ab | right,right,right | 27s +-1    |
+            | d    | a  | bd,ab,ab | right,right,right | 29.5s +-1  |
             | d    | c  | bd,bc,bc | right,right,right | 24s +-1    |
 
     Scenario: changing sides
@@ -141,3 +143,49 @@ Feature: Testbot - side bias
             | from | to | route       | driving_side           |
             | d    | a  | cd,bc,ab,ab | right,right,left,left  |
             | a    | d  | ab,bc,cd,cd | left,right,right,right |
+
+    Scenario: Turning across oncoming traffic costs the oncoming penalty
+        Given the profile file "car" initialized with
+        """
+        profile.oncoming_turn_penalty = 10
+        """
+        And the node map
+            """
+            a   b   c
+
+                d
+            """
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | bd    |
+
+        # Traffic drives on the right here, so bd,ab turns across it and bd,bc
+        # turns away from it. Only the crossing turn pays.
+        When I route I should get
+            | from | to | route    | time      | driving_side      |
+            | d    | a  | bd,ab,ab | 37.5s +-1 | right,right,right |
+            | d    | c  | bd,bc,bc | 24s +-1   | right,right,right |
+
+    Scenario: The oncoming penalty can be switched off
+        Given the profile file "car" initialized with
+        """
+        profile.oncoming_turn_penalty = 0
+        """
+        And the node map
+            """
+            a   b   c
+
+                d
+            """
+        And the ways
+            | nodes |
+            | ab    |
+            | bc    |
+            | bd    |
+
+        When I route I should get
+            | from | to | route    | time    | driving_side      |
+            | d    | a  | bd,ab,ab | 27s +-1 | right,right,right |
+            | d    | c  | bd,bc,bc | 24s +-1 | right,right,right |

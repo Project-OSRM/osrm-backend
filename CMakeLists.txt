@@ -327,6 +327,10 @@ find_package(RapidJSON CONFIG REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 find_package(flatbuffers CONFIG REQUIRED)
 
+# Driving-side classifier. Compiled, not header-only: its wasm core is shipped
+# as transpiled C and built once by the overlay port.
+find_package(gauche CONFIG REQUIRED)
+
 # Generate flatbuffers C++ headers from .fbs schemas at build time.
 # This removes the need to commit pre-generated headers and pin the
 # flatbuffers version — any compatible flatc will regenerate them.
@@ -505,6 +509,7 @@ set(EXTRACTOR_LIBRARIES
     ${OSMIUM_LIBRARIES}
     ${TBB_LIBRARIES}
     ${ZLIB_LIBRARY}
+    gauche::gauche_cpp
     ${MAYBE_COVERAGE_LIBRARIES})
 set(PARTITIONER_LIBRARIES
     ${BOOST_ENGINE_LIBRARIES}
