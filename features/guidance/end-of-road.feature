@@ -20,9 +20,9 @@ Feature: End Of Road Instructions
             | ef     | primary |
 
        When I route I should get
-            | waypoints | route       | turns                           |
-            | a,c       | aeb,cbd,cbd | depart,end of road left,arrive  |
-            | a,d       | aeb,cbd,cbd | depart,end of road right,arrive |
+            | waypoints | route       | turns                           | locations |
+            | a,c       | aeb,cbd,cbd | depart,end of road left,arrive  | a,b,c     |
+            | a,d       | aeb,cbd,cbd | depart,end of road right,arrive | a,b,d     |
 
     # http://map.project-osrm.org/?z=18&center=38.906632%2C-77.008265&loc=38.906463%2C-77.007621&loc=38.906822%2C-77.008860&hl=en&alt=0
     Scenario: End of Road, unnamed oneway
@@ -40,8 +40,8 @@ Feature: End Of Road Instructions
             | ef     | primary | turn | yes    |
 
        When I route I should get
-            | waypoints | route  | turns                           |
-            | a,d       | road,, | depart,end of road right,arrive |
+            | waypoints | route  | turns                           | locations |
+            | a,d       | road,, | depart,end of road right,arrive | a,?,d     |
 
     @3605
     Scenario: End of Road with oneway through street
@@ -59,8 +59,8 @@ Feature: End Of Road Instructions
             | ef     | primary | no     |
 
        When I route I should get
-            | waypoints | route       | turns                           |
-            | a,d       | aeb,cbd,cbd | depart,end of road right,arrive |
+            | waypoints | route       | turns                           | locations |
+            | a,d       | aeb,cbd,cbd | depart,end of road right,arrive | a,b,d     |
 
     @3605
     Scenario: End of Road fromnameless onto through street
@@ -78,8 +78,8 @@ Feature: End Of Road Instructions
             | ef     | primary | no     | ef   |
 
        When I route I should get
-            | waypoints | route    | turns                           |
-            | a,d       | ,cbd,cbd | depart,end of road right,arrive |
+            | waypoints | route    | turns                           | locations |
+            | a,d       | ,cbd,cbd | depart,end of road right,arrive | a,?,d     |
 
     Scenario: End of Road with three streets
         Given the node map
@@ -97,9 +97,9 @@ Feature: End Of Road Instructions
             | ef     | primary |
 
        When I route I should get
-            | waypoints | route     | turns                           |
-            | a,c       | aeb,cb,cb | depart,end of road left,arrive  |
-            | a,d       | aeb,bd,bd | depart,end of road right,arrive |
+            | waypoints | route     | turns                           | locations |
+            | a,c       | aeb,cb,cb | depart,end of road left,arrive  | a,b,c     |
+            | a,d       | aeb,bd,bd | depart,end of road right,arrive | a,b,d     |
 
     Scenario: End of Road with three streets, slightly angled
         Given the node map
@@ -117,9 +117,9 @@ Feature: End Of Road Instructions
             | ef     | primary |
 
        When I route I should get
-            | waypoints | route     | turns                           |
-            | a,c       | aeb,cb,cb | depart,end of road left,arrive  |
-            | a,d       | aeb,bd,bd | depart,end of road right,arrive |
+            | waypoints | route     | turns                           | locations |
+            | a,c       | aeb,cb,cb | depart,end of road left,arrive  | a,b,c     |
+            | a,d       | aeb,bd,bd | depart,end of road right,arrive | a,b,d     |
 
     Scenario: End of Road with three streets, slightly angled
         Given the node map
@@ -137,9 +137,9 @@ Feature: End Of Road Instructions
             | bd     | primary |
 
        When I route I should get
-            | waypoints | route     | turns                           |
-            | a,c       | aeb,cb,cb | depart,end of road left,arrive  |
-            | a,d       | aeb,bd,bd | depart,end of road right,arrive |
+            | waypoints | route     | turns                           | locations |
+            | a,c       | aeb,cb,cb | depart,end of road left,arrive  | a,b,c     |
+            | a,d       | aeb,bd,bd | depart,end of road right,arrive | a,b,d     |
 
     Scenario: End of Road with through street, slightly angled
         Given the node map
@@ -156,9 +156,9 @@ Feature: End Of Road Instructions
             | cbd    | primary |
 
        When I route I should get
-            | waypoints | route       | turns                           |
-            | a,c       | aeb,cbd,cbd | depart,end of road left,arrive  |
-            | a,d       | aeb,cbd,cbd | depart,end of road right,arrive |
+            | waypoints | route       | turns                           | locations |
+            | a,c       | aeb,cbd,cbd | depart,end of road left,arrive  | a,b,c     |
+            | a,d       | aeb,cbd,cbd | depart,end of road right,arrive | a,b,d     |
 
     Scenario: End of Road with through street, slightly angled
         Given the node map
@@ -175,9 +175,9 @@ Feature: End Of Road Instructions
             | cbd    | primary |
 
        When I route I should get
-            | waypoints | route       | turns                           |
-            | a,c       | aeb,cbd,cbd | depart,end of road left,arrive  |
-            | a,d       | aeb,cbd,cbd | depart,end of road right,arrive |
+            | waypoints | route       | turns                           | locations |
+            | a,c       | aeb,cbd,cbd | depart,end of road left,arrive  | a,b,c     |
+            | a,d       | aeb,cbd,cbd | depart,end of road right,arrive | a,b,d     |
 
     Scenario: End of Road with two ramps - prefer ramp over end of road
         Given the node map
@@ -195,9 +195,9 @@ Feature: End Of Road Instructions
             | bd     | motorway_link |
 
        When I route I should get
-            | waypoints | route     | turns                       |
-            | a,c       | aeb,bc,bc | depart,on ramp left,arrive  |
-            | a,d       | aeb,bd,bd | depart,on ramp right,arrive |
+            | waypoints | route     | turns                       | locations |
+            | a,c       | aeb,bc,bc | depart,on ramp left,arrive  | a,b,c     |
+            | a,d       | aeb,bd,bd | depart,on ramp right,arrive | a,b,d     |
 
     # http://www.openstreetmap.org/#map=19/52.49907/13.41836
     @end-of-road @negative
@@ -232,5 +232,5 @@ Feature: End Of Road Instructions
             | pg           | secondary   | kstr  | yes    |
 
         When I route I should get
-            | waypoints | route                | turns                               | #                                                      |
-            | k,l       | skal,kotti,skal,skal | depart,turn right,turn right,arrive | # could be a case to find better turn instructions for |
+            | waypoints | route                | turns                               | #                                                      | locations |
+            | k,l       | skal,kotti,skal,skal | depart,turn right,turn right,arrive | # could be a case to find better turn instructions for | k,k,k,l   |

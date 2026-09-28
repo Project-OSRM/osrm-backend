@@ -50,5 +50,5 @@ Feature: General Post-Processing related features
             | fghij |
 
         When I route I should get
-            | waypoints | route |
-            | a,j       | ef,ef |
+            | waypoints | route | locations |
+            | a,j       | ef,ef | |
