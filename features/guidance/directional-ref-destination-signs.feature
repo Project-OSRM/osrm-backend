@@ -29,11 +29,11 @@ Feature: Destination Signs
           | mn    | MN   | Berlin         | A1              | A1                      |                          | Berlin              |  Hamburg             | no     | mis-tagged destination: not a oneway |
          
         When I route I should get
-          | from | to | route                                                     | destinations                                    | ref   | #                         |
-          | a    | b  | AB,AB                                                     | A1: Berlin,A1: Berlin                           | ,     |                           |
-          | d    | c  | CD,CD                                                     | A2: Hamburg,A2: Hamburg                         | ,     |                           |
-          | e    | f  | EF,EF                                                     | A1: Berlin,A1: Berlin                           | ,     |                           |
-          | h    | g  | GH,GH                                                     | A2: Hamburg,A2: Hamburg                         | ,     |                           |
-          | i    | j  | IJ,IJ                                                     | A1: Berlin,A1: Berlin                           | ,     |                           |
-          | l    | k  | KL,KL                                                     | A2: Hamburg,A2: Hamburg                         | ,     |                           |
-          | m    | n  | MN,MN                                                     | ,                                               | ,     | guard against mis-tagging |
+          | from | to | route                                                     | destinations                                    | ref   | # | locations |
+          | a    | b  | AB,AB                                                     | A1: Berlin,A1: Berlin                           | ,     |   | a,b       |
+          | d    | c  | CD,CD                                                     | A2: Hamburg,A2: Hamburg                         | ,     |   | d,c       |
+          | e    | f  | EF,EF                                                     | A1: Berlin,A1: Berlin                           | ,     |   | e,f       |
+          | h    | g  | GH,GH                                                     | A2: Hamburg,A2: Hamburg                         | ,     |   | h,g       |
+          | i    | j  | IJ,IJ                                                     | A1: Berlin,A1: Berlin                           | ,     |   | i,j       |
+          | l    | k  | KL,KL                                                     | A2: Hamburg,A2: Hamburg                         | ,     |   | l,k       |
+          | m    | n  | MN,MN                                                     | ,                                               | ,     | guard against mis-tagging | m,n       |
