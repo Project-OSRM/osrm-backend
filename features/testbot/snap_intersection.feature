@@ -332,9 +332,34 @@ Feature: Snapping at intersections
         When I route I should get
             | from | to | code    |
             | a    | e  | NoRoute |
-            | b    | e  | NoRoute |
             | e    | a  | NoRoute |
-            | d    | a  | NoRoute |
+
+
+    # CH drops the turns out of a node with a closed segment, so b and d can't leave theirs
+    @no_ch
+    Scenario: Snapping to source node with previous section of segment blocked, MLD
+        Given the node map
+            """
+            a<--b---c---d-->e
+            """
+
+        And the ways
+            | nodes |
+            | abc   |
+            | cde   |
+
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        And the speed file
+            """
+            1,2,0
+            5,4,0
+            """
+
+        When I route I should get
+            | from | to | route       | time | weight |
+            | b    | e  | abc,cde,cde | 60s  | 60     |
+            | d    | a  | cde,abc,abc | 60s  | 60     |
 
 
     Scenario: Only snaps to one of many equidistant nearest locations

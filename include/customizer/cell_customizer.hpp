@@ -211,6 +211,10 @@ class CellCustomizer
             }
 
             const auto &data = graph.GetEdgeData(edge);
+            if (data.weight == INVALID_EDGE_WEIGHT)
+            {
+                continue;
+            }
             if (data.forward && (first_level || partition.GetCell(level - 1, node) !=
                                                     partition.GetCell(level - 1, to)))
             {

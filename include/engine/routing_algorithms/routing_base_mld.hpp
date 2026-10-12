@@ -281,6 +281,51 @@ retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward
     return packed_path;
 }
 
+// A node holding a closed (zero-speed) segment has INVALID_EDGE_WEIGHT as its node weight, so no
+// path can run through it. A path that starts on it past the closure must still be able to leave
+// it. Its seed weight is the negated raw sum of the segment weights up to the phantom, closed
+// segments counting INVALID_SEGMENT_WEIGHT, so leaving costs the raw sum over all segments, which
+// leaves the weight from the phantom on.
+//
+// The seed weight also tells which closed segments lie after the phantom, which block leaving: a
+// segment after it starts no earlier than the phantom, while one before it ends before the
+// phantom, so starts INVALID_SEGMENT_WEIGHT earlier. An open-area approach weight makes the seed
+// weight larger, but never by anywhere near that much.
+//
+// Returns INVALID_EDGE_WEIGHT if the node can't be left.
+template <typename Algorithm>
+EdgeWeight getLeavingNodeWeight(const DataFacade<Algorithm> &facade,
+                                const NodeID node,
+                                const bool is_source,
+                                const EdgeWeight seed_weight)
+{
+    const auto node_weight = facade.GetNodeWeight(node);
+    if (node_weight != INVALID_EDGE_WEIGHT || !is_source)
+    {
+        return node_weight;
+    }
+
+    const auto phantom_offset = EdgeWeight{0} - seed_weight;
+    const auto leaving_weight = [phantom_offset](const auto &weights)
+    {
+        EdgeWeight weight_before{0};
+        for (const SegmentWeight weight : weights)
+        {
+            if (weight == INVALID_SEGMENT_WEIGHT && weight_before >= phantom_offset)
+            {
+                return INVALID_EDGE_WEIGHT;
+            }
+            weight_before += alias_cast<EdgeWeight>(weight);
+        }
+        return weight_before;
+    };
+
+    const auto geometry_index = facade.GetGeometryIndex(node);
+    return geometry_index.forward
+               ? leaving_weight(facade.GetUncompressedForwardWeights(geometry_index.id))
+               : leaving_weight(facade.GetUncompressedReverseWeights(geometry_index.id));
+}
+
 template <typename Heap>
 void insertOrUpdate(Heap &heap,
                     const NodeID node,
@@ -306,6 +351,14 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                         const typename Heap::HeapNode &heapNode,
                         const Args &...args)
 {
+    if constexpr (DIRECTION == REVERSE_DIRECTION)
+    {
+        if (!canLeaveTargetSeed(facade, heapNode))
+        {
+            return;
+        }
+    }
+
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
     const auto &metric = facade.GetCellMetric();
@@ -422,7 +475,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 checkParentCellRestriction(partition.GetCell(level + 1, to), args...))
             {
                 const auto node_weight =
-                    facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
+                    DIRECTION == FORWARD_DIRECTION
+                        ? getLeavingNodeWeight(facade,
+                                               heapNode.node,
+                                               heapNode.data.parent == heapNode.node,
+                                               heapNode.weight)
+                        : facade.GetNodeWeight(to);
+                if (node_weight == INVALID_EDGE_WEIGHT)
+                {
+                    continue;
+                }
                 const auto turn_penalty = facade.GetWeightPenaltyForEdgeID(edge_data.turn_id);
 
                 // TODO: BOOST_ASSERT(edge_data.weight == node_weight + turn_penalty);
@@ -473,8 +535,17 @@ void routingStep(const DataFacade<Algorithm> &facade,
         auto reverse_weight = reverseHeapNode->weight;
         auto path_weight = weight + reverse_weight;
 
+        const auto &source_node = DIRECTION == FORWARD_DIRECTION ? heapNode : *reverseHeapNode;
+        const auto &target_node = DIRECTION == FORWARD_DIRECTION ? *reverseHeapNode : heapNode;
+
         if (!shouldForceStep(force_step_nodes, heapNode, *reverseHeapNode) &&
-            (path_weight >= EdgeWeight{0}) && (path_weight < path_upper_bound))
+            (path_weight >= EdgeWeight{0}) && (path_weight < path_upper_bound) &&
+            canMeetAtNode(facade,
+                          heapNode.node,
+                          source_node.data.parent == source_node.node,
+                          source_node.weight,
+                          target_node.data.parent == target_node.node,
+                          target_node.weight))
         {
             middle_node = heapNode.node;
             path_upper_bound = path_weight;
