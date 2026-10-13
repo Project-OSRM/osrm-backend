@@ -78,7 +78,8 @@ local function to_number_uint(s)
   return nil
 end
 
-local function first_width(way, keys)
+-- Greedily returns the first positive width found among the given tag keys.
+local function find_first_width(way, keys)
   for _, key in ipairs(keys) do
     local width = Measure.get_max_width(way:get_value_by_key(key))
     if width and width > 0 then
@@ -87,29 +88,31 @@ local function first_width(way, keys)
   end
 end
 
-local function sum_width_lanes(value)
+-- Sums a "|"-separated per-lane width list; nil if no lane has a positive width.
+local function sum_lane_width(value)
   if not value then
     return nil
   end
 
   local total = 0
-  local found = false
   for lane_width in (value .. '|'):gmatch("([^|]*)|") do
     local width = Measure.get_max_width(lane_width)
     if width and width > 0 then
       total = total + width
-      found = true
     end
   end
 
-  if found then
-    return total
+  -- only positive widths are added, so a zero sum means nothing was parsed
+  if total == 0 then
+    return nil
   end
+  return total
 end
 
-local function first_width_lanes(way, keys)
+-- Greedily returns the first positive per-lane width sum among the given tag keys.
+local function find_first_lane_width(way, keys)
   for _, key in ipairs(keys) do
-    local width = sum_width_lanes(way:get_value_by_key(key))
+    local width = sum_lane_width(way:get_value_by_key(key))
     if width and width > 0 then
       return width
     end
@@ -117,26 +120,26 @@ local function first_width_lanes(way, keys)
 end
 
 function Guidance.get_road_width(way)
-  local width = first_width(way, { 'width:carriageway', 'width', 'est_width' })
+  local width = find_first_width(way, { 'width:carriageway', 'width', 'est_width' })
   if width then
     return width
   end
 
-  local forward_width = first_width(way, { 'width:forward' })
-  local backward_width = first_width(way, { 'width:backward' })
+  local forward_width = find_first_width(way, { 'width:forward' })
+  local backward_width = find_first_width(way, { 'width:backward' })
 
   if forward_width or backward_width then
     return (forward_width or 0) + (backward_width or 0)
   end
 
-  forward_width = first_width_lanes(way, { 'width:lanes:forward' })
-  backward_width = first_width_lanes(way, { 'width:lanes:backward' })
+  forward_width = find_first_lane_width(way, { 'width:lanes:forward' })
+  backward_width = find_first_lane_width(way, { 'width:lanes:backward' })
 
   if forward_width or backward_width then
     return (forward_width or 0) + (backward_width or 0)
   end
 
-  width = first_width_lanes(way, { 'width:lanes' })
+  width = find_first_lane_width(way, { 'width:lanes' })
   if width then
     return width
   end
