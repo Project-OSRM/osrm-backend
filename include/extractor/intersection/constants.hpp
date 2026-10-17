@@ -22,6 +22,8 @@ const double constexpr PRIORITY_DISTINCTION_FACTOR = 1.75;
 
 // the lane width we assume for a single lane
 const auto constexpr ASSUMED_LANE_WIDTH = 3.25;
+// cap pathological width tags and lane-derived widths when approximating a road surface
+const auto constexpr MAX_ROAD_SURFACE_WIDTH = 80.;
 
 // how far apart can roads be at the most, when thinking about merging them?
 const auto constexpr MERGABLE_ANGLE_DIFFERENCE = 95.0;
