@@ -118,14 +118,20 @@ end
 
 local function sum_directional_width(forward_width,
                                      backward_width,
+                                     both_ways_width,
                                      is_forward_oneway,
                                      is_reverse_oneway)
+  local width
   if is_forward_oneway then
-    return forward_width
+    width = forward_width
   elseif is_reverse_oneway then
-    return backward_width
+    width = backward_width
   elseif forward_width and backward_width then
-    return forward_width + backward_width
+    width = forward_width + backward_width
+  end
+
+  if width then
+    return width + (both_ways_width or 0)
   end
 end
 
@@ -136,11 +142,17 @@ function Guidance.get_road_width(way, is_forward_oneway, is_reverse_oneway)
     return width
   end
 
+  local all_lane_width = find_first_lane_width(way, { 'width:lanes' })
+  if all_lane_width then
+    return all_lane_width
+  end
+
+  local both_ways_width = find_first_lane_width(way, { 'width:lanes:both_ways' })
   local forward_width = find_first_width(way, { 'width:forward' })
   local backward_width = find_first_width(way, { 'width:backward' })
 
   width = sum_directional_width(
-    forward_width, backward_width, is_forward_oneway, is_reverse_oneway)
+    forward_width, backward_width, both_ways_width, is_forward_oneway, is_reverse_oneway)
   if width then
     return width
   end
@@ -148,16 +160,8 @@ function Guidance.get_road_width(way, is_forward_oneway, is_reverse_oneway)
   forward_width = find_first_lane_width(way, { 'width:lanes:forward' })
   backward_width = find_first_lane_width(way, { 'width:lanes:backward' })
 
-  width = sum_directional_width(
-    forward_width, backward_width, is_forward_oneway, is_reverse_oneway)
-  if width then
-    return width
-  end
-
-  width = find_first_lane_width(way, { 'width:lanes' })
-  if width then
-    return width
-  end
+  return sum_directional_width(
+    forward_width, backward_width, both_ways_width, is_forward_oneway, is_reverse_oneway)
 end
 
 

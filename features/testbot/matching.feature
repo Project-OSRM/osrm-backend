@@ -263,6 +263,31 @@ Feature: Basic Map Matching
             | abcd  |        | motorway |            |               | 3.5\|3.5           |                      |
             | abcd  |        | primary  | roundabout |               | 3.5\|3.5           |                      |
 
+    Scenario Outline: Testbot - Shared and complete lane widths cover the road surface
+        Given a grid size of 4 meters
+        Given the node map
+            """
+            a b c d
+
+
+            1 2 3 4
+            e f g h
+            """
+
+        And the ways
+            | nodes | oneway | width:lanes | width:lanes:forward | width:lanes:backward | width:lanes:both_ways |
+            | abcd  | no     | <all_width> | <forward_width>     | <backward_width>    | <both_ways_width>    |
+            | efgh  | no     |             |                     |                     |                      |
+
+        When I match I should get
+            | trace | matchings |
+            | 1234  | abcd      |
+
+        Examples:
+            | all_width    | forward_width | backward_width | both_ways_width |
+            |               | 3.5           | 3.5            | 19              |
+            | 3.5\|3.5\|19 | 3.5           | 3.5            |                 |
+
     Scenario: Testbot - Map matching with oneways
         Given a grid size of 10 meters
         Given the node map

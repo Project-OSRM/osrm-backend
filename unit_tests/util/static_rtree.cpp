@@ -46,14 +46,10 @@ struct RoadSurfaceDataFacade final
       MockAlgorithmDataFacade<osrm::engine::routing_algorithms::ch::Algorithm>
 {
     double GetRoadWidth(const NodeID id) const override final
-    {
-        return id < road_widths.size() ? road_widths[id] : 0.;
-    }
+    { return id < road_widths.size() ? road_widths[id] : 0.; }
 
     std::uint8_t GetNumberOfLanes(const NodeID id) const override final
-    {
-        return id < lane_counts.size() ? lane_counts[id] : 0;
-    }
+    { return id < lane_counts.size() ? lane_counts[id] : 0; }
 
     double GetMaxRoadHalfWidth() const override final
     {

@@ -249,17 +249,19 @@ BOOST_AUTO_TEST_CASE(lane_count_changes_do_not_block_compression)
     test::MockScriptingEnvironment scripting_environment;
 
     const auto check_lane_count_order =
-        [&compressor, &scripting_environment](const std::uint8_t first,
-                                              const std::uint8_t second,
-                                              const std::uint8_t third)
+        [&compressor, &scripting_environment](
+            const std::uint8_t first, const std::uint8_t second, const std::uint8_t third)
     {
         std::vector<TurnRestriction> restrictions;
         CompressedEdgeContainer container;
         std::vector<NodeBasedEdgeAnnotation> annotations(3);
         std::vector<UnresolvedManeuverOverride> maneuver_overrides;
-        std::vector<InputEdge> edges = {MakeUnitEdge(0, 1), MakeUnitEdge(1, 0),
-                                        MakeUnitEdge(1, 2), MakeUnitEdge(2, 1),
-                                        MakeUnitEdge(2, 3), MakeUnitEdge(3, 2)};
+        std::vector<InputEdge> edges = {MakeUnitEdge(0, 1),
+                                        MakeUnitEdge(1, 0),
+                                        MakeUnitEdge(1, 2),
+                                        MakeUnitEdge(2, 1),
+                                        MakeUnitEdge(2, 3),
+                                        MakeUnitEdge(3, 2)};
 
         annotations[0].number_of_lanes = first;
         annotations[1].number_of_lanes = second;
