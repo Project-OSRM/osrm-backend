@@ -123,7 +123,8 @@ end
 
 -- set the road classification based on guidance globals configuration
 function WayHandlers.classification(profile,way,result,data)
-  set_classification(data.highway,result,way)
+  set_classification(
+      data.highway, result, way, data.is_forward_oneway, data.is_reverse_oneway)
 end
 
 -- handle destination tags
@@ -618,6 +619,8 @@ function WayHandlers.oneway(profile,way,result,data)
     end
   end
 
+  data.is_forward_oneway = false
+  data.is_reverse_oneway = false
   data.oneway = oneway
 
   if oneway == "-1" then

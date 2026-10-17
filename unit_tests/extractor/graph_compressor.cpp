@@ -10,6 +10,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
 #include <unordered_set>
 #include <vector>
 
@@ -244,37 +245,52 @@ BOOST_AUTO_TEST_CASE(direction_changes)
 
 BOOST_AUTO_TEST_CASE(lane_count_changes_do_not_block_compression)
 {
-    //
-    // 0---1---2
-    //
     GraphCompressor compressor;
-
-    std::vector<TurnRestriction> restrictions;
-    CompressedEdgeContainer container;
-    std::vector<NodeBasedEdgeAnnotation> annotations(2);
     test::MockScriptingEnvironment scripting_environment;
-    std::vector<UnresolvedManeuverOverride> maneuver_overrides;
 
-    std::vector<InputEdge> edges = {
-        MakeUnitEdge(0, 1), MakeUnitEdge(1, 0), MakeUnitEdge(1, 2), MakeUnitEdge(2, 1)};
+    const auto check_lane_count_order =
+        [&compressor, &scripting_environment](const std::uint8_t first,
+                                              const std::uint8_t second,
+                                              const std::uint8_t third)
+    {
+        std::vector<TurnRestriction> restrictions;
+        CompressedEdgeContainer container;
+        std::vector<NodeBasedEdgeAnnotation> annotations(3);
+        std::vector<UnresolvedManeuverOverride> maneuver_overrides;
+        std::vector<InputEdge> edges = {MakeUnitEdge(0, 1), MakeUnitEdge(1, 0),
+                                        MakeUnitEdge(1, 2), MakeUnitEdge(2, 1),
+                                        MakeUnitEdge(2, 3), MakeUnitEdge(3, 2)};
 
-    annotations[0].number_of_lanes = 3;
-    annotations[1].number_of_lanes = 2;
-    edges[2].data.annotation_data = edges[3].data.annotation_data = 1;
+        annotations[0].number_of_lanes = first;
+        annotations[1].number_of_lanes = second;
+        annotations[2].number_of_lanes = third;
+        edges[2].data.annotation_data = edges[3].data.annotation_data = 1;
+        edges[4].data.annotation_data = edges[5].data.annotation_data = 2;
 
-    Graph graph(3, edges);
-    BOOST_CHECK(compatible(graph, annotations, 0, 2));
+        Graph graph(4, edges);
+        BOOST_CHECK(compatible(graph, annotations, 0, 2));
 
-    compressor.Compress(
-        scripting_environment, restrictions, maneuver_overrides, graph, annotations, container);
+        compressor.Compress(
+            scripting_environment, restrictions, maneuver_overrides, graph, annotations, container);
 
-    BOOST_CHECK_EQUAL(graph.FindEdge(0, 1), SPECIAL_EDGEID);
-    BOOST_CHECK_EQUAL(graph.FindEdge(1, 2), SPECIAL_EDGEID);
-    const auto edge = graph.FindEdge(0, 2);
-    BOOST_REQUIRE(edge != SPECIAL_EDGEID);
-    BOOST_CHECK_EQUAL(annotations[graph.GetEdgeData(edge).annotation_data].number_of_lanes, 2);
-    BOOST_CHECK_EQUAL(annotations[graph.GetEdgeData(edge).annotation_data].road_width,
-                      static_cast<std::uint16_t>(3 * intersection::ASSUMED_LANE_WIDTH * 100.));
+        BOOST_CHECK_EQUAL(graph.FindEdge(0, 1), SPECIAL_EDGEID);
+        BOOST_CHECK_EQUAL(graph.FindEdge(1, 2), SPECIAL_EDGEID);
+        BOOST_CHECK_EQUAL(graph.FindEdge(2, 3), SPECIAL_EDGEID);
+        const auto edge = graph.FindEdge(0, 3);
+        BOOST_REQUIRE(edge != SPECIAL_EDGEID);
+        const auto &annotation = annotations[graph.GetEdgeData(edge).annotation_data];
+        BOOST_CHECK_EQUAL(annotation.number_of_lanes, 2);
+        const auto widest_lane_count = std::max(first, std::max(second, third));
+        BOOST_CHECK_EQUAL(annotation.road_width,
+                          static_cast<std::uint16_t>(widest_lane_count *
+                                                     intersection::ASSUMED_LANE_WIDTH * 100.));
+        BOOST_CHECK(annotation.road_width_is_inferred);
+    };
+
+    check_lane_count_order(3, 2, 2);
+    check_lane_count_order(2, 2, 3);
+    check_lane_count_order(2, 3, 4);
+    check_lane_count_order(4, 3, 2);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

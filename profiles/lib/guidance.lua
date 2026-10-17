@@ -116,7 +116,21 @@ local function find_first_lane_width(way, keys)
   end
 end
 
-function Guidance.get_road_width(way)
+local function sum_directional_width(forward_width,
+                                     backward_width,
+                                     is_forward_oneway,
+                                     is_reverse_oneway)
+  if is_forward_oneway then
+    return forward_width
+  elseif is_reverse_oneway then
+    return backward_width
+  elseif forward_width and backward_width then
+    return forward_width + backward_width
+  end
+end
+
+function Guidance.get_road_width(way, is_forward_oneway, is_reverse_oneway)
+
   local width = find_first_width(way, { 'width:carriageway', 'width', 'est_width' })
   if width then
     return width
@@ -125,15 +139,19 @@ function Guidance.get_road_width(way)
   local forward_width = find_first_width(way, { 'width:forward' })
   local backward_width = find_first_width(way, { 'width:backward' })
 
-  if forward_width and backward_width then
-    return forward_width + backward_width
+  width = sum_directional_width(
+    forward_width, backward_width, is_forward_oneway, is_reverse_oneway)
+  if width then
+    return width
   end
 
   forward_width = find_first_lane_width(way, { 'width:lanes:forward' })
   backward_width = find_first_lane_width(way, { 'width:lanes:backward' })
 
-  if forward_width and backward_width then
-    return forward_width + backward_width
+  width = sum_directional_width(
+    forward_width, backward_width, is_forward_oneway, is_reverse_oneway)
+  if width then
+    return width
   end
 
   width = find_first_lane_width(way, { 'width:lanes' })
@@ -143,7 +161,7 @@ function Guidance.get_road_width(way)
 end
 
 
-function Guidance.set_classification (highway, result, input_way)
+function Guidance.set_classification (highway, result, input_way, is_forward_oneway, is_reverse_oneway)
   if motorway_types[highway] then
     result.road_classification.motorway_class = true
   end
@@ -207,7 +225,8 @@ function Guidance.set_classification (highway, result, input_way)
     end
   end
 
-  local road_width = Guidance.get_road_width(input_way)
+  local road_width =
+      Guidance.get_road_width(input_way, is_forward_oneway, is_reverse_oneway)
   if road_width then
     result.road_width = road_width
   end
