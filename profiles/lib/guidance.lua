@@ -97,15 +97,12 @@ local function sum_lane_width(value)
   local total = 0
   for lane_width in (value .. '|'):gmatch("([^|]*)|") do
     local width = Measure.get_max_width(lane_width)
-    if width and width > 0 then
-      total = total + width
+    if not width or width <= 0 then
+      return nil
     end
+    total = total + width
   end
 
-  -- only positive widths are added, so a zero sum means nothing was parsed
-  if total == 0 then
-    return nil
-  end
   return total
 end
 
@@ -128,15 +125,15 @@ function Guidance.get_road_width(way)
   local forward_width = find_first_width(way, { 'width:forward' })
   local backward_width = find_first_width(way, { 'width:backward' })
 
-  if forward_width or backward_width then
-    return (forward_width or 0) + (backward_width or 0)
+  if forward_width and backward_width then
+    return forward_width + backward_width
   end
 
   forward_width = find_first_lane_width(way, { 'width:lanes:forward' })
   backward_width = find_first_lane_width(way, { 'width:lanes:backward' })
 
-  if forward_width or backward_width then
-    return (forward_width or 0) + (backward_width or 0)
+  if forward_width and backward_width then
+    return forward_width + backward_width
   end
 
   width = find_first_lane_width(way, { 'width:lanes' })
@@ -144,6 +141,7 @@ function Guidance.get_road_width(way)
     return width
   end
 end
+
 
 function Guidance.set_classification (highway, result, input_way)
   if motorway_types[highway] then

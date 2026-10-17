@@ -187,6 +187,53 @@ Feature: Basic Map Matching
             | width:lanes           |       |       |                   |               |                | 6.5\|6.5\|6.5\|6.5 |                     |                      |
             | width:lanes directions |       |       |                   |               |                |                     | 13                  | 13                   |
             | lanes fallback        | 24    |       |                   |               |                |                     |                     |                      |
+    Scenario: Testbot - Partial lane widths use lane-count fallback
+        Given a grid size of 2 meters
+        Given the node map
+            """
+            a b c d
+
+
+            1 2 3 4
+
+            e f g h
+            """
+
+        And the ways
+            | nodes | oneway | lanes | width:lanes |
+            | abcd  | no     | 3     | \|\|3.5       |
+            | efgh  | no     |       |             |
+
+        When I match I should get
+            | trace | matchings |
+            | 1234  | abcd      |
+
+
+    Scenario Outline: Testbot - Incomplete directional widths retain complete lane width
+        Given a grid size of 2 meters
+        Given the node map
+            """
+            a b c d
+
+
+            1 2 3 4
+
+            e f g h
+            """
+
+        And the ways
+            | nodes | oneway | width:lanes | width:forward | width:backward | width:lanes:forward | width:lanes:backward |
+            | abcd  | no     | <width_lanes> | <width_forward> | <width_backward> | <width_lanes_forward> | <width_lanes_backward> |
+            | efgh  | no     |               |                |                 |                       |                        |
+
+        When I match I should get
+            | trace | matchings |
+            | 1234  | abcd      |
+
+        Examples:
+            | source                     | width_lanes   | width_forward | width_backward | width_lanes_forward | width_lanes_backward |
+            | width:forward incomplete  | 3.5\|3.5       | 3.5           |                |                     |                      |
+            | width:lanes:forward incomplete | 3.5\|3.5 |               |                | 3.5                 |                      |
 
     Scenario: Testbot - Map matching with oneways
         Given a grid size of 10 meters
