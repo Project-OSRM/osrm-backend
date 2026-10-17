@@ -235,6 +235,34 @@ Feature: Basic Map Matching
             | width:forward incomplete  | 3.5\|3.5       | 3.5           |                |                     |                      |
             | width:lanes:forward incomplete | 3.5\|3.5 |               |                | 3.5                 |                      |
 
+    Scenario Outline: Testbot - One-way directional widths cover the road surface
+        Given a grid size of 2 meters
+        Given the node map
+            """
+            a b c d
+
+
+            1 2 3 4
+
+            e f g h
+            """
+
+        And the ways
+            | nodes | oneway | highway | junction | width:forward | width:lanes:forward | width:lanes:backward |
+            | <nodes> | <oneway> | <highway> | <junction> | <width_forward> | <width_lanes_forward> | <width_lanes_backward> |
+            | efgh  | no     |         |          |                |                     |                       |
+
+        When I match I should get
+            | trace | matchings |
+            | 1234  | abcd      |
+
+        Examples:
+            | nodes | oneway | highway  | junction   | width_forward | width_lanes_forward | width_lanes_backward |
+            | abcd  | yes    |          |            | 14            |                     |                      |
+            | dcba  | -1     |          |            |               |                     | 7\|7                 |
+            | abcd  |        | motorway |            |               | 3.5\|3.5           |                      |
+            | abcd  |        | primary  | roundabout |               | 3.5\|3.5           |                      |
+
     Scenario: Testbot - Map matching with oneways
         Given a grid size of 10 meters
         Given the node map

@@ -104,12 +104,22 @@ function process_way (profile, way, result)
     result.backward_speed = speed_back
   end
 
+  local is_forward_oneway = false
+  local is_reverse_oneway = false
   if oneway == "no" or oneway == "0" or oneway == "false" then
     -- nothing to do
   elseif oneway == "-1" then
     result.forward_mode = mode.inaccessible
-  elseif oneway == "yes" or oneway == "1" or oneway == "true" or junction == "roundabout" then
+    is_reverse_oneway = true
+  elseif oneway == "yes" or oneway == "1" or oneway == "true" then
     result.backward_mode = mode.inaccessible
+    is_forward_oneway = true
+  elseif oneway == nil and
+         (highway == "motorway" or junction == "roundabout" or junction == "circular") then
+    if junction == "roundabout" then
+      result.backward_mode = mode.inaccessible
+    end
+    is_forward_oneway = true
   end
 
   if highway == 'motorway' then
@@ -126,7 +136,7 @@ function process_way (profile, way, result)
     result.road_classification.num_lanes = lanes
   end
 
-  local road_width = Guidance.get_road_width(way)
+  local road_width = Guidance.get_road_width(way, is_forward_oneway, is_reverse_oneway)
   if road_width then
     result.road_width = road_width
   end

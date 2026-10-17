@@ -226,18 +226,46 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                             : (back_number_of_lanes == 0
                                    ? front_number_of_lanes
                                    : std::min(front_number_of_lanes, back_number_of_lanes));
-                    const auto road_width =
-                        front_number_of_lanes != back_number_of_lanes &&
-                                node_data_container[front_annotation].road_width == 0 &&
-                                node_data_container[back_annotation].road_width == 0
-                            ? encodeRoadWidth(
-                                  std::max(front_number_of_lanes, back_number_of_lanes) *
-                                  intersection::ASSUMED_LANE_WIDTH)
-                            : node_data_container[selected_annotation].road_width;
+                    const auto &front = node_data_container[front_annotation];
+                    const auto &back = node_data_container[back_annotation];
+                    auto road_width = node_data_container[selected_annotation].road_width;
+                    auto road_width_is_inferred =
+                        node_data_container[selected_annotation].road_width_is_inferred;
+
+                    if (front.road_width == 0 && back.road_width == 0 &&
+                        front_number_of_lanes != back_number_of_lanes)
+                    {
+                        road_width = encodeRoadWidth(
+                            std::max(front_number_of_lanes, back_number_of_lanes) *
+                            intersection::ASSUMED_LANE_WIDTH);
+                        road_width_is_inferred = true;
+                    }
+                    else if (front.road_width_is_inferred && back.road_width_is_inferred)
+                    {
+                        road_width = std::max(front.road_width, back.road_width);
+                        road_width_is_inferred = true;
+                    }
+                    else if ((front.road_width_is_inferred && back.road_width == 0) ||
+                             (back.road_width_is_inferred && front.road_width == 0))
+                    {
+                        road_width = std::max(
+                            std::max(front.road_width, back.road_width),
+                            encodeRoadWidth(std::max(front_number_of_lanes, back_number_of_lanes) *
+                                            intersection::ASSUMED_LANE_WIDTH));
+                        road_width_is_inferred = true;
+                    }
+                    else if (front.road_width == back.road_width && front.road_width > 0)
+                    {
+                        road_width = front.road_width;
+                        road_width_is_inferred =
+                            front.road_width_is_inferred && back.road_width_is_inferred;
+                    }
 
                     if (node_data_container[selected_annotation].number_of_lanes ==
                             number_of_lanes &&
-                        node_data_container[selected_annotation].road_width == road_width)
+                        node_data_container[selected_annotation].road_width == road_width &&
+                        node_data_container[selected_annotation].road_width_is_inferred ==
+                            road_width_is_inferred)
                     {
                         return selected_annotation;
                     }
@@ -245,6 +273,7 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                     auto combined_annotation = node_data_container[selected_annotation];
                     combined_annotation.number_of_lanes = number_of_lanes;
                     combined_annotation.road_width = road_width;
+                    combined_annotation.road_width_is_inferred = road_width_is_inferred;
                     node_data_container.push_back(combined_annotation);
                     return static_cast<AnnotationID>(node_data_container.size() - 1);
                 };

@@ -420,7 +420,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
              road_classification.GetNumberOfLanes(),
              encodeRoadWidth(parsed_way.road_width),
              parsed_way.forward_travel_mode,
-             parsed_way.is_left_hand_driving});
+             parsed_way.is_left_hand_driving,
+             false});
         util::for_each_pair(nodes,
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
@@ -458,7 +459,8 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
              road_classification.GetNumberOfLanes(),
              encodeRoadWidth(parsed_way.road_width),
              parsed_way.backward_travel_mode,
-             parsed_way.is_left_hand_driving});
+             parsed_way.is_left_hand_driving,
+             false});
         util::for_each_pair(nodes,
                             [&](const osmium::NodeRef &first_node, const osmium::NodeRef &last_node)
                             {
