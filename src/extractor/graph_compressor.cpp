@@ -235,9 +235,9 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                     if (front.road_width == 0 && back.road_width == 0 &&
                         front_number_of_lanes != back_number_of_lanes)
                     {
-                        road_width = encodeRoadWidth(
-                            std::max(front_number_of_lanes, back_number_of_lanes) *
-                            intersection::ASSUMED_LANE_WIDTH);
+                        road_width =
+                            encodeRoadWidth(std::max(front_number_of_lanes, back_number_of_lanes) *
+                                            intersection::ASSUMED_LANE_WIDTH);
                         road_width_is_inferred = true;
                     }
                     else if (front.road_width_is_inferred && back.road_width_is_inferred)

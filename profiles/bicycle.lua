@@ -464,30 +464,28 @@ end
 function oneway_handler(profile,way,result,data)
   -- oneway
   data.implied_oneway = data.junction == "roundabout" or data.junction == "circular" or data.highway == "motorway"
-  data.is_forward_oneway = false
-  data.is_reverse_oneway = false
+  data.is_forward_oneway = data.oneway == "yes" or data.oneway == "1" or data.oneway == "true" or
+      (data.oneway == nil and data.implied_oneway)
+  data.is_reverse_oneway = data.oneway == "-1"
+  data.is_physical_forward_oneway = data.is_forward_oneway
+  data.is_physical_reverse_oneway = data.is_reverse_oneway
 
   if data.oneway_bicycle == "yes" or data.oneway_bicycle == "1" or data.oneway_bicycle == "true" then
     result.backward_mode = mode.inaccessible
-    data.is_forward_oneway = true
   elseif data.oneway_bicycle == "no" or data.oneway_bicycle == "0" or data.oneway_bicycle == "false" then
    -- prevent other cases
   elseif data.oneway_bicycle == "-1" then
     result.forward_mode = mode.inaccessible
     data.reverse = true
-    data.is_reverse_oneway = true
   elseif data.oneway == "yes" or data.oneway == "1" or data.oneway == "true" then
     result.backward_mode = mode.inaccessible
-    data.is_forward_oneway = true
   elseif data.oneway == "no" or data.oneway == "0" or data.oneway == "false" then
     -- prevent other cases
   elseif data.oneway == "-1" then
     result.forward_mode = mode.inaccessible
     data.reverse = true
-    data.is_reverse_oneway = true
   elseif data.implied_oneway then
     result.backward_mode = mode.inaccessible
-    data.is_forward_oneway = true
   end
 end
 

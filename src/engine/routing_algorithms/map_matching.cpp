@@ -140,7 +140,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
             std::transform(candidates_list[t].begin(),
                            candidates_list[t].end(),
                            emission_log_probabilities[t].begin(),
-                           [&](const PhantomNodeWithDistance &candidate) {
+                           [&](const PhantomNodeWithDistance &candidate)
+                           {
                                return default_emission_log_probability(
                                    getDistanceOutsideRoadSurface(facade, candidate));
                            });
@@ -158,7 +159,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 std::transform(candidates_list[t].begin(),
                                candidates_list[t].end(),
                                emission_log_probabilities[t].begin(),
-                               [&](const PhantomNodeWithDistance &candidate) {
+                               [&](const PhantomNodeWithDistance &candidate)
+                               {
                                    return emission_log_probability(
                                        getDistanceOutsideRoadSurface(facade, candidate));
                                });
@@ -168,7 +170,8 @@ SubMatchingList mapMatching(SearchEngineData<Algorithm> &engine_working_data,
                 std::transform(candidates_list[t].begin(),
                                candidates_list[t].end(),
                                emission_log_probabilities[t].begin(),
-                               [&](const PhantomNodeWithDistance &candidate) {
+                               [&](const PhantomNodeWithDistance &candidate)
+                               {
                                    return default_emission_log_probability(
                                        getDistanceOutsideRoadSurface(facade, candidate));
                                });

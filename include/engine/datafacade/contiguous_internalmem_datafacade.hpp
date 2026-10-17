@@ -432,14 +432,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     { return edge_based_node_data.GetClassData(edge_based_node_id); }
 
     std::uint8_t GetNumberOfLanes(const NodeID edge_based_node_id) const override final
-    {
-        return edge_based_node_data.GetNumberOfLanes(edge_based_node_id);
-    }
+    { return edge_based_node_data.GetNumberOfLanes(edge_based_node_id); }
 
     double GetRoadWidth(const NodeID edge_based_node_id) const override final
-    {
-        return edge_based_node_data.GetRoadWidth(edge_based_node_id);
-    }
+    { return edge_based_node_data.GetRoadWidth(edge_based_node_id); }
 
     double GetMaxRoadHalfWidth() const override final { return m_max_road_half_width; }
 

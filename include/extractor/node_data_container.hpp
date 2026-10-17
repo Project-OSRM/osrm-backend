@@ -85,14 +85,10 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     { return annotation_data[nodes[node_id].annotation_id].classes; }
 
     std::uint8_t GetNumberOfLanes(const NodeID node_id) const
-    {
-        return annotation_data[nodes[node_id].annotation_id].number_of_lanes;
-    }
+    { return annotation_data[nodes[node_id].annotation_id].number_of_lanes; }
 
     double GetRoadWidth(const NodeID node_id) const
-    {
-        return annotation_data[nodes[node_id].annotation_id].road_width / 100.;
-    }
+    { return annotation_data[nodes[node_id].annotation_id].road_width / 100.; }
 
     double ComputeMaxRoadHalfWidth() const
     {

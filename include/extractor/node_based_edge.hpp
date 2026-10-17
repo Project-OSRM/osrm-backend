@@ -85,11 +85,10 @@ struct NodeBasedEdgeAnnotation
 
     bool CanCompressWith(const NodeBasedEdgeAnnotation &other) const
     {
-        return CanCombineWith(other) &&
-               (road_width == other.road_width ||
-                (road_width_is_inferred && other.road_width_is_inferred) ||
-                (road_width_is_inferred && other.road_width == 0) ||
-                (other.road_width_is_inferred && road_width == 0));
+        return CanCombineWith(other) && (road_width == other.road_width ||
+                                         (road_width_is_inferred && other.road_width_is_inferred) ||
+                                         (road_width_is_inferred && other.road_width == 0) ||
+                                         (other.road_width_is_inferred && road_width == 0));
     }
 
     bool operator<(const NodeBasedEdgeAnnotation &other) const
@@ -102,13 +101,13 @@ struct NodeBasedEdgeAnnotation
                          travel_mode,
                          is_left_hand_driving,
                          road_width_is_inferred) < std::tie(other.string_view_id,
-                                                          other.lane_description_id,
-                                                          other.classes,
-                                                          other.number_of_lanes,
-                                                          other.road_width,
-                                                          other.travel_mode,
-                                                          other.is_left_hand_driving,
-                                                          other.road_width_is_inferred));
+                                                            other.lane_description_id,
+                                                            other.classes,
+                                                            other.number_of_lanes,
+                                                            other.road_width,
+                                                            other.travel_mode,
+                                                            other.is_left_hand_driving,
+                                                            other.road_width_is_inferred));
     }
 };
 

@@ -267,6 +267,7 @@
         {"key": "width:lanes", "description": "Lane widths for map matching on wide roads"},
         {"key": "width:lanes:forward", "description": "Forward lane widths for map matching on wide roads"},
         {"key": "width:lanes:backward", "description": "Backward lane widths for map matching on wide roads"},
+        {"key": "width:lanes:both_ways", "description": "Shared lane widths for map matching on wide roads"},
         {"key": "lanes", "description": "Penalties for shared single lane streets"},
         {"key": "lanes:forward", "description": "Lanes in forward direction"},
         {"key": "lanes:backward", "description": "Lanes in backward direction"},
