@@ -1,5 +1,6 @@
 local Tags = require('lib/tags')
 local Set = require('lib/set')
+local Measure = require('lib/measure')
 
 local Guidance = {}
 
@@ -77,7 +78,94 @@ local function to_number_uint(s)
   return nil
 end
 
-function Guidance.set_classification (highway, result, input_way)
+-- Greedily returns the first positive width found among the given tag keys.
+local function find_first_width(way, keys)
+  for _, key in ipairs(keys) do
+    local width = Measure.get_max_width(way:get_value_by_key(key))
+    if width and width > 0 then
+      return width
+    end
+  end
+end
+
+-- Sums a "|"-separated per-lane width list; nil if no lane has a positive width.
+local function sum_lane_width(value)
+  if not value then
+    return nil
+  end
+
+  local total = 0
+  for lane_width in (value .. '|'):gmatch("([^|]*)|") do
+    local width = Measure.get_max_width(lane_width)
+    if not width or width <= 0 then
+      return nil
+    end
+    total = total + width
+  end
+
+  return total
+end
+
+-- Greedily returns the first positive per-lane width sum among the given tag keys.
+local function find_first_lane_width(way, keys)
+  for _, key in ipairs(keys) do
+    local width = sum_lane_width(way:get_value_by_key(key))
+    if width and width > 0 then
+      return width
+    end
+  end
+end
+
+local function sum_directional_width(forward_width,
+                                     backward_width,
+                                     both_ways_width,
+                                     is_forward_oneway,
+                                     is_reverse_oneway)
+  local width
+  if is_forward_oneway then
+    width = forward_width
+  elseif is_reverse_oneway then
+    width = backward_width
+  elseif forward_width and backward_width then
+    width = forward_width + backward_width
+  end
+
+  if width then
+    return width + (both_ways_width or 0)
+  end
+end
+
+function Guidance.get_road_width(way, is_forward_oneway, is_reverse_oneway)
+
+  local width = find_first_width(way, { 'width:carriageway', 'width', 'est_width' })
+  if width then
+    return width
+  end
+
+  local all_lane_width = find_first_lane_width(way, { 'width:lanes' })
+  if all_lane_width then
+    return all_lane_width
+  end
+
+  local both_ways_width = find_first_lane_width(way, { 'width:lanes:both_ways' })
+  local forward_width = find_first_width(way, { 'width:forward' })
+  local backward_width = find_first_width(way, { 'width:backward' })
+
+  width = sum_directional_width(
+    forward_width, backward_width, both_ways_width, is_forward_oneway, is_reverse_oneway)
+  if width then
+    return width
+  end
+
+  forward_width = find_first_lane_width(way, { 'width:lanes:forward' })
+  backward_width = find_first_lane_width(way, { 'width:lanes:backward' })
+
+  return sum_directional_width(
+    forward_width, backward_width, both_ways_width, is_forward_oneway, is_reverse_oneway)
+end
+
+
+function Guidance.set_classification (highway, result, input_way, is_forward_oneway, is_reverse_oneway)
   if motorway_types[highway] then
     result.road_classification.motorway_class = true
   end
@@ -139,6 +227,12 @@ function Guidance.set_classification (highway, result, input_way)
     if total_count ~= 0 then
       result.road_classification.num_lanes = total_count
     end
+  end
+
+  local road_width =
+      Guidance.get_road_width(input_way, is_forward_oneway, is_reverse_oneway)
+  if road_width then
+    result.road_width = road_width
   end
 end
 

@@ -1,4 +1,7 @@
 local Sequence = require('lib/sequence')
+-- Required explicitly: this module uses Set below, and profiles such as testbot
+-- load it through lib/guidance without the car/bicycle profiles' globals.
+local Set = require('lib/set')
 
 Measure = {}
 
