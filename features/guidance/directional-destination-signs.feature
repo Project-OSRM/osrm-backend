@@ -31,13 +31,13 @@ Feature: Destination Signs
           | qr    | QR   |     |                |                 |                     |  Hamburg             | -1     |                                      |
 
         When I route I should get
-          | from | to | route                                                     | destinations                                    | ref   | #                         |
-          | a    | b  | AB,AB                                                     | Berlin,Berlin                                   | ,     |                           |
-          | c    | d  | CD,CD                                                     | Berlin,Berlin                                   | ,     |                           |
-          | f    | e  | EF,EF                                                     | Hamburg,Hamburg                                 | ,     |                           |
-          | g    | h  | GH,GH                                                     | A1,A1                                           | ,     |                           |
-          | i    | j  | IJ,IJ                                                     | ,                                               | ,     | guard against mis-tagging |
-          | k    | l  | KL,KL                                                     | A1: Berlin,A1: Berlin                           | ,     |                           |
-          | m    | n  | MN,MN                                                     | A1: Berlin,A1: Berlin                           | ,     |                           |
-          | p    | o  | OP,OP                                                     | Hamburg,Hamburg                                 | ,     |                           |
-          | r    | q  | QR,QR                                                     | Hamburg,Hamburg                                 | ,     |                           |
+          | from | to | route                                                     | destinations                                    | ref   | # | locations |
+          | a    | b  | AB,AB                                                     | Berlin,Berlin                                   | ,     |   | a,b       |
+          | c    | d  | CD,CD                                                     | Berlin,Berlin                                   | ,     |   | c,d       |
+          | f    | e  | EF,EF                                                     | Hamburg,Hamburg                                 | ,     |   | f,e       |
+          | g    | h  | GH,GH                                                     | A1,A1                                           | ,     |   | g,h       |
+          | i    | j  | IJ,IJ                                                     | ,                                               | ,     | guard against mis-tagging | i,j       |
+          | k    | l  | KL,KL                                                     | A1: Berlin,A1: Berlin                           | ,     |   | k,l       |
+          | m    | n  | MN,MN                                                     | A1: Berlin,A1: Berlin                           | ,     |   | m,n       |
+          | p    | o  | OP,OP                                                     | Hamburg,Hamburg                                 | ,     |   | p,o       |
+          | r    | q  | QR,QR                                                     | Hamburg,Hamburg                                 | ,     |   | r,q       |
