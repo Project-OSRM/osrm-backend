@@ -1,0 +1,62 @@
+name: RISC-V (experimental)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: riscv-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VCPKG_COMMIT_ID: d015e31e90838a4c9dfa3eed45979bc70d9357fc
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/.vcpkg-bincache
+  VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/.vcpkg-bincache,readwrite"
+  # vcpkg has no prebuilt tool for riscv64; build it from source
+  VCPKG_FORCE_SYSTEM_BINARIES: 1
+
+jobs:
+  build-riscv64:
+    runs-on: ubuntu-24.04-riscv
+    continue-on-error: true
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Machine info
+        run: |
+          uname -m
+          nproc
+          free -h
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential gcc-14 g++-14 cmake ninja-build \
+            curl zip unzip tar pkg-config git ccache
+
+      - name: Enable vcpkg binary cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ github.workspace }}/.vcpkg-bincache
+          key: vcpkg-${{ runner.os }}-${{ runner.arch }}-riscv64-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}
+          restore-keys: |
+            vcpkg-${{ runner.os }}-${{ runner.arch }}-riscv64-${{ env.VCPKG_COMMIT_ID }}-
+
+      - name: Setup vcpkg
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          vcpkgJsonGlob: 'vcpkg.json'
+
+      - name: Configure
+        run: |
+          export CC=gcc-14 CXX=g++-14
+          cmake -S . -B build \
+            -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_LTO=OFF \
+            -DENABLE_NODE_BINDINGS=OFF
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
