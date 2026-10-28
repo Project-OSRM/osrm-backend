@@ -12,7 +12,6 @@ env:
   VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/.vcpkg-bincache
   VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/.vcpkg-bincache,readwrite"
   VCPKG_FORCE_SYSTEM_BINARIES: 1
-  # Be explicit: riscv64-linux is a vcpkg community triplet
   VCPKG_DEFAULT_TRIPLET: riscv64-linux
   VCPKG_DEFAULT_HOST_TRIPLET: riscv64-linux
   CC: gcc-14
