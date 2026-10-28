@@ -58,6 +58,11 @@ void relaxOutgoingEdges(
         return;
     }
 
+    if (DIRECTION == REVERSE_DIRECTION && !canLeaveTargetSeed(facade, heapNode))
+    {
+        return;
+    }
+
     for (auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
     {
         const auto &data = facade.GetEdgeData(edge);
@@ -139,6 +144,16 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         auto new_distance = heapNode.data.distance + target_distance;
 
         const auto approach = heapNode.data.approach + current_bucket.approach;
+
+        if (!canMeetAtNode(facade,
+                           heapNode.node,
+                           heapNode.data.parent == heapNode.node,
+                           heapNode.weight,
+                           current_bucket.parent_node == heapNode.node,
+                           target_weight))
+        {
+            continue;
+        }
 
         if (new_weight - approach < EdgeWeight{0})
         {
