@@ -1,6 +1,6 @@
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { osrm } from '../../features/support/fbresult_generated.js';
+import { osrm } from '../../features/support/fbresult.js';
 
 // Somewhere in Monaco
 // http://www.openstreetmap.org/#map=18/43.73185/7.41772
