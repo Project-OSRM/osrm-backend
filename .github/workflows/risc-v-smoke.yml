@@ -11,7 +11,6 @@ env:
   VCPKG_COMMIT_ID: d015e31e90838a4c9dfa3eed45979bc70d9357fc
   VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/.vcpkg-bincache
   VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/.vcpkg-bincache,readwrite"
-  # vcpkg has no prebuilt tool for riscv64; build it from source
   VCPKG_FORCE_SYSTEM_BINARIES: 1
 
 jobs:
@@ -32,8 +31,15 @@ jobs:
       - name: Install toolchain
         run: |
           sudo apt-get update -y
-          sudo apt-get install -y build-essential gcc-14 g++-14 cmake ninja-build \
-            curl zip unzip tar pkg-config git ccache
+          sudo apt-get install -y build-essential gcc-14 g++-14 ninja-build \
+            curl zip unzip tar pkg-config git ccache autoconf automake libtool \
+            autoconf-archive python3 python3-pip python3-venv
+          python3 -m venv $HOME/cmake-venv
+          $HOME/cmake-venv/bin/pip install "cmake>=3.31"
+          echo "$HOME/cmake-venv/bin" >> $GITHUB_PATH
+
+      - name: Check CMake version
+        run: cmake --version
 
       - name: Enable vcpkg binary cache
         uses: actions/cache@v4
