@@ -137,6 +137,12 @@ The first configure will build every dependency (boost, tbb, expat, bzip2,
 lua, libosmium, …) from source. Subsequent configures reuse vcpkg's
 binary cache.
 
+Running the tests:
+```bash
+cd build
+cmake --build . --target tests
+```
+
 ### Request Against the Demo Server
 
 Read the [API usage policy](https://github.com/Project-OSRM/osrm-backend/wiki/Demo-server).
