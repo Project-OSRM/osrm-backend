@@ -464,7 +464,11 @@ end
 function oneway_handler(profile,way,result,data)
   -- oneway
   data.implied_oneway = data.junction == "roundabout" or data.junction == "circular" or data.highway == "motorway"
-  data.reverse = false
+  data.is_forward_oneway = data.oneway == "yes" or data.oneway == "1" or data.oneway == "true" or
+      (data.oneway == nil and data.implied_oneway)
+  data.is_reverse_oneway = data.oneway == "-1"
+  data.is_physical_forward_oneway = data.is_forward_oneway
+  data.is_physical_reverse_oneway = data.is_reverse_oneway
 
   if data.oneway_bicycle == "yes" or data.oneway_bicycle == "1" or data.oneway_bicycle == "true" then
     result.backward_mode = mode.inaccessible
@@ -710,7 +714,9 @@ function process_way(profile, way, result)
     has_cycleway_backward = false,
     is_twoway = true,
     reverse = false,
-    implied_oneway = false
+    implied_oneway = false,
+    is_forward_oneway = false,
+    is_reverse_oneway = false
   }
 
   local handlers = Sequence {
