@@ -281,7 +281,7 @@ class TableAPI final : public BaseAPI
                        {
                            if (duration == MAXIMAL_EDGE_DURATION)
                            {
-                               return 0.;
+                               return -1.;
                            }
                            return from_alias<double>(duration) / 10.;
                        });
@@ -301,7 +301,7 @@ class TableAPI final : public BaseAPI
                        {
                            if (distance == INVALID_EDGE_DISTANCE)
                            {
-                               return 0.;
+                               return -1.;
                            }
                            return std::round(from_alias<double>(distance) * 10) / 10.;
                        });
