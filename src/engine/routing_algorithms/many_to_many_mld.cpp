@@ -313,15 +313,15 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                 it->second;
 
             const auto path_weight = weight + target_weight;
+            const auto path_duration = duration + target_duration;
+            const auto path_distance = distance + target_distance;
             // The walk into an open area is charged at both ends and is not travel, so it
             // cannot make a target that sits before the source reachable.  Test the graph
             // part, or a degenerate pairing is accepted and the cell comes out short by
             // the stretch between them.  See ManyToManyHeapData::approach.
-            if (path_weight - (approach + target_approach) >= EdgeWeight{0})
+            if (isValidTablePath(
+                    path_weight - (approach + target_approach), path_duration, path_distance))
             {
-                const auto path_duration = duration + target_duration;
-                const auto path_distance = distance + target_distance;
-
                 EdgeDistance nulldistance = {0};
                 auto &current_distance =
                     distances_table.empty() ? nulldistance : distances_table[index];
@@ -499,7 +499,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         // ManyToManyHeapData::approach.
         const auto approach = heapNode.data.approach + current_bucket.approach;
 
-        if (new_weight - approach >= EdgeWeight{0} &&
+        if (isValidTablePath(new_weight - approach, new_duration, new_distance) &&
             std::tie(new_weight, new_duration, new_distance) <
                 std::tie(current_weight, current_duration, current_distance))
         {
