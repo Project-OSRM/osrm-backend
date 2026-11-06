@@ -5,6 +5,60 @@ Feature: Basic Distance Matrix
     Background:
         Given the profile "testbot"
         And the partition extra arguments "--small-component-size 1 --max-cell-sizes 2,4,8,16"
+
+    Scenario: Testbot - FlatBuffers travel distance matrix preserves unreachable cells
+        Given the extract extra arguments "--small-component-size 1"
+        And the node map
+            """
+            a b
+            c d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | cd    |
+
+        When I request a travel distance matrix I should get
+            |   | a     | b     | c     | d     |
+            | a | 0     | 100   |       |       |
+            | b | 100   | 0     |       |       |
+            | c |       |       | 0     | 100   |
+            | d |       |       | 100   | 0     |
+
+        When I request a travel distance matrix with flatbuffers I should get
+            |   | a     | b     | c     | d     |
+            | a | 0     | 100   | -1    | -1    |
+            | b | 100   | 0     | -1    | -1    |
+            | c | -1    | -1    | 0     | 100   |
+            | d | -1    | -1    | 100   | 0     |
+
+        When I request a travel distance matrix with flatbuffers I should get
+            |   | b     | c     | d     |
+            | a | 100   | -1    | -1    |
+            | c | -1    | 0     | 100   |
+
+    Scenario: Testbot - FlatBuffers travel distance matrix preserves off-diagonal zeros
+        Given the node locations
+            | node | lon   | lat   |
+            | a    | 1.001 | 1.001 |
+            | b    | 1.002 | 1.001 |
+            | 1    | 1.001 | 1.001 |
+
+        And the ways
+            | nodes |
+            | ab    |
+
+        When I request a travel distance matrix I should get
+            |   | a | 1 |
+            | a | 0 | 0 |
+            | 1 | 0 | 0 |
+
+        When I request a travel distance matrix with flatbuffers I should get
+            |   | a | 1 |
+            | a | 0 | 0 |
+            | 1 | 0 | 0 |
+
   Scenario: Testbot - Travel distance matrix of small grid
         Given the node map
             """
@@ -619,6 +673,13 @@ Feature: Basic Distance Matrix
             | b | 300    | 0      | 600   | 1200.1 |
             | f | 900    | 600    | 0     | 300    |
             | 1 | 1500   | 1200.1 | 300   | 0      |
+
+        When I request a travel distance matrix with flatbuffers I should get
+            |   | a    | b             | f   | 1             |
+            | a | 0    | 300           | 900 | 1500          |
+            | b | 300  | 0             | 600 | 1200.1 +-0.01 |
+            | f | 900  | 600           | 0   | 300           |
+            | 1 | 1500 | 1200.1 +-0.01 | 300 | 0             |
 
         When I request a travel distance matrix I should get
             |   | a      | b      | f     | 1      |
