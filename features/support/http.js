@@ -4,6 +4,10 @@ import { env } from './env.js';
 export function sendRequest (url, log, callback) {
   log(`sending request: ${url}`);
   const req = env.client.get (url, { agent: env.agent }, (res) => {
+    // Keep binary responses byte-preserving for FlatBuffers decoders.
+    if (res.headers['content-type']?.includes('flatbuffers')) {
+      res.setEncoding('latin1');
+    }
     let data = '';
 
     // Collect data chunks
@@ -48,6 +52,10 @@ export function sendPostRequest (url, body, log, callback) {
       },
     },
     (res) => {
+      // Keep binary responses byte-preserving for FlatBuffers decoders.
+      if (res.headers['content-type']?.includes('flatbuffers')) {
+        res.setEncoding('latin1');
+      }
       let data = '';
       res.on('data', (chunk) => {
         data += chunk;
