@@ -26,23 +26,26 @@ inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
                           EdgeDuration &duration,
                           EdgeDistance &distance)
 { // Special case for CH when contractor creates a loop edge node->node
-    BOOST_ASSERT(weight - approach < EdgeWeight{0});
+    BOOST_ASSERT(!isValidTablePath(weight - approach, duration, distance));
 
     const auto loop_weight = ch::getLoopMetric<EdgeWeight>(facade, node);
     if (std::get<0>(loop_weight) != INVALID_EDGE_WEIGHT)
     {
         const auto new_weight_with_loop = weight + std::get<0>(loop_weight);
-        if (new_weight_with_loop - approach >= EdgeWeight{0})
+        const auto loop_duration = ch::getLoopMetric<EdgeDuration>(facade, node);
+        const auto new_duration_with_loop = duration + std::get<0>(loop_duration);
+        const auto new_distance_with_loop = distance + std::get<1>(loop_duration);
+        if (isValidTablePath(
+                new_weight_with_loop - approach, new_duration_with_loop, new_distance_with_loop))
         {
             weight = new_weight_with_loop;
-            auto result = ch::getLoopMetric<EdgeDuration>(facade, node);
-            duration += std::get<0>(result);
-            distance += std::get<1>(result);
+            duration = new_duration_with_loop;
+            distance = new_distance_with_loop;
             return true;
         }
     }
 
-    // No loop found or adjusted weight is negative
+    // No loop found or the adjusted path still has a negative metric.
     return false;
 }
 
@@ -140,7 +143,7 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
 
         const auto approach = heapNode.data.approach + current_bucket.approach;
 
-        if (new_weight - approach < EdgeWeight{0})
+        if (!isValidTablePath(new_weight - approach, new_duration, new_distance))
         {
             if (addLoopWeight(
                     facade, heapNode.node, new_weight, approach, new_duration, new_distance))
