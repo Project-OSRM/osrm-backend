@@ -13,6 +13,13 @@ namespace osrm::engine::routing_algorithms
 {
 namespace
 {
+// Rounded weight offsets can be equal even when a target lies before the source.
+// Reject the backwards pairing instead of treating its negative duration or distance
+// as a zero-weight path. The caller subtracts any open-area approach weight first.
+inline bool
+isValidTablePath(const EdgeWeight weight, const EdgeDuration duration, const EdgeDistance distance)
+{ return weight >= EdgeWeight{0} && duration >= EdgeDuration{0} && distance >= EdgeDistance{0}; }
+
 struct NodeBucket
 {
     NodeID middle_node;
