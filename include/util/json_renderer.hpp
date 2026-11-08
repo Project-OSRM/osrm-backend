@@ -8,6 +8,10 @@
 
 #include "osrm/json_container.hpp"
 
+#include <boost/assert.hpp>
+
+#include <array>
+#include <charconv>
 #include <cmath>
 #include <cstdint>
 #include <iterator>
@@ -15,8 +19,6 @@
 #include <ostream>
 #include <string>
 #include <vector>
-
-#include "util/format.hpp"
 
 namespace osrm::util::json
 {
@@ -63,18 +65,25 @@ template <typename Out> struct Renderer
         // (up to ~10 billion currently) without scientific notation.
         constexpr auto max_exact_int =
             static_cast<double>(1ULL << std::numeric_limits<double>::digits);
+        // Enough for a 53-bit integer or ten significant digits with a double's exponent.
+        std::array<char, 32> buffer;
+        std::to_chars_result formatted;
         if (number.value >= 0.0 && number.value <= max_exact_int &&
             std::trunc(number.value) == number.value)
         {
-            auto int_value = static_cast<std::uint64_t>(number.value);
-            std::string formatted = std::format("{}", int_value);
-            write(formatted.data(), formatted.size());
+            const auto int_value = static_cast<std::uint64_t>(number.value);
+            formatted = std::to_chars(buffer.data(), buffer.data() + buffer.size(), int_value);
         }
         else
         {
-            std::string formatted = std::format("{:.10g}", number.value);
-            write(formatted.data(), formatted.size());
+            formatted = std::to_chars(buffer.data(),
+                                      buffer.data() + buffer.size(),
+                                      number.value,
+                                      std::chars_format::general,
+                                      10);
         }
+        BOOST_ASSERT(formatted.ec == std::errc{});
+        write(buffer.data(), static_cast<std::size_t>(formatted.ptr - buffer.data()));
     }
 
     void operator()(const Object &object)

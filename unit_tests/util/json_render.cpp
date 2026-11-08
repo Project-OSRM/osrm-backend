@@ -2,11 +2,24 @@
 #include "util/json_renderer.hpp"
 
 #include <boost/test/unit_test.hpp>
+
+#include <array>
+#include <bit>
+#include <cmath>
+#include <format>
 #include <limits>
+#include <locale>
+#include <random>
+#include <sstream>
+#include <string>
+#include <string_view>
+#include <utility>
+#include <vector>
+
+namespace osrm::util::json
+{
 
 BOOST_AUTO_TEST_SUITE(json_renderer)
-
-using namespace osrm::util::json;
 
 BOOST_AUTO_TEST_CASE(number_truncating)
 {
@@ -230,4 +243,113 @@ BOOST_AUTO_TEST_CASE(test_integer_in_array)
     BOOST_CHECK_EQUAL(output, "[11117421192,10003966158,3.14]");
 }
 
+BOOST_AUTO_TEST_CASE(number_formatting_extremes_and_notation_boundaries)
+{
+    const std::array cases = {
+        std::pair{std::numeric_limits<double>::max(), "1.797693135e+308"},
+        std::pair{std::numeric_limits<double>::lowest(), "-1.797693135e+308"},
+        std::pair{std::numeric_limits<double>::min(), "2.225073859e-308"},
+        std::pair{-std::numeric_limits<double>::min(), "-2.225073859e-308"},
+        std::pair{std::numeric_limits<double>::denorm_min(), "4.940656458e-324"},
+        std::pair{-std::numeric_limits<double>::denorm_min(), "-4.940656458e-324"},
+        std::pair{0.0001, "0.0001"},
+        std::pair{0.00001, "1e-05"},
+        std::pair{-0.00001, "-1e-05"},
+        std::pair{9999999999.5, "1e+10"},
+        std::pair{10000000000.0, "10000000000"},
+        std::pair{10000000000.5, "1e+10"},
+        std::pair{-9999999999.0, "-9999999999"},
+        std::pair{-10000000000.0, "-1e+10"},
+        std::pair{9007199254740992.0, "9007199254740992"},
+        std::pair{std::nextafter(9007199254740992.0, 0.0), "9007199254740991"},
+        std::pair{std::nextafter(9007199254740992.0, std::numeric_limits<double>::infinity()),
+                  "9.007199255e+15"},
+    };
+
+    for (const auto &[number, expected] : cases)
+    {
+        std::string output;
+        Renderer<std::string>{output}(Number{number});
+        BOOST_CHECK_EQUAL(output, expected);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(number_formatting_preserves_the_previous_format_contract)
+{
+    const auto check_number = [](const double number)
+    {
+        std::string expected;
+        constexpr auto max_exact_int =
+            static_cast<double>(1ULL << std::numeric_limits<double>::digits);
+        if (!std::isfinite(number))
+            expected = "null";
+        else if (number >= 0. && number <= max_exact_int && std::trunc(number) == number)
+            expected = std::format("{}", static_cast<std::uint64_t>(number));
+        else
+            expected = std::format("{:.10g}", number);
+
+        std::string output;
+        Renderer<std::string>{output}(Number{number});
+        BOOST_CHECK_EQUAL(output, expected);
+    };
+
+    std::mt19937_64 generator{7761};
+    for (int sample = 0; sample < 10'000; ++sample)
+        check_number(std::bit_cast<double>(generator()));
+
+    for (int exponent = -323; exponent <= 308; ++exponent)
+    {
+        const auto number = std::pow(10., exponent);
+        for (const auto neighbor :
+             {std::nextafter(number, 0.),
+              number,
+              std::nextafter(number, std::numeric_limits<double>::infinity())})
+        {
+            check_number(neighbor);
+            check_number(-neighbor);
+        }
+    }
+}
+
+BOOST_AUTO_TEST_CASE(number_formatting_is_consistent_across_output_sinks)
+{
+    const Array numbers{{Number{0.},
+                         Number{-0.},
+                         Number{42.5},
+                         Number{11117421192.},
+                         Number{0.00001},
+                         Number{std::numeric_limits<double>::lowest()},
+                         Number{std::numeric_limits<double>::quiet_NaN()},
+                         Number{std::numeric_limits<double>::infinity()}}};
+    constexpr std::string_view expected =
+        "[0,0,42.5,11117421192,1e-05,-1.797693135e+308,null,null]";
+
+    std::string string_output;
+    Renderer<std::string>{string_output}(numbers);
+    BOOST_CHECK_EQUAL(string_output, expected);
+
+    std::vector<char> vector_output;
+    Renderer<std::vector<char>>{vector_output}(numbers);
+    BOOST_CHECK_EQUAL(std::string(vector_output.begin(), vector_output.end()), expected);
+
+    std::ostringstream stream_output;
+    Renderer<std::ostream>{stream_output}(numbers);
+    BOOST_CHECK_EQUAL(stream_output.str(), expected);
+}
+
+BOOST_AUTO_TEST_CASE(number_formatting_ignores_the_stream_locale)
+{
+    struct CommaDecimalPoint final : std::numpunct<char>
+    {
+        char do_decimal_point() const override { return ','; }
+    };
+
+    std::ostringstream output;
+    output.imbue(std::locale(std::locale::classic(), new CommaDecimalPoint));
+    Renderer<std::ostream>{output}(Number{1234.5});
+    BOOST_CHECK_EQUAL(output.str(), "1234.5");
+}
+
 BOOST_AUTO_TEST_SUITE_END()
+
+} // namespace osrm::util::json
