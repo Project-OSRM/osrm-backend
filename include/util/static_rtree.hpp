@@ -31,6 +31,7 @@
 #include <limits>
 #include <queue>
 #include <string>
+#include <tuple>
 #include <vector>
 
 namespace osrm::util
@@ -207,7 +208,10 @@ class StaticRTree
         std::uint32_t m_original_index;
 
         inline bool operator<(const WrappedInputElement &other) const
-        { return m_hilbert_value < other.m_hilbert_value; }
+        {
+            return std::tie(m_hilbert_value, m_original_index) <
+                   std::tie(other.m_hilbert_value, other.m_original_index);
+        }
     };
 
     struct QueryCandidate
