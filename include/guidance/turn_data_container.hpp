@@ -93,6 +93,19 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
             others.begin(), others.end(), [this](const TurnData &other) { push_back(other); });
     }
 
+    // Maps stored IDs through old to new tables, invalid IDs stay
+    void remapIDs(const std::vector<LaneDataID> &lane_data_remap,
+                  const std::vector<EntryClassID> &entry_class_remap)
+        requires(Ownership != storage::Ownership::View)
+    {
+        for (auto &id : lane_data_ids)
+            if (id < lane_data_remap.size())
+                id = lane_data_remap[id];
+        for (auto &id : entry_class_ids)
+            if (id < entry_class_remap.size())
+                id = entry_class_remap[id];
+    }
+
     friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
                                                const std::string &name,
                                                TurnDataContainerImpl &turn_data_container);
