@@ -225,9 +225,12 @@ class StaticRTree
         QueryCandidate(std::uint64_t squared_min_dist,
                        TreeIndex tree_index,
                        std::uint32_t segment_index,
-                       const Coordinate &coordinate)
+                       const Coordinate &coordinate,
+                       const Coordinate &segment_u,
+                       const Coordinate &segment_v)
             : squared_min_dist(squared_min_dist), tree_index(tree_index),
-              fixed_projected_coordinate(coordinate), segment_index(segment_index)
+              fixed_projected_coordinate(coordinate), segment_u(segment_u), segment_v(segment_v),
+              segment_index(segment_index)
         {
         }
 
@@ -238,12 +241,36 @@ class StaticRTree
         {
             // Attn: this is reversed order. std::priority_queue is a
             // max pq (biggest item at the front)!
-            return other.squared_min_dist < squared_min_dist;
+            if (squared_min_dist != other.squared_min_dist)
+                return other.squared_min_dist < squared_min_dist;
+
+            // Equal distances are common on the 1e-6 degree grid. They must not be resolved by
+            // the heap's insertion order, which depends on the tree layout and thereby on the
+            // whole data set: tree nodes first, so that all segments of this distance are queued
+            // before one is returned, then segments by a total order on their geometry.
+            if (is_segment() != other.is_segment())
+                return is_segment();
+            if (!is_segment())
+                return false;
+            return other.TieKey() < TieKey();
+        }
+
+        inline auto TieKey() const
+        {
+            return std::make_tuple(static_cast<std::int32_t>(fixed_projected_coordinate.lon),
+                                   static_cast<std::int32_t>(fixed_projected_coordinate.lat),
+                                   static_cast<std::int32_t>(segment_u.lon),
+                                   static_cast<std::int32_t>(segment_u.lat),
+                                   static_cast<std::int32_t>(segment_v.lon),
+                                   static_cast<std::int32_t>(segment_v.lat),
+                                   segment_index);
         }
 
         std::uint64_t squared_min_dist;
         TreeIndex tree_index;
         Coordinate fixed_projected_coordinate;
+        Coordinate segment_u;
+        Coordinate segment_v;
         std::uint32_t segment_index;
     };
 
@@ -714,7 +741,9 @@ class StaticRTree
             traversal_queue.emplace(QueryCandidate{squared_distance,
                                                    leaf_id,
                                                    static_cast<std::uint32_t>(i),
-                                                   Coordinate{projected_nearest}});
+                                                   Coordinate{projected_nearest},
+                                                   m_coordinate_list[current_edge.u],
+                                                   m_coordinate_list[current_edge.v]});
         }
     }
 
