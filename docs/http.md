@@ -385,6 +385,8 @@ curl 'http://router.project-osrm.org/table/v1/driving/13.388860,52.517037;13.397
 - `destinations` array of `Waypoint` objects describing all destinations in order
 - `fallback_speed_cells` (optional) array of arrays containing `i,j` pairs indicating which cells contain estimated values based on `fallback_speed`.  Will be absent if `fallback_speed` is not used.
 
+In FlatBuffers responses, unreachable duration and distance cells are encoded as `-1.0` instead of JSON's `null`.
+
 In case of error the following `code`s are supported in addition to the general ones:
 
 | Type             | Description     |
@@ -1207,8 +1209,12 @@ A pair of long long integers. Used only by `Waypoint` object.
 Almost the same as `json` Table object. The main difference is that 'sources' field is absent and the root's object 'waypoints' field is
 used instead. All the other differences follow:
 
-- `durations`: `[float]` Flat representation of a durations matrix. Element at row;col can be addressed as [row * cols + col]
-- `distances`: `[float]` Flat representation of a destinations matrix. Element at row;col can be addressed as [row * cols + col]
+- `durations`: `[float]` Flat representation of a durations matrix in seconds. Element at row;col can be addressed as [row * cols + col]. Unreachable cells are `-1.0`.
+- `distances`: `[float]` Flat representation of a distances matrix in meters. Element at row;col can be addressed as [row * cols + col]. Unreachable cells are `-1.0`.
 - `destinations`: `[Waypoint]` Array of `Waypoint` objects. Will be `null` if `skip_waypoints` will be set to `true`
 - `rows`: `ushort` Number of rows in durations/destinations matrices.
 - `cols`: `ushort` Number of cols in durations/destinations matrices.
+
+The float vectors cannot represent `null` elements. Clients can translate `-1.0` to their language's null value to match JSON responses. Valid zero-duration or zero-distance cells remain `0.0`; cells estimated with `fallback_speed` retain their computed values.
+
+**Compatibility note:** Older versions encoded unreachable FlatBuffers cells as `0.0`, making them indistinguishable from valid zero values. Returning `-1.0` changes that behavior without changing the schema. Clients must handle the new sentinel; reachability cannot be recovered reliably from older responses.
