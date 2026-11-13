@@ -143,7 +143,9 @@ binary cache.
 
 ### Running Tests
 
-Run the unit tests from the repository root after configuring the build:
+Install a supported Node.js runtime before running the full unit suite: its
+non-Windows library-test data fixtures use Node.js scripts. Run the unit tests
+from the repository root after configuring the build:
 
 ```bash
 ctest --test-dir build --output-on-failure

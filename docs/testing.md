@@ -32,7 +32,9 @@ To prepare the test data simply `cd test/data/` and then run `make`.
 
 ### Running Tests
 
-Run the unit tests from the repository root after configuring the CMake build:
+Install a supported Node.js runtime for the non-Windows library-test data
+fixtures, which run JavaScript helper scripts. Run the unit tests from the
+repository root after configuring the CMake build:
 
 ```
 ctest --test-dir build --output-on-failure
