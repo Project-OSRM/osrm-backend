@@ -65,6 +65,33 @@ function Tags.get_forward_backward_by_set(way,data,keys)
   return forward, backward
 end
 
+-- return [[forwards],[backwards]] values, a list of values from a set of tags.
+function Tags.get_forward_backward_list_from_set(way,data,keys)
+  local forwards, backwards
+  for i,key in ipairs(keys) do
+    local forward = way:get_value_by_key(key .. ':forward')
+    local backward = way:get_value_by_key(key .. ':backward')
+
+    if not forward or not backward then
+      local common = way:get_value_by_key(key)
+      forward = forward or common
+      backward = backward or common
+    end
+
+    if forward then
+      forwards = forwards or {}
+      table.insert(forwards,forward)
+    end
+
+    if backward then
+      backwards = backwards or {}
+      table.insert(backwards,backward)
+    end
+  end
+
+  return forwards, backwards
+end
+
 -- look through a sequence of keys combined with a prefix
 -- e.g. for the sequence [motorcar,motor_vehicle,vehicle] and the prefix 'oneway' search for:
 -- oneway:motorcar
