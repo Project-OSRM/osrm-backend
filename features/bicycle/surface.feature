@@ -11,7 +11,7 @@ Feature: Bike - Surfaces
             | cycleway | asphalt               | 47.9 s  |
             | cycleway | chipseal              | 48 s    |
             | cycleway | concrete              | 48 s    |
-            | cycleway | concrete_lanes        | 48 s    |
+            | cycleway | concrete:lanes        | 48 s    |
             | cycleway | cobblestone:flattened | 72 s    |
             | cycleway | paving_stones         | 72 s    |
             | cycleway | wood                  | 72 s    |
@@ -32,6 +32,16 @@ Feature: Bike - Surfaces
             | cycleway | sand                  | 240 s   |
             | cycleway | woodchips             | 240 s   |
             | cycleway | sett                  | 80 s    |
+
+    Scenario: Bicycle - Concrete lanes cap a faster configured cycling speed
+        Given the profile file "bicycle" initialized with
+        """
+        profile.bicycle_speeds.cycleway = 20
+        """
+        Then routability should be
+            | highway  | surface        | bothw         |
+            | cycleway |                | 36 s +-0.2    |
+            | cycleway | concrete:lanes | 48 s +-0.2    |
 
     Scenario: Bicycle - Good surfaces on small paths
         Then routability should be
