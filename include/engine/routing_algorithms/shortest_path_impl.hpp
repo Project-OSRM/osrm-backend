@@ -399,6 +399,33 @@ leg_connections getLegConnections(const PhantomNodeCandidates &source_candidates
     return connections;
 }
 
+// Whether a closed (zero-speed) segment lies ahead of a phantom on its node in one direction,
+// so a route arriving there can't go on: like at a dead end, it has to turn around.
+template <typename Algorithm>
+bool isClosedAhead(const DataFacade<Algorithm> &facade,
+                   const PhantomNode &phantom,
+                   const bool forward)
+{
+    const auto geometry_id =
+        facade
+            .GetGeometryIndex(phantom.forward_segment_id.enabled ? phantom.forward_segment_id.id
+                                                                 : phantom.reverse_segment_id.id)
+            .id;
+    // segments are listed in travel order, so those ahead follow the phantom's own
+    const auto closed_after = [](const auto &weights, const std::size_t position)
+    {
+        return std::find(weights.begin() + position, weights.end(), INVALID_SEGMENT_WEIGHT) !=
+               weights.end();
+    };
+    if (forward)
+    {
+        return closed_after(facade.GetUncompressedForwardWeights(geometry_id),
+                            phantom.fwd_segment_position + 1);
+    }
+    const auto weights = facade.GetUncompressedReverseWeights(geometry_id);
+    return closed_after(weights, weights.size() - phantom.fwd_segment_position);
+}
+
 struct leg_state
 {
     // routability to target
@@ -410,11 +437,16 @@ struct leg_state
     // total nodes from route start up to and including this leg
     std::vector<std::size_t> total_nodes_to_forward;
     std::vector<std::size_t> total_nodes_to_reverse;
+    // the node was only reached by turning around at the waypoint, from the other direction
+    std::vector<bool> turned_to_forward;
+    std::vector<bool> turned_to_reverse;
 
     void reset()
     {
         reached_forward_node_target.clear();
         reached_reverse_node_target.clear();
+        turned_to_forward.clear();
+        turned_to_reverse.clear();
         total_weight_to_forward.clear();
         total_weight_to_reverse.clear();
         total_nodes_to_forward.clear();
@@ -503,6 +535,58 @@ struct route_state
         return can_reach_leg_forward || can_reach_leg_reverse;
     }
 
+    // A route reaching a waypoint heading towards a closed segment on its node can't continue
+    // straight on, so let it turn around there, as it would at a dead end.
+    template <typename Algorithm>
+    void turnAroundBeforeClosures(const DataFacade<Algorithm> &facade,
+                                  const PhantomNodeCandidates &waypoint_candidates)
+    {
+        BOOST_ASSERT(waypoint_candidates.size() == last.total_weight_to_forward.size());
+        last.turned_to_forward.assign(waypoint_candidates.size(), false);
+        last.turned_to_reverse.assign(waypoint_candidates.size(), false);
+        for (const auto i : util::irange<std::size_t>(0UL, waypoint_candidates.size()))
+        {
+            const auto &candidate = waypoint_candidates[i];
+            const auto weight_to_forward = last.total_weight_to_forward[i];
+            const auto weight_to_reverse = last.total_weight_to_reverse[i];
+            const auto nodes_to_forward = last.total_nodes_to_forward[i];
+            const auto nodes_to_reverse = last.total_nodes_to_reverse[i];
+
+            if (last.reached_forward_node_target[i] && candidate.IsValidReverseSource() &&
+                weight_to_forward < weight_to_reverse && isClosedAhead(facade, candidate, true))
+            {
+                last.reached_reverse_node_target[i] = true;
+                last.total_weight_to_reverse[i] = weight_to_forward;
+                last.total_nodes_to_reverse[i] = nodes_to_forward;
+                last.turned_to_reverse[i] = true;
+            }
+            if (last.reached_reverse_node_target[i] && !last.turned_to_reverse[i] &&
+                candidate.IsValidForwardSource() && weight_to_reverse < weight_to_forward &&
+                isClosedAhead(facade, candidate, false))
+            {
+                last.reached_forward_node_target[i] = true;
+                last.total_weight_to_forward[i] = weight_to_reverse;
+                last.total_nodes_to_forward[i] = nodes_to_reverse;
+                last.turned_to_forward[i] = true;
+            }
+        }
+    }
+
+    // The previous leg path that ends where a leg from this source node starts
+    size_t previousPathFromForward(size_t previous_leg) const
+    {
+        return !last.turned_to_forward.empty() && last.turned_to_forward[previous_leg]
+                   ? previousReversePath(previous_leg)
+                   : previousForwardPath(previous_leg);
+    }
+
+    size_t previousPathFromReverse(size_t previous_leg) const
+    {
+        return !last.turned_to_reverse.empty() && last.turned_to_reverse[previous_leg]
+                   ? previousForwardPath(previous_leg)
+                   : previousReversePath(previous_leg);
+    }
+
     void completeSearch()
     {
         // insert sentinel
@@ -539,7 +623,7 @@ struct route_state
                                  packed_leg_to_forward.size();
                 current.total_nodes_to_forward.push_back(new_total);
                 previous_leg_in_route.push_back(
-                    previousForwardPath(*leg_connections.forward_to_forward));
+                    previousPathFromForward(*leg_connections.forward_to_forward));
             }
             else if (leg_connections.reverse_to_forward)
             {
@@ -547,7 +631,7 @@ struct route_state
                                  packed_leg_to_forward.size();
                 current.total_nodes_to_forward.push_back(new_total);
                 previous_leg_in_route.push_back(
-                    previousReversePath(*leg_connections.reverse_to_forward));
+                    previousPathFromReverse(*leg_connections.reverse_to_forward));
             }
             else
             {
@@ -562,7 +646,7 @@ struct route_state
                                  packed_leg_to_reverse.size();
                 current.total_nodes_to_reverse.push_back(new_total);
                 previous_leg_in_route.push_back(
-                    previousForwardPath(*leg_connections.forward_to_reverse));
+                    previousPathFromForward(*leg_connections.forward_to_reverse));
             }
             else if (leg_connections.reverse_to_reverse)
             {
@@ -570,7 +654,7 @@ struct route_state
                                  packed_leg_to_reverse.size();
                 current.total_nodes_to_reverse.push_back(new_total);
                 previous_leg_in_route.push_back(
-                    previousReversePath(*leg_connections.reverse_to_reverse));
+                    previousPathFromReverse(*leg_connections.reverse_to_reverse));
             }
             else
             {
@@ -692,6 +776,10 @@ shortestPathWithWaypointContinuation(SearchEngineData<Algorithm> &engine_working
     {
         const auto &source_candidates = waypoint_candidates[i];
         const auto &target_candidates = waypoint_candidates[i + 1];
+        if (i > 0)
+        {
+            route.turnAroundBeforeClosures(facade, source_candidates);
+        }
         // We assume each source candidate for this leg was a target candidate from the previous
         // leg, and in the same order.
         BOOST_ASSERT(source_candidates.size() == route.last.reached_forward_node_target.size());

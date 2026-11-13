@@ -89,6 +89,70 @@ std::vector<NodeID> getForceStepNodes(const PhantomEndpointCandidates &candidate
 PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candidates,
                                          const std::vector<NodeID> &path);
 
+// A target on an edge-based node with a closed (zero-speed) segment before it can only be
+// reached along that node, from a source on it past the closure: entering the node from its
+// start would cross the closure. Seed weights are raw sums of the segment weights up to the
+// phantom, closed segments counting INVALID_SEGMENT_WEIGHT, so `target_weight`, the target's
+// seed weight, tells which closed segments lie before it, and `entry_weight`, where the path
+// enters the node, which it has already passed: 0 for the start of the node, the negated seed
+// weight for a source on it. A closed segment that starts at or after the entry and ends by
+// the target blocks the path. An open-area approach weight moves either end, but never by
+// anywhere near INVALID_SEGMENT_WEIGHT.
+template <typename FacadeT>
+bool isTargetReachable(const FacadeT &facade,
+                       const NodeID node,
+                       const EdgeWeight entry_weight,
+                       const EdgeWeight target_weight)
+{
+    const auto reachable = [&](const auto &weights)
+    {
+        EdgeWeight weight_before{0};
+        for (const SegmentWeight weight : weights)
+        {
+            if (weight_before + alias_cast<EdgeWeight>(INVALID_SEGMENT_WEIGHT) > target_weight)
+            {
+                return true;
+            }
+            if (weight == INVALID_SEGMENT_WEIGHT && weight_before >= entry_weight)
+            {
+                return false;
+            }
+            weight_before += alias_cast<EdgeWeight>(weight);
+        }
+        return true;
+    };
+
+    const auto geometry_index = facade.GetGeometryIndex(node);
+    return geometry_index.forward
+               ? reachable(facade.GetUncompressedForwardWeights(geometry_index.id))
+               : reachable(facade.GetUncompressedReverseWeights(geometry_index.id));
+}
+
+// Whether a search may step off a target seed, entering its node from the start.
+template <typename FacadeT, typename HeapNodeT>
+bool canLeaveTargetSeed(const FacadeT &facade, const HeapNodeT &target_heap_node)
+{
+    return target_heap_node.data.parent != target_heap_node.node ||
+           isTargetReachable(facade, target_heap_node.node, {0}, target_heap_node.weight);
+}
+
+// Whether the source and target sides of a search may meet at a node. Only a target seed
+// can be out of reach: the source side reached the node at its start, unless it is a seed too.
+template <typename FacadeT>
+bool canMeetAtNode(const FacadeT &facade,
+                   const NodeID node,
+                   const bool source_is_seed,
+                   const EdgeWeight source_weight,
+                   const bool target_is_seed,
+                   const EdgeWeight target_weight)
+{
+    return !target_is_seed ||
+           isTargetReachable(facade,
+                             node,
+                             source_is_seed ? EdgeWeight{0} - source_weight : EdgeWeight{0},
+                             target_weight);
+}
+
 template <typename HeapNodeT>
 inline bool shouldForceStep(const std::vector<NodeID> &force_nodes,
                             const HeapNodeT &forward_heap_node,

@@ -46,6 +46,11 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                         const SearchEngineData<Algorithm>::QueryHeap::HeapNode &heapNode,
                         SearchEngineData<Algorithm>::QueryHeap &heap)
 {
+    if (DIRECTION == REVERSE_DIRECTION && !canLeaveTargetSeed(facade, heapNode))
+    {
+        return;
+    }
+
     for (const auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
     {
         const auto &data = facade.GetEdgeData(edge);
@@ -118,7 +123,19 @@ void routingStep(const DataFacade<Algorithm> &facade,
     auto heapNode = forward_heap.DeleteMinGetHeapNode();
     const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
 
-    if (reverseHeapNode)
+    const auto canMeet = [&]
+    {
+        const auto &source_node = DIRECTION == FORWARD_DIRECTION ? heapNode : *reverseHeapNode;
+        const auto &target_node = DIRECTION == FORWARD_DIRECTION ? *reverseHeapNode : heapNode;
+        return canMeetAtNode(facade,
+                             heapNode.node,
+                             source_node.data.parent == source_node.node,
+                             source_node.weight,
+                             target_node.data.parent == target_node.node,
+                             target_node.weight);
+    };
+
+    if (reverseHeapNode && canMeet())
     {
         const EdgeWeight new_weight = reverseHeapNode->weight + heapNode.weight;
 

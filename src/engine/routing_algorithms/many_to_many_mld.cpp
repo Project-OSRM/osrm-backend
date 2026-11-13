@@ -37,8 +37,14 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
                       const EdgeDistance distance,
                       SearchEngineData<mld::Algorithm>::ManyToManyQueryHeap &query_heap,
                       LevelID level,
+                      const bool is_seed,
                       const EdgeWeight approach = EdgeWeight{0})
 {
+    if (DIRECTION == REVERSE_DIRECTION && is_seed && !isTargetReachable(facade, node, {0}, weight))
+    {
+        return;
+    }
+
     for (const auto edge : facade.GetBorderEdgeRange(level, node))
     {
         const auto &data = facade.GetEdgeData(edge);
@@ -53,7 +59,13 @@ void relaxBorderEdges(const DataFacade<mld::Algorithm> &facade,
 
             const auto turn_id = data.turn_id;
             const auto node_id = DIRECTION == FORWARD_DIRECTION ? node : facade.GetTarget(edge);
-            const auto node_weight = facade.GetNodeWeight(node_id);
+            const auto node_weight = DIRECTION == FORWARD_DIRECTION
+                                         ? getLeavingNodeWeight(facade, node_id, is_seed, weight)
+                                         : facade.GetNodeWeight(node_id);
+            if (node_weight == INVALID_EDGE_WEIGHT)
+            {
+                continue;
+            }
             const auto node_duration = facade.GetNodeDuration(node_id);
             const auto node_distance = facade.GetNodeDistance(node_id);
             const auto turn_weight =
@@ -214,6 +226,7 @@ void relaxOutgoingEdges(
                                 heapNode.data.distance,
                                 query_heap,
                                 level,
+                                heapNode.data.parent == heapNode.node,
                                 heapNode.data.approach);
 }
 
@@ -296,6 +309,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
     // Check if node is in the destinations list and update weights/durations
     auto update_values = [&](NodeID node,
+                             bool is_seed,
                              EdgeWeight weight,
                              EdgeDuration duration,
                              EdgeDistance distance,
@@ -317,7 +331,12 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
             // cannot make a target that sits before the source reachable.  Test the graph
             // part, or a degenerate pairing is accepted and the cell comes out short by
             // the stretch between them.  See ManyToManyHeapData::approach.
-            if (path_weight - (approach + target_approach) >= EdgeWeight{0})
+            // In the reverse direction the entries are the sources, and the search the target
+            const bool reachable =
+                DIRECTION == FORWARD_DIRECTION
+                    ? canMeetAtNode(facade, node, is_seed, weight, true, target_weight)
+                    : canMeetAtNode(facade, node, true, target_weight, is_seed, weight);
+            if (path_weight - (approach + target_approach) >= EdgeWeight{0} && reachable)
             {
                 const auto path_duration = duration + target_duration;
                 const auto path_distance = distance + target_distance;
@@ -356,7 +375,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
             // the node (e.g destination is before source on oneway segment) we want to allow
             // node to be visited later in the search along a reachable path.
             // Therefore, we manually run first step of search without marking node as visited.
-            update_values(node, initial_weight, initial_duration, initial_distance, approach);
+            update_values(node, true, initial_weight, initial_duration, initial_distance, approach);
             relaxBorderEdges<DIRECTION>(facade,
                                         node,
                                         initial_weight,
@@ -364,6 +383,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                         initial_distance,
                                         query_heap,
                                         0,
+                                        true,
                                         approach);
         }
         else
@@ -429,6 +449,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
 
         // Update values
         update_values(heapNode.node,
+                      heapNode.data.parent == heapNode.node,
                       heapNode.weight,
                       heapNode.data.duration,
                       heapNode.data.distance,
@@ -499,7 +520,23 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         // ManyToManyHeapData::approach.
         const auto approach = heapNode.data.approach + current_bucket.approach;
 
-        if (new_weight - approach >= EdgeWeight{0} &&
+        // In the reverse direction the buckets hold the sources, and the search the target
+        const bool heap_is_seed = heapNode.data.parent == heapNode.node;
+        const bool bucket_is_seed = current_bucket.parent_node == heapNode.node;
+        const bool reachable = DIRECTION == FORWARD_DIRECTION ? canMeetAtNode(facade,
+                                                                              heapNode.node,
+                                                                              heap_is_seed,
+                                                                              heapNode.weight,
+                                                                              bucket_is_seed,
+                                                                              target_weight)
+                                                              : canMeetAtNode(facade,
+                                                                              heapNode.node,
+                                                                              bucket_is_seed,
+                                                                              target_weight,
+                                                                              heap_is_seed,
+                                                                              heapNode.weight);
+
+        if (new_weight - approach >= EdgeWeight{0} && reachable &&
             std::tie(new_weight, new_duration, new_distance) <
                 std::tie(current_weight, current_duration, current_distance))
         {

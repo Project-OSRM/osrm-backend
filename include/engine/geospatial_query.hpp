@@ -436,17 +436,19 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 to_alias<EdgeDuration>(from_alias<double>(reverse_duration) * ratio);
         }
 
-        // check phantom node segments validity
-        auto areSegmentsValid = [](const auto &first, const auto &last) -> bool
-        { return std::find(first, last, INVALID_SEGMENT_WEIGHT) == last; };
-        bool is_forward_valid_source =
-            areSegmentsValid(forward_weights.begin(), forward_weights.end());
-        bool is_forward_valid_target = areSegmentsValid(
-            forward_weights.begin(), forward_weights.begin() + data.fwd_segment_position + 1);
-        bool is_reverse_valid_source =
-            areSegmentsValid(reverse_weights.begin(), reverse_weights.end());
-        bool is_reverse_valid_target = areSegmentsValid(
-            reverse_weights.begin(), reverse_weights.end() - data.fwd_segment_position);
+        // A phantom only needs its own segment open. Whether a closed segment elsewhere on the
+        // edge-based node stops a source leaving it, or a target being reached from its start,
+        // is up to the search (see getLeavingNodeWeight and isTargetReachable): a source and a
+        // target on the node with no closure between them can still reach one another.
+        const bool is_forward_open =
+            forward_weights[data.fwd_segment_position] != INVALID_SEGMENT_WEIGHT;
+        const bool is_reverse_open =
+            reverse_weights[reverse_weights.size() - data.fwd_segment_position - 1] !=
+            INVALID_SEGMENT_WEIGHT;
+        const bool is_forward_valid_source = is_forward_open;
+        const bool is_forward_valid_target = is_forward_open;
+        const bool is_reverse_valid_source = is_reverse_open;
+        const bool is_reverse_valid_target = is_reverse_open;
 
         auto transformed = PhantomNodeWithDistance{
             PhantomNode{data,

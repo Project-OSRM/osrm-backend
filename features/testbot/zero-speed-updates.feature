@@ -88,9 +88,10 @@ Feature: Check zero speed updates
             3,2,0
             """
 
+        # 2 is on the closed segment, so it snaps to b, which 1 can reach
         When I route I should get
-          | from | to | code    |
-          |    1 |  2 | NoRoute |
+          | from | to | route   | code |
+          |    1 |  2 | abc,abc | Ok   |
 
 
     Scenario: Routing with alternatives on restricted way
@@ -113,9 +114,10 @@ Feature: Check zero speed updates
             | alternatives | true |
 
 
+        # 1 is on the closed segment, so it snaps to b, from where 2 is reachable
         When I route I should get
-          | from | to | code    | alternative |
-          |    1 |  2 | NoRoute |             |
+          | from | to | route   | code | alternative |
+          |    1 |  2 | abc,abc | Ok   |             |
 
 
     Scenario: Routing on restricted oneway
@@ -157,10 +159,11 @@ Feature: Check zero speed updates
             3,2,0
             """
 
+        # 2 is on the closed segment and 3 past the end of the way, so both snap to b
         When I route I should get
-          | waypoints | code    |
-          | 1,2,3     | NoRoute |
-          | 3,2,1     | NoRoute |
+          | waypoints | route           | code |
+          | 1,2,3     | abc,abc,abc,abc | Ok   |
+          | 3,2,1     | abc,abc,abc,abc | Ok   |
 
 
     @trip
@@ -260,3 +263,117 @@ Feature: Check zero speed updates
           | from | to | code |
           | 3    | 4  | Ok   |
           | a    | f  | Ok   |
+
+
+    Scenario: Closing a segment should not trap a start past the closure on the same way
+        Given the node map
+            """
+            x
+            |
+            a - 1 - 2 - b - 3 - c - d
+                                |
+                                y
+            """
+
+        And the ways
+            | nodes |
+            | abcd  |
+            | xa    |
+            | cy    |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        # Node IDs (top-to-bottom, left-to-right): x=1, a=2, b=3, c=4, d=5, y=6
+        # Close b-c (3,4) in both directions. a-b-c is a single edge between the
+        # intersections at a and c, with 1 and 2 on the open part of it.
+        And the speed file
+            """
+            3,4,0
+            4,3,0
+            """
+
+        When I route I should get
+          | from | to | route      | code    |
+          | 1    | 2  | abcd,abcd  | Ok      |
+          | 2    | 1  | abcd,abcd  | Ok      |
+          | x    | 1  | xa,abcd,abcd | Ok    |
+          | 1    | d  |            | NoRoute |
+          | 2    | y  |            | NoRoute |
+          | x    | d  |            | NoRoute |
+          | y    | 1  |            | NoRoute |
+
+    # CH drops the turns out of a node with a closed segment, so it still has no way off it
+    @no_ch
+    Scenario: Closing a segment should not trap a start past the closure on the same way, MLD
+        Given the node map
+            """
+            x
+            |
+            a - 1 - 2 - b - 3 - c - d
+                                |
+                                y
+            """
+
+        And the ways
+            | nodes |
+            | abcd  |
+            | xa    |
+            | cy    |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        And the speed file
+            """
+            3,4,0
+            4,3,0
+            """
+
+        When I route I should get
+          | from | to | route      | code    |
+          | 1    | x  | abcd,xa,xa | Ok      |
+          | 2    | x  | abcd,xa,xa | Ok      |
+
+        # Arriving at 2 heading east, the way ahead is closed, so turn around there
+        When I route I should get
+          | waypoints | route                 | code |
+          | 1,2,x     | abcd,abcd,abcd,xa,xa  | Ok   |
+
+        When I request a travel time matrix I should get
+          |   | 1  | 2  | x  |
+          | 1 | 0  | 20 | 40 |
+          | 2 | 20 | 0  | 60 |
+          | x | 40 | 60 | 0  |
+
+
+    Scenario: Turning around at a waypoint heading towards a closed segment
+        Given the node map
+            """
+            x
+            |
+            a - 1 - 2 - 3 - b - c - d
+                                |
+                                y
+            """
+
+        And the ways
+            | nodes |
+            | abcd  |
+            | xa    |
+            | cy    |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        # Node IDs (top-to-bottom, left-to-right): x=1, a=2, b=3, c=4, d=5, y=6
+        # Close b-c (3,4) in both directions: arriving at 3 heading east, the way
+        # ahead is closed, so the route has to turn around there.
+        And the speed file
+            """
+            3,4,0
+            4,3,0
+            """
+
+        When I route I should get
+          | waypoints | route               | time    | code |
+          | 2,3,1     | abcd,abcd,abcd,abcd | 60s +-1 | Ok   |
+          | 1,3,2     | abcd,abcd,abcd,abcd | 60s +-1 | Ok   |
+
+        When I route I should get
+          | waypoints | code    |
+          | 1,3,y     | NoRoute |

@@ -71,7 +71,18 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
     search_space.emplace_back(heapNode.data.parent, heapNode.node);
 
     const auto reverseHeapNode = reverse_heap.GetHeapNodeIfWasInserted(heapNode.node);
-    if (reverseHeapNode)
+    const auto canMeet = [&]
+    {
+        const auto &source_node = DIRECTION == FORWARD_DIRECTION ? heapNode : *reverseHeapNode;
+        const auto &target_node = DIRECTION == FORWARD_DIRECTION ? *reverseHeapNode : heapNode;
+        return canMeetAtNode(facade,
+                             heapNode.node,
+                             source_node.data.parent == source_node.node,
+                             source_node.weight,
+                             target_node.data.parent == target_node.node,
+                             target_node.weight);
+    };
+    if (reverseHeapNode && canMeet())
     {
         search_space_intersection.emplace_back(heapNode.node);
         const EdgeWeight new_weight = reverseHeapNode->weight + heapNode.weight;
@@ -96,6 +107,11 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
                 }
             }
         }
+    }
+
+    if (DIRECTION == REVERSE_DIRECTION && !canLeaveTargetSeed(facade, heapNode))
+    {
+        return;
     }
 
     for (auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
