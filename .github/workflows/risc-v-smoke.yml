@@ -1,0 +1,100 @@
+name: RISC-V (experimental)
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: riscv-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  VCPKG_COMMIT_ID: d015e31e90838a4c9dfa3eed45979bc70d9357fc
+  VCPKG_DEFAULT_BINARY_CACHE: ${{ github.workspace }}/.vcpkg-bincache
+  VCPKG_BINARY_SOURCES: "clear;files,${{ github.workspace }}/.vcpkg-bincache,readwrite"
+  VCPKG_FORCE_SYSTEM_BINARIES: 1
+  VCPKG_DEFAULT_TRIPLET: riscv64-linux
+  VCPKG_DEFAULT_HOST_TRIPLET: riscv64-linux
+  CC: gcc-14
+  CXX: g++-14
+
+jobs:
+  build-riscv64:
+    runs-on: ubuntu-24.04-riscv
+    continue-on-error: true
+    timeout-minutes: 360
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-tags: true
+
+      - name: Machine info
+        run: |
+          uname -m
+          nproc
+          free -h
+          df -h .
+
+      - name: Install toolchain
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y build-essential gcc-14 g++-14 ninja-build \
+            curl zip unzip tar pkg-config git ccache autoconf automake libtool \
+            autoconf-archive python3 python3-pip python3-venv
+          python3 -m venv $HOME/cmake-venv
+          $HOME/cmake-venv/bin/pip install "cmake>=3.31"
+          echo "$HOME/cmake-venv/bin" >> $GITHUB_PATH
+
+      - name: Check CMake version
+        run: cmake --version
+
+      - name: Restore vcpkg binary cache
+        id: vcpkg-cache
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ github.workspace }}/.vcpkg-bincache
+          key: vcpkg-riscv64-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}-${{ github.run_id }}
+          restore-keys: |
+            vcpkg-riscv64-${{ env.VCPKG_COMMIT_ID }}-
+
+      # Install dependencies as their own step so a failure points at vcpkg,
+      # not at CMake's project() call.
+      - name: Setup vcpkg and install dependencies
+        uses: lukka/run-vcpkg@v11
+        with:
+          vcpkgGitCommitId: ${{ env.VCPKG_COMMIT_ID }}
+          vcpkgJsonGlob: 'vcpkg.json'
+          runVcpkgInstall: true
+          runVcpkgFormatString: '["install","--recurse","--clean-after-build","--x-install-root","$[env.VCPKG_INSTALLED_DIR]","--triplet","riscv64-linux"]'
+        env:
+          VCPKG_INSTALLED_DIR: ${{ github.workspace }}/build/vcpkg_installed
+
+      - name: Configure
+        run: |
+          cmake -S . -B build -G Ninja \
+            -DCMAKE_TOOLCHAIN_FILE=${VCPKG_ROOT}/scripts/buildsystems/vcpkg.cmake \
+            -DVCPKG_TARGET_TRIPLET=riscv64-linux \
+            -DVCPKG_MANIFEST_INSTALL=OFF \
+            -DCMAKE_BUILD_TYPE=Release \
+            -DENABLE_LTO=OFF \
+            -DENABLE_NODE_BINDINGS=OFF
+
+      - name: Build
+        run: cmake --build build --parallel $(nproc)
+
+      - name: Save vcpkg binary cache
+        if: always()
+        uses: actions/cache/save@v4
+        with:
+          path: ${{ github.workspace }}/.vcpkg-bincache
+          key: vcpkg-riscv64-${{ env.VCPKG_COMMIT_ID }}-${{ hashFiles('vcpkg.json', 'vcpkg-configuration.json', 'vcpkg-overlay-ports/**') }}-${{ github.run_id }}
+
+      - name: Upload vcpkg logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vcpkg-logs-riscv64
+          path: |
+            ${{ env.VCPKG_ROOT }}/buildtrees/**/*.log
+            build/vcpkg-manifest-install.log
+            build/CMakeFiles/CMakeConfigureLog.yaml
+          if-no-files-found: ignore
