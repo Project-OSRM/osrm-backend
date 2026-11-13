@@ -32,18 +32,34 @@ To prepare the test data simply `cd test/data/` and then run `make`.
 
 ### Running Tests
 
-To build the unit tests:
+Install a supported Node.js runtime for the non-Windows library-test data
+fixtures, which run JavaScript helper scripts. Run the unit tests from the
+repository root after configuring the CMake build:
 
 ```
-cd build
-cmake ..
-make tests
+ctest --test-dir build --output-on-failure
 ```
 
-You should see the compiled binaries in `build/unit_tests`, you can then run each suite individually:
+CTest fixtures build each test executable before running it. They also prepare
+the Monaco data needed by the library tests on non-Windows platforms. For a
+multi-config generator, add the selected configuration, for example `-C Release`.
+
+To build the test executables without running them:
+
+```bash
+cmake --build build --target tests
+```
+
+Run one suite through CTest, including its build fixture:
+
+```bash
+ctest --test-dir build --output-on-failure -R '^engine-tests$'
+```
+
+The compiled binaries are in `build/unit_tests`. To run a built suite directly:
 
 ```
-./engine-tests
+./build/unit_tests/engine-tests
 ```
 
 ## Cucumber

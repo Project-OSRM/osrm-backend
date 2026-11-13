@@ -61,7 +61,7 @@ If you want to use the CH pipeline instead replace `osrm-partition` and `osrm-cu
 
 ### Using Docker
 
-We base our Docker images ([backend](https://github.com/Project-OSRM/osrm-backend/pkgs/container/osrm-backend), [frontend](https://hub.docker.com/r/osrm/osrm-frontend/)) on Debian Linux and make sure they are as lightweight as possible. Older backend versions can be found on [Docker Hub](https://hub.docker.com/r/osrm/osrm-backend/).
+We base our Docker images ([backend](https://github.com/Project-OSRM/osrm-backend/pkgs/container/osrm-backend), [frontend](https://github.com/Project-OSRM/osrm-frontend/pkgs/container/osrm-frontend)) on Debian Linux and make sure they are as lightweight as possible. Older backend versions can be found on [Docker Hub](https://hub.docker.com/r/osrm/osrm-backend/).
 
 Download OpenStreetMap extracts for example from [Geofabrik](http://download.geofabrik.de/)
 
@@ -86,7 +86,7 @@ Make requests against the HTTP server
 
 Optionally start a user-friendly frontend on port 9966, and open it up in your browser
 
-    docker run -p 9966:9966 osrm/osrm-frontend
+    docker run -p 9966:9966 ghcr.io/project-osrm/osrm-frontend:latest
     xdg-open 'http://127.0.0.1:9966'
 
 In case Docker complains about not being able to connect to the Docker daemon make sure you are in the `docker` group.
@@ -117,6 +117,10 @@ sudo apt install build-essential git cmake ninja-build pkg-config \
   autoconf automake libtool curl zip unzip tar
 ```
 
+Check `cmake --version` before configuring. Ubuntu 24.04's default package is
+older than 3.29; install a newer CMake from the [official downloads](https://cmake.org/download/)
+or [Kitware's APT repository](https://apt.kitware.com/) on that release.
+
 Bootstrap vcpkg once (anywhere on your machine) and point `VCPKG_ROOT` at it:
 
 ```bash
@@ -136,6 +140,32 @@ sudo cmake --install build
 The first configure will build every dependency (boost, tbb, expat, bzip2,
 lua, libosmium, …) from source. Subsequent configures reuse vcpkg's
 binary cache.
+
+### Running Tests
+
+Install a supported Node.js runtime before running the full unit suite: its
+non-Windows library-test data fixtures use Node.js scripts. Run the unit tests
+from the repository root after configuring the build:
+
+```bash
+ctest --test-dir build --output-on-failure
+```
+
+CTest builds the test executables and their test data through fixtures before
+running them. For a multi-config build, add the selected configuration, such as
+`-C Release`. To build the test executables without running them, use
+`cmake --build build --target tests`.
+
+The integration tests use Node.js and cucumber. After installing the project's
+Node.js dependencies and building the OSRM executables, run:
+
+```bash
+OSRM_BUILD_DIR=build npx cucumber-js -p home -p mld -p mmap
+```
+
+Use `npm test` for the full CH/MLD and load-method matrix. See
+[testing](docs/testing.md) for individual suites and [cucumber](docs/cucumber.md)
+for scenario-test setup.
 
 ### Request Against the Demo Server
 
