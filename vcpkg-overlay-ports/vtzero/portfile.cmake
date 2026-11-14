@@ -7,7 +7,11 @@ vcpkg_from_github(
 )
 
 set(VCPKG_BUILD_TYPE release) # header-only
-vcpkg_cmake_configure(SOURCE_PATH ${SOURCE_PATH})
+vcpkg_cmake_configure(
+    SOURCE_PATH "${SOURCE_PATH}"
+    OPTIONS
+        "-DPROTOZERO_INCLUDE_DIR=${CURRENT_INSTALLED_DIR}/include"
+)
 
 vcpkg_cmake_install()
 
