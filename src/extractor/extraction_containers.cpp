@@ -22,6 +22,7 @@
 #include <tbb/parallel_sort.h>
 
 #include <limits>
+#include <tuple>
 
 namespace
 {
@@ -44,6 +45,28 @@ struct CmpEdgeByOSMTargetID
 struct CmpEdgeByInternalSourceTargetAndName
 {
     using value_type = oe::InternalExtractorEdge;
+
+    static auto tieBreakKey(const value_type &edge)
+    {
+        const auto &r = edge.result;
+        const auto &c = r.flags.road_classification;
+        const unsigned bits = r.flags.forward | r.flags.backward << 1 | r.flags.is_split << 2 |
+                              r.flags.roundabout << 3 | r.flags.circular << 4 |
+                              r.flags.startpoint << 5 | r.flags.restricted << 6;
+        return std::make_tuple(r.weight,
+                               r.duration,
+                               r.distance,
+                               r.annotation_data,
+                               bits,
+                               static_cast<unsigned>(c.GetPriority()),
+                               static_cast<unsigned>(c.GetNumberOfLanes()),
+                               static_cast<unsigned>(c.IsMotorwayClass()),
+                               static_cast<unsigned>(c.IsLinkClass()),
+                               static_cast<unsigned>(c.IsLowPriorityRoadClass()),
+                               static_cast<unsigned>(r.flags.highway_turn_classification),
+                               static_cast<unsigned>(r.flags.access_turn_classification));
+    }
+
     bool operator()(const value_type &lhs, const value_type &rhs) const
     {
         if (lhs.result.source != rhs.result.source)
@@ -60,21 +83,28 @@ struct CmpEdgeByInternalSourceTargetAndName
 
         auto const lhs_name_id = edge_annotation_data[lhs.result.annotation_data].string_view_id;
         auto const rhs_name_id = edge_annotation_data[rhs.result.annotation_data].string_view_id;
-        if (lhs_name_id == rhs_name_id)
-            return false;
+        if (lhs_name_id != rhs_name_id)
+        {
+            if (lhs_name_id == EMPTY_STRINGVIEWID)
+                return false;
 
-        if (lhs_name_id == EMPTY_STRINGVIEWID)
-            return false;
+            if (rhs_name_id == EMPTY_STRINGVIEWID)
+                return true;
 
-        if (rhs_name_id == EMPTY_STRINGVIEWID)
-            return true;
+            BOOST_ASSERT(!name_offsets.empty() && name_offsets.back() == name_data.size());
+            const oe::ExtractionContainers::NameCharData::const_iterator data = name_data.begin();
+            const auto lhs_begin = data + name_offsets[lhs_name_id];
+            const auto lhs_end = data + name_offsets[lhs_name_id + 1];
+            const auto rhs_begin = data + name_offsets[rhs_name_id];
+            const auto rhs_end = data + name_offsets[rhs_name_id + 1];
+            if (std::lexicographical_compare(lhs_begin, lhs_end, rhs_begin, rhs_end))
+                return true;
+            if (std::lexicographical_compare(rhs_begin, rhs_end, lhs_begin, lhs_end))
+                return false;
+        }
 
-        BOOST_ASSERT(!name_offsets.empty() && name_offsets.back() == name_data.size());
-        const oe::ExtractionContainers::NameCharData::const_iterator data = name_data.begin();
-        return std::lexicographical_compare(data + name_offsets[lhs_name_id],
-                                            data + name_offsets[lhs_name_id + 1],
-                                            data + name_offsets[rhs_name_id],
-                                            data + name_offsets[rhs_name_id + 1]);
+        // total order, so the parallel sort does not depend on scheduling
+        return tieBreakKey(lhs) < tieBreakKey(rhs);
     }
 
     const oe::ExtractionContainers::AnnotationDataVector &edge_annotation_data;

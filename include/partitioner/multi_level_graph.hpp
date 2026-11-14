@@ -173,9 +173,11 @@ class MultiLevelGraph : public util::StaticGraph<EdgeDataT, Ownership>
             permutation.end(),
             [&edges, &highest_border_level](const auto &lhs, const auto &rhs)
             {
-                // sort by source node and then by level in ascending order
-                return std::tie(edges[lhs].source, highest_border_level[lhs], edges[lhs].target) <
-                       std::tie(edges[rhs].source, highest_border_level[rhs], edges[rhs].target);
+                // sort by source node and then by level in ascending order, input order on ties
+                return std::tie(
+                           edges[lhs].source, highest_border_level[lhs], edges[lhs].target, lhs) <
+                       std::tie(
+                           edges[rhs].source, highest_border_level[rhs], edges[rhs].target, rhs);
             });
 
         return permutation;
