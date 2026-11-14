@@ -6,8 +6,16 @@ vcpkg_from_github(
     HEAD_REF master
 )
 
+# Only the headers are consumed; upstream always builds its examples and tests.
+vcpkg_replace_string("${SOURCE_PATH}/CMakeLists.txt" "add_subdirectory(examples)" "")
+vcpkg_replace_string("${SOURCE_PATH}/CMakeLists.txt" "add_subdirectory(test)" "")
+
 set(VCPKG_BUILD_TYPE release) # header-only
-vcpkg_cmake_configure(SOURCE_PATH ${SOURCE_PATH})
+vcpkg_cmake_configure(
+    SOURCE_PATH "${SOURCE_PATH}"
+    OPTIONS
+        "-DPROTOZERO_INCLUDE_DIR=${CURRENT_INSTALLED_DIR}/include"
+)
 
 vcpkg_cmake_install()
 
