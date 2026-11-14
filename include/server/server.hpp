@@ -5,7 +5,6 @@
 #include "server/request_handler.hpp"
 #include "server/service_handler.hpp"
 
-#include "util/available_threads.hpp"
 #include "util/log.hpp"
 
 #include <boost/asio.hpp>
@@ -40,7 +39,10 @@ class Server : public std::enable_shared_from_this<Server>
                                                 std::uint64_t max_body_size)
     {
         util::Log() << "HTTP/1.1 server using Boost.Beast, compression by zlib " << zlibVersion();
-        const unsigned hardware_threads = util::GetAvailableThreads();
+        // Only clamp to the actual hardware thread count here: an explicit --threads is allowed
+        // to exceed a container's cgroup CPU quota (osrm-routed only uses the quota to pick a
+        // *default*, see util::GetAvailableThreads).
+        const unsigned hardware_threads = std::max(1u, std::thread::hardware_concurrency());
         const unsigned real_num_threads = std::min(hardware_threads, requested_num_threads);
         return std::make_shared<Server>(ip_address,
                                         ip_port,

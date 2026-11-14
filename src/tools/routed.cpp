@@ -118,7 +118,12 @@ inline unsigned generateServerProgramOptions(const int argc,
     using boost::program_options::value;
     using std::filesystem::path;
 
-    const auto hardware_threads = std::max<int>(1, static_cast<int>(util::GetAvailableThreads()));
+    // The quota-aware value is only used to pick a sensible --threads default; the actual
+    // hardware thread count is what an explicit --threads gets clamped against below, so a
+    // container's cgroup CPU quota can't silently reduce a value the operator set on purpose.
+    const auto default_thread_num = std::max<int>(1, static_cast<int>(util::GetAvailableThreads()));
+    const auto hardware_threads =
+        std::max<int>(1, static_cast<int>(std::thread::hardware_concurrency()));
 
     // declare a group of options that will be allowed only on command line
     boost::program_options::options_description generic_options("Options");
@@ -145,7 +150,7 @@ inline unsigned generateServerProgramOptions(const int argc,
          value<int>(&ip_port)->default_value(5000),
          "TCP/IP port") //
         ("threads,t",
-         value<int>(&requested_thread_num)->default_value(hardware_threads),
+         value<int>(&requested_thread_num)->default_value(default_thread_num),
          "Number of threads to use") //
         ("keepalive-timeout,k",
          value<short>(&keepalive_timeout)->default_value(5),
