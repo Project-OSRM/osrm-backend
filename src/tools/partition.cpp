@@ -2,6 +2,7 @@
 #include "partitioner/partitioner_config.hpp"
 
 #include "osrm/exception.hpp"
+#include "util/available_threads.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
 #include "util/timing_util.hpp"
@@ -90,7 +91,7 @@ return_code parseArguments(int argc,
         //
         ("threads,t",
          boost::program_options::value<unsigned int>(&config.requested_num_threads)
-             ->default_value(std::thread::hardware_concurrency()),
+             ->default_value(util::GetAvailableThreads()),
          "Number of threads to use")
         //
         ("balance",
