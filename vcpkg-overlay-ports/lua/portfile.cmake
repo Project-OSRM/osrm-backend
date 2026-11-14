@@ -1,18 +1,16 @@
-# Based on microsoft/vcpkg at d015e31e90838a4c9dfa3eed45979bc70d9357fc.
-# Keep the official mirror as a fallback when lua.org TLS is unavailable.
 vcpkg_download_distfile(ARCHIVE
+    # Official Lua mirror: https://www.lua.org/mirrors.html
     URLS
         "https://www.lua.org/ftp/lua-${VERSION}.tar.gz"
         "https://www.tecgraf.puc-rio.br/lua/mirror/ftp/lua-${VERSION}.tar.gz"
     FILENAME "lua-${VERSION}.tar.gz"
-    SHA512 3253d2cdc929da6438095a30d66ef16a1abdbb0ada8fee238705b3b38492f14be9553640fdca6b25661e01155ba5582032e0a2ef064e4c283e85efc0a128cabe
+    SHA512 1c8cb3d7194732d7685f80a30e0804cb24dc6aee1f8d1383bb9fd5d0699b84c70b823e686555dfa8fd61a32f32c0c687a8419ff4aa285f39d4f3bf3d5cd635c0
 )
 vcpkg_extract_source_archive(
     SOURCE_PATH
     ARCHIVE "${ARCHIVE}"
     PATCHES
         vs2015-impl-c99.patch
-        fix-ios-system.patch
         uwp-no-popen.diff
 )
 file(COPY "${CMAKE_CURRENT_LIST_DIR}/CMakeLists.txt" DESTINATION "${SOURCE_PATH}")
