@@ -321,6 +321,10 @@ find_package(Threads REQUIRED)
 include(CheckCXXSourceRuns)
 
 find_package(LibArchive REQUIRED)
+if(WIN32)
+  # libarchive uses BCryptGenRandom; FindLibArchive does not expose this dependency.
+  set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES bcrypt)
+endif()
 
 # Header-only libraries from vcpkg. Each provides a CMake CONFIG package.
 find_package(RapidJSON CONFIG REQUIRED)

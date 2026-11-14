@@ -53,6 +53,10 @@ changes — otherwise the wheel build either misses the cache (slow) or
 fails on a missing port. The manylinux repo's `Build` workflow takes an
 `osrmRef` input for that purpose; see its README.
 
+The Linux wheel setup installs `perl-IPC-Cmd` before building. OpenSSL's
+vcpkg port needs this Perl module when a registry update invalidates the
+image's prebuilt dependency cache.
+
 For local source builds outside the manylinux image, e.g macOS, install vcpkg
 yourself, point CMake at its toolchain, and use the release-only triplet
 to match the cache:
