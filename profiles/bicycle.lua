@@ -184,7 +184,7 @@ function setup()
       asphalt = default_speed,
       chipseal = default_speed,
       concrete = default_speed,
-      concrete_lanes = default_speed,
+      ["concrete:lanes"] = default_speed,
       wood = 10,
       metal = 10,
       ["cobblestone:flattened"] = 10,
