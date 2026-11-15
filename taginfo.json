@@ -269,7 +269,7 @@
         {"key": "surface", "value": "asphalt"},
         {"key": "surface", "value": "concrete"},
         {"key": "surface", "value": "concrete:plates"},
-        {"key": "surface", "value": "concrete:lanes"},
+        {"key": "surface", "value": "concrete:lanes", "description": "Limits bicycle speed on concrete lanes"},
         {"key": "surface", "value": "paved"},
         {"key": "surface", "value": "cement"},
         {"key": "surface", "value": "compacted"},
