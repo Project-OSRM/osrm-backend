@@ -49,6 +49,11 @@ function setup()
     -- Applied to bidirectional roads to prefer roads with clear lane markings
     lane_markings_penalty     = 0.75,
 
+    -- Penalty multiplier for highway=residential, to prefer through roads over
+    -- residential shortcuts. Applies to the rate only, so speeds and ETAs do not change.
+    -- Not combined with other penalties: the strongest one (lowest value) is used.
+    residential_penalty       = 0.9,
+
     -- Penalty multiplier for the disadvantaged direction on ways tagged 'priority=forward'/'priority=backward'.
     -- Applies to the per-direction rate (speed). A value < 1 reduces the disadvantaged
     -- direction's rate which increases its routing weight (weight ≈ duration / rate).

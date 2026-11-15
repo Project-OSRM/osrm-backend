@@ -19,8 +19,8 @@ Feature: Car - weights
             | bdf   | service     |
         When I route I should get
             | from | to | route          | speed   | weight |
-            | a    | e  | abc,cg,efg,efg | 29 km/h | 122.4  |
-            | a    | d  | abc,bdf,bdf    | 18 km/h | 71.7   |
+            | a    | e  | abc,cg,efg,efg | 29 km/h | 132    |
+            | a    | d  | abc,bdf,bdf    | 18 km/h | 74.1   |
 
     Scenario: Does not jump off the highway to go down service road
         Given the profile "car"
