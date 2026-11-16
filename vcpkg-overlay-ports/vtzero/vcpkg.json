@@ -1,7 +1,7 @@
 {
   "name": "vtzero",
   "version-string": "1.2.0",
-  "port-version": 2,
+  "port-version": 3,
   "description": "Tiny and fast vector tile decoder and encoder in C++.",
   "homepage": "https://github.com/mapbox/vtzero",
   "license": "BSD-2-Clause",

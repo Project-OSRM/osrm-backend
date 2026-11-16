@@ -53,6 +53,14 @@ changes — otherwise the wheel build either misses the cache (slow) or
 fails on a missing port. The manylinux repo's `Build` workflow takes an
 `osrmRef` input for that purpose; see its README.
 
+CI runs every build-matrix entry even when another entry fails. Failed Linux
+wheel builds print the retained container's vcpkg configuration and error logs
+to help diagnose dependency rebuilds.
+
+The Linux wheel setup installs `perl-IPC-Cmd` and `perl-Time-Piece` before
+building. OpenSSL's vcpkg port needs these Perl modules when a registry update
+invalidates the image's prebuilt dependency cache.
+
 For local source builds outside the manylinux image, e.g macOS, install vcpkg
 yourself, point CMake at its toolchain, and use the release-only triplet
 to match the cache:
