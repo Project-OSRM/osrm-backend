@@ -436,6 +436,11 @@ function WayHandlers.penalties(profile,way,result,data)
     width_penalty = 0.5
   end
 
+  local residential_penalty = 1.0
+  if profile.residential_penalty and data.highway == "residential" then
+    residential_penalty = profile.residential_penalty
+  end
+
   -- Handle high frequency reversible oneways (think traffic signal controlled, changing direction every 15 minutes).
   -- Scaling speed to take average waiting time into account plus some more for start / stop.
   local alternating_penalty = 1.0
@@ -463,8 +468,8 @@ function WayHandlers.penalties(profile,way,result,data)
     end
   end
 
-  local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, priority_forward_penalty)
-  local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, priority_backward_penalty)
+  local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, priority_forward_penalty, residential_penalty)
+  local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, priority_backward_penalty, residential_penalty)
 
   if profile.properties.weight_name == 'routability' then
     if result.forward_speed > 0 then
