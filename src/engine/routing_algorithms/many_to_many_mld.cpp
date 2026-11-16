@@ -1,6 +1,7 @@
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/routing_algorithms/routing_base_mld.hpp"
 
+#include <algorithm>
 #include <boost/assert.hpp>
 #include <ranges>
 
@@ -761,7 +762,23 @@ manyToManySearch(SearchEngineData<mld::Algorithm> &engine_working_data,
                                                        calculate_distance);
     }
 
-    if (target_indices.size() == 1)
+    // The backward search only finds a source by reaching its node, which it never does for a
+    // node holding a closed segment, so a source past a closure needs the bidirectional search.
+    const auto is_on_closed_node = [&](const std::size_t index)
+    {
+        return std::ranges::any_of(
+            candidates_list[index],
+            [&](const PhantomNode &phantom)
+            {
+                return (phantom.IsValidForwardSource() &&
+                        facade.GetNodeWeight(phantom.forward_segment_id.id) ==
+                            INVALID_EDGE_WEIGHT) ||
+                       (phantom.IsValidReverseSource() &&
+                        facade.GetNodeWeight(phantom.reverse_segment_id.id) == INVALID_EDGE_WEIGHT);
+            });
+    };
+
+    if (target_indices.size() == 1 && !std::ranges::any_of(source_indices, is_on_closed_node))
     {
         return mld::oneToManySearch<REVERSE_DIRECTION>(engine_working_data,
                                                        facade,

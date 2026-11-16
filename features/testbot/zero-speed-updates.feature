@@ -342,6 +342,12 @@ Feature: Check zero speed updates
           | 2 | 20 | 0  | 60 |
           | x | 40 | 60 | 0  |
 
+        # A single destination with several sources is searched backwards from the destination
+        When I request a travel time matrix I should get
+          |   | x  |
+          | 1 | 40 |
+          | 2 | 60 |
+
 
     Scenario: Turning around at a waypoint heading towards a closed segment
         Given the node map
