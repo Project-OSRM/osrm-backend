@@ -70,6 +70,7 @@ struct NodeBasedEdgeAnnotation
     ClassData classes;                     // 8  1
     TravelMode travel_mode : 4;            // 4
     bool is_left_hand_driving : 1;         // 1
+    std::uint8_t padding : 3 = 0;          // zeroed, the file stays reproducible
 
     bool CanCombineWith(const NodeBasedEdgeAnnotation &other) const
     {

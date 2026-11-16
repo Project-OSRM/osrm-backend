@@ -22,6 +22,7 @@
 #include <boost/numeric/conversion/cast.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <limits>
 #include <string>
 #include <thread>
@@ -476,7 +477,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         }
     }
 
-    std::size_t node_based_edge_counter = 0;
+    std::atomic<std::size_t> node_based_edge_counter = 0;
 
     SuffixTable street_name_suffix_table(scripting_environment);
     const auto &turn_lanes_data = transformTurnLaneMapIntoArrays(lane_description_map);

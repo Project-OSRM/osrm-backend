@@ -261,6 +261,46 @@ BOOST_FIXTURE_TEST_CASE(construct_branch_test, TestRandomGraphFixture_Branch)
 BOOST_FIXTURE_TEST_CASE(construct_multiple_levels_test, TestRandomGraphFixture_MultipleLevels)
 { construction_test("test_5", *this); }
 
+// Segments at the same squared distance on the fixed point grid must be returned in an order that
+// depends on their geometry only, not on the tree layout.
+BOOST_AUTO_TEST_CASE(equidistant_segments_are_ordered_by_geometry)
+{
+    using Coord = std::pair<FloatLongitude, FloatLatitude>;
+    using Edge = std::tuple<unsigned, unsigned, bool>;
+    for (const double sign : {1.0, -1.0})
+    {
+        // two vertical segments 3e-6 degrees left and right of the query, filler far away
+        std::vector<Coord> coords = {
+            Coord{FloatLongitude{sign * 10.000003}, FloatLatitude{-0.5}},
+            Coord{FloatLongitude{sign * 10.000003}, FloatLatitude{0.5}},
+            Coord{FloatLongitude{sign * 9.999997}, FloatLatitude{-0.5}},
+            Coord{FloatLongitude{sign * 9.999997}, FloatLatitude{0.5}},
+        };
+        std::vector<Edge> edges = {Edge(0, 1, true), Edge(2, 3, true)};
+        for (unsigned i = 0; i < 20; ++i)
+        {
+            coords.push_back(Coord{FloatLongitude{sign * (11.0 + i)}, FloatLatitude{-3.0}});
+            coords.push_back(Coord{FloatLongitude{sign * (11.0 + i)}, FloatLatitude{3.0}});
+            edges.push_back(Edge(coords.size() - 2, coords.size() - 1, true));
+        }
+        GraphFixture fixture(coords, edges);
+        TemporaryFile tmp;
+        auto rtree = make_rtree<MiniStaticRTree>(tmp.path, fixture);
+
+        const Coordinate query(FloatLongitude{sign * 10.0}, FloatLatitude{0.0});
+        const auto result = rtree.Nearest(query, 2);
+        BOOST_REQUIRE_EQUAL(result.size(), 2);
+        const Coordinate projected_query{web_mercator::fromWGS84(query)};
+        BOOST_CHECK_EQUAL(coordinate_calculation::squaredEuclideanDistance(
+                              result[0].fixed_projected_coordinate, projected_query),
+                          coordinate_calculation::squaredEuclideanDistance(
+                              result[1].fixed_projected_coordinate, projected_query));
+        // the smaller longitude comes first
+        BOOST_CHECK(result[0].fixed_projected_coordinate.lon <
+                    result[1].fixed_projected_coordinate.lon);
+    }
+}
+
 // Bug: If you querry a point that lies between two BBs that have a gap,
 // one BB will be pruned, even if it could contain a nearer match.
 BOOST_AUTO_TEST_CASE(regression_test)
