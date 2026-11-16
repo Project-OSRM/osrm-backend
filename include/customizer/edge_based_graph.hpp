@@ -16,6 +16,7 @@ namespace osrm::customizer
 
 struct EdgeBasedGraphEdgeData
 {
+    static constexpr bool SupportsPackedRecords = true;
     NodeID turn_id; // ID of the edge based node (node based edge)
 };
 

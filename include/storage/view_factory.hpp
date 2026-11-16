@@ -386,8 +386,11 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
     if (!block_nodes)
         node_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry>(
             index, name + "/node_array");
-    auto edge_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry>(
-        index, name + "/edge_array");
+    util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry> edge_list;
+    const bool packed = index.HasBlock(name + "/edge_array6");
+    if (!packed)
+        edge_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry>(
+            index, name + "/edge_array");
     auto node_to_offset = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset>(
         index, name + "/node_to_edge_offset");
     auto node_weights = make_vector_view<EdgeWeight>(index, name + "/node_weights");
@@ -404,6 +407,8 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
                                                           node_distances,
                                                           is_forward_edge,
                                                           is_backward_edge);
+    if (packed)
+        graph.bindPackedEdges(make_vector_view<std::uint8_t>(index, name + "/edge_array6"));
     if (block_nodes)
         graph.bindNodeBlocks(
             make_vector_view<util::BlockDeltaHeader>(index, name + "/node_blocks/headers"),

@@ -15,6 +15,7 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <cstring>
 #include <utility>
 #include <vector>
 
@@ -142,7 +143,8 @@ class StaticGraph
 
         number_of_nodes = static_cast<decltype(number_of_nodes)>(node_array.size() - 1);
         number_of_edges = static_cast<decltype(number_of_edges)>(node_array.back().first_edge);
-        BOOST_ASSERT(number_of_edges <= edge_array.size());
+        BOOST_ASSERT(number_of_edges <= edge_array.size() ||
+                     (Ownership == storage::Ownership::View && edge_array.empty()));
         BOOST_ASSERT(number_of_nodes == node_array.size() - 1);
     }
 
@@ -168,11 +170,21 @@ class StaticGraph
     unsigned GetOutDegree(const NodeIterator n) const { return EndEdges(n) - BeginEdges(n); }
 
     inline NodeIterator GetTarget(const EdgeIterator e) const
-    { return NodeIterator(edge_array[e].target); }
+    { return NodeIterator(readEdge(e).target); }
 
     auto &GetEdgeData(const EdgeIterator e) { return edge_array[e].data; }
 
-    const auto &GetEdgeData(const EdgeIterator e) const { return edge_array[e].data; }
+    decltype(auto) GetEdgeData(const EdgeIterator e) const
+    {
+        if constexpr (requires { EdgeDataT::SupportsPackedRecords; })
+            return EdgeDataT(readEdge(e).data);
+        else
+            return (edge_array[e].data);
+    }
+
+    void bindPackedEdges(Vector<std::uint8_t> bytes)
+        requires(Ownership == storage::Ownership::View)
+    { packed_edges = std::move(bytes); }
 
     EdgeIterator BeginEdges(const NodeIterator n) const { return EdgeIterator(readFirstEdge(n)); }
 
@@ -183,7 +195,7 @@ class StaticGraph
     {
         for (const auto i : irange(BeginEdges(from), EndEdges(from)))
         {
-            if (to == edge_array[i].target)
+            if (to == GetTarget(i))
             {
                 return i;
             }
@@ -322,6 +334,21 @@ class StaticGraph
         return node_array.at(node).first_edge;
     }
 
+    EdgeArrayEntry readEdge(EdgeIterator edge) const
+    {
+        if constexpr (requires { EdgeDataT::SupportsPackedRecords; })
+        {
+            if (!packed_edges.empty())
+            {
+                std::uint64_t bits;
+                std::memcpy(&bits, packed_edges.data() + std::size_t(edge) * 6, sizeof(bits));
+                return {static_cast<NodeID>(bits & ((std::uint64_t{1} << 25) - 1)),
+                        {static_cast<NodeID>((bits >> 25) & ((std::uint64_t{1} << 22) - 1))}};
+            }
+        }
+        return edge_array[edge];
+    }
+
     NodeIterator number_of_nodes = 0;
     EdgeIterator number_of_edges = 0;
 
@@ -330,6 +357,7 @@ class StaticGraph
     Vector<std::uint64_t> node_words;
     std::uint64_t *node_count = nullptr;
     Vector<EdgeArrayEntry> edge_array;
+    Vector<std::uint8_t> packed_edges;
 };
 
 } // namespace osrm::util

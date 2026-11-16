@@ -692,7 +692,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
     NodeID GetTarget(const EdgeID edge_based_edge_id) const override final
     { return query_graph.GetTarget(edge_based_edge_id); }
 
-    const EdgeData &GetEdgeData(const EdgeID edge_based_edge_id) const override final
+    EdgeData GetEdgeData(const EdgeID edge_based_edge_id) const override final
     { return query_graph.GetEdgeData(edge_based_edge_id); }
 
     EdgeRange GetBorderEdgeRange(const LevelID level,

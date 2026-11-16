@@ -84,9 +84,19 @@ inline void read(storage::tar::FileReader &reader,
     }
     else
         storage::serialization::read(reader, name + "/node_array", graph.node_array);
-    storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
+    if (reader.HasEntry(name + "/edge_array6"))
+    {
+        if constexpr (Ownership != storage::Ownership::View ||
+                      !requires { EdgeDataT::SupportsPackedRecords; })
+            throw util::exception("Packed query edges cannot be preprocessed");
+        else
+            storage::serialization::read(reader, name + "/edge_array6", graph.packed_edges);
+    }
+    else
+        storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
     graph.number_of_nodes = (graph.node_count ? *graph.node_count : graph.node_array.size()) - 1;
-    graph.number_of_edges = graph.edge_array.size();
+    graph.number_of_edges =
+        graph.packed_edges.empty() ? graph.edge_array.size() : (graph.packed_edges.size() - 8) / 6;
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>
