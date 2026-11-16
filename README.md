@@ -151,10 +151,19 @@ from the repository root after configuring the build:
 ctest --test-dir build --output-on-failure
 ```
 
-CTest builds the test executables and their test data through fixtures before
-running them. For a multi-config build, add the selected configuration, such as
-`-C Release`. To build the test executables without running them, use
-`cmake --build build --target tests`.
+CTest builds the test executables through fixtures and prepares their Monaco
+test data on non-Windows platforms. Windows users must prepare the generated
+CH and MLD datasets separately before running the full suite; see the
+[Windows test instructions](docs/testing.md#windows).
+
+For a non-Windows multi-config build, set `OSRM_BUILD_DIR` to the absolute
+configuration-specific executable directory before configuring CMake, for
+example `export OSRM_BUILD_DIR="$PWD/build/Release"`. Select the same
+configuration when running CTest with `-C Release`. See the
+[multi-config instructions](docs/testing.md#multi-config-builds-on-linux-and-macos)
+for a complete example. To build the test executables without running them,
+use `cmake --build build --target tests`, adding `--config Release` for a
+multi-config build.
 
 The integration tests use Node.js and cucumber. After installing the project's
 Node.js dependencies and building the OSRM executables, run:

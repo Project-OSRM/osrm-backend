@@ -28,7 +28,8 @@ This dataset is a small extract and may not even contain all tags or edge cases.
 Furthermore this dataset is not in sync with what you see in up-to-date OSM maps or on the demo server.
 See the library tests for how to add new dataset dependent tests.
 
-To prepare the test data simply `cd test/data/` and then run `make`.
+CTest prepares the generated data automatically on non-Windows platforms.
+Windows preparation is described in [Running Tests](#running-tests).
 
 ### Running Tests
 
@@ -41,8 +42,56 @@ ctest --test-dir build --output-on-failure
 ```
 
 CTest fixtures build each test executable before running it. They also prepare
-the Monaco data needed by the library tests on non-Windows platforms. For a
-multi-config generator, add the selected configuration, for example `-C Release`.
+the Monaco data needed by the library tests on non-Windows platforms. These
+commands assume a standalone build with `OSRM_BUILD_TESTING=ON` (the default).
+Multi-config builds and Windows need the additional setup below.
+
+#### Multi-config builds on Linux and macOS
+
+The data fixture captures `OSRM_BUILD_DIR` when CMake configures the build.
+Set it to the absolute directory containing the selected configuration's OSRM
+executables before configuring, then select the same configuration in CTest.
+For example, from the repository root with `VCPKG_ROOT` set:
+
+```bash
+export OSRM_BUILD_DIR="$PWD/build/Release"
+cmake -S . -B build -G "Ninja Multi-Config" \
+  -DCMAKE_TOOLCHAIN_FILE="$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake"
+ctest --test-dir build -C Release --output-on-failure
+```
+
+Use a fresh build directory when changing generators. If the build is already
+configured with a multi-config generator, set `OSRM_BUILD_DIR` and rerun CMake
+configuration so the data fixture uses the updated path. Passing `-C Release`
+to CTest alone does not change the captured executable directory.
+
+#### Windows
+
+CTest builds the test executables, but does not generate the Monaco datasets
+on Windows. Before running the full suite on a fresh checkout, build the OSRM
+preparation tools and generate the data in `test/data/ch` and `test/data/mld`.
+The following PowerShell commands use a configured multi-config build and do
+not require the Python bindings:
+
+```powershell
+cmake --build build --config Release --target osrm-extract osrm-contract osrm-partition osrm-customize
+$osrm = (Resolve-Path build/Release).Path
+Push-Location test/data
+& "$osrm/osrm-extract.exe" -p ../../profiles/car.lua monaco.osm.pbf
+New-Item -ItemType Directory -Force ch, mld | Out-Null
+Copy-Item monaco.osrm* ch/ -Force
+Copy-Item monaco.osrm* mld/ -Force
+& "$osrm/osrm-contract.exe" ch/monaco.osrm
+& "$osrm/osrm-partition.exe" mld/monaco.osrm
+& "$osrm/osrm-customize.exe" mld/monaco.osrm
+Pop-Location
+ctest --test-dir build -C Release --output-on-failure
+```
+
+Use the same configuration throughout. For a single-config Windows build,
+use its executable directory (for example `build`) instead of `build/Release`.
+
+#### Selecting test targets
 
 To build the test executables without running them:
 
@@ -50,13 +99,17 @@ To build the test executables without running them:
 cmake --build build --target tests
 ```
 
+Add `--config Release` for a multi-config build.
+
 Run one suite through CTest, including its build fixture:
 
 ```bash
 ctest --test-dir build --output-on-failure -R '^engine-tests$'
 ```
 
-The compiled binaries are in `build/unit_tests`. To run a built suite directly:
+Add `-C Release` to CTest commands for a multi-config build. Its test binaries
+are in `build/unit_tests/Release`; single-config builds use `build/unit_tests`.
+To run a built single-config suite directly:
 
 ```
 ./build/unit_tests/engine-tests
