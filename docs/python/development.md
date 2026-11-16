@@ -221,6 +221,11 @@ Run the test suite:
 pytest test/python/
 ```
 
+Standalone CMake builds enable `OSRM_BUILD_TESTING` and
+`OSRM_BUILD_BENCHMARKS` by default. Both default to `OFF` when OSRM is
+embedded with `add_subdirectory()` or `FetchContent`; set either option
+explicitly to include those auxiliary targets in a superproject.
+
 ## Running cibuildwheel locally
 
 [cibuildwheel](https://cibuildwheel.pypa.io/) builds wheels inside isolated
