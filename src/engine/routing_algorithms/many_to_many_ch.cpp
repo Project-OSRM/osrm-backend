@@ -148,9 +148,9 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         if (!canMeetAtNode(facade,
                            heapNode.node,
                            heapNode.data.parent == heapNode.node,
-                           heapNode.weight,
+                           heapNode.data.seed_position,
                            current_bucket.parent_node == heapNode.node,
-                           target_weight))
+                           current_bucket.seed_position))
         {
             continue;
         }
@@ -195,7 +195,8 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                                            heapNode.weight,
                                            heapNode.data.duration,
                                            heapNode.data.distance,
-                                           heapNode.data.approach);
+                                           heapNode.data.approach,
+                                           heapNode.data.seed_position);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(facade, heapNode, query_heap, candidates);
 }

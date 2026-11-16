@@ -20,11 +20,21 @@
 #include <algorithm>
 #include <iterator>
 #include <numeric>
+#include <optional>
 #include <stack>
 #include <vector>
 
 namespace osrm::engine::routing_algorithms
 {
+
+// Heap data for a seed placed for a phantom at `position` on `node`
+template <typename Heap>
+typename Heap::DataType makeSeedData(const NodeID node, const SeedPosition position)
+{
+    typename Heap::DataType data{node};
+    data.seed_position = position;
+    return data;
+}
 
 namespace details
 {
@@ -33,16 +43,18 @@ void insertSourceInForwardHeap(Heap &forward_heap, const PhantomNode &source)
 {
     if (source.IsValidForwardSource())
     {
-        forward_heap.Insert(source.forward_segment_id.id,
-                            source.GetForwardWeightAsSource(),
-                            source.forward_segment_id.id);
+        forward_heap.Insert(
+            source.forward_segment_id.id,
+            source.GetForwardWeightAsSource(),
+            makeSeedData<Heap>(source.forward_segment_id.id, source.fwd_segment_position));
     }
 
     if (source.IsValidReverseSource())
     {
-        forward_heap.Insert(source.reverse_segment_id.id,
-                            source.GetReverseWeightAsSource(),
-                            source.reverse_segment_id.id);
+        forward_heap.Insert(
+            source.reverse_segment_id.id,
+            source.GetReverseWeightAsSource(),
+            makeSeedData<Heap>(source.reverse_segment_id.id, source.fwd_segment_position));
     }
 }
 
@@ -51,16 +63,18 @@ void insertTargetInReverseHeap(Heap &reverse_heap, const PhantomNode &target)
 {
     if (target.IsValidForwardTarget())
     {
-        reverse_heap.Insert(target.forward_segment_id.id,
-                            target.GetForwardWeightAsTarget(),
-                            target.forward_segment_id.id);
+        reverse_heap.Insert(
+            target.forward_segment_id.id,
+            target.GetForwardWeightAsTarget(),
+            makeSeedData<Heap>(target.forward_segment_id.id, target.fwd_segment_position));
     }
 
     if (target.IsValidReverseTarget())
     {
-        reverse_heap.Insert(target.reverse_segment_id.id,
-                            target.GetReverseWeightAsTarget(),
-                            target.reverse_segment_id.id);
+        reverse_heap.Insert(
+            target.reverse_segment_id.id,
+            target.GetReverseWeightAsTarget(),
+            makeSeedData<Heap>(target.reverse_segment_id.id, target.fwd_segment_position));
     }
 }
 } // namespace details
@@ -89,68 +103,64 @@ std::vector<NodeID> getForceStepNodes(const PhantomEndpointCandidates &candidate
 PhantomEndpoints endpointsFromCandidates(const PhantomEndpointCandidates &candidates,
                                          const std::vector<NodeID> &path);
 
-// A target on an edge-based node with a closed (zero-speed) segment before it can only be
-// reached along that node, from a source on it past the closure: entering the node from its
-// start would cross the closure. Seed weights are raw sums of the segment weights up to the
-// phantom, closed segments counting INVALID_SEGMENT_WEIGHT, so `target_weight`, the target's
-// seed weight, tells which closed segments lie before it, and `entry_weight`, where the path
-// enters the node, which it has already passed: 0 for the start of the node, the negated seed
-// weight for a source on it. A closed segment that starts at or after the entry and ends by
-// the target blocks the path. An open-area approach weight moves either end, but never by
-// anywhere near INVALID_SEGMENT_WEIGHT.
+// Whether a closed (zero-speed) segment lies on an edge-based node between two points on it, each
+// given as a seed position (see HeapData::seed_position): from the start of the segment at `from`
+// up to the start of the one at `to`, or to the end of the node if `to` is std::nullopt.
 template <typename FacadeT>
-bool isTargetReachable(const FacadeT &facade,
-                       const NodeID node,
-                       const EdgeWeight entry_weight,
-                       const EdgeWeight target_weight)
+bool isClosedBetween(const FacadeT &facade,
+                     const NodeID node,
+                     const SeedPosition from,
+                     const std::optional<SeedPosition> to)
 {
-    const auto reachable = [&](const auto &weights)
-    {
-        EdgeWeight weight_before{0};
-        for (const SegmentWeight weight : weights)
-        {
-            if (weight_before + alias_cast<EdgeWeight>(INVALID_SEGMENT_WEIGHT) > target_weight)
-            {
-                return true;
-            }
-            if (weight == INVALID_SEGMENT_WEIGHT && weight_before >= entry_weight)
-            {
-                return false;
-            }
-            weight_before += alias_cast<EdgeWeight>(weight);
-        }
-        return true;
-    };
-
     const auto geometry_index = facade.GetGeometryIndex(node);
-    return geometry_index.forward
-               ? reachable(facade.GetUncompressedForwardWeights(geometry_index.id))
-               : reachable(facade.GetUncompressedReverseWeights(geometry_index.id));
+    const auto closed = [&](const auto &weights)
+    {
+        // weights are in travel order, positions in forward geometry order
+        const auto index = [&](const SeedPosition position) -> std::size_t
+        {
+            if (position == NODE_START_POSITION)
+            {
+                return 0;
+            }
+            BOOST_ASSERT(position < weights.size());
+            return geometry_index.forward ? position : weights.size() - position - 1;
+        };
+        const auto first = weights.begin() + index(from);
+        const auto last = to ? weights.begin() + index(*to) : weights.end();
+        return first < last && std::find(first, last, INVALID_SEGMENT_WEIGHT) != last;
+    };
+    return geometry_index.forward ? closed(facade.GetUncompressedForwardWeights(geometry_index.id))
+                                  : closed(facade.GetUncompressedReverseWeights(geometry_index.id));
 }
 
-// Whether a search may step off a target seed, entering its node from the start.
+// Whether a search may step off a target seed, entering its node from the start: a closed
+// segment before the target blocks it.
 template <typename FacadeT, typename HeapNodeT>
 bool canLeaveTargetSeed(const FacadeT &facade, const HeapNodeT &target_heap_node)
 {
     return target_heap_node.data.parent != target_heap_node.node ||
-           isTargetReachable(facade, target_heap_node.node, {0}, target_heap_node.weight);
+           !isClosedBetween(facade,
+                            target_heap_node.node,
+                            NODE_START_POSITION,
+                            target_heap_node.data.seed_position);
 }
 
-// Whether the source and target sides of a search may meet at a node. Only a target seed
-// can be out of reach: the source side reached the node at its start, unless it is a seed too.
+// Whether the source and target sides of a search may meet at a node. Only a target seed can be
+// out of reach, when a closed segment lies between it and where the path enters the node: the
+// start of the node, unless the source side is a seed too.
 template <typename FacadeT>
 bool canMeetAtNode(const FacadeT &facade,
                    const NodeID node,
                    const bool source_is_seed,
-                   const EdgeWeight source_weight,
+                   const SeedPosition source_position,
                    const bool target_is_seed,
-                   const EdgeWeight target_weight)
+                   const SeedPosition target_position)
 {
     return !target_is_seed ||
-           isTargetReachable(facade,
-                             node,
-                             source_is_seed ? EdgeWeight{0} - source_weight : EdgeWeight{0},
-                             target_weight);
+           !isClosedBetween(facade,
+                            node,
+                            source_is_seed ? source_position : NODE_START_POSITION,
+                            target_position);
 }
 
 template <typename HeapNodeT>
@@ -200,7 +210,8 @@ void insertSourceInHeap(ManyToManyQueryHeap &heap, const PhantomNodeCandidates &
                         {phantom_node.forward_segment_id.id,
                          phantom_node.GetForwardDurationAsSource(),
                          phantom_node.GetForwardDistanceAsSource(),
-                         phantom_node.approach_weight});
+                         phantom_node.approach_weight,
+                         phantom_node.fwd_segment_position});
         }
         if (phantom_node.IsValidReverseSource())
         {
@@ -209,7 +220,8 @@ void insertSourceInHeap(ManyToManyQueryHeap &heap, const PhantomNodeCandidates &
                         {phantom_node.reverse_segment_id.id,
                          phantom_node.GetReverseDurationAsSource(),
                          phantom_node.GetReverseDistanceAsSource(),
-                         phantom_node.approach_weight});
+                         phantom_node.approach_weight,
+                         phantom_node.fwd_segment_position});
         }
     }
 }
@@ -226,7 +238,8 @@ void insertTargetInHeap(ManyToManyQueryHeap &heap, const PhantomNodeCandidates &
                         {phantom_node.forward_segment_id.id,
                          phantom_node.GetForwardDurationAsTarget(),
                          phantom_node.GetForwardDistanceAsTarget(),
-                         phantom_node.approach_weight});
+                         phantom_node.approach_weight,
+                         phantom_node.fwd_segment_position});
         }
         if (phantom_node.IsValidReverseTarget())
         {
@@ -235,7 +248,8 @@ void insertTargetInHeap(ManyToManyQueryHeap &heap, const PhantomNodeCandidates &
                         {phantom_node.reverse_segment_id.id,
                          phantom_node.GetReverseDurationAsTarget(),
                          phantom_node.GetReverseDistanceAsTarget(),
-                         phantom_node.approach_weight});
+                         phantom_node.approach_weight,
+                         phantom_node.fwd_segment_position});
         }
     }
 }

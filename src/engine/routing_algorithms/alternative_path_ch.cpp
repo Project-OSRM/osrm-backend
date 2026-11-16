@@ -78,9 +78,9 @@ void alternativeRoutingStep(const DataFacade<Algorithm> &facade,
         return canMeetAtNode(facade,
                              heapNode.node,
                              source_node.data.parent == source_node.node,
-                             source_node.weight,
+                             source_node.data.seed_position,
                              target_node.data.parent == target_node.node,
-                             target_node.weight);
+                             target_node.data.seed_position);
     };
     if (reverseHeapNode && canMeet())
     {

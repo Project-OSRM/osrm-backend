@@ -438,7 +438,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
 
         // A phantom only needs its own segment open. Whether a closed segment elsewhere on the
         // edge-based node stops a source leaving it, or a target being reached from its start,
-        // is up to the search (see getLeavingNodeWeight and isTargetReachable): a source and a
+        // is up to the search (see getLeavingNodeWeight and canMeetAtNode): a source and a
         // target on the node with no closure between them can still reach one another.
         const bool is_forward_open =
             forward_weights[data.fwd_segment_position] != INVALID_SEGMENT_WEIGHT;

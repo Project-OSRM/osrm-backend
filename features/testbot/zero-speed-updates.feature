@@ -377,3 +377,80 @@ Feature: Check zero speed updates
         When I route I should get
           | waypoints | code    |
           | 1,3,y     | NoRoute |
+
+
+    Scenario: Turning around at a waypoint past a closed segment after a costly leg
+        Given a grid size of 20000 meters
+        And the node map
+            """
+            a b 1 2 c d
+                    |
+                    |
+                    |
+                    e
+                    |
+                    |
+                    |
+                    s
+            """
+
+        And the ways
+            | nodes |
+            | abcd  |
+            | ces   |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        # Node IDs (top-to-bottom, left-to-right): a=1, b=2, c=3, d=4, e=5, s=6
+        # Close a-b in both directions, and slow ces down so that the leg from s to 1 costs
+        # more than a closed segment does. Arriving at 1 heading west, the way ahead is
+        # closed, so the route turns around there and goes on east.
+        And the speed file
+            """
+            1,2,0
+            2,1,0
+            3,5,1
+            5,3,1
+            5,6,1
+            6,5,1
+            """
+
+        When I route I should get
+          | waypoints | route                    | code |
+          | s,1,2     | ces,abcd,abcd,abcd,abcd  | Ok   |
+
+    # CH drops the turns out of a node with a closed segment, so it still has no way off it
+    @no_ch
+    Scenario: Leaving a waypoint past a closed segment after a costly leg, MLD
+        Given a grid size of 20000 meters
+        And the node map
+            """
+            a b 1 2 c d
+                    |
+                    |
+                    |
+                    e
+                    |
+                    |
+                    |
+                    s
+            """
+
+        And the ways
+            | nodes |
+            | abcd  |
+            | ces   |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        And the speed file
+            """
+            1,2,0
+            2,1,0
+            3,5,1
+            5,3,1
+            5,6,1
+            6,5,1
+            """
+
+        When I route I should get
+          | waypoints | route                    | code |
+          | s,1,d     | ces,abcd,abcd,abcd,abcd  | Ok   |

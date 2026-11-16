@@ -31,14 +31,16 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
         {
             forward_heap.Insert(source.forward_segment_id.id,
                                 source.GetForwardWeightAsSource(),
-                                source.forward_segment_id.id);
+                                makeSeedData<typename SearchEngineData<Algorithm>::QueryHeap>(
+                                    source.forward_segment_id.id, source.fwd_segment_position));
         }
 
         if (source.IsValidReverseSource())
         {
             forward_heap.Insert(source.reverse_segment_id.id,
                                 source.GetReverseWeightAsSource(),
-                                source.reverse_segment_id.id);
+                                makeSeedData<typename SearchEngineData<Algorithm>::QueryHeap>(
+                                    source.reverse_segment_id.id, source.fwd_segment_position));
         }
     }
     for (const auto &target : candidates.target_phantoms)
@@ -47,13 +49,15 @@ void searchWithUTurn(SearchEngineData<Algorithm> &engine_working_data,
         {
             reverse_heap.Insert(target.forward_segment_id.id,
                                 target.GetForwardWeightAsTarget(),
-                                target.forward_segment_id.id);
+                                makeSeedData<typename SearchEngineData<Algorithm>::QueryHeap>(
+                                    target.forward_segment_id.id, target.fwd_segment_position));
         }
         if (target.IsValidReverseTarget())
         {
             reverse_heap.Insert(target.reverse_segment_id.id,
                                 target.GetReverseWeightAsTarget(),
-                                target.reverse_segment_id.id);
+                                makeSeedData<typename SearchEngineData<Algorithm>::QueryHeap>(
+                                    target.reverse_segment_id.id, target.fwd_segment_position));
         }
     }
 
@@ -95,25 +99,28 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
         reverse_heap.Clear();
         reverse_heap.Insert(target.forward_segment_id.id,
                             target.GetForwardWeightAsTarget(),
-                            target.forward_segment_id.id);
+                            makeSeedData<typename SearchEngineData<Algorithm>::QueryHeap>(
+                                target.forward_segment_id.id, target.fwd_segment_position));
 
         for (const auto i : util::irange<std::size_t>(0UL, source_candidates.size()))
         {
             const auto &candidate = source_candidates[i];
             if (search_from_forward_node[i] && candidate.IsValidForwardSource())
             {
-                forward_heap.Insert(candidate.forward_segment_id.id,
-                                    total_weight_to_forward[i] +
-                                        candidate.GetForwardWeightAsSource(),
-                                    candidate.forward_segment_id.id);
+                forward_heap.Insert(
+                    candidate.forward_segment_id.id,
+                    total_weight_to_forward[i] + candidate.GetForwardWeightAsSource(),
+                    makeSeedData<typename SearchEngineData<Algorithm>::QueryHeap>(
+                        candidate.forward_segment_id.id, candidate.fwd_segment_position));
             }
 
             if (search_from_reverse_node[i] && candidate.IsValidReverseSource())
             {
-                forward_heap.Insert(candidate.reverse_segment_id.id,
-                                    total_weight_to_reverse[i] +
-                                        candidate.GetReverseWeightAsSource(),
-                                    candidate.reverse_segment_id.id);
+                forward_heap.Insert(
+                    candidate.reverse_segment_id.id,
+                    total_weight_to_reverse[i] + candidate.GetReverseWeightAsSource(),
+                    makeSeedData<typename SearchEngineData<Algorithm>::QueryHeap>(
+                        candidate.reverse_segment_id.id, candidate.fwd_segment_position));
             }
         }
 
@@ -133,7 +140,8 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
         reverse_heap.Clear();
         reverse_heap.Insert(target.reverse_segment_id.id,
                             target.GetReverseWeightAsTarget(),
-                            target.reverse_segment_id.id);
+                            makeSeedData<typename SearchEngineData<Algorithm>::QueryHeap>(
+                                target.reverse_segment_id.id, target.fwd_segment_position));
 
         BOOST_ASSERT(search_from_forward_node.size() == source_candidates.size());
         for (const auto i : util::irange<std::size_t>(0UL, source_candidates.size()))
@@ -141,18 +149,20 @@ void search(SearchEngineData<Algorithm> &engine_working_data,
             const auto &candidate = source_candidates[i];
             if (search_from_forward_node[i] && candidate.IsValidForwardSource())
             {
-                forward_heap.Insert(candidate.forward_segment_id.id,
-                                    total_weight_to_forward[i] +
-                                        candidate.GetForwardWeightAsSource(),
-                                    candidate.forward_segment_id.id);
+                forward_heap.Insert(
+                    candidate.forward_segment_id.id,
+                    total_weight_to_forward[i] + candidate.GetForwardWeightAsSource(),
+                    makeSeedData<typename SearchEngineData<Algorithm>::QueryHeap>(
+                        candidate.forward_segment_id.id, candidate.fwd_segment_position));
             }
 
             if (search_from_reverse_node[i] && candidate.IsValidReverseSource())
             {
-                forward_heap.Insert(candidate.reverse_segment_id.id,
-                                    total_weight_to_reverse[i] +
-                                        candidate.GetReverseWeightAsSource(),
-                                    candidate.reverse_segment_id.id);
+                forward_heap.Insert(
+                    candidate.reverse_segment_id.id,
+                    total_weight_to_reverse[i] + candidate.GetReverseWeightAsSource(),
+                    makeSeedData<typename SearchEngineData<Algorithm>::QueryHeap>(
+                        candidate.reverse_segment_id.id, candidate.fwd_segment_position));
             }
         }
 
