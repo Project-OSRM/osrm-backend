@@ -110,7 +110,7 @@ if(INSTALL_TOOLS)
     if(UNIX AND HAVE_LIBM)
         target_link_libraries(luac PRIVATE m)
     endif()
-    
+
     # The Interpreter
     add_executable(luai "${SRC_LUAI}")
     set_target_properties(luai PROPERTIES OUTPUT_NAME "lua" PDB_NAME "luai")

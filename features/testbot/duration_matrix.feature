@@ -36,6 +36,59 @@ Feature: Basic Duration Matrix
             | a | 0  | 10 |
             | b | 10 | 0  |
 
+    Scenario: Testbot - FlatBuffers travel time matrix preserves unreachable cells
+        Given the extract extra arguments "--small-component-size 1"
+        And the node map
+            """
+            a b
+            c d
+            """
+
+        And the ways
+            | nodes |
+            | ab    |
+            | cd    |
+
+        When I request a travel time matrix I should get
+            |   | a     | b     | c     | d     |
+            | a | 0     | 10    |       |       |
+            | b | 10    | 0     |       |       |
+            | c |       |       | 0     | 10    |
+            | d |       |       | 10    | 0     |
+
+        When I request a travel time matrix with flatbuffers I should get
+            |   | a     | b     | c     | d     |
+            | a | 0     | 10    | -1    | -1    |
+            | b | 10    | 0     | -1    | -1    |
+            | c | -1    | -1    | 0     | 10    |
+            | d | -1    | -1    | 10    | 0     |
+
+        When I request a travel time matrix with flatbuffers I should get
+            |   | b     | c     | d     |
+            | a | 10    | -1    | -1    |
+            | c | -1    | 0     | 10    |
+
+    Scenario: Testbot - FlatBuffers travel time matrix preserves off-diagonal zeros
+        Given the node locations
+            | node | lon   | lat   |
+            | a    | 1.001 | 1.001 |
+            | b    | 1.002 | 1.001 |
+            | 1    | 1.001 | 1.001 |
+
+        And the ways
+            | nodes |
+            | ab    |
+
+        When I request a travel time matrix I should get
+            |   | a | 1 |
+            | a | 0 | 0 |
+            | 1 | 0 | 0 |
+
+        When I request a travel time matrix with flatbuffers I should get
+            |   | a | 1 |
+            | a | 0 | 0 |
+            | 1 | 0 | 0 |
+
     @ch
     Scenario: Testbot - Travel time matrix of minimal network with toll exclude
         Given the query options
@@ -548,6 +601,13 @@ Feature: Basic Duration Matrix
             | b | 30   | 0  | 12   | 24 |
             | f | 17.9 | 12 | 0    | 30 |
             | 1 | 30   | 24 | 30   | 0  |
+
+        When I request a travel time matrix with flatbuffers I should get
+            |   | a           | b  | f           | 1  |
+            | a | 0           | 30 | 17.9 +-0.01 | 30 |
+            | b | 30          | 0  | 12          | 24 |
+            | f | 17.9 +-0.01 | 12 | 0           | 30 |
+            | 1 | 30          | 24 | 30          | 0  |
 
         When I request a travel time matrix I should get
             |   | a  | b  | f    | 1  |
