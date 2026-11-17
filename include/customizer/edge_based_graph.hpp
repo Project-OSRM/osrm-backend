@@ -103,6 +103,16 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
 
     bool IsBackwardEdge(EdgeID edge) const { return is_backward_edge[edge]; }
 
+    EdgeID FindEdge(const NodeID from, const NodeID to) const
+    {
+        for (const auto edge : SuperT::GetAdjacentEdgeRange(from))
+        {
+            if (SuperT::GetTarget(edge) == to && IsForwardEdge(edge))
+                return edge;
+        }
+        return SPECIAL_EDGEID;
+    }
+
     friend void
     serialization::read<EdgeDataT, Ownership>(storage::tar::FileReader &reader,
                                               const std::string &name,
