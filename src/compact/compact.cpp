@@ -3,6 +3,7 @@
 #include "customizer/edge_based_graph.hpp"
 #include "extractor/edge_based_node.hpp"
 #include "storage/compact_dataset.hpp"
+#include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/storage.hpp"
 #include "storage/view_factory.hpp"
@@ -17,6 +18,7 @@
 #include <fstream>
 #include <initializer_list>
 #include <limits>
+#include <memory>
 #include <set>
 #include <span>
 #include <unordered_map>
@@ -65,10 +67,10 @@ CompactPaths getCompactPaths(const std::filesystem::path &input,
     return paths;
 }
 
-class MappedCompactInput
+class LoadedCompactInput
 {
   public:
-    MappedCompactInput(const CompactPaths &paths, std::initializer_list<const char *> suffixes)
+    LoadedCompactInput(const CompactPaths &paths, std::initializer_list<const char *> suffixes)
     {
         std::vector<SharedDataIndex::AllocatedRegion> regions;
         for (const auto &suffix : suffixes)
@@ -76,10 +78,14 @@ class MappedCompactInput
             const auto path = paths.getInputPath(suffix);
             auto layout = std::make_unique<TarDataLayout>();
             populateLayoutFromFile(path, *layout);
-            boost::iostreams::mapped_file_source mapped;
-            const auto bytes = util::mmapFile<char>(path, mapped);
-            regions.push_back({const_cast<char *>(bytes.data()), std::move(layout)});
-            m_mappings.push_back(std::move(mapped));
+            io::FileReader reader(path, io::FileReader::HasNoFingerprint);
+            const auto size = reader.GetSize();
+            if (size > static_cast<std::size_t>(std::numeric_limits<std::streamsize>::max()))
+                throw util::exception("Compaction archive exceeds the supported read size");
+            auto data = std::make_unique<char[]>(size);
+            reader.ReadInto(data.get(), size);
+            regions.push_back({data.get(), std::move(layout)});
+            m_buffers.push_back(std::move(data));
         }
         m_index = SharedDataIndex{std::move(regions)};
     }
@@ -87,7 +93,7 @@ class MappedCompactInput
     const SharedDataIndex &getIndex() const { return m_index; }
 
   private:
-    std::vector<boost::iostreams::mapped_file_source> m_mappings;
+    std::vector<std::unique_ptr<char[]>> m_buffers;
     SharedDataIndex m_index;
 };
 
@@ -642,7 +648,7 @@ void compactDataset(const std::filesystem::path &input,
     {
         const auto turns = [&]
         {
-            MappedCompactInput input(
+            LoadedCompactInput input(
                 paths,
                 {".osrm.edges", ".osrm.turn_weight_penalties", ".osrm.turn_duration_penalties"});
             const auto &index = input.getIndex();
@@ -657,12 +663,12 @@ void compactDataset(const std::filesystem::path &input,
             writeTurns(source, target, result);
             return result;
         }();
-        MappedCompactInput graph_input(paths, {".osrm.mldgr"});
+        LoadedCompactInput graph_input(paths, {".osrm.mldgr"});
         writeGraph(paths.getInputPath(".osrm.mldgr"), target, graph_input.getIndex(), turns);
     }
     const auto run_stage = [&](const char *suffix, auto writer)
     {
-        MappedCompactInput input(paths, {suffix});
+        LoadedCompactInput input(paths, {suffix});
         writer(source, target, input.getIndex());
     };
     run_stage(".osrm.ebg_nodes", writeNodes);
