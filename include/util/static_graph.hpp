@@ -349,6 +349,15 @@ class StaticGraph
         return edge_array[edge];
     }
 
+    EdgeIterator readFirstEdge(NodeIterator node) const
+    {
+        if constexpr (Ownership == storage::Ownership::View)
+            if (node_count)
+                return static_cast<EdgeIterator>(
+                    util::decodeBlockDelta(node_headers, node_words, node));
+        return node_array.at(node).first_edge;
+    }
+
     NodeIterator number_of_nodes = 0;
     EdgeIterator number_of_edges = 0;
 
