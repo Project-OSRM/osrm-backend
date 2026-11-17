@@ -229,4 +229,21 @@ BOOST_AUTO_TEST_CASE(packed_edge_boundaries_and_adjacency)
     BOOST_CHECK_EQUAL(view.FindEdge(0, 0), SPECIAL_EDGEID);
 }
 
+BOOST_FIXTURE_TEST_CASE(ambiguous_output_path_cannot_redirect_writes, CompactFixture)
+{
+    const auto ambiguous_parent = root / "ambiguous.osrm";
+    std::filesystem::create_directory(ambiguous_parent);
+    const auto redirected_parent = root / "ambiguous" / "new";
+    std::filesystem::create_directories(redirected_parent);
+    const auto sentinel = redirected_parent / "map.osrm.osrm.edges";
+    const std::string expected = "Existing data must remain untouched";
+    std::ofstream(sentinel) << expected;
+    BOOST_CHECK_THROW(osrm::storage::compactDataset(source, ambiguous_parent / "new" / "map.osrm"),
+                      osrm::util::exception);
+    BOOST_CHECK(!std::filesystem::exists(ambiguous_parent / "new"));
+    std::ifstream stream(sentinel);
+    const std::string actual((std::istreambuf_iterator<char>(stream)), {});
+    BOOST_CHECK_EQUAL(actual, expected);
+}
+
 BOOST_AUTO_TEST_SUITE_END()

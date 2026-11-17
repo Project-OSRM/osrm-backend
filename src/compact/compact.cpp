@@ -545,11 +545,19 @@ void compactDataset(const std::filesystem::path &input, const std::filesystem::p
 {
     if (std::endian::native != std::endian::little || sizeof(void *) != 8)
         throw util::exception("Compact datasets currently require a 64-bit little-endian platform");
-    const StorageConfig source(std::filesystem::absolute(input));
+    const auto absolute_input = std::filesystem::absolute(input).lexically_normal();
+    const StorageConfig source(absolute_input);
+    auto expected_input = absolute_input;
+    if (expected_input.extension() != ".osrm")
+        expected_input += ".osrm";
     const auto absolute_output = std::filesystem::absolute(output).lexically_normal();
     if (absolute_output.extension() != ".osrm")
         throw util::exception("Output must end in .osrm and name a new parent directory");
     const StorageConfig target(absolute_output);
+    if (source.GetPath(".osrm.properties") != expected_input.string() + ".properties" ||
+        target.GetPath(".osrm.properties") != absolute_output.string() + ".properties")
+        throw util::exception("Ambiguous dataset path: remove format extensions such as .osrm "
+                              "from parent directory names.");
     requireMutableDataset(source.base_path);
     if (!source.IsValid())
         throw util::exception("Input is missing required query files");

@@ -16,6 +16,8 @@ The output's parent directory must not exist. Its ancestors must already exist.
 `osrm-compact` never modifies input files and copies every file needed for queries;
 the result contains no links to the input. An existing output directory is refused,
 including an empty directory. Do not update the input while compaction is running.
+Parent directory names containing dataset extensions such as `.osrm` are rejected
+because the shared OSRM path normalization would reinterpret them.
 
 Compaction failure removes only the directory created by that invocation. A
 process interruption can leave a directory containing `.osrm-compact-incomplete`;
@@ -56,17 +58,31 @@ Geometry, partition, and CSR encodings also retain the original representation
 when their encoded payload would be larger. Nonzero datasource spans remain
 unchanged. Cell metrics share only exactly equal matrices at startup.
 
-The Germany prototype achieved approximately 50.8% lower warmed resident memory
-with one query worker. This is a dataset and workload measurement, not a guarantee
-for other datasets, exclusions, worker counts, or query mixes. Production rollout
-still requires validation on the intended hardware and workload. The spatial-index
-experiment is separate from this format.
+The current Germany validation reduced warmed resident memory from 5.462 GB to
+2.692 GB (50.72%) with one query worker. A motorway-exclusion control saved
+50.71%. Startup with prefetched files decreased from 3.115 to 2.099 seconds.
+Independent compaction took 78.18 seconds, approximately 3.54% of the earlier
+extraction, partitioning and customization time.
+
+The same Dijkstra-rank benchmark measured a 6.34% MLD search-time penalty versus
+original storage with cell sharing on both sides (95% source-cluster interval:
+6.07% to 6.61%). This is higher than the earlier prototype's 5.30% result.
+Excluding version metadata from query allocation did not establish a meaningful
+speed improvement. Performance approval remains a release gate. Full Route API
+measurements varied substantially between process observations; consult the
+experiment report instead of treating one API mean as a guaranteed overhead.
+
+These are dataset and workload measurements, not guarantees for other datasets,
+exclusions, worker counts, or query mixes. Production rollout requires validation
+on the intended hardware and workload. The spatial-index experiment is separate
+from this format. No release has been published from this feature branch.
 
 ## Validation before rollout
 
 Build and run the `block_delta`, `compact_dataset`, and `compact` repository test
 suites. They cover integer widths 0 through 64, partial blocks, version handling,
-failure cleanup, independent output files, automatic sharing, and exact responses
+failure cleanup, ambiguous-path rejection, independent output files, automatic
+sharing, and exact responses
 for Route, Nearest, Table, Trip, Match, and Tile on Monaco. Keep byte-exact response
 comparisons, full data audits, resident memory, startup time, and Dijkstra-rank
 query measurements as release gates on Germany and the deployment datasets.
