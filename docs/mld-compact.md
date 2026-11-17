@@ -103,3 +103,58 @@ query measurements as release gates on Germany and the deployment datasets.
 The Dijkstra rank selects targets by the number of nodes settled by a plain
 unidirectional Dijkstra search. The timed operation is the production MLD search
 between those targets and sources; API latency is measured separately.
+
+## Release candidate checks, 17 November 2026
+
+Compact output is not ready to become the default. Verification of the unchanged
+candidate on Germany preserved all measured outputs, but shared-library error
+handling and installed C++ preprocessing headers still have release blockers.
+Linux, Windows, ARM, packaged wheels, and default LTO builds remain unverified.
+
+Three fresh process pairs measured 5.469 GB versus 2.699 GB warmed RSS (50.65%
+saved), prefetched startup of 3.559 versus 2.267 seconds, and a 2.36% Route API
+latency increase. Three repetitions of the unchanged Dijkstra-rank benchmark
+verified 288 reference weights and 147,456 timed searches per process. Their
+search slowdown was 5.30%, with a hierarchical process/source bootstrap interval
+of 4.50% to 6.00%. Individual processes measured 4.56%, 5.97%, and 5.38%; this
+is a fresh observation, not a source optimization over the earlier result.
+Both sides of the rank comparison share exact cell metrics.
+
+An additional mixed-workload test held all worker caches resident. Two process
+pairs per worker count used 80% Route, 10% Table, and 10% Nearest requests:
+
+| Workers | Memory saved | Throughput change | p99 latency change |
+| --- | ---: | ---: | ---: |
+| 1 | 50.89% | -0.57% | +1.37% |
+| 4 | 50.30% | -3.44% | +5.72% |
+| 8 | 49.64% | -4.94% | +6.02% |
+
+At eight workers, another 20.0 MB would be needed merely to reach 50% savings in
+this workload. These throughput and tail measurements are descriptive, not
+deployment guarantees. The host was an Intel i7-7700K with four physical cores,
+eight logical threads, and 32 GiB RAM; builds used Apple Clang 17, Release, with
+LTO disabled.
+
+The six standard Cucumber configurations completed with 8,937 scenarios passed,
+35 skipped, and four failures. All four repeat the existing
+`features/options/datastore/datastore.feature:7` assertion expecting a stderr
+fragment when no options are supplied; the original main-build binary reproduces
+it. A further MLD direct-load pass queried 1,433 independent compact generations
+and passed 1,495 scenarios, with that same single CLI assertion failure. No
+feature expectations were weakened. Native Python service comparisons across
+car, bicycle, and foot also matched exactly, as did nonzero traffic and a valid
+full-width annotation fallback. Interrupted-generation and unsupported-mode
+checks rejected unsafe loads. Protected Germany files and the user's spatial
+index source changes were verified unchanged.
+
+Shared builds failed four compactor exception cases and one customization
+preflight case: expected OSRM exceptions escaped their typed catches. Duplicate
+exception type information in `libosrm` and `libosrm_store` is the leading
+diagnosis. An installed C++ customization consumer also cannot find
+`customizer/customizer_config.hpp`. Resolve these issues and finish deployment
+and platform validation before changing the default.
+
+Preprocessing was not re-timed in this release check. The earlier 78.34-second
+integrated result was 1.32% above the two-command compact workflow, but ordinary
+customization alone took 48.31 seconds. Compact creation added about 30.03 seconds
+(62.15%) to that stage; the full extract/partition pipeline was not re-timed.
