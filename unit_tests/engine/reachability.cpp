@@ -30,7 +30,7 @@ class ReachabilityFacade final
 
     auto GetBorderEdgeRange(LevelID level, NodeID node) const
     {
-        BOOST_ASSERT(level == 0);
+        BOOST_REQUIRE_EQUAL(level, 0);
         constexpr std::array<std::pair<EdgeID, EdgeID>, 7> edge_ranges = {
             {{0, 4}, {4, 6}, {6, 7}, {7, 7}, {7, 7}, {7, 7}, {7, 7}}};
         const auto [first, last] = edge_ranges[node];
@@ -103,7 +103,7 @@ class ArithmeticReachabilityFacade final
 
     auto GetBorderEdgeRange(LevelID level, NodeID node) const
     {
-        BOOST_ASSERT(level == 0);
+        BOOST_REQUIRE_EQUAL(level, 0);
         constexpr std::array<std::pair<EdgeID, EdgeID>, 4> ranges = {
             {{0, 2}, {2, 3}, {3, 4}, {4, 4}}};
         return util::irange<EdgeID>(ranges[node].first, ranges[node].second);
@@ -145,7 +145,7 @@ class SparseReachabilityFacade final
 
     auto GetBorderEdgeRange(LevelID level, NodeID node) const
     {
-        BOOST_ASSERT(level == 0);
+        BOOST_REQUIRE_EQUAL(level, 0);
         if (HasEdges && node < 2)
             return util::irange<EdgeID>(node, node + 1);
         return util::irange<EdgeID>(0, 0);
