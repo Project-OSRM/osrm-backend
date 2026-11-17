@@ -69,19 +69,21 @@ Geometry, partition, and CSR encodings also retain the original representation
 when their encoded payload would be larger. Nonzero datasource spans remain
 unchanged. Cell metrics share only exactly equal matrices at startup.
 
-The current Germany validation reduced warmed resident memory from 5.462 GB to
-2.692 GB (50.72%) with one query worker. A motorway-exclusion control saved
-50.71%. Startup with prefetched files decreased from 3.115 to 2.099 seconds.
-Independent compaction took 78.18 seconds, approximately 3.54% of the earlier
-extraction, partitioning and customization time.
+The integrated Germany validation reduced warmed resident memory from 5.462 GB
+to 2.697 GB (50.62%) with one query worker. A motorway-exclusion control saved
+50.12%. Startup with prefetched files decreased from 3.149 to 2.126 seconds.
+With six customization workers, customization plus compact creation took 78.34
+seconds versus 77.32 seconds for the two-command control (+1.32%). Peak
+preprocessing memory was 7.56 GB versus 7.16 GB (+5.64%). The compact stage uses
+sequential, stage-local archive buffers; no routing instance is loaded.
 
-The same Dijkstra-rank benchmark measured a 6.34% MLD search-time penalty versus
-original storage with cell sharing on both sides (95% source-cluster interval:
-6.07% to 6.61%). This is higher than the earlier prototype's 5.30% result.
-Excluding version metadata from query allocation did not establish a meaningful
-speed improvement. Performance approval remains a release gate. Full Route API
-measurements varied substantially between process observations; consult the
-experiment report instead of treating one API mean as a guaranteed overhead.
+The frozen Dijkstra-rank benchmark measured no additional search slowdown from
+integration: -0.20% versus standalone compact output (95% source-cluster interval:
+-0.30% to -0.10%). The compact format's search cost versus raw storage was +6.82%
+(6.47% to 7.16%), with exact cell sharing on both sides. That representation cost
+remains a release performance gate. API timings are descriptive observations,
+not tail-latency guarantees. The retained Germany output matched the standalone
+control byte-for-byte across all query archive entries and spatial-index leaves.
 
 These are dataset and workload measurements, not guarantees for other datasets,
 exclusions, worker counts, or query mixes. Production rollout requires validation
