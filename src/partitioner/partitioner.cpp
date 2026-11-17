@@ -9,6 +9,7 @@
 #include "partitioner/recursive_bisection.hpp"
 #include "partitioner/remove_unconnected.hpp"
 #include "partitioner/renumber.hpp"
+#include "storage/compact_dataset.hpp"
 
 #include "extractor/compressed_node_based_graph_edge.hpp"
 #include "extractor/files.hpp"
@@ -62,6 +63,9 @@ auto getGraphBisection(const PartitionerConfig &config)
 
 int Partitioner::Run(const PartitionerConfig &config)
 {
+    storage::requireMutableDataset(config.base_path);
+    if (!config.output_path.empty())
+        storage::requireMutableDataset(config.output_path);
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
 

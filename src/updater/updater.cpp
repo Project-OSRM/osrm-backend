@@ -1,4 +1,5 @@
 #include "updater/updater.hpp"
+#include "storage/compact_dataset.hpp"
 #include "updater/csv_source.hpp"
 
 #include "extractor/compressed_edge_container.hpp"
@@ -532,6 +533,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                         std::vector<EdgeWeight> &node_weights,
                                         std::uint32_t &connectivity_checksum) const
 {
+    storage::requireMutableDataset(config.base_path);
     std::vector<EdgeDuration> node_durations(node_weights.size());
     return LoadAndUpdateEdgeExpandedGraph(
         edge_based_edge_list, node_weights, node_durations, connectivity_checksum);

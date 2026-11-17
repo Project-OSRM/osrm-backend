@@ -1,4 +1,5 @@
 #include "extractor/node_data_container.hpp"
+#include "storage/compact_dataset.hpp"
 
 #include "customizer/cell_customizer.hpp"
 #include "customizer/customizer.hpp"
@@ -120,6 +121,9 @@ std::vector<CellMetric> customizeFilteredMetrics(const partitioner::MultiLevelEd
 
 int Customizer::Run(const CustomizationConfig &config)
 {
+    storage::requireMutableDataset(config.base_path);
+    if (!config.output_path.empty())
+        storage::requireMutableDataset(config.output_path);
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
 

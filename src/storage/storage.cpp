@@ -1,5 +1,6 @@
 #include "storage/storage.hpp"
 
+#include "storage/compact_dataset.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/shared_datatype.hpp"
@@ -200,6 +201,9 @@ Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
 
 int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric)
 {
+    if (isCompactDataset(config.base_path))
+        throw util::exception(
+            "Compact datasets do not yet support osrm-datastore; use MLD with direct loading.");
     BOOST_ASSERT_MSG(config.IsValid(), "Invalid storage config");
 
     util::LogPolicy::GetInstance().Unmute();

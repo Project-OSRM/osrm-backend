@@ -90,7 +90,7 @@ endif()
 install(TARGETS ${EXT_NAME} LIBRARY DESTINATION osrm)
 
 # Install OSRM executables and profiles into the wheel
-set(OSRM_EXECUTABLES osrm-extract osrm-contract osrm-customize osrm-partition osrm-datastore osrm-routed osrm-components)
+set(OSRM_EXECUTABLES osrm-compact osrm-extract osrm-contract osrm-customize osrm-partition osrm-datastore osrm-routed osrm-components)
 install(TARGETS ${OSRM_EXECUTABLES} DESTINATION osrm/bin)
 install(DIRECTORY ${PROJECT_SOURCE_DIR}/profiles DESTINATION osrm/share)
 

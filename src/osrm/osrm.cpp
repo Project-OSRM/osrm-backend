@@ -1,5 +1,6 @@
 #include "osrm/osrm.hpp"
 
+#include "storage/compact_dataset.hpp"
 #include "engine/algorithm.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"

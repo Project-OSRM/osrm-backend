@@ -17,6 +17,7 @@ _BIN_DIR = Path(__file__).parent / "bin"
 _LIBS_DIR = Path(__file__).parent.parent / "osrm_bindings.libs"
 
 COMMANDS = {
+    "compact": "osrm-compact",
     "components": "osrm-components",
     "contract": "osrm-contract",
     "customize": "osrm-customize",

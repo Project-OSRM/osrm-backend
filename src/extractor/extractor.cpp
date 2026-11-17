@@ -21,6 +21,8 @@
 #include "extractor/turn_path_filter.hpp"
 #include "extractor/way_restriction_map.hpp"
 
+#include "storage/compact_dataset.hpp"
+
 #include "guidance/files.hpp"
 #include "guidance/guidance_processing.hpp"
 #include "guidance/segregated_intersection_classification.hpp"
@@ -209,6 +211,7 @@ std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynami
  */
 int Extractor::run(ScriptingEnvironment &scripting_environment)
 {
+    storage::requireMutableDataset(config.base_path);
     util::LogPolicy::GetInstance().Unmute();
 
     const unsigned recommended_num_threads = std::thread::hardware_concurrency();

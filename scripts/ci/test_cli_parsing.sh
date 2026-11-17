@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Integration tests for CLI argument parsing across all six OSRM tool binaries.
+# Integration tests for CLI argument parsing across all seven OSRM tool binaries.
 # Strategy: negative observation. We rarely run anything that succeeds —
 # instead we send each tool a known-bad input AFTER parsing and check that the
 # tool's response proves a specific parse path was taken. A tool that gets to
@@ -33,11 +33,12 @@ fi
 EXTRACT="$BINARIES_FOLDER/osrm-extract"
 CONTRACT="$BINARIES_FOLDER/osrm-contract"
 CUSTOMIZE="$BINARIES_FOLDER/osrm-customize"
+COMPACT="$BINARIES_FOLDER/osrm-compact"
 PARTITION="$BINARIES_FOLDER/osrm-partition"
 ROUTED="$BINARIES_FOLDER/osrm-routed"
 DATASTORE="$BINARIES_FOLDER/osrm-datastore"
 
-for bin in "$EXTRACT" "$CONTRACT" "$CUSTOMIZE" "$PARTITION" "$ROUTED" "$DATASTORE"; do
+for bin in "$EXTRACT" "$CONTRACT" "$CUSTOMIZE" "$PARTITION" "$ROUTED" "$DATASTORE" "$COMPACT"; do
     if [ ! -x "$bin" ]; then
         echo "Binary missing or not executable: $bin" >&2
         exit 1
@@ -245,6 +246,16 @@ assert_exit_nonzero "extract/--bogus-flag exits nonzero" \
 
 assert_exit_nonzero "routed/--bogus-flag exits nonzero" \
     "$ROUTED" --bogus-flag "$NONEXISTENT"
+
+# --- compact query preparation ---------------------------------------------
+
+assert_exit_zero "compact/--help" "$COMPACT" --help
+assert_exit_zero "compact/--version" "$COMPACT" --version
+assert_exit_zero "compact/--list-inputs" "$COMPACT" --list-inputs
+assert_output_matches "compact/MLD graph required" '^required .osrm.mldgr$' "$COMPACT" --list-inputs
+assert_exit_nonzero "compact/missing output exits nonzero" "$COMPACT" /nonexistent.osrm
+assert_exit_nonzero "compact/unknown option exits nonzero" "$COMPACT" --bogus-flag
+assert_exit_nonzero "compact/missing input exits nonzero" "$COMPACT" /nonexistent.osrm --output /nonexistent-output/dataset.osrm
 
 # --- summary ---------------------------------------------------------------
 

@@ -1,6 +1,7 @@
 #include "engine/datafacade/mmap_memory_allocator.hpp"
 
 #include "storage/block.hpp"
+#include "storage/compact_dataset.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/storage.hpp"
@@ -13,6 +14,8 @@ namespace osrm::engine::datafacade
 
 MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
 {
+    if (storage::isCompactDataset(config.base_path))
+        throw util::exception("Compact datasets require MLD with direct loading.");
     storage::Storage storage(config);
     std::vector<storage::SharedDataIndex::AllocatedRegion> allocated_regions;
 

@@ -1,6 +1,6 @@
 # Command-Line Tools
 
-OSRM ships six command-line tools that cover the full data pipeline, from raw
+OSRM ships seven command-line tools that cover the full data pipeline, from raw
 OSM data to a running routing server. All tools share a set of common options
 described below, followed by per-tool reference sections.
 
@@ -87,6 +87,17 @@ osrm-partition <input.osrm> [options]
 
 Applies live traffic data (speed and turn-penalty files) to a partitioned MLD
 graph. Can be run repeatedly without re-partitioning when speeds change.
+
+For a separate compact query generation after customization, use
+[`osrm-compact`](mld-compact.md):
+
+```sh
+osrm-compact germany.osrm --output compact-germany/germany.osrm
+```
+
+The output parent directory must be new. Compaction runs on one thread and
+supports the common help, version, verbosity, and list-inputs options. Load the
+result with direct-load MLD; exact cell sharing is enabled automatically.
 
 ```
 osrm-customize <input.osrm> [options]
