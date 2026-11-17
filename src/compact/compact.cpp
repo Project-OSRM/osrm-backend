@@ -15,6 +15,7 @@
 #include <bit>
 #include <cstring>
 #include <fstream>
+#include <initializer_list>
 #include <limits>
 #include <set>
 #include <span>
@@ -67,17 +68,10 @@ CompactPaths getCompactPaths(const std::filesystem::path &input,
 class MappedCompactInput
 {
   public:
-    explicit MappedCompactInput(const CompactPaths &paths)
+    MappedCompactInput(const CompactPaths &paths, std::initializer_list<const char *> suffixes)
     {
         std::vector<SharedDataIndex::AllocatedRegion> regions;
-        for (const auto &suffix : {".osrm.edges",
-                                   ".osrm.turn_weight_penalties",
-                                   ".osrm.turn_duration_penalties",
-                                   ".osrm.mldgr",
-                                   ".osrm.ebg_nodes",
-                                   ".osrm.icd",
-                                   ".osrm.partition",
-                                   ".osrm.geometry"})
+        for (const auto &suffix : suffixes)
         {
             const auto path = paths.getInputPath(suffix);
             auto layout = std::make_unique<TarDataLayout>();
@@ -645,20 +639,36 @@ void compactDataset(const std::filesystem::path &input,
             throw util::exception(std::string("Missing MLD input: ") + suffix);
 
     OutputDirectory output_directory(absolute_output.parent_path());
-    MappedCompactInput mapped_input(paths);
-    const auto &index = mapped_input.getIndex();
-    if (*index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum") !=
-        *index.GetBlockPtr<std::uint32_t>("/mld/connectivity_checksum"))
-        throw util::exception("Graph and guidance connectivity checksums do not match");
     {
-        const auto turns = canonicalizeTurns(index);
-        writeTurns(source, target, turns);
-        writeGraph(paths.getInputPath(".osrm.mldgr"), target, index, turns);
+        const auto turns = [&]
+        {
+            MappedCompactInput input(
+                paths,
+                {".osrm.edges", ".osrm.turn_weight_penalties", ".osrm.turn_duration_penalties"});
+            const auto &index = input.getIndex();
+            tar::FileReader graph_reader(paths.getInputPath(".osrm.mldgr"),
+                                         tar::FileReader::VerifyFingerprint);
+            std::uint32_t graph_checksum;
+            graph_reader.ReadInto("/mld/connectivity_checksum", graph_checksum);
+            if (*index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum") !=
+                graph_checksum)
+                throw util::exception("Graph and guidance connectivity checksums do not match");
+            auto result = canonicalizeTurns(index);
+            writeTurns(source, target, result);
+            return result;
+        }();
+        MappedCompactInput graph_input(paths, {".osrm.mldgr"});
+        writeGraph(paths.getInputPath(".osrm.mldgr"), target, graph_input.getIndex(), turns);
     }
-    writeNodes(source, target, index);
-    writeBearings(source, target, index);
-    writePartition(source, target, index);
-    writeGeometry(source, target, index);
+    const auto run_stage = [&](const char *suffix, auto writer)
+    {
+        MappedCompactInput input(paths, {suffix});
+        writer(source, target, input.getIndex());
+    };
+    run_stage(".osrm.ebg_nodes", writeNodes);
+    run_stage(".osrm.icd", writeBearings);
+    run_stage(".osrm.partition", writePartition);
+    run_stage(".osrm.geometry", writeGeometry);
     rewriteArchive(source.GetPath(".osrm.properties"),
                    target.GetPath(".osrm.properties"),
                    {},
