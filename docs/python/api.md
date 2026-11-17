@@ -238,6 +238,8 @@ python -m osrm extract data.osm.pbf -p profiles/car.lua
 python -m osrm contract data.osrm
 python -m osrm partition data.osrm
 python -m osrm customize data.osrm
+# Optional compact query generation, alongside the ordinary prepared data
+python -m osrm customize data.osrm --compact-output compact/data.osrm
 python -m osrm datastore data.osrm
 python -m osrm routed data.osrm
 ```

@@ -88,16 +88,20 @@ osrm-partition <input.osrm> [options]
 Applies live traffic data (speed and turn-penalty files) to a partitioned MLD
 graph. Can be run repeatedly without re-partitioning when speeds change.
 
-For a separate compact query generation after customization, use
-[`osrm-compact`](mld-compact.md):
+To also create a compact query generation in the same preprocessing run, use:
 
 ```sh
-osrm-compact germany.osrm --output compact-germany/germany.osrm
+osrm-customize germany.osrm --compact-output compact-germany/germany.osrm
 ```
 
-The output parent directory must be new. Compaction runs on one thread and
-supports the common help, version, verbosity, and list-inputs options. Load the
-result with direct-load MLD; exact cell sharing is enabled automatically.
+Non-compact output remains the default and is retained for traffic updates.
+The compact output parent must be new; the result uses direct-load MLD with
+exact cell sharing enabled automatically. `--compact-output` also works with
+`--output`: graph and metric files come from the redirected output, while common
+files come from the input. See the [compact dataset workflow](mld-compact.md).
+The standalone `osrm-compact` command remains available for existing datasets.
+`--list-inputs --compact-output <path>` includes the additional query metadata
+needed by the compact stage; generated MLD files are not listed as inputs.
 
 ```
 osrm-customize <input.osrm> [options]
@@ -105,6 +109,7 @@ osrm-customize <input.osrm> [options]
 
 | Flag | Default | Description |
 |------|---------|-------------|
+| `--compact-output <path.osrm>` | _(none)_ | Also create an independent compact query dataset after customization. The parent directory must not exist. |
 | `--segment-speed-file <file>` | | CSV with `nodeA,nodeB,speed` columns to override edge weights. Repeatable. |
 | `--turn-penalty-file <file>` | | CSV with `from_node,via_node,to_node,penalty` to override turn weights. Repeatable. |
 | `--edge-weight-updates-over-factor <x>` | `0` (disabled) | Log edges whose weight changed by more than factor `x` (requires `--segment-speed-file`). |

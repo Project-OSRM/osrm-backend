@@ -40,6 +40,7 @@ struct CustomizationConfig final : storage::IOConfig
     }
 
     std::filesystem::path output_path;
+    std::filesystem::path CompactOutputPath;
     unsigned requested_num_threads;
 
     updater::UpdaterConfig updater_config;

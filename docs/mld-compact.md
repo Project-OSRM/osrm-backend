@@ -1,21 +1,27 @@
 # Compact MLD query datasets
 
-This opt-in workflow prepares a separate, query-only copy of a fully customized
-MLD dataset. It preserves routing and snapping values exactly. The original
+This opt-in workflow creates a compact, query-only generation during MLD
+customization. Non-compact preprocessing remains the default. It preserves routing and snapping values exactly. The original
 prepared dataset remains the input for traffic updates and preprocessing.
 
 ```sh
 osrm-extract -p profiles/car.lua germany.osm.pbf
 osrm-partition germany.osrm
-osrm-customize germany.osrm
-osrm-compact germany.osrm --output compact-germany/germany.osrm
+osrm-customize germany.osrm --compact-output compact-germany/germany.osrm
 osrm-routed --algorithm mld compact-germany/germany.osrm
 ```
 
 The output's parent directory must not exist. Its ancestors must already exist.
-`osrm-compact` never modifies input files and copies every file needed for queries;
+`osrm-customize` updates the normal prepared data as usual, then creates the
+compact generation. `--compact-output` is separate from `--output`: the latter
+redirects the ordinary MLD graph and metrics, and the compact stage automatically
+combines them with the common input files. No separate conversion command is
+required. All files needed for queries are copied into the compact generation;
 the result contains no links to the input. An existing output directory is refused,
-including an empty directory. Do not update the input while compaction is running.
+including an empty directory. Destination preflight runs before customization or
+traffic updates. A failure during the final compact stage leaves the normal
+customized data available and returns a failure status. Do not update the input
+concurrently. Customization working arrays are released before the compact stage.
 Parent directory names containing dataset extensions such as `.osrm` are rejected
 because the shared OSRM path normalization would reinterpret them.
 
@@ -34,6 +40,11 @@ The command needs the complete default query dataset, including guidance files.
 CH, `--mmap`, memory-file loading, and `osrm-datastore` are rejected for compact
 datasets. The source may also have CH files; those files are not copied.
 
+The standalone `osrm-compact input.osrm --output new-directory/dataset.osrm`
+command remains available for an already customized dataset. It uses the same
+writer and does not modify its input. In the C++ preprocessing API, set
+`CustomizationConfig::CompactOutputPath` to request the integrated stage.
+
 Compact data carries format version 1 inside `.osrm.properties`, in addition to
 OSRM's existing platform and version fingerprints. An unknown compact version is
 rejected. Keep all files from one generation together. Older OSRM versions are
@@ -41,7 +52,7 @@ not supported readers of compact datasets.
 
 Partitioning, contraction, customization, and traffic updates reject compact input
 before writing files. Apply updates to the original prepared data, run
-`osrm-customize` again, and compact into a new directory. Route services do not
+`osrm-customize --compact-output` again with a new output directory. Route services do not
 change. To roll back, restart with the original prepared dataset.
 
 ## Storage choices

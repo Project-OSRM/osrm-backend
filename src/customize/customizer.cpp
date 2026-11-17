@@ -1,10 +1,10 @@
-#include "extractor/node_data_container.hpp"
-#include "storage/compact_dataset.hpp"
+#include "customizer/customizer.hpp"
 
 #include "customizer/cell_customizer.hpp"
-#include "customizer/customizer.hpp"
 #include "customizer/edge_based_graph.hpp"
 #include "customizer/files.hpp"
+
+#include "extractor/node_data_container.hpp"
 
 #include "partitioner/cell_statistics.hpp"
 #include "partitioner/cell_storage.hpp"
@@ -12,6 +12,8 @@
 #include "partitioner/files.hpp"
 #include "partitioner/multi_level_partition.hpp"
 
+#include "storage/compact.hpp"
+#include "storage/compact_dataset.hpp"
 #include "storage/shared_memory_ownership.hpp"
 
 #include "updater/updater.hpp"
@@ -117,13 +119,8 @@ std::vector<CellMetric> customizeFilteredMetrics(const partitioner::MultiLevelEd
 
     return metrics;
 }
-} // namespace
-
-int Customizer::Run(const CustomizationConfig &config)
+int customizeDataset(const CustomizationConfig &config)
 {
-    storage::requireMutableDataset(config.base_path);
-    if (!config.output_path.empty())
-        storage::requireMutableDataset(config.output_path);
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
 
@@ -190,6 +187,28 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 
     return 0;
+}
+
+} // namespace
+
+int Customizer::Run(const CustomizationConfig &config)
+{
+    storage::requireMutableDataset(config.base_path);
+    if (!config.output_path.empty())
+        storage::requireMutableDataset(config.output_path);
+    if (!config.CompactOutputPath.empty())
+        storage::validateCompactDatasetPaths(
+            config.base_path, config.CompactOutputPath, config.output_path);
+    const auto result = customizeDataset(config);
+    if (result == 0 && !config.CompactOutputPath.empty())
+    {
+        TIMER_START(compacting_data);
+        storage::compactDataset(config.base_path, config.CompactOutputPath, config.output_path);
+        TIMER_STOP(compacting_data);
+        util::Log() << "Compact query dataset creation took " << TIMER_SEC(compacting_data)
+                    << " seconds";
+    }
+    return result;
 }
 
 } // namespace osrm::customizer

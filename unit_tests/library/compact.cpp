@@ -246,4 +246,41 @@ BOOST_FIXTURE_TEST_CASE(ambiguous_output_path_cannot_redirect_writes, CompactFix
     BOOST_CHECK_EQUAL(actual, expected);
 }
 
+BOOST_FIXTURE_TEST_CASE(mismatched_redirected_graph_is_rejected, CompactFixture)
+{
+    const auto wrong = root / "wrong.osrm";
+    {
+        osrm::storage::tar::FileReader reader(source.string() + ".mldgr",
+                                              osrm::storage::tar::FileReader::VerifyFingerprint);
+        osrm::storage::tar::FileWriter writer(wrong.string() + ".mldgr",
+                                              osrm::storage::tar::FileWriter::HasNoFingerprint);
+        std::vector<osrm::storage::tar::FileReader::FileEntry> entries;
+        reader.List(std::back_inserter(entries));
+        for (const auto &entry : entries)
+        {
+            if (entry.name == "/mld/connectivity_checksum")
+            {
+                std::uint32_t checksum;
+                reader.ReadInto(entry.name, checksum);
+                checksum ^= 0xffffffff;
+                writer.WriteFrom(entry.name, checksum);
+            }
+            else
+            {
+                std::vector<char> bytes(entry.size);
+                reader.ReadInto(entry.name, bytes.data(), bytes.size());
+                writer.WriteFrom(entry.name, bytes.data(), bytes.size());
+            }
+        }
+        writer.Close();
+    }
+    std::filesystem::copy_file(source.string() + ".cell_metrics", wrong.string() + ".cell_metrics");
+    BOOST_CHECK_EXCEPTION(
+        osrm::storage::compactDataset(source, target, wrong),
+        osrm::util::exception,
+        [](const auto &error)
+        { return std::string(error.what()).find("connectivity checksums") != std::string::npos; });
+    BOOST_CHECK(!std::filesystem::exists(target.parent_path()));
+}
+
 BOOST_AUTO_TEST_SUITE_END()

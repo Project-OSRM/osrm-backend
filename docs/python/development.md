@@ -379,12 +379,15 @@ CMake installs `osrm-compact` with the other executables, including under
 `osrm/bin/` in Python wheels. The module dispatcher exposes the same tool:
 
 ```sh
-python -m osrm compact germany.osrm --output compact-germany/germany.osrm
+python -m osrm customize germany.osrm --compact-output compact-germany/germany.osrm
 python -m osrm routed --algorithm mld compact-germany/germany.osrm
 ```
 
 The output parent directory must be new. Compact format version 1 is query-only
 and currently supports direct-load MLD on 64-bit little-endian platforms. Update
-the original prepared data and compact a new generation after customization.
+the original prepared data and use `customize --compact-output` to create a new
+generation in the same run. The standalone `compact` command remains available.
+The CMake compaction library depends on storage and utility code, rather than the
+routing engine, and is linked into `osrm_customize`.
 See [the compact dataset workflow](../mld-compact.md) for compatibility, fallback,
 and rollout requirements.

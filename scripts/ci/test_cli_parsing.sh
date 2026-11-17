@@ -247,6 +247,21 @@ assert_exit_nonzero "extract/--bogus-flag exits nonzero" \
 assert_exit_nonzero "routed/--bogus-flag exits nonzero" \
     "$ROUTED" --bogus-flag "$NONEXISTENT"
 
+# --- integrated compact preparation ----------------------------------------
+
+assert_output_matches "customize/compact-output option documented" 'compact-output' "$CUSTOMIZE" --help
+assert_exit_nonzero "customize/compact-output requires a path" "$CUSTOMIZE" "$NONEXISTENT" --compact-output
+assert_output_matches "customize/compact-output parses with spaces" 'Missing/Broken File|Required files' "$CUSTOMIZE" "$NONEXISTENT" --compact-output '/nonexistent compact/output.osrm'
+assert_exit_nonzero "customize/compact-output rejects unknown options" "$CUSTOMIZE" "$NONEXISTENT" --compact-output /nonexistent/output.osrm --bogus-flag
+
+assert_output_not_matches "extract/path-with-spaces accepted by parser" "for option .* is invalid" "$EXTRACT" --profile /nonexistent.lua "$SPACE_DIR/missing.osm.pbf"
+assert_output_not_matches "partition/path-with-spaces accepted by parser" "for option .* is invalid" "$PARTITION" "$SPACE_DIR/missing.osrm"
+assert_output_matches "compact/paths with spaces reach preflight" "Output directory|Missing/Broken File|Input is missing" "$COMPACT" "$SPACE_DIR/missing.osrm" --output '/nonexistent compact/output.osrm'
+
+assert_output_matches "customize/compact inputs include guidance" '^required .osrm.icd$' "$CUSTOMIZE" --list-inputs --compact-output /new/output.osrm
+assert_output_not_matches "customize/normal inputs unchanged" '^required .osrm.icd$' "$CUSTOMIZE" --list-inputs
+assert_output_not_matches "customize/generated datasource names not required input" '^required .osrm.datasource_names$' "$CUSTOMIZE" --list-inputs --compact-output /new/output.osrm
+
 # --- compact query preparation ---------------------------------------------
 
 assert_exit_zero "compact/--help" "$COMPACT" --help

@@ -6,7 +6,6 @@
 #include "storage/serialization.hpp"
 #include "storage/storage.hpp"
 #include "storage/view_factory.hpp"
-#include "engine/datafacade/process_memory_allocator.hpp"
 #include "util/block_delta_encoding.hpp"
 #include "util/log.hpp"
 #include "util/mmap_file.hpp"
@@ -25,6 +24,79 @@ namespace osrm::storage
 {
 namespace
 {
+struct CompactPaths
+{
+    StorageConfig Source;
+    StorageConfig Metrics;
+    StorageConfig Target;
+
+    std::filesystem::path getInputPath(const std::string &suffix) const
+    {
+        return (suffix == ".osrm.mldgr" || suffix == ".osrm.cell_metrics") ? Metrics.GetPath(suffix)
+                                                                           : Source.GetPath(suffix);
+    }
+};
+
+CompactPaths getCompactPaths(const std::filesystem::path &input,
+                             const std::filesystem::path &output,
+                             const std::filesystem::path &mld_input)
+{
+    if (std::endian::native != std::endian::little || sizeof(void *) != 8)
+        throw util::exception("Compact datasets currently require a 64-bit little-endian platform");
+    const auto absolute_input = std::filesystem::absolute(input).lexically_normal();
+    const auto absolute_mld =
+        std::filesystem::absolute(mld_input.empty() ? input : mld_input).lexically_normal();
+    const auto absolute_output = std::filesystem::absolute(output).lexically_normal();
+    if (absolute_output.extension() != ".osrm")
+        throw util::exception("Output must end in .osrm and name a new parent directory");
+    CompactPaths paths{{absolute_input}, {absolute_mld}, {absolute_output}};
+    const auto expected_properties = [](auto path)
+    {
+        if (path.extension() != ".osrm")
+            path += ".osrm";
+        return path.string() + ".properties";
+    };
+    if (paths.Source.GetPath(".osrm.properties") != expected_properties(absolute_input) ||
+        paths.Metrics.GetPath(".osrm.properties") != expected_properties(absolute_mld) ||
+        paths.Target.GetPath(".osrm.properties") != absolute_output.string() + ".properties")
+        throw util::exception("Ambiguous dataset path: remove format extensions such as .osrm "
+                              "from parent directory names.");
+    return paths;
+}
+
+class MappedCompactInput
+{
+  public:
+    explicit MappedCompactInput(const CompactPaths &paths)
+    {
+        std::vector<SharedDataIndex::AllocatedRegion> regions;
+        for (const auto &suffix : {".osrm.edges",
+                                   ".osrm.turn_weight_penalties",
+                                   ".osrm.turn_duration_penalties",
+                                   ".osrm.mldgr",
+                                   ".osrm.ebg_nodes",
+                                   ".osrm.icd",
+                                   ".osrm.partition",
+                                   ".osrm.geometry"})
+        {
+            const auto path = paths.getInputPath(suffix);
+            auto layout = std::make_unique<TarDataLayout>();
+            populateLayoutFromFile(path, *layout);
+            boost::iostreams::mapped_file_source mapped;
+            const auto bytes = util::mmapFile<char>(path, mapped);
+            regions.push_back({const_cast<char *>(bytes.data()), std::move(layout)});
+            m_mappings.push_back(std::move(mapped));
+        }
+        m_index = SharedDataIndex{std::move(regions)};
+    }
+
+    const SharedDataIndex &getIndex() const { return m_index; }
+
+  private:
+    std::vector<boost::iostreams::mapped_file_source> m_mappings;
+    SharedDataIndex m_index;
+};
+
 class OutputDirectory
 {
   public:
@@ -211,7 +283,7 @@ void writeTurns(const StorageConfig &source, const StorageConfig &target, const 
     }
 }
 
-void writeGraph(const StorageConfig &source,
+void writeGraph(const std::filesystem::path &source_graph,
                 const StorageConfig &target,
                 const SharedDataIndex &index,
                 const Turns &turns)
@@ -260,7 +332,7 @@ void writeGraph(const StorageConfig &source,
     std::vector<std::string> drop{edge_name};
     if (blocks)
         drop.push_back(node_name);
-    rewriteArchive(source.GetPath(".osrm.mldgr"),
+    rewriteArchive(source_graph,
                    target.GetPath(".osrm.mldgr"),
                    drop,
                    [&](auto &writer)
@@ -541,38 +613,47 @@ void writeGeometry(const StorageConfig &source,
 }
 } // namespace
 
-void compactDataset(const std::filesystem::path &input, const std::filesystem::path &output)
+void validateCompactDatasetPaths(const std::filesystem::path &input,
+                                 const std::filesystem::path &output,
+                                 const std::filesystem::path &mld_input)
 {
-    if (std::endian::native != std::endian::little || sizeof(void *) != 8)
-        throw util::exception("Compact datasets currently require a 64-bit little-endian platform");
-    const auto absolute_input = std::filesystem::absolute(input).lexically_normal();
-    const StorageConfig source(absolute_input);
-    auto expected_input = absolute_input;
-    if (expected_input.extension() != ".osrm")
-        expected_input += ".osrm";
+    const auto paths = getCompactPaths(input, output, mld_input);
+    requireMutableDataset(paths.Source.base_path);
+    requireMutableDataset(paths.Metrics.base_path);
+    const auto parent = std::filesystem::absolute(output).lexically_normal().parent_path();
+    if (std::filesystem::exists(parent) || std::filesystem::is_symlink(parent))
+        throw util::exception("Output directory must be new: " + parent.string());
+    if (!std::filesystem::is_directory(parent.parent_path()))
+        throw util::exception("Output directory's parent must exist: " +
+                              parent.parent_path().string());
+}
+
+void compactDataset(const std::filesystem::path &input,
+                    const std::filesystem::path &output,
+                    const std::filesystem::path &mld_input)
+{
+    validateCompactDatasetPaths(input, output, mld_input);
+    const auto paths = getCompactPaths(input, output, mld_input);
+    const auto &source = paths.Source;
+    const auto &target = paths.Target;
     const auto absolute_output = std::filesystem::absolute(output).lexically_normal();
-    if (absolute_output.extension() != ".osrm")
-        throw util::exception("Output must end in .osrm and name a new parent directory");
-    const StorageConfig target(absolute_output);
-    if (source.GetPath(".osrm.properties") != expected_input.string() + ".properties" ||
-        target.GetPath(".osrm.properties") != absolute_output.string() + ".properties")
-        throw util::exception("Ambiguous dataset path: remove format extensions such as .osrm "
-                              "from parent directory names.");
-    requireMutableDataset(source.base_path);
     if (!source.IsValid())
         throw util::exception("Input is missing required query files");
     for (const auto &suffix :
          {".osrm.partition", ".osrm.cells", ".osrm.cell_metrics", ".osrm.mldgr"})
-        if (!std::filesystem::is_regular_file(source.GetPath(suffix)))
+        if (!std::filesystem::is_regular_file(paths.getInputPath(suffix)))
             throw util::exception(std::string("Missing MLD input: ") + suffix);
 
     OutputDirectory output_directory(absolute_output.parent_path());
-    engine::datafacade::ProcessMemoryAllocator allocator(source, true);
-    const auto &index = allocator.GetIndex();
+    MappedCompactInput mapped_input(paths);
+    const auto &index = mapped_input.getIndex();
+    if (*index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum") !=
+        *index.GetBlockPtr<std::uint32_t>("/mld/connectivity_checksum"))
+        throw util::exception("Graph and guidance connectivity checksums do not match");
     {
         const auto turns = canonicalizeTurns(index);
         writeTurns(source, target, turns);
-        writeGraph(source, target, index, turns);
+        writeGraph(paths.getInputPath(".osrm.mldgr"), target, index, turns);
     }
     writeNodes(source, target, index);
     writeBearings(source, target, index);
@@ -602,13 +683,20 @@ void compactDataset(const std::filesystem::path &input, const std::filesystem::p
     files.insert(files.end(), updatable.begin(), updatable.end());
     files.emplace_back(true, source.GetPath(".osrm.fileIndex"));
     files.emplace_back(false, source.GetPath(".osrm.openareas.fileIndex"));
-    for (const auto &[required, path] : files)
+    for (const auto &[required, common_path] : files)
     {
-        const auto suffix = path.string().substr(source.base_path.string().size());
+        const auto suffix = common_path.string().substr(source.base_path.string().size());
+        const auto path = paths.getInputPath(suffix);
         if (rewritten.contains(suffix) || suffix == ".osrm.hsgr")
             continue;
         if (required || std::filesystem::exists(path))
+        {
+            if (suffix != ".osrm.fileIndex" && suffix != ".osrm.openareas.fileIndex")
+            {
+                tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+            }
             std::filesystem::copy_file(path, target.GetPath(suffix));
+        }
     }
     output_directory.complete();
     util::Log() << "Prepared compact query dataset: " << absolute_output.string();

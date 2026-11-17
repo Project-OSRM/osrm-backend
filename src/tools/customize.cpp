@@ -1,5 +1,6 @@
 #include "customizer/customizer.hpp"
 
+#include "storage/storage_config.hpp"
 #include "osrm/exception.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
@@ -76,7 +77,11 @@ return_code parseArguments(int argc,
             "time zone boundaries")(
             "output,o",
             boost::program_options::value<std::filesystem::path>(&customization_config.output_path),
-            "Output base path for generated files (default: same as input)");
+            "Output base path for generated files (default: same as input)")(
+            "compact-output",
+            boost::program_options::value<std::filesystem::path>(
+                &customization_config.CompactOutputPath),
+            "Also create a compact MLD query dataset; its parent directory must be new");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user
@@ -133,6 +138,16 @@ return_code parseArguments(int argc,
         std::set<std::string> seen;
         config.ListInputFiles(std::cout, seen);
         config.updater_config.ListInputFiles(std::cout, seen);
+        if (option_variables.contains("compact-output"))
+        {
+            for (const auto &suffix : storage::GetRequiredFiles({}))
+                if (suffix != ".osrm.datasource_names" && seen.insert(suffix.string()).second)
+                    std::cout << "required " << suffix.string() << '\n';
+            for (const auto &suffix :
+                 {".osrm.openareas", ".osrm.openareas.ramIndex", ".osrm.openareas.fileIndex"})
+                if (seen.insert(suffix).second)
+                    std::cout << "optional " << suffix << '\n';
+        }
         return return_code::exit;
     }
 
