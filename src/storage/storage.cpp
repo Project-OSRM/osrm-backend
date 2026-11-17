@@ -188,6 +188,8 @@ void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseData
 
     for (const auto &entry : entries)
     {
+        if (entry.name == COMPACT_VERSION_ENTRY)
+            continue;
         const auto name_end = entry.name.rfind(".meta");
         if (name_end == std::string::npos)
         {

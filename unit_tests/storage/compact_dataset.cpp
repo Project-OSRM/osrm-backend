@@ -1,4 +1,5 @@
 #include "storage/compact_dataset.hpp"
+#include "storage/storage.hpp"
 
 #include "../common/temporary_file.hpp"
 
@@ -82,6 +83,36 @@ BOOST_AUTO_TEST_CASE(malformed_version_metadata_is_rejected)
         writer.Close();
     }
     BOOST_CHECK_THROW(osrm::storage::isCompactDataset(base), osrm::util::exception);
+}
+
+BOOST_AUTO_TEST_CASE(version_metadata_does_not_change_query_layout)
+{
+    DatasetDirectory directory;
+    const auto legacy = directory.path / "legacy.osrm.properties";
+    const auto compact = directory.path / "compact.osrm.properties";
+    const std::uint64_t query_value = 1234;
+    for (const auto &path : {legacy, compact})
+    {
+        osrm::storage::tar::FileWriter writer(path,
+                                              osrm::storage::tar::FileWriter::GenerateFingerprint);
+        writer.WriteElementCount64("/common/query_value", 1);
+        writer.WriteFrom("/common/query_value", query_value);
+        if (path == compact)
+        {
+            writer.WriteElementCount64(osrm::storage::COMPACT_VERSION_ENTRY, 1);
+            writer.WriteFrom(osrm::storage::COMPACT_VERSION_ENTRY,
+                             osrm::storage::COMPACT_DATASET_VERSION);
+        }
+        writer.Close();
+    }
+    osrm::storage::ContiguousDataLayout before, after;
+    osrm::storage::populateLayoutFromFile(legacy, before);
+    osrm::storage::populateLayoutFromFile(compact, after);
+    BOOST_CHECK(before.HasBlock("/common/query_value"));
+    BOOST_CHECK(after.HasBlock("/common/query_value"));
+    BOOST_CHECK(!after.HasBlock(osrm::storage::COMPACT_VERSION_ENTRY));
+    BOOST_CHECK_EQUAL(before.GetSizeOfLayout(), after.GetSizeOfLayout());
+    BOOST_CHECK(osrm::storage::isCompactDataset(directory.path / "compact"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
