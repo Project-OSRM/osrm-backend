@@ -400,5 +400,7 @@ Native shared installs use a loader-relative install RPATH by default; an explic
 on their own with `cmake --install build --component Development`. The
 `installed-preprocessing-headers` CTest check compiles a consumer using only those
 installed OSRM headers, without the source include directory.
+CTest locks the shared library test data during both builds and tests, so
+parallel checks cannot overwrite files while another test is reading them.
 See [the compact dataset workflow](../mld-compact.md) for compatibility, fallback,
 and rollout requirements.
