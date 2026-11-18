@@ -27,6 +27,8 @@
 #include <functional>
 #include <iterator>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace osrm::storage
 {
@@ -517,12 +519,12 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
         std::copy(absolute_path.begin(), absolute_path.end(), path_ptr);
     }
 
+    const auto original_turns_path = config.base_path.string() + ".osrm.edges";
     for (const auto &file : GetStaticFiles())
     {
         if (std::filesystem::exists(file.second))
-            populateArchive(index,
-                            file.second,
-                            !m_native_turn_data || file.second != config.GetPath(".osrm.edges"));
+            populateArchive(
+                index, file.second, !m_native_turn_data || file.second != original_turns_path);
     }
 
     if (config.IsRequiredConfiguredInput(".osrm.edges") &&

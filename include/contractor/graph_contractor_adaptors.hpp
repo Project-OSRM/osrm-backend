@@ -8,21 +8,25 @@
 
 #include <tbb/parallel_sort.h>
 
+#include <functional>
 #include <vector>
 
 namespace osrm::contractor
 {
 
 // Make sure to move in the input edge list!
-template <typename InputEdgeContainer>
-ContractorGraph toContractorGraph(NodeID number_of_nodes, const InputEdgeContainer &input_edge_list)
+template <typename InputEdgeContainer, typename TurnIDFunction = std::identity>
+ContractorGraph toContractorGraph(NodeID number_of_nodes,
+                                  const InputEdgeContainer &input_edge_list,
+                                  TurnIDFunction turn_id = {})
 {
     std::vector<ContractorEdge> edges;
     edges.reserve(input_edge_list.size() * 2);
 
     for (const auto &input_edge : input_edge_list)
     {
-        if (input_edge.data.weight == INVALID_EDGE_WEIGHT)
+        if (input_edge.data.weight == INVALID_EDGE_WEIGHT ||
+            (!input_edge.data.forward && !input_edge.data.backward))
             continue;
 
 #ifndef NDEBUG
@@ -37,13 +41,14 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, const InputEdgeContain
                                   << static_cast<unsigned int>(input_edge.target);
         }
 #endif
+        const auto id = turn_id(input_edge.data.turn_id);
         edges.emplace_back(input_edge.source,
                            input_edge.target,
                            std::max(input_edge.data.weight, {1}),
                            to_alias<EdgeDuration>(input_edge.data.duration),
                            input_edge.data.distance,
                            1,
-                           input_edge.data.turn_id,
+                           id,
                            false, // shortcut
                            input_edge.data.forward,
                            input_edge.data.backward);
@@ -54,7 +59,7 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, const InputEdgeContain
                            to_alias<EdgeDuration>(input_edge.data.duration),
                            input_edge.data.distance,
                            1,
-                           input_edge.data.turn_id,
+                           id,
                            false,
                            input_edge.data.backward,
                            input_edge.data.forward);

@@ -212,9 +212,8 @@ std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynami
 int Extractor::run(ScriptingEnvironment &scripting_environment)
 {
     storage::requireMutableDataset(config.base_path);
-    storage::invalidateQueryData(config.base_path);
-    for (const auto *suffix : {".osrm.mldgr", ".osrm.cell_metrics", ".osrm.hsgr"})
-        std::filesystem::remove(config.base_path.string() + suffix);
+    storage::invalidateQueryData(config.output_path.empty() ? config.base_path
+                                                            : config.output_path);
     util::LogPolicy::GetInstance().Unmute();
 
     const unsigned recommended_num_threads = std::thread::hardware_concurrency();

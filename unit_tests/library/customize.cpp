@@ -3,6 +3,8 @@
 #include "equal_json.hpp"
 #include "extractor/files.hpp"
 #include "guidance/compact_turn_data.hpp"
+#include "storage/view_factory.hpp"
+#include "engine/datafacade/mmap_memory_allocator.hpp"
 #include "osrm/customizer.hpp"
 #include "osrm/customizer_config.hpp"
 #include "osrm/engine_config.hpp"
@@ -112,6 +114,31 @@ BOOST_FIXTURE_TEST_CASE(single_compact_representation, CustomizationFixture)
         CHECK_EQUAL_JSON(route_a, route_b);
     }
 }
+BOOST_FIXTURE_TEST_CASE(compact_geometry_views_round_trip, CustomizationFixture)
+{
+    osrm::engine::datafacade::MMapMemoryAllocator allocator(osrm::storage::StorageConfig{Source});
+    const auto view =
+        osrm::storage::make_segment_data_view(allocator.GetIndex(), "/common/segment_data");
+    const auto output = Root / "geometry-copy";
+    osrm::extractor::files::writeSegmentData(output, view);
+    osrm::extractor::SegmentDataContainer restored;
+    osrm::extractor::files::readSegmentData(output, restored);
+    const auto &copy = std::as_const(restored);
+    BOOST_REQUIRE_EQUAL(view.GetNumberOfGeometries(), copy.GetNumberOfGeometries());
+    const auto equal = [](const auto &left, const auto &right)
+    { BOOST_CHECK(std::ranges::equal(left, right)); };
+    for (unsigned g = 0; g < view.GetNumberOfGeometries(); ++g)
+    {
+        equal(view.GetForwardGeometry(g), copy.GetForwardGeometry(g));
+        equal(view.GetForwardWeights(g), copy.GetForwardWeights(g));
+        equal(view.GetReverseWeights(g), copy.GetReverseWeights(g));
+        equal(view.GetForwardDurations(g), copy.GetForwardDurations(g));
+        equal(view.GetReverseDurations(g), copy.GetReverseDurations(g));
+        equal(view.GetForwardDatasources(g), copy.GetForwardDatasources(g));
+        equal(view.GetReverseDatasources(g), copy.GetReverseDatasources(g));
+    }
+}
+
 BOOST_FIXTURE_TEST_CASE(repeated_traffic_keeps_original_turn_identities, CustomizationFixture)
 {
     auto config = getConfig();

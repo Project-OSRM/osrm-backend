@@ -165,3 +165,42 @@ int customizeDataset(const CustomizationConfig &config)
     }
 
     TIMER_START(writing_mld_data);
+    {
+        std::unordered_map<std::string, std::vector<CellMetric>> metric_exclude_classes;
+        metric_exclude_classes.emplace(properties.GetWeightName(), std::move(metrics));
+        files::writeCellMetrics(config.GetOutputPath(".osrm.cell_metrics"),
+                                metric_exclude_classes,
+                                storage.GetCellData());
+    }
+    TIMER_STOP(writing_mld_data);
+    util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
+
+    TIMER_START(writing_graph);
+    auto turns = guidance::makeQueryTurnData(config.base_path);
+    MultiLevelEdgeBasedGraph shaved_graph{std::move(graph),
+                                          std::move(node_weights),
+                                          std::move(node_durations),
+                                          std::move(node_distances),
+                                          turns.Mapping};
+    customizer::files::writeGraph(
+        config.GetOutputPath(".osrm.mldgr"), shaved_graph, connectivity_checksum, &turns);
+    TIMER_STOP(writing_graph);
+    util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
+
+    return 0;
+}
+
+} // namespace
+
+int Customizer::Run(const CustomizationConfig &config)
+{
+    storage::requireMutableDataset(config.base_path);
+    if (!config.output_path.empty())
+        storage::requireMutableDataset(config.output_path);
+    storage::invalidateQueryData(config.base_path);
+    if (!config.output_path.empty())
+        storage::invalidateQueryData(config.output_path);
+    return customizeDataset(config);
+}
+
+} // namespace osrm::customizer

@@ -49,17 +49,6 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
     using EdgeArrayEntry = SuperT::EdgeArrayEntry;
     using EdgeOffset = SuperT::EdgeOffset;
 
-    void remapTurnIDs(std::span<const EdgeID> mapping)
-        requires(Ownership == storage::Ownership::Container)
-    {
-        for (auto &edge : SuperT::edge_array)
-        {
-            if (edge.data.turn_id >= mapping.size())
-                throw util::exception("Invalid original graph turn identity");
-            edge.data.turn_id = mapping[edge.data.turn_id];
-        }
-    }
-
     MultiLevelGraph() = default;
     MultiLevelGraph(MultiLevelGraph &&) = default;
     MultiLevelGraph(const MultiLevelGraph &) = default;
@@ -69,7 +58,8 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
     MultiLevelGraph(PartitionerGraphT &&graph,
                     Vector<EdgeWeight> node_weights_,
                     Vector<EdgeDuration> node_durations_,
-                    Vector<EdgeDistance> node_distances_)
+                    Vector<EdgeDistance> node_distances_,
+                    std::span<const EdgeID> turn_mapping)
         : node_weights(std::move(node_weights_)), node_durations(std::move(node_durations_)),
           node_distances(std::move(node_distances_))
     {
@@ -86,7 +76,9 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
         SuperT::number_of_edges = original_edge_array.size();
         for (const auto &edge : original_edge_array)
         {
-            SuperT::edge_array.push_back({edge.target, {edge.data.turn_id}});
+            if (edge.data.turn_id >= turn_mapping.size())
+                throw util::exception("Invalid original graph turn identity");
+            SuperT::edge_array.push_back({edge.target, {turn_mapping[edge.data.turn_id]}});
             is_forward_edge.push_back(edge.data.forward);
             is_backward_edge.push_back(edge.data.backward);
         }

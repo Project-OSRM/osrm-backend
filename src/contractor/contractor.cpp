@@ -52,16 +52,6 @@ int Contractor::Run()
             edge_based_edge_list, node_weights, connectivity_checksum);
 
         auto turns = guidance::makeQueryTurnData(config.base_path);
-        for (auto &edge : edge_based_edge_list)
-        {
-            if (edge.data.weight == INVALID_EDGE_WEIGHT ||
-                (!edge.data.forward && !edge.data.backward))
-                continue;
-            if (edge.data.turn_id >= turns.Mapping.size())
-                throw util::exception("Invalid original contraction turn identity");
-            edge.data.turn_id = turns.Mapping[edge.data.turn_id];
-        }
-
         // Contracting the edge-expanded graph
 
         TIMER_START(contraction);
@@ -85,7 +75,16 @@ int Contractor::Run()
         QueryGraph query_graph;
         std::vector<std::vector<bool>> edge_filters;
         std::tie(query_graph, edge_filters) = contractExcludableGraph(
-            toContractorGraph(number_of_edge_based_nodes, edge_based_edge_list), node_filters);
+            toContractorGraph(number_of_edge_based_nodes,
+                              edge_based_edge_list,
+                              [&](const EdgeID id)
+                              {
+                                  if (id >= turns.Mapping.size())
+                                      throw util::exception(
+                                          "Invalid original contraction turn identity");
+                                  return turns.Mapping[id];
+                              }),
+            node_filters);
         TIMER_STOP(contraction);
         util::Log() << "Contracted graph has " << query_graph.GetNumberOfEdges() << " edges.";
         util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";

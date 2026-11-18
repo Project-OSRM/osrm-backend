@@ -277,7 +277,8 @@ BOOST_AUTO_TEST_CASE(redirected_extraction_invalidates_only_destination_graphs)
     const auto destination = std::filesystem::path(root) / "destination";
     const auto pbf = source.string() + ".osm.pbf";
     std::filesystem::copy_file(OSRM_TEST_DATA_DIR "/monaco.osm.pbf", pbf);
-    for (const auto *suffix : {".partition", ".cells", ".mldgr", ".cell_metrics", ".hsgr"})
+    for (const auto *suffix :
+         {".partition", ".cells", ".mldgr", ".cell_metrics", ".hsgr", ".query"})
     {
         std::ofstream(source.string() + ".osrm" + suffix) << "original";
         std::ofstream(destination.string() + ".osrm" + suffix) << "stale";
@@ -288,7 +289,8 @@ BOOST_AUTO_TEST_CASE(redirected_extraction_invalidates_only_destination_graphs)
     config.profile_path = OSRM_TEST_DATA_DIR "/../../profiles/car.lua";
     config.requested_num_threads = 2;
     BOOST_CHECK_NO_THROW(osrm::extract(config));
-    for (const auto *suffix : {".partition", ".cells", ".mldgr", ".cell_metrics", ".hsgr"})
+    for (const auto *suffix :
+         {".partition", ".cells", ".mldgr", ".cell_metrics", ".hsgr", ".query"})
     {
         std::string value;
         std::ifstream(source.string() + ".osrm" + suffix) >> value;
