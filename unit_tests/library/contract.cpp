@@ -7,6 +7,7 @@
 #include "osrm/contractor.hpp"
 #include "osrm/contractor_config.hpp"
 
+#include "guidance/files.hpp"
 #include "storage/compact_dataset.hpp"
 
 #include <filesystem>
@@ -166,6 +167,24 @@ BOOST_FIXTURE_TEST_CASE(partitioned_mld_waits_for_customization, ContractionFixt
     config.requested_num_threads = 2;
     BOOST_CHECK_NO_THROW(osrm::contract(config));
     BOOST_CHECK(!std::filesystem::exists(Source.string() + ".query"));
+}
+
+BOOST_FIXTURE_TEST_CASE(inactive_preprocessing_edges_need_no_turn_record, ContractionFixture)
+{
+    const auto checksum = readChecksum();
+    osrm::extractor::files::writeEdgeBasedGraph(
+        Source.string() + ".ebg", 1, std::vector<osrm::extractor::EdgeBasedEdge>(1), checksum);
+    osrm::guidance::files::writeTurnData(
+        Source.string() + ".edges", osrm::guidance::TurnDataContainer{}, checksum);
+    const std::vector<TurnPenalty> penalties;
+    osrm::extractor::files::writeTurnWeightPenalty(Source.string() + ".turn_weight_penalties",
+                                                   penalties);
+    osrm::extractor::files::writeTurnDurationPenalty(Source.string() + ".turn_duration_penalties",
+                                                     penalties);
+    osrm::ContractorConfig config;
+    config.UseDefaultOutputNames(Source);
+    config.requested_num_threads = 2;
+    BOOST_CHECK_NO_THROW(osrm::contract(config));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

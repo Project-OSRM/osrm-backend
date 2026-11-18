@@ -54,6 +54,9 @@ int Contractor::Run()
         auto turns = guidance::makeQueryTurnData(config.base_path);
         for (auto &edge : edge_based_edge_list)
         {
+            if (edge.data.weight == INVALID_EDGE_WEIGHT ||
+                (!edge.data.forward && !edge.data.backward))
+                continue;
             if (edge.data.turn_id >= turns.Mapping.size())
                 throw util::exception("Invalid original contraction turn identity");
             edge.data.turn_id = turns.Mapping[edge.data.turn_id];
