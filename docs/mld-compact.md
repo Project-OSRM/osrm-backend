@@ -104,12 +104,12 @@ The Dijkstra rank selects targets by the number of nodes settled by a plain
 unidirectional Dijkstra search. The timed operation is the production MLD search
 between those targets and sources; API latency is measured separately.
 
-## Release candidate checks, 18 November 2026
+## Earlier local release checks, 18 November 2026
 
-The local failures from the 17 November check are resolved. Compact output
-remains opt-in: Linux, Windows, ARM, packaged wheels and default LTO builds
-remain unverified, and deployment performance still needs validation. No release
-has been published and the default has not changed.
+The following snapshot predates platform CI and the STL revision below. The local
+failures from the 17 November check were resolved. Compact output remained opt-in,
+with platform, packaging, default LTO and deployment validation still open. No
+release was published and the default did not change.
 
 Shared builds now use one `osrm_exception` library for OSRM exception definitions.
 All 133 shared library cases (277,331 assertions) and six shared customization
@@ -138,8 +138,8 @@ The normal `@stress` and `@todo` exclusions remain.
 ### Worker memory and query cost
 
 MLD query, table and map-matching worker indices now use 16-bit common values,
-exact full-width overflow and a dense full-width fallback. Standard C++ arrays
-own the index storage; blocks initialize on first write, and unwritten blocks return zero. This
+exact full-width overflow and a dense full-width fallback. The snapshot below
+used zero-filled narrow-index allocations. This
 changes runtime scratch storage for both ordinary and compact MLD; it does not
 change the compact disk format or preprocessing algorithm. Large searches can
 trigger the full-width fallback and reduce the savings.
@@ -208,3 +208,54 @@ Germany compaction took 78.34 seconds versus 77.32 seconds for customization plu
 separate compaction (+1.32%). Ordinary customization alone took 48.31 seconds;
 compact creation added about 30.03 seconds (+62.15%) to that stage. The full
 extract/partition pipeline was not re-timed.
+
+## STL revision, 18 November 2026
+
+Feature code now uses `std::copy`, `std::copy_n`, `std::equal`, and
+`std::bit_cast` for memory operations. Cell matrices compare their object bytes,
+preserving signed zero and NaN payloads. `AGENTS.md` records this coding rule.
+
+Worker arrays use `std::make_unique_for_overwrite` and a small initialized-block
+table. A first write fills its 512-entry block with `std::fill_n`. An unwritten
+block reads as zero without accessing uninitialized values. Full-width promotion
+reconstructs every slot, including unwritten blocks. Boundary, partial-tail,
+promotion, clear/reuse, and ASan/UBSan checks pass.
+
+Eager standard-array initialization was also tested. It saved 50.10% on average
+at eight workers, but one process pair fell just below 50%. The retained block
+initialization restores the margin:
+
+| Workers | Process pairs | Ordinary / compact RSS | Memory saved | QPS change | p99 change |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| 1 | 2 | 5.426 / 2.668 GB | 50.82% | -5.91% | +5.81% |
+| 4 | 2 | 5.455 / 2.690 GB | 50.69% | +5.36% | -9.44% |
+| 8 | 4 | 5.480 / 2.721 GB | 50.35% | -4.14% | +6.23% |
+
+Every individual pair saves at least 50%. The pooled eight-worker margin is about
+19.4 MB below half of ordinary RSS. The extra eight-worker pairs were run
+because the initial throughput measurements varied. All observations are retained;
+these short throughput and p99 measurements do not establish a deployment bound.
+
+Three interleaved process pairs use the same frozen Dijkstra-rank benchmark,
+with 16 sources and matching weights and checksums in all 884,736 timed searches.
+
+| Comparison | Search time change | 95% process/source interval |
+| --- | ---: | ---: |
+| STL compact vs previous compact | +0.96% | +0.62% to +1.25% |
+| Current compact vs current ordinary | +5.10% | +4.85% to +5.35% |
+| Current compact vs previous ordinary | +6.05% | +5.64% to +6.40% |
+
+A fresh Route API pair measures 2.755 versus 2.845 ms (+3.26%).
+Prefetched startup is 2.991 versus 2.265 seconds (-24.27%).
+These API values come from one process pair and three timed rounds. Germany
+default, motorway, toll and ferry responses, snapping and other service outputs
+match protected references. The full graph and partition audit also passes.
+Preprocessing was not re-timed for this revision.
+
+Measured engine: `ef68fb6f0`; previous engine: `f98d0919c`. Artifacts and the
+unchanged benchmark-source hashes are retained under
+`measurements/mld-stl-blocks-20261118`. The same host and workload definitions
+as the earlier snapshot apply. For current compiler, sanitizer and packaging
+status, see [PR #7782](https://github.com/Project-OSRM/osrm-backend/pull/7782).
+Code review, deployment measurements and performance acceptance are still required
+before changing the default. Compact output remains opt-in.
