@@ -389,5 +389,9 @@ the original prepared data and use `customize --compact-output` to create a new
 generation in the same run. The standalone `compact` command remains available.
 The CMake compaction library depends on storage and utility code, rather than the
 routing engine, and is linked into `osrm_customize`.
+Shared builds keep OSRM's exception definitions in `osrm_exception`; install that
+library alongside the other OSRM libraries. CMake targets propagate this dependency,
+and `libosrm.pc` includes it for installed consumers. Static builds and default
+Python wheels link the same exception library statically.
 See [the compact dataset workflow](../mld-compact.md) for compatibility, fallback,
 and rollout requirements.
