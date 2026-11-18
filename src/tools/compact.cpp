@@ -39,17 +39,17 @@ try
                                       .run(),
                                   variables);
     boost::program_options::notify(variables);
-    if (variables.count("version"))
+    if (variables.contains("version"))
     {
         std::cout << OSRM_VERSION << '\n';
         return EXIT_SUCCESS;
     }
-    if (variables.count("help"))
+    if (variables.contains("help"))
     {
         std::cout << options << '\n';
         return EXIT_SUCCESS;
     }
-    if (variables.count("list-inputs"))
+    if (variables.contains("list-inputs"))
     {
         for (const auto &suffix : osrm::storage::GetRequiredFiles({}))
             std::cout << "required " << suffix.string() << '\n';
