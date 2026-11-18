@@ -393,6 +393,8 @@ Shared builds keep OSRM's exception definitions in `osrm_exception`; install tha
 library alongside the other OSRM libraries. CMake targets propagate this dependency,
 and `libosrm.pc` includes it for installed consumers. Static builds and default
 Python wheels link the same exception library statically.
+Tools and benchmarks that embed `UTIL` objects directly must also link
+`osrm_exception`; embedding object files does not propagate link dependencies.
 Native shared installs use a loader-relative install RPATH by default; an explicit
 `CMAKE_INSTALL_RPATH` overrides it. Public preprocessing headers can be installed
 on their own with `cmake --install build --component Development`. The
