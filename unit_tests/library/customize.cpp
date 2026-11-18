@@ -66,7 +66,17 @@ struct CustomizationFixture
                                    std::istreambuf_iterator<char>()));
             ++count;
         }
-        BOOST_CHECK_EQUAL(count, 20);
+        unsigned expected_count = 20;
+        for (const auto *suffix : {".openareas", ".openareas.ramIndex", ".openareas.fileIndex"})
+            expected_count += std::filesystem::exists(Source.string() + suffix);
+        BOOST_CHECK_EQUAL(count, expected_count);
+        unsigned output_count = 0;
+        for (const auto &entry : std::filesystem::directory_iterator(target.parent_path()))
+        {
+            BOOST_CHECK(std::filesystem::is_regular_file(entry.path()));
+            ++output_count;
+        }
+        BOOST_CHECK_EQUAL(output_count, expected_count);
     }
 
     std::filesystem::path writeTraffic() const
