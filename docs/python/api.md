@@ -235,11 +235,9 @@ The package also installs OSRM command-line tools, accessible via `python -m osr
 
 ```bash
 python -m osrm extract data.osm.pbf -p profiles/car.lua
-python -m osrm contract data.osrm
 python -m osrm partition data.osrm
 python -m osrm customize data.osrm
-python -m osrm datastore data.osrm
-python -m osrm routed data.osrm
+python -m osrm routed --algorithm mld data.osrm
 ```
 
 MLD customization creates compact query data by default. Direct loading,
