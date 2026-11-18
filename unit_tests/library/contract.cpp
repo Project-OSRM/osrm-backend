@@ -58,6 +58,25 @@ struct ContractionFixture
                 std::filesystem::copy_file(entry.path(), Root / entry.path().filename());
     }
     ~ContractionFixture() { std::filesystem::remove_all(Root); }
+
+    std::uint32_t readChecksum() const
+    {
+        osrm::storage::tar::FileReader reader(Source.string() + ".edges",
+                                              osrm::storage::tar::FileReader::VerifyFingerprint);
+        std::uint32_t checksum;
+        reader.ReadInto("/common/connectivity_checksum", checksum);
+        return checksum;
+    }
+
+    void writeUnusedMLD(std::uint32_t checksum) const
+    {
+        {
+            osrm::storage::tar::FileWriter writer(
+                Source.string() + ".mldgr", osrm::storage::tar::FileWriter::GenerateFingerprint);
+            writer.WriteFrom("/mld/connectivity_checksum", checksum);
+        }
+        std::ofstream(Source.string() + ".cell_metrics") << "unused stale metrics";
+    }
 };
 } // namespace
 
@@ -127,18 +146,7 @@ BOOST_FIXTURE_TEST_CASE(redirected_contraction_preserves_traffic_inputs, Traffic
 
 BOOST_FIXTURE_TEST_CASE(default_compaction_waits_for_stale_mld_graph, ContractionFixture)
 {
-    std::uint32_t checksum;
-    {
-        osrm::storage::tar::FileReader reader(Source.string() + ".edges",
-                                              osrm::storage::tar::FileReader::VerifyFingerprint);
-        reader.ReadInto("/common/connectivity_checksum", checksum);
-    }
-    {
-        osrm::storage::tar::FileWriter writer(Source.string() + ".mldgr",
-                                              osrm::storage::tar::FileWriter::GenerateFingerprint);
-        writer.WriteFrom("/mld/connectivity_checksum", checksum ^ std::uint32_t{1});
-    }
-    std::ofstream(Source.string() + ".cell_metrics") << "unused stale metrics";
+    writeUnusedMLD(readChecksum() ^ std::uint32_t{1});
     std::ofstream(Source.string() + ".query") << "stale query data";
     osrm::ContractorConfig config;
     config.UseDefaultOutputNames(Source);
@@ -146,6 +154,17 @@ BOOST_FIXTURE_TEST_CASE(default_compaction_waits_for_stale_mld_graph, Contractio
     BOOST_CHECK_NO_THROW(osrm::contract(config));
     BOOST_CHECK(!std::filesystem::exists(Source.string() + ".query"));
     BOOST_CHECK(std::filesystem::exists(Source.string() + ".hsgr"));
+}
+
+BOOST_FIXTURE_TEST_CASE(partitioned_mld_waits_for_customization, ContractionFixture)
+{
+    writeUnusedMLD(readChecksum());
+    std::filesystem::remove(Source.string() + ".query");
+    osrm::ContractorConfig config;
+    config.UseDefaultOutputNames(Source);
+    config.requested_num_threads = 2;
+    BOOST_CHECK_NO_THROW(osrm::contract(config));
+    BOOST_CHECK(!std::filesystem::exists(Source.string() + ".query"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()
