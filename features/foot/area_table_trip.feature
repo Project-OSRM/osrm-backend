@@ -139,3 +139,23 @@ Feature: Foot - Tables and trips across a pedestrian area
             |   | m     | e     |
             | m | 0     | 115.8 |
             | e | 115.8 | 0     |
+
+        When I request a travel distance matrix I should get
+            |   | e     |
+            | m | 161.7 |
+            | e | 0     |
+
+        When I request a travel distance matrix I should get
+            |   | m     |
+            | m | 0     |
+            | e | 161.7 |
+
+        When I request a travel time matrix I should get
+            |   | e     |
+            | m | 115.8 |
+            | e | 0     |
+
+        When I request a travel time matrix I should get
+            |   | m     |
+            | m | 0     |
+            | e | 115.8 |

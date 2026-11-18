@@ -23,6 +23,7 @@
 #include <cstddef>
 #include <iterator>
 #include <memory>
+#include <mutex>
 #include <string>
 #include <utility>
 #include <vector>
@@ -266,6 +267,14 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         std::tie(m_maneuver_overrides, m_maneuver_override_node_sequences) =
             make_maneuver_overrides_views(index, "/common/maneuver_overrides");
+    }
+
+  protected:
+    bool hasOnlyNonnegativeTurnDurationPenalties() const
+    {
+        return std::all_of(m_turn_duration_penalties.begin(),
+                           m_turn_duration_penalties.end(),
+                           [](const TurnPenalty penalty) { return penalty >= TurnPenalty{0}; });
     }
 
   public:
@@ -618,6 +627,19 @@ class ContiguousInternalMemoryDataFacade<CH>
           ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator, metric_name, exclude_index)
     {
     }
+
+    bool hasNonnegativeTurnDurations() const
+    {
+        std::call_once(
+            m_turn_duration_check,
+            [this] { m_nonnegative_turn_durations = hasOnlyNonnegativeTurnDurationPenalties(); });
+        return m_nonnegative_turn_durations;
+    }
+
+  private:
+    // Each facade owns an immutable dataset view, including after a data reload.
+    mutable std::once_flag m_turn_duration_check;
+    mutable bool m_nonnegative_turn_durations = false;
 };
 
 template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public AlgorithmDataFacade<MLD>
