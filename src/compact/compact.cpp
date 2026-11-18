@@ -14,7 +14,6 @@
 #include <algorithm>
 #include <array>
 #include <bit>
-#include <cstring>
 #include <fstream>
 #include <initializer_list>
 #include <limits>
@@ -244,9 +243,9 @@ Turns canonicalizeTurns(const SharedDataIndex &index)
                 result.Fields[field].insert(result.Fields[field].end(),
                                             input[field] + i * width,
                                             input[field] + (i + 1) * width);
-            if (std::memcmp(input[field] + i * width,
-                            result.Fields[field].data() + result.Mapping[i] * width,
-                            width))
+            if (!std::equal(input[field] + i * width,
+                            input[field] + (i + 1) * width,
+                            result.Fields[field].data() + result.Mapping[i] * width))
                 throw util::exception("Turn record reconstruction failed");
         }
     }
@@ -310,9 +309,11 @@ void writeGraph(const std::filesystem::path &source_graph,
         {
             const auto bits =
                 std::uint64_t(edges[i].target) | (std::uint64_t(edges[i].data.turn_id) << 25);
-            std::memcpy(packed.data() + i * 6, &bits, 6);
-            std::uint64_t restored;
-            std::memcpy(&restored, packed.data() + i * 6, 8);
+            const auto bytes = std::bit_cast<std::array<std::uint8_t, sizeof(bits)>>(bits);
+            std::copy_n(bytes.begin(), 6, packed.data() + i * 6);
+            std::array<std::uint8_t, sizeof(std::uint64_t)> restored_bytes;
+            std::copy_n(packed.data() + i * 6, restored_bytes.size(), restored_bytes.begin());
+            const auto restored = std::bit_cast<std::uint64_t>(restored_bytes);
             if ((restored & ((1ULL << 25) - 1)) != edges[i].target ||
                 ((restored >> 25) & ((1ULL << 22) - 1)) != edges[i].data.turn_id)
                 throw util::exception("Graph edge reconstruction failed");

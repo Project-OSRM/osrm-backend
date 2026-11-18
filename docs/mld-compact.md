@@ -138,8 +138,8 @@ The normal `@stress` and `@todo` exclusions remain.
 ### Worker memory and query cost
 
 MLD query, table and map-matching worker indices now use 16-bit common values,
-exact full-width overflow and a dense full-width fallback. Untouched narrow
-array pages remain demand-zero where the operating system permits it. This
+exact full-width overflow and a dense full-width fallback. Standard C++ arrays
+own and initialize the index storage. This
 changes runtime scratch storage for both ordinary and compact MLD; it does not
 change the compact disk format or preprocessing algorithm. Large searches can
 trigger the full-width fallback and reduce the savings.

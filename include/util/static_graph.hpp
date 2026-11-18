@@ -15,7 +15,8 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
-#include <cstring>
+#include <array>
+#include <bit>
 #include <utility>
 #include <vector>
 
@@ -340,8 +341,10 @@ class StaticGraph
         {
             if (!packed_edges.empty())
             {
-                std::uint64_t bits;
-                std::memcpy(&bits, packed_edges.data() + std::size_t(edge) * 6, sizeof(bits));
+                std::array<std::uint8_t, sizeof(std::uint64_t)> bytes;
+                std::copy_n(
+                    packed_edges.data() + std::size_t(edge) * 6, bytes.size(), bytes.begin());
+                const auto bits = std::bit_cast<std::uint64_t>(bytes);
                 return {static_cast<NodeID>(bits & ((std::uint64_t{1} << 25) - 1)),
                         {static_cast<NodeID>((bits >> 25) & ((std::uint64_t{1} << 22) - 1))}};
             }

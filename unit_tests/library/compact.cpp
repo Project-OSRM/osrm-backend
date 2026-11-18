@@ -17,6 +17,9 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <algorithm>
+#include <array>
+#include <bit>
 #include <fstream>
 #include <map>
 
@@ -211,7 +214,8 @@ BOOST_AUTO_TEST_CASE(packed_edge_boundaries_and_adjacency)
     for (unsigned i = 0; i < 4; ++i)
     {
         const auto bits = std::uint64_t(targets[i]) | (std::uint64_t(turns[i]) << 25);
-        std::memcpy(bytes + i * 6, &bits, 6);
+        const auto word = std::bit_cast<std::array<std::uint8_t, sizeof(bits)>>(bits);
+        std::copy_n(word.begin(), 6, bytes + i * 6);
     }
     Graph graph{{nodes, 4}, {}};
     graph.bindPackedEdges({bytes, sizeof(bytes)});
