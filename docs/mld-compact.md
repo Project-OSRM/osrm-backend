@@ -14,6 +14,7 @@ osrm-routed --algorithm mld germany.osrm
 Records pack integer fields, deduplicate identical turns, and share identical
 cell matrices. All values remain exact; fields that exceed a compact width use
 a wider encoding.
+The full profile exclusion set is supported.
 
 Traffic updates use the usual customization options. Compact preprocessing
 files retain the original turn identities; each routing graph contains its own
