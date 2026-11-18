@@ -308,11 +308,8 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
         auto layout_size = reader.GetPosition();
         auto *data_ptr = reinterpret_cast<char *>(static_memory->Ptr()) + layout_size;
 
-        if (only_metric)
-        {
-            regions.push_back({data_ptr, std::move(static_layout)});
-            readonly_handles.push_back({std::move(static_memory), data_ptr, static_region.proj_id});
-        }
+        regions.push_back({data_ptr, std::move(static_layout)});
+        readonly_handles.push_back({std::move(static_memory), data_ptr, static_region.proj_id});
     }
     if (!only_metric)
     {
