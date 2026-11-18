@@ -139,6 +139,7 @@ BOOST_FIXTURE_TEST_CASE(default_compaction_waits_for_stale_mld_graph, Contractio
         writer.WriteFrom("/mld/connectivity_checksum", checksum ^ std::uint32_t{1});
     }
     std::ofstream(Source.string() + ".cell_metrics") << "unused stale metrics";
+    std::ofstream(Source.string() + ".query") << "stale query data";
     osrm::ContractorConfig config;
     config.UseDefaultOutputNames(Source);
     config.requested_num_threads = 2;

@@ -27,6 +27,8 @@ int Contractor::Run()
     storage::requireMutableDataset(config.base_path);
     if (!config.output_path.empty())
         storage::requireMutableDataset(config.output_path);
+    const auto refresh_query_data =
+        std::filesystem::exists(config.base_path.string() + ".osrm.query");
     storage::invalidateQueryData(config.base_path);
     if (!config.output_path.empty())
         storage::invalidateQueryData(config.output_path);
@@ -91,7 +93,7 @@ int Contractor::Run()
                                                        storage::CH_GENERATION_ENTRY));
     }
 
-    if (config.output_path.empty())
+    if (config.output_path.empty() && refresh_query_data)
         storage::writeQueryData(config.base_path);
 
     TIMER_STOP(preparing);
