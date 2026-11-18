@@ -801,6 +801,28 @@ void writeQueryData(const std::filesystem::path &input)
     if (!std::filesystem::exists(source.GetPath(".osrm.mldgr")) ||
         !std::filesystem::exists(source.GetPath(".osrm.cell_metrics")))
         return;
+    invalidateQueryData(source.base_path);
+    std::uint32_t guidance_checksum;
+    {
+        tar::FileReader reader(source.GetPath(".osrm.edges"), tar::FileReader::VerifyFingerprint);
+        reader.ReadInto("/common/connectivity_checksum", guidance_checksum);
+    }
+    for (const auto &[suffix, entry] : {std::pair{".osrm.mldgr", "/mld/connectivity_checksum"},
+                                        std::pair{".osrm.hsgr", "/ch/connectivity_checksum"}})
+    {
+        const auto path = source.GetPath(suffix);
+        if (!std::filesystem::exists(path))
+            continue;
+        tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+        std::uint32_t graph_checksum;
+        reader.ReadInto(entry, graph_checksum);
+        if (graph_checksum != guidance_checksum)
+        {
+            util::Log() << "Deferring compact query data until both prepared graphs match the "
+                           "guidance data.";
+            return;
+        }
+    }
     std::random_device random;
     const auto nonce = (std::uint64_t(random()) << 32) | std::uint64_t(random());
     const auto stage =

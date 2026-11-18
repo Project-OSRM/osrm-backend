@@ -7,6 +7,8 @@
 #include "osrm/contractor.hpp"
 #include "osrm/contractor_config.hpp"
 
+#include "storage/compact_dataset.hpp"
+
 #include <filesystem>
 #include <fstream>
 #include <iterator>
@@ -38,6 +40,24 @@ struct TrafficOutputFixture
         std::error_code error;
         std::filesystem::remove_all(Root, error);
     }
+};
+} // namespace
+
+namespace
+{
+struct ContractionFixture
+{
+    std::filesystem::path Root = std::filesystem::temp_directory_path() / random_string(16);
+    std::filesystem::path Source = Root / "monaco.osrm";
+
+    ContractionFixture()
+    {
+        std::filesystem::create_directory(Root);
+        for (const auto &entry : std::filesystem::directory_iterator(OSRM_TEST_DATA_DIR "/ch"))
+            if (entry.path().filename().string().starts_with("monaco.osrm."))
+                std::filesystem::copy_file(entry.path(), Root / entry.path().filename());
+    }
+    ~ContractionFixture() { std::filesystem::remove_all(Root); }
 };
 } // namespace
 
@@ -103,6 +123,28 @@ BOOST_FIXTURE_TEST_CASE(redirected_contraction_preserves_traffic_inputs, Traffic
         config.output_path.string() + ".osrm.turn_duration_penalties", updated);
     BOOST_REQUIRE(!updated.empty());
     BOOST_CHECK(updated.front() == TurnPenalty{370});
+}
+
+BOOST_FIXTURE_TEST_CASE(default_compaction_waits_for_stale_mld_graph, ContractionFixture)
+{
+    std::uint32_t checksum;
+    {
+        osrm::storage::tar::FileReader reader(Source.string() + ".edges",
+                                              osrm::storage::tar::FileReader::VerifyFingerprint);
+        reader.ReadInto("/common/connectivity_checksum", checksum);
+    }
+    {
+        osrm::storage::tar::FileWriter writer(Source.string() + ".mldgr",
+                                              osrm::storage::tar::FileWriter::GenerateFingerprint);
+        writer.WriteFrom("/mld/connectivity_checksum", checksum ^ std::uint32_t{1});
+    }
+    std::ofstream(Source.string() + ".cell_metrics") << "unused stale metrics";
+    osrm::ContractorConfig config;
+    config.UseDefaultOutputNames(Source);
+    config.requested_num_threads = 2;
+    BOOST_CHECK_NO_THROW(osrm::contract(config));
+    BOOST_CHECK(!std::filesystem::exists(Source.string() + ".query"));
+    BOOST_CHECK(std::filesystem::exists(Source.string() + ".hsgr"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

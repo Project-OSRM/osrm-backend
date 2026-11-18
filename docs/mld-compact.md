@@ -12,7 +12,8 @@ osrm-routed --algorithm mld germany.osrm
 The generated `germany.osrm.query` archive contains packed graph and geometry
 records, deduplicated turns, and exactly shared cell matrices. Direct loading,
 `--mmap`, and `osrm-datastore` use it automatically. No compaction switch is needed.
-CH and MLD can share the same prepared dataset.
+CH and MLD can share a dataset. After extraction or partitioning, rebuild both
+graphs.
 
 Apply traffic updates as usual:
 

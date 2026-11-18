@@ -286,4 +286,28 @@ BOOST_FIXTURE_TEST_CASE(default_customization_keeps_mutable_format, Customizatio
     BOOST_CHECK(raw.Nearest(nearest, result) == osrm::Status::Ok);
 }
 
+BOOST_FIXTURE_TEST_CASE(default_compaction_waits_for_stale_ch_graph, CustomizationFixture)
+{
+    auto config = getConfig();
+    config.CompactOutputPath.clear();
+    std::uint32_t checksum;
+    {
+        osrm::storage::tar::FileReader reader(Source.string() + ".edges",
+                                              osrm::storage::tar::FileReader::VerifyFingerprint);
+        reader.ReadInto("/common/connectivity_checksum", checksum);
+    }
+    const auto ch_path = Source.string() + ".hsgr";
+    {
+        osrm::storage::tar::FileWriter writer(ch_path,
+                                              osrm::storage::tar::FileWriter::GenerateFingerprint);
+        writer.WriteFrom("/ch/connectivity_checksum", checksum ^ std::uint32_t{1});
+    }
+    BOOST_CHECK_NO_THROW(osrm::customize(config));
+    BOOST_CHECK(!std::filesystem::exists(Source.string() + ".query"));
+    BOOST_CHECK(std::filesystem::exists(Source.string() + ".mldgr"));
+    std::filesystem::remove(ch_path);
+    BOOST_CHECK_NO_THROW(osrm::customize(config));
+    BOOST_CHECK(osrm::storage::hasQueryData(config.base_path));
+}
+
 BOOST_AUTO_TEST_SUITE_END()
