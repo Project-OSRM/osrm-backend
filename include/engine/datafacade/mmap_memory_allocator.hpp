@@ -9,7 +9,13 @@
 
 #include <boost/iostreams/device/mapped_file.hpp>
 
+#include <memory>
 #include <string>
+
+namespace osrm::customizer
+{
+struct SharedCellMetrics;
+}
 
 namespace osrm::engine::datafacade
 {
@@ -20,7 +26,8 @@ namespace osrm::engine::datafacade
 class MMapMemoryAllocator final : public ContiguousBlockAllocator
 {
   public:
-    explicit MMapMemoryAllocator(const storage::StorageConfig &config);
+    explicit MMapMemoryAllocator(const storage::StorageConfig &config,
+                                 bool share_cell_metrics = false);
     ~MMapMemoryAllocator() override final;
 
     // interface to give access to the datafacades
@@ -31,6 +38,7 @@ class MMapMemoryAllocator final : public ContiguousBlockAllocator
     std::vector<boost::iostreams::mapped_file_source> mapped_memory_files;
     std::string rtree_filename;
     std::string open_area_rtree_filename;
+    std::unique_ptr<customizer::SharedCellMetrics> shared_cell_metrics;
 };
 
 } // namespace osrm::engine::datafacade

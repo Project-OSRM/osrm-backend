@@ -30,8 +30,9 @@ class ExternalProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
   public:
     using Facade = DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
-    ExternalProvider(const storage::StorageConfig &config)
-        : facade_factory(std::make_shared<datafacade::MMapMemoryAllocator>(config))
+    ExternalProvider(const storage::StorageConfig &config, bool share_cell_metrics = false)
+        : facade_factory(
+              std::make_shared<datafacade::MMapMemoryAllocator>(config, share_cell_metrics))
     {
     }
 

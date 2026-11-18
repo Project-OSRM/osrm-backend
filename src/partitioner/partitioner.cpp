@@ -66,6 +66,9 @@ int Partitioner::Run(const PartitionerConfig &config)
     storage::requireMutableDataset(config.base_path);
     if (!config.output_path.empty())
         storage::requireMutableDataset(config.output_path);
+    storage::invalidateQueryData(config.base_path);
+    if (!config.output_path.empty())
+        storage::invalidateQueryData(config.output_path);
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
 

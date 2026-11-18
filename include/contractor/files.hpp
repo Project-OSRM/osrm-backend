@@ -32,7 +32,8 @@ inline void readGraph(const std::filesystem::path &path,
 template <typename ContractedMetricT>
 inline void writeGraph(const std::filesystem::path &path,
                        const std::unordered_map<std::string, ContractedMetricT> &metrics,
-                       const std::uint32_t connectivity_checksum)
+                       const std::uint32_t connectivity_checksum,
+                       const std::uint64_t query_generation = 0)
 {
     static_assert(std::is_same<ContractedMetric, ContractedMetricT>::value ||
                       std::is_same<ContractedMetricView, ContractedMetricT>::value,
@@ -46,6 +47,11 @@ inline void writeGraph(const std::filesystem::path &path,
     for (const auto &pair : metrics)
     {
         serialization::write(writer, "/ch/metrics/" + pair.first, pair.second);
+    }
+    if (query_generation != 0)
+    {
+        writer.WriteElementCount64("/ch/query_generation", 1);
+        writer.WriteFrom("/ch/query_generation", query_generation);
     }
 }
 } // namespace osrm::contractor::files

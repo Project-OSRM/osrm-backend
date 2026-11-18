@@ -16,6 +16,8 @@ void validateCompactDatasetPaths(const std::filesystem::path &input,
 void compactDataset(const std::filesystem::path &input,
                     const std::filesystem::path &output,
                     const std::filesystem::path &mld_input = {});
+
+void writeQueryData(const std::filesystem::path &input);
 } // namespace osrm::storage
 
 #endif

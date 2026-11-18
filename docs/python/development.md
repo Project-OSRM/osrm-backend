@@ -373,34 +373,20 @@ committed when creating the tag.
 Install public headers with `cmake --install build --component Development`.
 CTest compiles a consumer against the installed customization headers.
 
-## Compact MLD query datasets
+## Compact MLD query data
 
-CMake installs `osrm-compact` with the other executables, including under
-`osrm/bin/` in Python wheels. The module dispatcher exposes the same tool:
+`osrm-customize` generates `.osrm.query` automatically. The existing storage
+library contains the writer; there is no separate compact library. Direct, mmap
+and datastore loaders use the same serialized query blocks and shared matrices.
+The optional `osrm-compact` export tool is included in Python wheels and exposed
+through `python -m osrm compact`.
 
-```sh
-python -m osrm customize germany.osrm --compact-output compact-germany/germany.osrm
-python -m osrm routed --algorithm mld compact-germany/germany.osrm
-```
+Shared builds keep exception definitions in `osrm_exception`, which must be
+installed with the other shared libraries. CMake targets and `libosrm.pc`
+propagate this dependency. Targets embedding `UTIL` objects directly must also
+link it. Static wheels link the exception library statically.
 
-The output parent directory must be new. Compact format version 1 is query-only
-and currently supports direct-load MLD on 64-bit little-endian platforms. Update
-the original prepared data and use `customize --compact-output` to create a new
-generation in the same run. The standalone `compact` command remains available.
-The CMake compaction library depends on storage and utility code, rather than the
-routing engine, and is linked into `osrm_customize`.
-Shared builds keep OSRM's exception definitions in `osrm_exception`; install that
-library alongside the other OSRM libraries. CMake targets propagate this dependency,
-and `libosrm.pc` includes it for installed consumers. Static builds and default
-Python wheels link the same exception library statically.
-Tools and benchmarks that embed `UTIL` objects directly must also link
-`osrm_exception`; embedding object files does not propagate link dependencies.
-Native shared installs use a loader-relative install RPATH by default; an explicit
-`CMAKE_INSTALL_RPATH` overrides it. Public preprocessing headers can be installed
-on their own with `cmake --install build --component Development`. The
-`installed-preprocessing-headers` CTest check compiles a consumer using only those
-installed OSRM headers, without the source include directory.
-CTest locks the shared library test data during both builds and tests, so
-parallel checks cannot overwrite files while another test is reading them.
-See [the compact dataset workflow](../mld-compact.md) for compatibility, fallback,
-and rollout requirements.
+Public preprocessing headers can be installed with `cmake --install build
+--component Development`; CTest compiles a consumer against those headers.
+Parallel library tests lock their shared generated data during builds and reads.
+See [compact query data](../mld-compact.md) for the normal workflow.

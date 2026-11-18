@@ -1,4 +1,7 @@
 #include "engine/datafacade/mmap_memory_allocator.hpp"
+#include "engine/datafacade/shared_cell_metrics.hpp"
+
+#include "customizer/shared_cell_metrics.hpp"
 
 #include "storage/block.hpp"
 #include "storage/compact_dataset.hpp"
@@ -12,10 +15,10 @@
 namespace osrm::engine::datafacade
 {
 
-MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
+MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config,
+                                         bool share_cell_metrics)
 {
-    if (storage::isCompactDataset(config.base_path))
-        throw util::exception("Compact datasets require MLD with direct loading.");
+    (void)storage::isCompactDataset(config.base_path);
     storage::Storage storage(config);
     std::vector<storage::SharedDataIndex::AllocatedRegion> allocated_regions;
 
@@ -53,8 +56,14 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
     auto updatable_files = storage.GetUpdatableFiles();
     files.insert(files.end(), updatable_files.begin(), updatable_files.end());
 
+    std::string metric_name;
+    if (share_cell_metrics && !storage.hasQueryData())
+        shared_cell_metrics = makeSharedCellMetrics(config, metric_name);
+
     for (const auto &file : files)
     {
+        if (shared_cell_metrics && file.second == config.GetPath(".osrm.cell_metrics"))
+            continue;
         if (std::filesystem::exists(file.second))
         {
             std::unique_ptr<storage::BaseDataLayout> layout =
@@ -62,10 +71,12 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
             boost::iostreams::mapped_file_source mapped_memory_file;
             auto data = util::mmapFile<char>(file.second, mapped_memory_file).data();
             mapped_memory_files.push_back(std::move(mapped_memory_file));
-            storage::populateLayoutFromFile(file.second, *layout);
+            storage.PopulateLayout(*layout, {file});
             allocated_regions.push_back({const_cast<char *>(data), std::move(layout)});
         }
     }
+    if (shared_cell_metrics)
+        appendSharedCellMetrics(allocated_regions, *shared_cell_metrics, metric_name);
 
     index = storage::SharedDataIndex{std::move(allocated_regions)};
 }

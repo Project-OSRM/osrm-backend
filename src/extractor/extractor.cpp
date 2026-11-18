@@ -212,6 +212,7 @@ std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynami
 int Extractor::run(ScriptingEnvironment &scripting_environment)
 {
     storage::requireMutableDataset(config.base_path);
+    storage::invalidateQueryData(config.base_path);
     util::LogPolicy::GetInstance().Unmute();
 
     const unsigned recommended_num_threads = std::thread::hardware_concurrency();

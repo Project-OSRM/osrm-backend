@@ -179,7 +179,9 @@ bool swapData(Monitor &monitor,
 }
 } // namespace
 
-void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseDataLayout &layout)
+void populateLayoutFromFile(const std::filesystem::path &path,
+                            storage::BaseDataLayout &layout,
+                            const std::function<bool(const std::string &)> &include)
 {
     tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
 
@@ -190,6 +192,8 @@ void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseData
     {
         if (entry.name == COMPACT_VERSION_ENTRY)
             continue;
+        if (include && !include(entry.name))
+            continue;
         const auto name_end = entry.name.rfind(".meta");
         if (name_end == std::string::npos)
         {
@@ -199,13 +203,14 @@ void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseData
     }
 }
 
-Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
+Storage::Storage(StorageConfig config_)
+    : config(std::move(config_)), m_query_data(osrm::storage::hasQueryData(config.base_path))
+{
+}
 
 int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric)
 {
-    if (isCompactDataset(config.base_path))
-        throw util::exception(
-            "Compact datasets do not yet support osrm-datastore; use MLD with direct loading.");
+    const auto compact = isCompactDataset(config.base_path);
     BOOST_ASSERT_MSG(config.IsValid(), "Invalid storage config");
 
     util::LogPolicy::GetInstance().Unmute();
@@ -240,6 +245,13 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
     // Because of datastore_lock the only write operation can occur sequentially later.
     Monitor monitor(SharedRegionRegister{});
     auto &shared_register = monitor.data();
+    if (only_metric && (m_query_data || compact))
+    {
+        if (shared_register.Find(dataset_name + "/static") ==
+            storage::SharedRegionRegister::INVALID_REGION_ID)
+            throw util::exception("Cannot update the metric to a dataset that does not exist yet.");
+        only_metric = false;
+    }
 
     // Populate a memory layout into stack memory
     std::vector<SharedDataIndex::AllocatedRegion> regions;
@@ -268,10 +280,15 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
         auto layout_size = reader.GetPosition();
         auto *data_ptr = reinterpret_cast<char *>(static_memory->Ptr()) + layout_size;
 
-        regions.push_back({data_ptr, std::move(static_layout)});
-        readonly_handles.push_back({std::move(static_memory), data_ptr, static_region.proj_id});
+        if (!static_layout->HasBlock("/common/ebg_node_data/nodes"))
+            only_metric = false;
+        if (only_metric)
+        {
+            regions.push_back({data_ptr, std::move(static_layout)});
+            readonly_handles.push_back({std::move(static_memory), data_ptr, static_region.proj_id});
+        }
     }
-    else
+    if (!only_metric)
     {
         std::unique_ptr<storage::BaseDataLayout> static_layout =
             std::make_unique<storage::ContiguousDataLayout>();
@@ -340,6 +357,18 @@ std::vector<std::pair<bool, std::filesystem::path>> Storage::GetStaticFiles()
         }
     }
 
+    if (m_query_data)
+        std::erase_if(files,
+                      [&](const auto &file)
+                      {
+                          for (const auto &suffix :
+                               {".osrm.partition", ".osrm.ebg_nodes", ".osrm.edges", ".osrm.icd"})
+                              if (file.second ==
+                                  std::filesystem::path(config.base_path.string() + suffix))
+                                  return true;
+                          return false;
+                      });
+
     return files;
 }
 
@@ -365,6 +394,11 @@ std::vector<std::pair<bool, std::filesystem::path>> Storage::GetUpdatableFiles()
         }
     }
 
+    if (m_query_data)
+    {
+        files.clear();
+        files.emplace_back(true, config.GetPath(".osrm.query"));
+    }
     return files;
 }
 
@@ -418,7 +452,20 @@ void Storage::PopulateLayout(storage::BaseDataLayout &layout,
     {
         if (std::filesystem::exists(file.second))
         {
-            populateLayoutFromFile(file.second, layout);
+            populateLayoutFromFile(
+                file.second,
+                layout,
+                [&](const auto &name)
+                {
+                    if (!m_query_data || file.second != config.GetPath(".osrm.query"))
+                        return true;
+                    if (name.starts_with("/common/turn_data/") &&
+                        !config.IsRequiredConfiguredInput(".osrm.edges"))
+                        return false;
+                    return config.IsRequiredConfiguredInput(".osrm.icd") ||
+                           (!name.starts_with("/common/intersection_bearings/") &&
+                            !name.starts_with("/common/entry_classes"));
+                });
         }
     }
 }
@@ -459,7 +506,7 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
             populateArchive(index, file.second);
     }
 
-    if (config.IsRequiredConfiguredInput(".osrm.edges") &&
+    if (!m_query_data && config.IsRequiredConfiguredInput(".osrm.edges") &&
         index.GetBlockSize("/common/connectivity_checksum") != sizeof(std::uint32_t))
         throw util::exception("Invalid connectivity checksum in " +
                               config.GetPath(".osrm.edges").string());
@@ -471,6 +518,22 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
     {
         if (std::filesystem::exists(file.second))
             populateArchive(index, file.second);
+    }
+
+    if (m_query_data)
+    {
+        if (config.IsRequiredConfiguredInput(".osrm.edges"))
+        {
+            const auto checksum = *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
+            for (const auto *entry : {"/mld/connectivity_checksum", "/ch/connectivity_checksum"})
+            {
+                if (index.HasBlock(entry) &&
+                    (index.GetBlockSize(entry) != sizeof(std::uint32_t) ||
+                     *index.GetBlockPtr<std::uint32_t>(entry) != checksum))
+                    throw util::exception("Query graph and guidance connectivity checksums do not match");
+            }
+        }
+        return;
     }
 
     for (const auto &[suffix, entry] : {std::pair{".osrm.hsgr", "/ch/connectivity_checksum"},

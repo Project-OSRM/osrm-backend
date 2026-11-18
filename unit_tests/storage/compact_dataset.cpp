@@ -52,6 +52,70 @@ BOOST_AUTO_TEST_CASE(known_version_is_query_only)
     BOOST_CHECK_THROW(osrm::storage::requireMutableDataset(base), osrm::util::exception);
 }
 
+BOOST_AUTO_TEST_CASE(query_archive_requires_matching_source_generations)
+{
+    DatasetDirectory directory;
+    const auto base = directory.path / "data";
+    const auto write_generation = [&](const std::string &suffix,
+                                      const std::string &entry,
+                                      std::uint64_t generation,
+                                      std::uint32_t checksum = 42)
+    {
+        osrm::storage::tar::FileWriter writer(base.string() + suffix,
+                                              osrm::storage::tar::FileWriter::GenerateFingerprint);
+        writer.WriteElementCount64(entry, 1);
+        writer.WriteFrom(entry, generation);
+        const auto checksum_entry =
+            suffix == ".osrm.mldgr" ? "/mld/connectivity_checksum" : "/ch/connectivity_checksum";
+        writer.WriteElementCount64(checksum_entry, 1);
+        writer.WriteFrom(checksum_entry, checksum);
+        writer.Close();
+    };
+    const auto write_query = [&](std::uint64_t mld_generation, std::uint64_t ch_generation)
+    {
+        osrm::storage::tar::FileWriter writer(base.string() + ".osrm.query",
+                                              osrm::storage::tar::FileWriter::GenerateFingerprint);
+        for (const auto &[entry, value] :
+             {std::pair{osrm::storage::COMPACT_VERSION_ENTRY,
+                        osrm::storage::COMPACT_DATASET_VERSION},
+              std::pair{osrm::storage::MLD_GENERATION_ENTRY, mld_generation},
+              std::pair{osrm::storage::CH_GENERATION_ENTRY, ch_generation}})
+        {
+            writer.WriteElementCount64(entry, 1);
+            writer.WriteFrom(entry, value);
+        }
+        for (const auto *entry : {"/mld/connectivity_checksum", "/ch/connectivity_checksum"})
+        {
+            writer.WriteElementCount64(entry, 1);
+            writer.WriteFrom(entry, std::uint32_t{42});
+        }
+        writer.Close();
+    };
+    BOOST_CHECK(!osrm::storage::hasQueryData(base));
+    write_query(1, 0);
+    BOOST_CHECK(!osrm::storage::hasQueryData(base));
+    write_generation(".osrm.mldgr", osrm::storage::MLD_GENERATION_ENTRY, 1);
+    BOOST_CHECK(osrm::storage::hasQueryData(base));
+    write_generation(".osrm.mldgr", osrm::storage::MLD_GENERATION_ENTRY, 2);
+    BOOST_CHECK(!osrm::storage::hasQueryData(base));
+    write_query(2, 0);
+    BOOST_CHECK(osrm::storage::hasQueryData(base));
+    write_generation(".osrm.hsgr", osrm::storage::CH_GENERATION_ENTRY, 1);
+    BOOST_CHECK(!osrm::storage::hasQueryData(base));
+    write_query(2, 1);
+    BOOST_CHECK(osrm::storage::hasQueryData(base));
+    write_generation(".osrm.hsgr", osrm::storage::CH_GENERATION_ENTRY, 2);
+    BOOST_CHECK(!osrm::storage::hasQueryData(base));
+    write_generation(".osrm.hsgr", osrm::storage::CH_GENERATION_ENTRY, 1, 43);
+    BOOST_CHECK(!osrm::storage::hasQueryData(base));
+    write_generation(".osrm.hsgr", osrm::storage::CH_GENERATION_ENTRY, 1);
+    BOOST_CHECK(osrm::storage::hasQueryData(base));
+    osrm::storage::invalidateQueryData(base);
+    BOOST_CHECK(!std::filesystem::exists(base.string() + ".osrm.query"));
+    BOOST_CHECK(std::filesystem::exists(base.string() + ".osrm.mldgr"));
+    BOOST_CHECK(std::filesystem::exists(base.string() + ".osrm.hsgr"));
+}
+
 BOOST_AUTO_TEST_CASE(unknown_version_is_rejected)
 {
     DatasetDirectory directory;

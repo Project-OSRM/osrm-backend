@@ -115,7 +115,8 @@ inline void readGraph(const std::filesystem::path &path,
 template <typename MultiLevelGraphT>
 inline void writeGraph(const std::filesystem::path &path,
                        const MultiLevelGraphT &graph,
-                       const std::uint32_t connectivity_checksum)
+                       const std::uint32_t connectivity_checksum,
+                       const std::uint64_t query_generation = 0)
 {
     static_assert(std::is_same<customizer::MultiLevelEdgeBasedGraphView, MultiLevelGraphT>::value ||
                       std::is_same<customizer::MultiLevelEdgeBasedGraph, MultiLevelGraphT>::value,
@@ -126,6 +127,11 @@ inline void writeGraph(const std::filesystem::path &path,
     writer.WriteElementCount64("/mld/connectivity_checksum", 1);
     writer.WriteFrom("/mld/connectivity_checksum", connectivity_checksum);
     serialization::write(writer, "/mld/multilevelgraph", graph);
+    if (query_generation != 0)
+    {
+        writer.WriteElementCount64("/mld/query_generation", 1);
+        writer.WriteFrom("/mld/query_generation", query_generation);
+    }
 }
 } // namespace osrm::customizer::files
 

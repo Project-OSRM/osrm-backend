@@ -67,7 +67,8 @@ struct CustomizationFixture
             ++count;
         }
         unsigned expected_count = 20;
-        for (const auto *suffix : {".openareas", ".openareas.ramIndex", ".openareas.fileIndex"})
+        for (const auto *suffix :
+             {".openareas", ".openareas.ramIndex", ".openareas.fileIndex", ".hsgr"})
             expected_count += std::filesystem::exists(Source.string() + suffix);
         BOOST_CHECK_EQUAL(count, expected_count);
         unsigned output_count = 0;
@@ -104,12 +105,12 @@ struct CustomizationFixture
     }
 };
 
-osrm::OSRM loadMLD(const std::filesystem::path &path)
+osrm::OSRM loadMLD(const std::filesystem::path &path, bool mmap = false)
 {
     osrm::EngineConfig config;
     config.storage_config = {path};
     config.use_shared_memory = false;
-    config.use_mmap = false;
+    config.use_mmap = mmap;
     config.algorithm = osrm::EngineConfig::Algorithm::MLD;
     return osrm::OSRM(config);
 }
@@ -127,6 +128,46 @@ BOOST_AUTO_TEST_CASE(test_customize_with_invalid_config)
                       std::exception); // including osrm::util::exception, etc.
 }
 
+BOOST_FIXTURE_TEST_CASE(default_customization_is_repeatable_and_loads_in_both_modes,
+                        CustomizationFixture)
+{
+    auto config = getConfig();
+    config.CompactOutputPath.clear();
+    osrm::customize(config);
+    BOOST_REQUIRE(osrm::storage::hasQueryData(config.base_path));
+    BOOST_CHECK(!osrm::storage::isCompactDataset(config.base_path));
+    const auto generation = osrm::storage::readQueryGeneration(Source.string() + ".mldgr",
+                                                               osrm::storage::MLD_GENERATION_ENTRY);
+    const auto query = std::filesystem::path(Source.string() + ".query");
+    const auto hidden = Root / "query.reference";
+    osrm::RouteParameters route;
+    route.coordinates = get_locations_in_big_component();
+    route.steps = true;
+    route.annotations = true;
+    route.annotations_type = osrm::RouteParameters::AnnotationsType::All;
+    for (const bool mmap : {false, true})
+    {
+        std::filesystem::rename(query, hidden);
+        auto ordinary = loadMLD(Source, mmap);
+        std::filesystem::rename(hidden, query);
+        auto optimized = loadMLD(Source, mmap);
+        osrm::json::Object expected, actual;
+        BOOST_CHECK(ordinary.Route(route, expected) == optimized.Route(route, actual));
+        CHECK_EQUAL_JSON(expected, actual);
+        osrm::NearestParameters nearest;
+        nearest.coordinates = {route.coordinates.front()};
+        nearest.number_of_results = 5;
+        BOOST_CHECK(ordinary.Nearest(nearest, expected) == optimized.Nearest(nearest, actual));
+        CHECK_EQUAL_JSON(expected, actual);
+    }
+    osrm::customize(config);
+    BOOST_CHECK(osrm::storage::hasQueryData(config.base_path));
+    BOOST_CHECK_NE(osrm::storage::readQueryGeneration(Source.string() + ".mldgr",
+                                                      osrm::storage::MLD_GENERATION_ENTRY),
+                   generation);
+    BOOST_CHECK(!std::filesystem::exists(Target.parent_path()));
+}
+
 BOOST_FIXTURE_TEST_CASE(first_customization_emits_compact_query_dataset, CustomizationFixture)
 {
     for (const auto &suffix : {".mldgr", ".cell_metrics", ".datasource_names"})
@@ -134,6 +175,7 @@ BOOST_FIXTURE_TEST_CASE(first_customization_emits_compact_query_dataset, Customi
     const auto config = getConfig();
     osrm::customize(config);
     BOOST_CHECK(!osrm::storage::isCompactDataset(config.base_path));
+    BOOST_CHECK(osrm::storage::hasQueryData(config.base_path));
     BOOST_CHECK(osrm::storage::isCompactDataset(osrm::storage::StorageConfig(Target).base_path));
     checkGeneration(Target);
     auto original = loadMLD(Source);

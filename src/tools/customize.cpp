@@ -81,7 +81,7 @@ return_code parseArguments(int argc,
             "compact-output",
             boost::program_options::value<std::filesystem::path>(
                 &customization_config.CompactOutputPath),
-            "Also create a compact MLD query dataset; its parent directory must be new");
+            "Export an independent query-only dataset; its parent directory must be new");
 
     // hidden options, will be allowed on command line, but will not be
     // shown to the user

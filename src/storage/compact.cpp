@@ -1,7 +1,11 @@
 #include "storage/compact.hpp"
 
+#include "contractor/query_graph.hpp"
 #include "customizer/edge_based_graph.hpp"
+#include "customizer/shared_cell_metrics.hpp"
 #include "extractor/edge_based_node.hpp"
+#include "extractor/files.hpp"
+#include "partitioner/files.hpp"
 #include "storage/compact_dataset.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
@@ -18,6 +22,7 @@
 #include <initializer_list>
 #include <limits>
 #include <memory>
+#include <random>
 #include <set>
 #include <span>
 #include <unordered_map>
@@ -355,6 +360,57 @@ void writeGraph(const std::filesystem::path &source_graph,
                 << (blocks ? "compressed offsets" : "full-width offsets");
 }
 
+void writeContractedGraph(const CompactPaths &paths, const Turns &turns)
+{
+    const auto source = paths.Source.GetPath(".osrm.hsgr");
+    if (!std::filesystem::exists(source))
+        return;
+    LoadedCompactInput input(paths, {".osrm.hsgr"});
+    const auto &index = input.getIndex();
+    extractor::ProfileProperties properties;
+    extractor::files::readProfileProperties(paths.Source.GetPath(".osrm.properties"), properties);
+    const auto name =
+        "/ch/metrics/" + std::string(properties.GetWeightName()) + "/contracted_graph/edge_array";
+    using Edge = contractor::QueryGraphView::EdgeArrayEntry;
+    const auto original = index.GetBlockPtr<Edge>(name);
+    std::vector<Edge> edges(original, original + index.GetBlockEntries(name));
+    for (auto &edge : edges)
+        if (!edge.data.shortcut)
+        {
+            if (edge.data.turn_id >= turns.Mapping.size())
+                throw util::exception("CH graph turn reference is out of bounds");
+            edge.data.turn_id = turns.Mapping[edge.data.turn_id];
+        }
+    rewriteArchive(source,
+                   paths.Target.GetPath(".osrm.hsgr"),
+                   {name},
+                   [&](auto &writer) { serialization::write(writer, name, edges); });
+}
+
+void writeCellMetrics(const CompactPaths &paths)
+{
+    LoadedCompactInput input(paths, {".osrm.cell_metrics"});
+    const auto &index = input.getIndex();
+    extractor::ProfileProperties properties;
+    extractor::files::readProfileProperties(paths.Source.GetPath(".osrm.properties"), properties);
+    const auto prefix = "/mld/metrics/" + std::string(properties.GetWeightName());
+    partitioner::CellStorage cells;
+    partitioner::files::readCells(paths.Source.GetPath(".osrm.cells"), cells);
+    const auto metrics = make_cell_metric_view(index, prefix);
+    const auto shared = customizer::shareCellMetrics(cells.GetCellData(), metrics);
+    tar::FileWriter writer(paths.Target.GetPath(".osrm.cell_metrics"),
+                           tar::FileWriter::GenerateFingerprint);
+    serialization::write(writer, prefix + "/shared/weights", shared.values.weights);
+    serialization::write(writer, prefix + "/shared/durations", shared.values.durations);
+    serialization::write(writer, prefix + "/shared/distances", shared.values.distances);
+    writer.WriteElementCount64(prefix + "/exclude", shared.offsets.size());
+    for (std::size_t i = 0; i < shared.offsets.size(); ++i)
+        serialization::write(writer,
+                             prefix + "/exclude/" + std::to_string(i) + "/cell_value_offsets",
+                             shared.offsets[i]);
+    writer.Close();
+}
+
 void writeNodes(const StorageConfig &source,
                 const StorageConfig &target,
                 const SharedDataIndex &index)
@@ -629,9 +685,12 @@ void validateCompactDatasetPaths(const std::filesystem::path &input,
                               parent.parent_path().string());
 }
 
-void compactDataset(const std::filesystem::path &input,
-                    const std::filesystem::path &output,
-                    const std::filesystem::path &mld_input)
+namespace
+{
+void writeCompactDataset(const std::filesystem::path &input,
+                         const std::filesystem::path &output,
+                         const std::filesystem::path &mld_input,
+                         bool copy_unchanged)
 {
     validateCompactDatasetPaths(input, output, mld_input);
     const auto paths = getCompactPaths(input, output, mld_input);
@@ -664,6 +723,7 @@ void compactDataset(const std::filesystem::path &input,
             writeTurns(source, target, result);
             return result;
         }();
+        writeContractedGraph(paths, turns);
         LoadedCompactInput graph_input(paths, {".osrm.mldgr"});
         writeGraph(paths.getInputPath(".osrm.mldgr"), target, graph_input.getIndex(), turns);
     }
@@ -676,6 +736,7 @@ void compactDataset(const std::filesystem::path &input,
     run_stage(".osrm.icd", writeBearings);
     run_stage(".osrm.partition", writePartition);
     run_stage(".osrm.geometry", writeGeometry);
+    writeCellMetrics(paths);
     rewriteArchive(source.GetPath(".osrm.properties"),
                    target.GetPath(".osrm.properties"),
                    {},
@@ -693,18 +754,25 @@ void compactDataset(const std::filesystem::path &input,
                                              ".osrm.icd",
                                              ".osrm.partition",
                                              ".osrm.geometry",
+                                             ".osrm.cell_metrics",
+                                             ".osrm.hsgr",
                                              ".osrm.properties"};
-    Storage storage(source);
-    auto files = storage.GetStaticFiles();
-    const auto updatable = storage.GetUpdatableFiles();
-    files.insert(files.end(), updatable.begin(), updatable.end());
-    files.emplace_back(true, source.GetPath(".osrm.fileIndex"));
-    files.emplace_back(false, source.GetPath(".osrm.openareas.fileIndex"));
+    std::vector<std::pair<bool, std::filesystem::path>> files;
+    if (copy_unchanged)
+    {
+        for (const auto &suffix : GetRequiredFiles({}))
+            files.emplace_back(true, source.GetPath(suffix.string()));
+        for (const auto &suffix : {".osrm.cells",
+                                   ".osrm.openareas",
+                                   ".osrm.openareas.ramIndex",
+                                   ".osrm.openareas.fileIndex"})
+            files.emplace_back(false, source.GetPath(suffix));
+    }
     for (const auto &[required, common_path] : files)
     {
         const auto suffix = common_path.string().substr(source.base_path.string().size());
         const auto path = paths.getInputPath(suffix);
-        if (rewritten.contains(suffix) || suffix == ".osrm.hsgr")
+        if (rewritten.contains(suffix) || suffix == ".osrm.query")
             continue;
         if (required || std::filesystem::exists(path))
         {
@@ -717,5 +785,116 @@ void compactDataset(const std::filesystem::path &input,
     }
     output_directory.complete();
     util::Log() << "Prepared compact query dataset: " << absolute_output.string();
+}
+} // namespace
+
+void compactDataset(const std::filesystem::path &input,
+                    const std::filesystem::path &output,
+                    const std::filesystem::path &mld_input)
+{ writeCompactDataset(input, output, mld_input, true); }
+
+void writeQueryData(const std::filesystem::path &input)
+{
+    if (std::endian::native != std::endian::little || sizeof(void *) != 8)
+        return;
+    StorageConfig source(input);
+    if (!std::filesystem::exists(source.GetPath(".osrm.mldgr")) ||
+        !std::filesystem::exists(source.GetPath(".osrm.cell_metrics")))
+        return;
+    std::random_device random;
+    const auto nonce = (std::uint64_t(random()) << 32) | std::uint64_t(random());
+    const auto stage =
+        source.base_path.parent_path() / ("osrm-query-stage-" + std::to_string(nonce));
+    const auto output = stage / "data.osrm";
+    bool stage_created = false;
+    try
+    {
+        const auto ch_path = source.GetPath(".osrm.hsgr");
+        if (std::filesystem::exists(ch_path) &&
+            readQueryGeneration(ch_path, CH_GENERATION_ENTRY) == 0)
+        {
+            const auto stamped = ch_path.string() + ".query-generation";
+            rewriteArchive(ch_path,
+                           stamped,
+                           {},
+                           [](auto &writer)
+                           {
+                               writer.WriteElementCount64(CH_GENERATION_ENTRY, 1);
+                               writer.WriteFrom(CH_GENERATION_ENTRY, std::uint64_t{1});
+                           });
+#ifdef _WIN32
+            std::filesystem::copy_file(
+                stamped, ch_path, std::filesystem::copy_options::overwrite_existing);
+            std::filesystem::remove(stamped);
+#else
+            std::filesystem::rename(stamped, ch_path);
+#endif
+        }
+        writeCompactDataset(input, output, {}, false);
+        stage_created = true;
+        const auto archive_path = stage / "query.archive";
+        {
+            tar::FileWriter writer(archive_path, tar::FileWriter::GenerateFingerprint);
+            writer.WriteElementCount64(COMPACT_VERSION_ENTRY, 1);
+            writer.WriteFrom(COMPACT_VERSION_ENTRY, COMPACT_DATASET_VERSION);
+            writer.WriteElementCount64(MLD_GENERATION_ENTRY, 1);
+            writer.WriteFrom(
+                MLD_GENERATION_ENTRY,
+                readQueryGeneration(source.GetPath(".osrm.mldgr"), MLD_GENERATION_ENTRY));
+            writer.WriteElementCount64(CH_GENERATION_ENTRY, 1);
+            writer.WriteFrom(CH_GENERATION_ENTRY,
+                             readQueryGeneration(ch_path, CH_GENERATION_ENTRY));
+            for (const auto &suffix : {".edges",
+                                       ".turn_weight_penalties",
+                                       ".turn_duration_penalties",
+                                       ".mldgr",
+                                       ".ebg_nodes",
+                                       ".icd",
+                                       ".partition",
+                                       ".geometry",
+                                       ".cell_metrics",
+                                       ".hsgr",
+                                       ".datasource_names"})
+            {
+                const auto path = std::string(suffix) == ".datasource_names"
+                                      ? source.GetPath(".osrm.datasource_names")
+                                      : std::filesystem::path(output.string() + suffix);
+                if (!std::filesystem::exists(path))
+                    continue;
+                tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+                boost::iostreams::mapped_file_source mapped;
+                const auto bytes = util::mmapFile<char>(path, mapped);
+                std::vector<tar::FileReader::FileEntry> entries;
+                reader.List(std::back_inserter(entries));
+                for (const auto &entry : entries)
+                {
+                    if (entry.name == "osrm_fingerprint.meta" ||
+                        entry.name == MLD_GENERATION_ENTRY ||
+                        entry.name == std::string(MLD_GENERATION_ENTRY) + ".meta" ||
+                        entry.name == CH_GENERATION_ENTRY ||
+                        entry.name == std::string(CH_GENERATION_ENTRY) + ".meta")
+                        continue;
+                    if (entry.offset > bytes.size() || entry.size > bytes.size() - entry.offset)
+                        throw util::exception("Archive entry exceeds file bounds: " + entry.name);
+                    writer.WriteFrom(entry.name, bytes.data() + entry.offset, entry.size);
+                }
+            }
+            writer.Close();
+        }
+        const auto query_path = source.GetPath(".osrm.query");
+#ifdef _WIN32
+        std::filesystem::remove(query_path);
+#endif
+        std::filesystem::rename(archive_path, query_path);
+        std::filesystem::remove_all(stage);
+        util::Log() << "Prepared compact query archive: " << query_path.string();
+    }
+    catch (...)
+    {
+        std::error_code error;
+        if (stage_created)
+            std::filesystem::remove_all(stage, error);
+        throw;
+    }
 }
 } // namespace osrm::storage

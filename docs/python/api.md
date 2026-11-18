@@ -238,23 +238,16 @@ python -m osrm extract data.osm.pbf -p profiles/car.lua
 python -m osrm contract data.osrm
 python -m osrm partition data.osrm
 python -m osrm customize data.osrm
-# Optional compact query generation, alongside the ordinary prepared data
-python -m osrm customize data.osrm --compact-output compact/data.osrm
 python -m osrm datastore data.osrm
 python -m osrm routed data.osrm
 ```
 
-Compact query datasets require explicit direct-load MLD settings. The engine's
-`use_mmap` default is `True`, so disable it as well as shared-memory loading:
+MLD customization creates compact query data by default. Direct loading,
+`use_mmap=True`, and datastore loading select it automatically:
 
 ```python
-engine = osrm.OSRM(
-    storage_config="compact/data.osrm",
-    algorithm="MLD",
-    use_shared_memory=False,
-    use_mmap=False,
-)
+engine = osrm.OSRM(storage_config="data.osrm", algorithm="MLD", use_shared_memory=False)
 ```
 
-Apply traffic updates to the original mutable data and create a new compact
-generation. See [compact MLD datasets](../mld-compact.md) for release limitations.
+Traffic updates use the normal prepared dataset and refresh its query archive.
+See [compact query data](../mld-compact.md).

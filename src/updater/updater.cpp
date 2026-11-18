@@ -545,6 +545,8 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                         std::vector<EdgeDuration> &node_durations,
                                         std::uint32_t &connectivity_checksum) const
 {
+    storage::requireMutableDataset(config.base_path);
+    storage::invalidateQueryData(config.base_path);
     TIMER_START(load_edges);
 
     EdgeID number_of_edge_based_nodes = 0;

@@ -181,8 +181,11 @@ int customizeDataset(const CustomizationConfig &config)
                                           std::move(node_weights),
                                           std::move(node_durations),
                                           std::move(node_distances)};
-    customizer::files::writeGraph(
-        config.GetOutputPath(".osrm.mldgr"), shaved_graph, connectivity_checksum);
+    customizer::files::writeGraph(config.GetOutputPath(".osrm.mldgr"),
+                                  shaved_graph,
+                                  connectivity_checksum,
+                                  storage::nextQueryGeneration(config.GetOutputPath(".osrm.mldgr"),
+                                                               storage::MLD_GENERATION_ENTRY));
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 
@@ -199,7 +202,12 @@ int Customizer::Run(const CustomizationConfig &config)
     if (!config.CompactOutputPath.empty())
         storage::validateCompactDatasetPaths(
             config.base_path, config.CompactOutputPath, config.output_path);
+    storage::invalidateQueryData(config.base_path);
+    if (!config.output_path.empty())
+        storage::invalidateQueryData(config.output_path);
     const auto result = customizeDataset(config);
+    if (result == 0 && config.output_path.empty())
+        storage::writeQueryData(config.base_path);
     if (result == 0 && !config.CompactOutputPath.empty())
     {
         TIMER_START(compacting_data);

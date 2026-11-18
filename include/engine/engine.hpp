@@ -72,7 +72,8 @@ class Engine final : public EngineInterface
             }
             util::Log(logDEBUG) << "Using direct memory mapping with algorithm "
                                 << routing_algorithms::name<Algorithm>();
-            facade_provider = std::make_unique<ExternalProvider<Algorithm>>(config.storage_config);
+            facade_provider = std::make_unique<ExternalProvider<Algorithm>>(
+                config.storage_config, config.share_cell_metrics);
         }
         else
         {

@@ -84,66 +84,73 @@ BOOST_FIXTURE_TEST_CASE(exact_services_and_independent_output, CompactFixture)
     original_config.use_shared_memory = false;
     original_config.use_mmap = false;
     original_config.algorithm = osrm::EngineConfig::Algorithm::MLD;
-    osrm::OSRM original(original_config);
-    osrm::EngineConfig config;
-    config.storage_config = {target};
-    config.use_shared_memory = false;
-    config.use_mmap = false;
-    config.algorithm = osrm::EngineConfig::Algorithm::MLD;
+    std::filesystem::remove(source.string() + ".query");
     std::filesystem::rename(source.parent_path(), root / "hidden-source");
-    osrm::OSRM optimized(config);
-    BOOST_CHECK(config.share_cell_metrics);
-
-    // No source paths may be needed by the new dataset after preparation.
-    const auto coordinates = get_locations_in_big_component();
-    using RouteQuery =
-        osrm::Status (osrm::OSRM::*)(const osrm::RouteParameters &, osrm::json::Object &) const;
-    using NearestQuery =
-        osrm::Status (osrm::OSRM::*)(const osrm::NearestParameters &, osrm::json::Object &) const;
-    using TableQuery =
-        osrm::Status (osrm::OSRM::*)(const osrm::TableParameters &, osrm::json::Object &) const;
-    using TripQuery =
-        osrm::Status (osrm::OSRM::*)(const osrm::TripParameters &, osrm::json::Object &) const;
-    using MatchQuery =
-        osrm::Status (osrm::OSRM::*)(const osrm::MatchParameters &, osrm::json::Object &) const;
-    osrm::RouteParameters route;
-    route.coordinates = coordinates;
-    route.steps = true;
-    route.annotations = true;
-    route.annotations_type = osrm::RouteParameters::AnnotationsType::All;
-    route.overview = osrm::RouteParameters::OverviewType::Full;
-    checkQuery(original, optimized, route, static_cast<RouteQuery>(&osrm::OSRM::Route));
-    route.exclude = {"motorway"};
-    checkQuery(original, optimized, route, static_cast<RouteQuery>(&osrm::OSRM::Route));
-
-    for (const auto &coordinate : coordinates)
+    for (const bool mmap : {false, true})
     {
-        osrm::NearestParameters nearest;
-        nearest.coordinates = {coordinate};
-        nearest.number_of_results = 5;
-        checkQuery(original, optimized, nearest, static_cast<NearestQuery>(&osrm::OSRM::Nearest));
-    }
-    osrm::TableParameters table;
-    table.coordinates = coordinates;
-    table.annotations = osrm::TableParameters::AnnotationsType::All;
-    checkQuery(original, optimized, table, static_cast<TableQuery>(&osrm::OSRM::Table));
-    osrm::TripParameters trip;
-    trip.coordinates = coordinates;
-    trip.steps = true;
-    checkQuery(original, optimized, trip, static_cast<TripQuery>(&osrm::OSRM::Trip));
-    osrm::MatchParameters match;
-    match.coordinates = get_split_trace_locations();
-    match.steps = true;
-    match.radiuses = {50., 50., 50., 50.};
-    checkQuery(original, optimized, match, static_cast<MatchQuery>(&osrm::OSRM::Match));
-    for (unsigned x = 8528; x <= 8530; ++x)
-        for (unsigned y = 5975; y <= 5977; ++y)
+        original_config.storage_config = {root / "hidden-source" / "monaco.osrm"};
+        original_config.use_mmap = mmap;
+        osrm::OSRM original(original_config);
+        osrm::EngineConfig config;
+        config.storage_config = {target};
+        config.use_shared_memory = false;
+        config.use_mmap = mmap;
+        config.algorithm = osrm::EngineConfig::Algorithm::MLD;
+        osrm::OSRM optimized(config);
+        BOOST_CHECK(config.share_cell_metrics);
+
+        // No source paths may be needed by the new dataset after preparation.
+        const auto coordinates = get_locations_in_big_component();
+        using RouteQuery =
+            osrm::Status (osrm::OSRM::*)(const osrm::RouteParameters &, osrm::json::Object &) const;
+        using NearestQuery = osrm::Status (osrm::OSRM::*)(const osrm::NearestParameters &,
+                                                          osrm::json::Object &) const;
+        using TableQuery =
+            osrm::Status (osrm::OSRM::*)(const osrm::TableParameters &, osrm::json::Object &) const;
+        using TripQuery =
+            osrm::Status (osrm::OSRM::*)(const osrm::TripParameters &, osrm::json::Object &) const;
+        using MatchQuery =
+            osrm::Status (osrm::OSRM::*)(const osrm::MatchParameters &, osrm::json::Object &) const;
+        osrm::RouteParameters route;
+        route.coordinates = coordinates;
+        route.steps = true;
+        route.annotations = true;
+        route.annotations_type = osrm::RouteParameters::AnnotationsType::All;
+        route.overview = osrm::RouteParameters::OverviewType::Full;
+        checkQuery(original, optimized, route, static_cast<RouteQuery>(&osrm::OSRM::Route));
+        route.exclude = {"motorway"};
+        checkQuery(original, optimized, route, static_cast<RouteQuery>(&osrm::OSRM::Route));
+
+        for (const auto &coordinate : coordinates)
         {
-            osrm::TileParameters tile{x, y, 14};
-            std::string before, after;
-            BOOST_CHECK(original.Tile(tile, before) == optimized.Tile(tile, after));
-            BOOST_CHECK_EQUAL(before, after);
+            osrm::NearestParameters nearest;
+            nearest.coordinates = {coordinate};
+            nearest.number_of_results = 5;
+            checkQuery(
+                original, optimized, nearest, static_cast<NearestQuery>(&osrm::OSRM::Nearest));
         }
+        osrm::TableParameters table;
+        table.coordinates = coordinates;
+        table.annotations = osrm::TableParameters::AnnotationsType::All;
+        checkQuery(original, optimized, table, static_cast<TableQuery>(&osrm::OSRM::Table));
+        osrm::TripParameters trip;
+        trip.coordinates = coordinates;
+        trip.steps = true;
+        checkQuery(original, optimized, trip, static_cast<TripQuery>(&osrm::OSRM::Trip));
+        osrm::MatchParameters match;
+        match.coordinates = get_split_trace_locations();
+        match.steps = true;
+        match.radiuses = {50., 50., 50., 50.};
+        checkQuery(original, optimized, match, static_cast<MatchQuery>(&osrm::OSRM::Match));
+        for (unsigned x = 8528; x <= 8530; ++x)
+            for (unsigned y = 5975; y <= 5977; ++y)
+            {
+                osrm::TileParameters tile{x, y, 14};
+                std::string before, after;
+                BOOST_CHECK(original.Tile(tile, before) == optimized.Tile(tile, after));
+                BOOST_CHECK_EQUAL(before, after);
+            }
+    }
 }
 
 BOOST_FIXTURE_TEST_CASE(refuses_existing_output_and_compact_input, CompactFixture)
@@ -167,7 +174,7 @@ BOOST_FIXTURE_TEST_CASE(refuses_existing_output_and_compact_input, CompactFixtur
     BOOST_CHECK_THROW(osrm::OSRM{config}, osrm::util::exception);
     config.algorithm = osrm::EngineConfig::Algorithm::MLD;
     config.use_mmap = true;
-    BOOST_CHECK_THROW(osrm::OSRM{config}, osrm::util::exception);
+    BOOST_CHECK_NO_THROW(osrm::OSRM{config});
 }
 
 BOOST_FIXTURE_TEST_CASE(failed_conversion_removes_only_its_output, CompactFixture)
