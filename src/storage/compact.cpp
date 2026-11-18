@@ -813,14 +813,15 @@ void writeQueryData(const std::filesystem::path &input)
         if (std::filesystem::exists(ch_path) &&
             readQueryGeneration(ch_path, CH_GENERATION_ENTRY) == 0)
         {
+            const auto generation = nextQueryGeneration(ch_path, CH_GENERATION_ENTRY);
             const auto stamped = ch_path.string() + ".query-generation";
             rewriteArchive(ch_path,
                            stamped,
                            {},
-                           [](auto &writer)
+                           [&](auto &writer)
                            {
                                writer.WriteElementCount64(CH_GENERATION_ENTRY, 1);
-                               writer.WriteFrom(CH_GENERATION_ENTRY, std::uint64_t{1});
+                               writer.WriteFrom(CH_GENERATION_ENTRY, generation);
                            });
 #ifdef _WIN32
             std::filesystem::copy_file(
