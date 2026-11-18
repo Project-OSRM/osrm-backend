@@ -259,7 +259,9 @@ assert_output_not_matches "partition/path-with-spaces accepted by parser" "for o
 assert_output_matches "compact/paths with spaces reach preflight" "Output directory|Missing/Broken File|Input is missing" "$COMPACT" "$SPACE_DIR/missing.osrm" --output '/nonexistent compact/output.osrm'
 
 assert_output_matches "customize/compact inputs include guidance" '^required .osrm.icd$' "$CUSTOMIZE" --list-inputs --compact-output /new/output.osrm
-assert_output_not_matches "customize/normal inputs unchanged" '^required .osrm.icd$' "$CUSTOMIZE" --list-inputs
+assert_output_matches "customize/default compact inputs include guidance" '^required .osrm.icd$' "$CUSTOMIZE" --list-inputs
+assert_output_not_matches "customize/redirected metrics inputs exclude guidance" '^required .osrm.icd$' "$CUSTOMIZE" --list-inputs --output /new/output.osrm
+assert_output_matches "contract/default inputs include optional MLD graph" '^optional .osrm.mldgr$' "$CONTRACT" --list-inputs
 assert_output_not_matches "customize/generated datasource names not required input" '^required .osrm.datasource_names$' "$CUSTOMIZE" --list-inputs --compact-output /new/output.osrm
 
 # --- compact query preparation ---------------------------------------------
