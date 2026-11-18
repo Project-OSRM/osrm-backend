@@ -138,13 +138,15 @@ return_code parseArguments(int argc,
         std::set<std::string> seen;
         config.ListInputFiles(std::cout, seen);
         config.updater_config.ListInputFiles(std::cout, seen);
-        if (option_variables.contains("compact-output"))
+        if (!option_variables.contains("output") || option_variables.contains("compact-output"))
         {
             for (const auto &suffix : storage::GetRequiredFiles({}))
                 if (suffix != ".osrm.datasource_names" && seen.insert(suffix.string()).second)
                     std::cout << "required " << suffix.string() << '\n';
-            for (const auto &suffix :
-                 {".osrm.openareas", ".osrm.openareas.ramIndex", ".osrm.openareas.fileIndex"})
+            for (const auto &suffix : {".osrm.hsgr",
+                                       ".osrm.openareas",
+                                       ".osrm.openareas.ramIndex",
+                                       ".osrm.openareas.fileIndex"})
                 if (seen.insert(suffix).second)
                     std::cout << "optional " << suffix << '\n';
         }

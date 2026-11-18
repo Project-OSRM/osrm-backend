@@ -88,20 +88,13 @@ osrm-partition <input.osrm> [options]
 Applies live traffic data (speed and turn-penalty files) to a partitioned MLD
 graph. Can be run repeatedly without re-partitioning when speeds change.
 
-To also create a compact query generation in the same preprocessing run, use:
+Customization also creates `.osrm.query` automatically. Direct, mmap and
+datastore loading use this exact compact representation without additional flags.
+The original preprocessing files remain available for traffic updates.
 
-```sh
-osrm-customize germany.osrm --compact-output compact-germany/germany.osrm
-```
-
-Non-compact output remains the default and is retained for traffic updates.
-The compact output parent must be new; the result uses direct-load MLD with
-exact cell sharing enabled automatically. `--compact-output` also works with
-`--output`: graph and metric files come from the redirected output, while common
-files come from the input. See the [compact dataset workflow](mld-compact.md).
-The standalone `osrm-compact` command remains available for existing datasets.
-`--list-inputs --compact-output <path>` includes the additional query metadata
-needed by the compact stage; generated MLD files are not listed as inputs.
+Use `--compact-output <new-directory/data.osrm>` for an independent query-only
+export. With `--output`, this export combines the redirected graph and metrics
+with common files from the input. See [compact query data](mld-compact.md).
 
 ```
 osrm-customize <input.osrm> [options]
