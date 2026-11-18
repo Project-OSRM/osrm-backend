@@ -88,13 +88,9 @@ osrm-partition <input.osrm> [options]
 Applies live traffic data (speed and turn-penalty files) to a partitioned MLD
 graph. Can be run repeatedly without re-partitioning when speeds change.
 
-Customization also creates `.osrm.query` automatically. Direct, mmap and
-datastore loading use this exact compact representation without additional flags.
-The original preprocessing files remain available for traffic updates.
-
-Use `--compact-output <new-directory/data.osrm>` for an independent query-only
-export. With `--output`, this export combines the redirected graph and metrics
-with common files from the input. See [compact query data](mld-compact.md).
+Preprocessing writes compact records directly into the normal dataset files.
+Direct, mmap and datastore loading use them automatically. Traffic updates keep
+the original turn identities. See [compact dataset storage](mld-compact.md).
 
 ```
 osrm-customize <input.osrm> [options]
@@ -102,7 +98,6 @@ osrm-customize <input.osrm> [options]
 
 | Flag | Default | Description |
 |------|---------|-------------|
-| `--compact-output <path.osrm>` | _(none)_ | Also create an independent compact query dataset after customization. The parent directory must not exist. |
 | `--segment-speed-file <file>` | | CSV with `nodeA,nodeB,speed` columns to override edge weights. Repeatable. |
 | `--turn-penalty-file <file>` | | CSV with `from_node,via_node,to_node,penalty` to override turn weights. Repeatable. |
 | `--edge-weight-updates-over-factor <x>` | `0` (disabled) | Log edges whose weight changed by more than factor `x` (requires `--segment-speed-file`). |

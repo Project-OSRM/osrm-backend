@@ -67,6 +67,8 @@ int Partitioner::Run(const PartitionerConfig &config)
     if (!config.output_path.empty())
         storage::requireMutableDataset(config.output_path);
     storage::invalidateQueryData(config.base_path);
+    for (const auto *suffix : {".osrm.mldgr", ".osrm.cell_metrics", ".osrm.hsgr"})
+        std::filesystem::remove(config.base_path.string() + suffix);
     if (!config.output_path.empty())
         storage::invalidateQueryData(config.output_path);
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,

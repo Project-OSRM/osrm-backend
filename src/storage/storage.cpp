@@ -24,6 +24,7 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <iterator>
 #include <string>
 
@@ -76,7 +77,9 @@ RegionHandle setupRegion(SharedRegionRegister &shared_register,
     return RegionHandle{std::move(memory), data_ptr, proj_id};
 }
 
-void populateArchive(const SharedDataIndex &index, const std::filesystem::path &path)
+void populateArchive(const SharedDataIndex &index,
+                     const std::filesystem::path &path,
+                     bool include_turn_data = true)
 {
     tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
     std::vector<tar::FileReader::FileEntry> entries;
@@ -84,7 +87,8 @@ void populateArchive(const SharedDataIndex &index, const std::filesystem::path &
     for (const auto &entry : entries)
     {
         if (entry.name.ends_with(".meta") || entry.name == "/ch/connectivity_checksum" ||
-            entry.name == "/mld/connectivity_checksum" || !index.HasBlock(entry.name))
+            entry.name == "/mld/connectivity_checksum" || !index.HasBlock(entry.name) ||
+            (!include_turn_data && entry.name.starts_with("/common/turn_data/")))
             continue;
         reader.ReadInto(
             entry.name, index.GetBlockPtr<char>(entry.name), index.GetBlockSize(entry.name));
@@ -190,7 +194,7 @@ void populateLayoutFromFile(const std::filesystem::path &path,
 
     for (const auto &entry : entries)
     {
-        if (entry.name == COMPACT_VERSION_ENTRY)
+        if (entry.name == COMPACT_VERSION_ENTRY || entry.name.starts_with("/preprocessing/"))
             continue;
         if (include && !include(entry.name))
             continue;
@@ -203,9 +207,31 @@ void populateLayoutFromFile(const std::filesystem::path &path,
     }
 }
 
-Storage::Storage(StorageConfig config_)
-    : config(std::move(config_)), m_query_data(osrm::storage::hasQueryData(config.base_path))
+Storage::Storage(StorageConfig config_) : config(std::move(config_)), m_native_turn_data(false)
 {
+    for (const auto &[suffix, entry] : {std::pair{".osrm.mldgr", "/common/turn_penalty/weight"},
+                                        std::pair{".osrm.hsgr", "/ch/turn_penalty/weight"}})
+    {
+        const auto path = config.base_path.string() + suffix;
+        if (std::filesystem::exists(path))
+        {
+            tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+            m_native_turn_data |= reader.HasEntry(entry);
+        }
+    }
+    if (m_native_turn_data)
+        for (const auto &[suffix, entry] : {std::pair{".osrm.mldgr", "/common/turn_penalty/weight"},
+                                            std::pair{".osrm.hsgr", "/ch/turn_penalty/weight"}})
+        {
+            const auto path = config.base_path.string() + suffix;
+            if (std::filesystem::exists(path))
+            {
+                tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+                if (!reader.HasEntry(entry))
+                    throw util::exception(
+                        "Rebuild both routing graphs with the current preprocessing tools");
+            }
+        }
 }
 
 int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric)
@@ -245,7 +271,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
     // Because of datastore_lock the only write operation can occur sequentially later.
     Monitor monitor(SharedRegionRegister{});
     auto &shared_register = monitor.data();
-    if (only_metric && (m_query_data || compact))
+    if (only_metric && compact)
     {
         if (shared_register.Find(dataset_name + "/static") ==
             storage::SharedRegionRegister::INVALID_REGION_ID)
@@ -280,8 +306,6 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
         auto layout_size = reader.GetPosition();
         auto *data_ptr = reinterpret_cast<char *>(static_memory->Ptr()) + layout_size;
 
-        if (!static_layout->HasBlock("/common/ebg_node_data/nodes"))
-            only_metric = false;
         if (only_metric)
         {
             regions.push_back({data_ptr, std::move(static_layout)});
@@ -357,18 +381,6 @@ std::vector<std::pair<bool, std::filesystem::path>> Storage::GetStaticFiles()
         }
     }
 
-    if (m_query_data)
-        std::erase_if(files,
-                      [&](const auto &file)
-                      {
-                          for (const auto &suffix :
-                               {".osrm.partition", ".osrm.ebg_nodes", ".osrm.edges", ".osrm.icd"})
-                              if (file.second ==
-                                  std::filesystem::path(config.base_path.string() + suffix))
-                                  return true;
-                          return false;
-                      });
-
     return files;
 }
 
@@ -394,11 +406,14 @@ std::vector<std::pair<bool, std::filesystem::path>> Storage::GetUpdatableFiles()
         }
     }
 
-    if (m_query_data)
-    {
-        files.clear();
-        files.emplace_back(true, config.GetPath(".osrm.query"));
-    }
+    if (m_native_turn_data)
+        std::erase_if(files,
+                      [&](const auto &file)
+                      {
+                          return file.second == config.GetPath(".osrm.turn_weight_penalties") ||
+                                 file.second == config.GetPath(".osrm.turn_duration_penalties");
+                      });
+
     return files;
 }
 
@@ -457,14 +472,16 @@ void Storage::PopulateLayout(storage::BaseDataLayout &layout,
                 layout,
                 [&](const auto &name)
                 {
-                    if (!m_query_data || file.second != config.GetPath(".osrm.query"))
-                        return true;
-                    if (name.starts_with("/common/turn_data/") &&
+                    if (m_native_turn_data &&
+                        file.second ==
+                            std::filesystem::path(config.base_path.string() + ".osrm.edges") &&
+                        name.starts_with("/common/turn_data/"))
+                        return false;
+                    if ((name.starts_with("/common/turn_data/") ||
+                         name.starts_with("/ch/turn_data/")) &&
                         !config.IsRequiredConfiguredInput(".osrm.edges"))
                         return false;
-                    return config.IsRequiredConfiguredInput(".osrm.icd") ||
-                           (!name.starts_with("/common/intersection_bearings/") &&
-                            !name.starts_with("/common/entry_classes"));
+                    return true;
                 });
         }
     }
@@ -503,39 +520,27 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
     for (const auto &file : GetStaticFiles())
     {
         if (std::filesystem::exists(file.second))
-            populateArchive(index, file.second);
+            populateArchive(index,
+                            file.second,
+                            !m_native_turn_data || file.second != config.GetPath(".osrm.edges"));
     }
 
-    if (!m_query_data && config.IsRequiredConfiguredInput(".osrm.edges") &&
+    if (config.IsRequiredConfiguredInput(".osrm.edges") &&
         index.GetBlockSize("/common/connectivity_checksum") != sizeof(std::uint32_t))
         throw util::exception("Invalid connectivity checksum in " +
                               config.GetPath(".osrm.edges").string());
 }
 
-void Storage::PopulateUpdatableData(const SharedDataIndex &index)
+void Storage::PopulateUpdatableData(const SharedDataIndex &index, bool load_cell_metrics)
 {
-    for (const auto &file : GetUpdatableFiles())
+    for (const auto &[required, path] : GetUpdatableFiles())
     {
-        if (std::filesystem::exists(file.second))
-            populateArchive(index, file.second);
+        (void)required;
+        if (!load_cell_metrics && path == config.GetPath(".osrm.cell_metrics"))
+            continue;
+        if (std::filesystem::exists(path))
+            populateArchive(index, path);
     }
-
-    if (m_query_data)
-    {
-        if (config.IsRequiredConfiguredInput(".osrm.edges"))
-        {
-            const auto checksum = *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
-            for (const auto *entry : {"/mld/connectivity_checksum", "/ch/connectivity_checksum"})
-            {
-                if (index.HasBlock(entry) &&
-                    (index.GetBlockSize(entry) != sizeof(std::uint32_t) ||
-                     *index.GetBlockPtr<std::uint32_t>(entry) != checksum))
-                    throw util::exception("Query graph and guidance connectivity checksums do not match");
-            }
-        }
-        return;
-    }
-
     for (const auto &[suffix, entry] : {std::pair{".osrm.hsgr", "/ch/connectivity_checksum"},
                                         std::pair{".osrm.mldgr", "/mld/connectivity_checksum"}})
     {

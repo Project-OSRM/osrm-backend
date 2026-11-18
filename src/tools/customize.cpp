@@ -78,18 +78,9 @@ return_code parseArguments(int argc,
             "output,o",
             boost::program_options::value<std::filesystem::path>(&customization_config.output_path),
             "Output base path for generated files (default: same as input)")(
-            "compact-output",
-            boost::program_options::value<std::filesystem::path>(
-                &customization_config.CompactOutputPath),
-            "Export an independent query-only dataset; its parent directory must be new");
-
-    // hidden options, will be allowed on command line, but will not be
-    // shown to the user
-    boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "input,i",
-        boost::program_options::value<std::filesystem::path>(&customization_config.base_path),
-        "Input base file path");
+            "input,i",
+            boost::program_options::value<std::filesystem::path>(&customization_config.base_path),
+            "Input base file path");
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -97,7 +88,7 @@ return_code parseArguments(int argc,
 
     // combine above options for parsing
     boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic_options).add(config_options).add(hidden_options);
+    cmdline_options.add(generic_options).add(config_options);
 
     const auto *executable = argv[0];
     boost::program_options::options_description visible_options(
@@ -138,18 +129,6 @@ return_code parseArguments(int argc,
         std::set<std::string> seen;
         config.ListInputFiles(std::cout, seen);
         config.updater_config.ListInputFiles(std::cout, seen);
-        if (!option_variables.contains("output") || option_variables.contains("compact-output"))
-        {
-            for (const auto &suffix : storage::GetRequiredFiles({}))
-                if (suffix != ".osrm.datasource_names" && seen.insert(suffix.string()).second)
-                    std::cout << "required " << suffix.string() << '\n';
-            for (const auto &suffix : {".osrm.hsgr",
-                                       ".osrm.openareas",
-                                       ".osrm.openareas.ramIndex",
-                                       ".osrm.openareas.fileIndex"})
-                if (seen.insert(suffix).second)
-                    std::cout << "optional " << suffix << '\n';
-        }
         return return_code::exit;
     }
 

@@ -1,6 +1,8 @@
-# Compact query data
+# Compact dataset storage
 
-MLD customization creates compact query data automatically. Use the normal commands:
+Normal preprocessing writes compact records directly into the usual `.osrm.*`
+files. There is no conversion command, extra pass, or second query dataset.
+Direct loading, `--mmap`, and `osrm-datastore` use the same files.
 
 ```sh
 osrm-extract -p profiles/car.lua germany.osm.pbf
@@ -9,31 +11,15 @@ osrm-customize germany.osrm
 osrm-routed --algorithm mld germany.osrm
 ```
 
-The generated `germany.osrm.query` archive contains packed graph and geometry
-records, deduplicated turns, and exactly shared cell matrices. Direct loading,
-`--mmap`, and `osrm-datastore` use it automatically. No compaction switch is needed.
-CH and MLD can share a dataset. After extraction or partitioning, rebuild both
-graphs.
+Records pack integer fields, deduplicate identical turns, and share identical
+cell matrices. All values remain exact; fields that exceed a compact width use
+a wider encoding.
 
-Apply traffic updates as usual:
+Traffic updates use the usual customization options. Compact preprocessing
+files retain the original turn identities; each routing graph contains its own
+query turn dictionary. Repeated customization and datastore metric reloads are
+supported. CH and MLD can share a dataset; rebuild both graphs after extraction
+or partitioning. Do not run preprocessing stages concurrently on one dataset.
 
-```sh
-osrm-customize germany.osrm --segment-speed-file speeds.csv --turn-penalty-file turns.csv
-```
-
-Customization refreshes the query archive while retaining the original
-preprocessing files and turn identities. Repeated customization, partitioning,
-and contraction remain supported. Datastore reloads publish a consistent set of
-graph and guidance data, including when `--only-metric` is requested.
-
-Deploy the `.osrm.query` archive with the other dataset files. Complete archives
-are published after writing succeeds; unfinished or stale generations are never
-selected. Older datasets without an archive still load through the original
-representation. Do not run preprocessing stages concurrently on one dataset.
-
-All encodings preserve exact values and use the original width when a compact
-width cannot represent the data. No routing or snapping approximation is used.
-
-For an independent query-only export, `osrm-compact germany.osrm --output
-new-directory/germany.osrm` remains available. Its output directory must be new;
-retain the prepared source for future traffic updates.
+Older prepared datasets remain readable. Rebuild old query-only exports from
+OSM before applying traffic updates.

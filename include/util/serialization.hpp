@@ -86,11 +86,26 @@ inline void read(storage::tar::FileReader &reader,
         storage::serialization::read(reader, name + "/node_array", graph.node_array);
     if (reader.HasEntry(name + "/edge_array6"))
     {
-        if constexpr (Ownership != storage::Ownership::View ||
-                      !requires { EdgeDataT::SupportsPackedRecords; })
-            throw util::exception("Packed query edges cannot be preprocessed");
-        else
+        if constexpr (!requires { EdgeDataT::SupportsPackedRecords; })
+            throw util::exception("Packed graph edge type is unsupported");
+        else if constexpr (Ownership == storage::Ownership::View)
             storage::serialization::read(reader, name + "/edge_array6", graph.packed_edges);
+        else
+        {
+            std::vector<std::uint8_t> packed;
+            storage::serialization::read(reader, name + "/edge_array6", packed);
+            if (packed.size() < 8 || (packed.size() - 8) % 6 != 0)
+                throw util::exception("Invalid packed graph dimensions");
+            graph.edge_array.resize((packed.size() - 8) / 6);
+            for (std::size_t i = 0; i < graph.edge_array.size(); ++i)
+            {
+                std::array<std::uint8_t, 8> bytes;
+                std::copy_n(packed.begin() + i * 6, 8, bytes.begin());
+                const auto value = std::bit_cast<std::uint64_t>(bytes);
+                graph.edge_array[i] = {NodeID(value & ((1u << 25) - 1)),
+                                       {NodeID((value >> 25) & ((1u << 22) - 1))}};
+            }
+        }
     }
     else
         storage::serialization::read(reader, name + "/edge_array", graph.edge_array);

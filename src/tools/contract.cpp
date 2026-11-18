@@ -134,16 +134,6 @@ return_code parseArguments(int argc,
         std::set<std::string> seen;
         config.ListInputFiles(std::cout, seen);
         config.updater_config.ListInputFiles(std::cout, seen);
-        if (!option_variables.contains("output"))
-        {
-            for (const auto &suffix : storage::GetRequiredFiles({}))
-                if (suffix != ".osrm.datasource_names" && seen.insert(suffix.string()).second)
-                    std::cout << "optional " << suffix.string() << '\n';
-            for (const auto &suffix :
-                 {".osrm.cells", ".osrm.cell_metrics", ".osrm.mldgr", ".osrm.partition"})
-                if (seen.insert(suffix).second)
-                    std::cout << "optional " << suffix << '\n';
-        }
         return return_code::exit;
     }
 

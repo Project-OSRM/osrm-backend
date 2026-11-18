@@ -2,7 +2,6 @@
 #include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
-#include "storage/compact.hpp"
 #include "storage/compact_dataset.hpp"
 
 #include "extractor/files.hpp"
@@ -27,8 +26,6 @@ int Contractor::Run()
     storage::requireMutableDataset(config.base_path);
     if (!config.output_path.empty())
         storage::requireMutableDataset(config.output_path);
-    const auto refresh_query_data =
-        std::filesystem::exists(config.base_path.string() + ".osrm.query");
     storage::invalidateQueryData(config.base_path);
     if (!config.output_path.empty())
         storage::invalidateQueryData(config.output_path);
@@ -53,6 +50,14 @@ int Contractor::Run()
         std::uint32_t connectivity_checksum = 0;
         EdgeID number_of_edge_based_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
             edge_based_edge_list, node_weights, connectivity_checksum);
+
+        auto turns = guidance::makeQueryTurnData(config.base_path);
+        for (auto &edge : edge_based_edge_list)
+        {
+            if (edge.data.turn_id >= turns.Mapping.size())
+                throw util::exception("Invalid original contraction turn identity");
+            edge.data.turn_id = turns.Mapping[edge.data.turn_id];
+        }
 
         // Contracting the edge-expanded graph
 
@@ -86,15 +91,9 @@ int Contractor::Run()
         metrics.emplace(metric_name,
                         ContractedMetric{std::move(query_graph), std::move(edge_filters)});
 
-        files::writeGraph(config.GetOutputPath(".osrm.hsgr"),
-                          metrics,
-                          connectivity_checksum,
-                          storage::nextQueryGeneration(config.GetOutputPath(".osrm.hsgr"),
-                                                       storage::CH_GENERATION_ENTRY));
+        files::writeGraph(
+            config.GetOutputPath(".osrm.hsgr"), metrics, connectivity_checksum, &turns);
     }
-
-    if (config.output_path.empty() && refresh_query_data)
-        storage::writeQueryData(config.base_path);
 
     TIMER_STOP(preparing);
 

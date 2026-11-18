@@ -373,13 +373,12 @@ committed when creating the tag.
 Install public headers with `cmake --install build --component Development`.
 CTest compiles a consumer against the installed customization headers.
 
-## Compact MLD query data
+## Compact dataset storage
 
-`osrm-customize` generates `.osrm.query` automatically. The existing storage
-library contains the writer; there is no separate compact library. Direct, mmap
-and datastore loaders use the same serialized query blocks and shared matrices.
-The optional `osrm-compact` export tool is included in Python wheels and exposed
-through `python -m osrm compact`.
+Preprocessing writes compact blocks into the normal dataset files. Direct, mmap
+and datastore loaders use those blocks without an extra conversion command.
+The Python CLI exposes the same six preprocessing and serving tools as the
+native installation.
 
 Shared builds keep exception definitions in `osrm_exception`, which must be
 installed with the other shared libraries. CMake targets and `libosrm.pc`

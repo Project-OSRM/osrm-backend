@@ -84,8 +84,6 @@ BOOST_AUTO_TEST_SUITE(library_contract)
 
 BOOST_AUTO_TEST_CASE(test_contract_with_invalid_config)
 {
-    using namespace osrm;
-
     osrm::ContractorConfig config;
     config.requested_num_threads = std::thread::hardware_concurrency();
     BOOST_CHECK_THROW(osrm::contract(config),
@@ -144,7 +142,7 @@ BOOST_FIXTURE_TEST_CASE(redirected_contraction_preserves_traffic_inputs, Traffic
     BOOST_CHECK(updated.front() == TurnPenalty{370});
 }
 
-BOOST_FIXTURE_TEST_CASE(default_compaction_waits_for_stale_mld_graph, ContractionFixture)
+BOOST_FIXTURE_TEST_CASE(contraction_replaces_stale_query_archive, ContractionFixture)
 {
     writeUnusedMLD(readChecksum() ^ std::uint32_t{1});
     std::ofstream(Source.string() + ".query") << "stale query data";
@@ -153,7 +151,10 @@ BOOST_FIXTURE_TEST_CASE(default_compaction_waits_for_stale_mld_graph, Contractio
     config.requested_num_threads = 2;
     BOOST_CHECK_NO_THROW(osrm::contract(config));
     BOOST_CHECK(!std::filesystem::exists(Source.string() + ".query"));
-    BOOST_CHECK(std::filesystem::exists(Source.string() + ".hsgr"));
+    osrm::storage::tar::FileReader graph(Source.string() + ".hsgr",
+                                         osrm::storage::tar::FileReader::VerifyFingerprint);
+    BOOST_CHECK(graph.HasEntry("/ch/turn_data/turn_instructions"));
+    BOOST_CHECK(graph.HasEntry("/ch/turn_penalty/weight"));
 }
 
 BOOST_FIXTURE_TEST_CASE(partitioned_mld_waits_for_customization, ContractionFixture)

@@ -1,7 +1,7 @@
 #!/bin/bash
 set -euo pipefail
 
-# Integration tests for CLI argument parsing across all seven OSRM tool binaries.
+# Integration tests for CLI argument parsing across all six OSRM tool binaries.
 # Strategy: negative observation. We rarely run anything that succeeds —
 # instead we send each tool a known-bad input AFTER parsing and check that the
 # tool's response proves a specific parse path was taken. A tool that gets to
@@ -33,12 +33,11 @@ fi
 EXTRACT="$BINARIES_FOLDER/osrm-extract"
 CONTRACT="$BINARIES_FOLDER/osrm-contract"
 CUSTOMIZE="$BINARIES_FOLDER/osrm-customize"
-COMPACT="$BINARIES_FOLDER/osrm-compact"
 PARTITION="$BINARIES_FOLDER/osrm-partition"
 ROUTED="$BINARIES_FOLDER/osrm-routed"
 DATASTORE="$BINARIES_FOLDER/osrm-datastore"
 
-for bin in "$EXTRACT" "$CONTRACT" "$CUSTOMIZE" "$PARTITION" "$ROUTED" "$DATASTORE" "$COMPACT"; do
+for bin in "$EXTRACT" "$CONTRACT" "$CUSTOMIZE" "$PARTITION" "$ROUTED" "$DATASTORE"; do
     if [ ! -x "$bin" ]; then
         echo "Binary missing or not executable: $bin" >&2
         exit 1
@@ -247,36 +246,10 @@ assert_exit_nonzero "extract/--bogus-flag exits nonzero" \
 assert_exit_nonzero "routed/--bogus-flag exits nonzero" \
     "$ROUTED" --bogus-flag "$NONEXISTENT"
 
-# --- integrated compact preparation ----------------------------------------
+# --- native compact preparation ---------------------------------------------
+assert_output_matches "customize/turn identities are required" '^required .osrm.edges$' "$CUSTOMIZE" --list-inputs
+assert_output_not_matches "customize/no export mode" 'compact-output' "$CUSTOMIZE" --help
 
-assert_output_matches "customize/compact-output option documented" 'compact-output' "$CUSTOMIZE" --help
-assert_exit_nonzero "customize/compact-output requires a path" "$CUSTOMIZE" "$NONEXISTENT" --compact-output
-assert_output_matches "customize/compact-output parses with spaces" 'Missing/Broken File|Required files' "$CUSTOMIZE" "$NONEXISTENT" --compact-output '/nonexistent compact/output.osrm'
-assert_exit_nonzero "customize/compact-output rejects unknown options" "$CUSTOMIZE" "$NONEXISTENT" --compact-output /nonexistent/output.osrm --bogus-flag
-
-assert_output_not_matches "extract/path-with-spaces accepted by parser" "for option .* is invalid" "$EXTRACT" --profile /nonexistent.lua "$SPACE_DIR/missing.osm.pbf"
-assert_output_not_matches "partition/path-with-spaces accepted by parser" "for option .* is invalid" "$PARTITION" "$SPACE_DIR/missing.osrm"
-assert_output_matches "compact/paths with spaces reach preflight" "Output directory|Missing/Broken File|Input is missing" "$COMPACT" "$SPACE_DIR/missing.osrm" --output '/nonexistent compact/output.osrm'
-
-assert_output_matches "customize/compact inputs include guidance" '^required .osrm.icd$' "$CUSTOMIZE" --list-inputs --compact-output /new/output.osrm
-assert_output_matches "customize/default compact inputs include guidance" '^required .osrm.icd$' "$CUSTOMIZE" --list-inputs
-assert_output_not_matches "customize/redirected metrics inputs exclude guidance" '^required .osrm.icd$' "$CUSTOMIZE" --list-inputs --output /new/output.osrm
-assert_output_matches "contract/default inputs include optional MLD graph" '^optional .osrm.mldgr$' "$CONTRACT" --list-inputs
-assert_output_not_matches "customize/generated datasource names not required input" '^required .osrm.datasource_names$' "$CUSTOMIZE" --list-inputs --compact-output /new/output.osrm
-
-# --- compact query preparation ---------------------------------------------
-
-assert_exit_zero "compact/--help" "$COMPACT" --help
-assert_exit_zero "compact/--version" "$COMPACT" --version
-assert_exit_zero "compact/--list-inputs" "$COMPACT" --list-inputs
-assert_output_matches "compact/MLD graph required" '^required .osrm.mldgr$' "$COMPACT" --list-inputs
-assert_exit_nonzero "compact/missing output exits nonzero" "$COMPACT" /nonexistent.osrm
-assert_exit_nonzero "compact/unknown option exits nonzero" "$COMPACT" --bogus-flag
-assert_exit_nonzero "compact/missing input exits nonzero" "$COMPACT" /nonexistent.osrm --output /nonexistent-output/dataset.osrm
-
-# --- summary ---------------------------------------------------------------
-
-echo
 echo "----------------------------------------"
 echo "$PASS passed, $FAIL failed"
 if [ "$FAIL" -gt 0 ]; then

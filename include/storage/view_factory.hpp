@@ -126,7 +126,9 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
     const auto reverse_sources_name = index.HasBlock(name + "/constant_reverse_sources")
                                           ? name + "/constant_reverse_sources"
                                           : name + "/reverse_data_sources";
-    const auto cost_prefix = name + "/adaptive_costs";
+    const auto cost_prefix = index.HasBlock(name + "/adaptive_costs/descriptors")
+                                 ? name + "/adaptive_costs"
+                                 : name + "/shared_costs";
     auto geometry_begin_indices = make_vector_view<unsigned>(index, name + "/index");
 
     auto node_list = make_vector_view<NodeID>(index, name + "/nodes");

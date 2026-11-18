@@ -213,6 +213,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 {
     storage::requireMutableDataset(config.base_path);
     storage::invalidateQueryData(config.base_path);
+    for (const auto *suffix : {".osrm.mldgr", ".osrm.cell_metrics", ".osrm.hsgr"})
+        std::filesystem::remove(config.base_path.string() + suffix);
     util::LogPolicy::GetInstance().Unmute();
 
     const unsigned recommended_num_threads = std::thread::hardware_concurrency();

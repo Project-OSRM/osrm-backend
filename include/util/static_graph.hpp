@@ -326,15 +326,6 @@ class StaticGraph
     }
 
   protected:
-    EdgeIterator readFirstEdge(NodeIterator node) const
-    {
-        if constexpr (Ownership == storage::Ownership::View)
-            if (node_count)
-                return static_cast<EdgeIterator>(
-                    util::decodeBlockDelta(node_headers, node_words, node));
-        return node_array.at(node).first_edge;
-    }
-
     EdgeArrayEntry readEdge(EdgeIterator edge) const
     {
         if constexpr (requires { EdgeDataT::SupportsPackedRecords; })

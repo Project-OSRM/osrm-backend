@@ -57,7 +57,7 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config,
     files.insert(files.end(), updatable_files.begin(), updatable_files.end());
 
     std::string metric_name;
-    if (share_cell_metrics && !storage.hasQueryData())
+    if (share_cell_metrics && !storage.hasNativeTurnData())
         shared_cell_metrics = makeSharedCellMetrics(config, metric_name);
 
     for (const auto &file : files)

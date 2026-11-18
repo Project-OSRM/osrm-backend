@@ -62,6 +62,8 @@ template <storage::Ownership Ownership> class TurnDataContainerImpl
     {
     }
 
+    std::size_t GetNumberOfTurns() const { return turn_instructions.size(); }
+
     EntryClassID GetEntryClassID(const EdgeID id) const { return entry_class_ids[id]; }
 
     TurnBearing GetPreTurnBearing(const EdgeID id) const { return pre_turn_bearings[id]; }

@@ -190,7 +190,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     void InitializeInternalPointers(const storage::SharedDataIndex &index,
                                     const std::string &metric_name,
-                                    const std::size_t exclude_index)
+                                    const std::size_t exclude_index,
+                                    bool ch = false)
     {
         // TODO: For multi-metric support we need to have separate exclude classes per metric
         (void)metric_name;
@@ -232,9 +233,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         edge_based_node_data = make_ebn_data_view(index, "/common/ebg_node_data");
 
-        if (isIndexed(index, "/common/turn_data"))
+        const std::string turn_prefix =
+            ch && index.HasBlock("/ch/turn_penalty/weight") ? "/ch" : "/common";
+        if (isIndexed(index, turn_prefix + "/turn_data"))
         {
-            turn_data = make_turn_data_view(index, "/common/turn_data");
+            turn_data = make_turn_data_view(index, turn_prefix + "/turn_data");
         }
 
         if (isIndexed(index, "/common/names"))
@@ -250,8 +253,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             m_lane_tuple_id_pairs = make_lane_data_view(index, "/common/turn_lanes");
         }
 
-        m_turn_weight_penalties = make_turn_weight_view(index, "/common/turn_penalty");
-        m_turn_duration_penalties = make_turn_duration_view(index, "/common/turn_penalty");
+        m_turn_weight_penalties = make_turn_weight_view(index, turn_prefix + "/turn_penalty");
+        m_turn_duration_penalties = make_turn_duration_view(index, turn_prefix + "/turn_penalty");
 
         segment_data = make_segment_data_view(index, "/common/segment_data");
 
@@ -273,9 +276,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     // allocator
     ContiguousInternalMemoryDataFacadeBase(std::shared_ptr<ContiguousBlockAllocator> allocator_,
                                            const std::string &metric_name,
-                                           const std::size_t exclude_index)
+                                           const std::size_t exclude_index,
+                                           bool ch = false)
         : allocator(std::move(allocator_))
-    { InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index); }
+    { InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index, ch); }
 
     // node and edge information access
     util::Coordinate GetCoordinateOfNode(const NodeID node_based_node_id) const override final
@@ -614,7 +618,7 @@ class ContiguousInternalMemoryDataFacade<CH>
     ContiguousInternalMemoryDataFacade(const std::shared_ptr<ContiguousBlockAllocator> &allocator,
                                        const std::string &metric_name,
                                        const std::size_t exclude_index)
-        : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index),
+        : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index, true),
           ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator, metric_name, exclude_index)
     {
     }

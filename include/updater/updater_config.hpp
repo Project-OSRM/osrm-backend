@@ -41,7 +41,8 @@ namespace osrm::updater
 struct UpdaterConfig final : storage::IOConfig
 {
     UpdaterConfig()
-        : IOConfig({".osrm.ebg",
+        : IOConfig({".osrm.edges",
+                    ".osrm.ebg",
                     ".osrm.turn_weight_penalties",
                     ".osrm.turn_duration_penalties",
                     ".osrm.turn_penalties_index",

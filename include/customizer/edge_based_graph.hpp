@@ -49,6 +49,17 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
     using EdgeArrayEntry = SuperT::EdgeArrayEntry;
     using EdgeOffset = SuperT::EdgeOffset;
 
+    void remapTurnIDs(std::span<const EdgeID> mapping)
+        requires(Ownership == storage::Ownership::Container)
+    {
+        for (auto &edge : SuperT::edge_array)
+        {
+            if (edge.data.turn_id >= mapping.size())
+                throw util::exception("Invalid original graph turn identity");
+            edge.data.turn_id = mapping[edge.data.turn_id];
+        }
+    }
+
     MultiLevelGraph() = default;
     MultiLevelGraph(MultiLevelGraph &&) = default;
     MultiLevelGraph(const MultiLevelGraph &) = default;

@@ -79,7 +79,23 @@ inline void write(storage::tar::FileWriter &writer,
     storage::serialization::write(writer, name + "/node_weights", graph.node_weights);
     storage::serialization::write(writer, name + "/node_durations", graph.node_durations);
     storage::serialization::write(writer, name + "/node_distances", graph.node_distances);
-    storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
+    bool narrow = std::endian::native == std::endian::little;
+    for (std::size_t i = 0; i < graph.GetNumberOfEdges(); ++i)
+        narrow &= graph.GetTarget(i) < (1u << 25) && graph.GetEdgeData(i).turn_id < (1u << 22);
+    if (narrow)
+    {
+        std::vector<std::uint8_t> packed(std::size_t(graph.GetNumberOfEdges()) * 6 + 8, 0);
+        for (std::size_t i = 0; i < graph.GetNumberOfEdges(); ++i)
+        {
+            const auto word = std::uint64_t(graph.GetTarget(i)) |
+                              (std::uint64_t(graph.GetEdgeData(i).turn_id) << 25);
+            const auto bytes = std::bit_cast<std::array<std::uint8_t, 8>>(word);
+            std::copy_n(bytes.begin(), 6, packed.begin() + i * 6);
+        }
+        storage::serialization::write(writer, name + "/edge_array6", packed);
+    }
+    else
+        storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
     storage::serialization::write(writer, name + "/is_forward_edge", graph.is_forward_edge);
     storage::serialization::write(writer, name + "/is_backward_edge", graph.is_backward_edge);
     storage::serialization::write(writer, name + "/node_to_edge_offset", graph.node_to_edge_offset);

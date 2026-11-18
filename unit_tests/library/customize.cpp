@@ -1,22 +1,16 @@
-#include <boost/test/unit_test.hpp>
-
-#include "osrm/customizer.hpp"
-#include "osrm/customizer_config.hpp"
-
 #include "../common/temporary_file.hpp"
 #include "coordinates.hpp"
 #include "equal_json.hpp"
-
 #include "extractor/files.hpp"
-#include "storage/compact.hpp"
-#include "storage/compact_dataset.hpp"
+#include "guidance/compact_turn_data.hpp"
+#include "osrm/customizer.hpp"
+#include "osrm/customizer_config.hpp"
 #include "osrm/engine_config.hpp"
 #include "osrm/nearest_parameters.hpp"
 #include "osrm/osrm.hpp"
 #include "osrm/route_parameters.hpp"
-
+#include <boost/test/unit_test.hpp>
 #include <fstream>
-#include <map>
 #include <thread>
 
 namespace
@@ -24,62 +18,22 @@ namespace
 struct CustomizationFixture
 {
     std::filesystem::path Root = std::filesystem::temp_directory_path() / random_string(16);
-    std::filesystem::path Source = Root / "source with spaces" / "monaco.osrm";
-    std::filesystem::path Target = Root / "compact generation" / "monaco.osrm";
-
+    std::filesystem::path Source = Root / "monaco.osrm";
     CustomizationFixture()
     {
-        std::filesystem::create_directories(Source.parent_path());
+        std::filesystem::create_directory(Root);
         for (const auto &entry : std::filesystem::directory_iterator(OSRM_TEST_DATA_DIR "/mld"))
             if (entry.path().filename().string().starts_with("monaco.osrm."))
-                std::filesystem::copy_file(entry.path(),
-                                           Source.parent_path() / entry.path().filename());
+                std::filesystem::copy_file(entry.path(), Root / entry.path().filename());
     }
     ~CustomizationFixture() { std::filesystem::remove_all(Root); }
-
     osrm::CustomizationConfig getConfig() const
     {
         osrm::CustomizationConfig config;
         config.UseDefaultOutputNames(Source);
         config.requested_num_threads = 2;
-        config.CompactOutputPath = Target;
         return config;
     }
-
-    void checkGeneration(const std::filesystem::path &target,
-                         const std::filesystem::path &mld_input = {}) const
-    {
-        const auto reference = Root / random_string(16) / "reference.osrm";
-        osrm::storage::compactDataset(Source, reference, mld_input);
-        unsigned count = 0;
-        for (const auto &entry : std::filesystem::directory_iterator(reference.parent_path()))
-        {
-            const auto suffix = entry.path().string().substr(reference.string().size());
-            const auto output = std::filesystem::path(target.string() + suffix);
-            BOOST_REQUIRE(std::filesystem::is_regular_file(output));
-            BOOST_CHECK(!std::filesystem::is_symlink(output));
-            BOOST_CHECK_EQUAL(std::filesystem::hard_link_count(output), 1);
-            std::ifstream a(entry.path(), std::ios::binary), b(output, std::ios::binary);
-            BOOST_CHECK(std::equal(std::istreambuf_iterator<char>(a),
-                                   std::istreambuf_iterator<char>(),
-                                   std::istreambuf_iterator<char>(b),
-                                   std::istreambuf_iterator<char>()));
-            ++count;
-        }
-        unsigned expected_count = 20;
-        for (const auto *suffix :
-             {".openareas", ".openareas.ramIndex", ".openareas.fileIndex", ".hsgr"})
-            expected_count += std::filesystem::exists(Source.string() + suffix);
-        BOOST_CHECK_EQUAL(count, expected_count);
-        unsigned output_count = 0;
-        for (const auto &entry : std::filesystem::directory_iterator(target.parent_path()))
-        {
-            BOOST_CHECK(std::filesystem::is_regular_file(entry.path()));
-            ++output_count;
-        }
-        BOOST_CHECK_EQUAL(output_count, expected_count);
-    }
-
     std::filesystem::path writeTraffic() const
     {
         osrm::extractor::SegmentDataContainer segments;
@@ -104,210 +58,90 @@ struct CustomizationFixture
         return traffic;
     }
 };
-
-osrm::OSRM loadMLD(const std::filesystem::path &path, bool mmap = false)
+osrm::OSRM loadMLD(const std::filesystem::path &path, bool mmap)
 {
     osrm::EngineConfig config;
     config.storage_config = {path};
+    config.algorithm = osrm::EngineConfig::Algorithm::MLD;
     config.use_shared_memory = false;
     config.use_mmap = mmap;
-    config.algorithm = osrm::EngineConfig::Algorithm::MLD;
     return osrm::OSRM(config);
 }
 } // namespace
-
 BOOST_AUTO_TEST_SUITE(library_customize)
-
-BOOST_AUTO_TEST_CASE(test_customize_with_invalid_config)
+BOOST_AUTO_TEST_CASE(invalid_config)
 {
-    using namespace osrm;
-
     osrm::CustomizationConfig config;
-    config.requested_num_threads = std::thread::hardware_concurrency();
-    BOOST_CHECK_THROW(osrm::customize(config),
-                      std::exception); // including osrm::util::exception, etc.
+    config.requested_num_threads = 2;
+    BOOST_CHECK_THROW(osrm::customize(config), std::exception);
 }
-
-BOOST_FIXTURE_TEST_CASE(default_customization_is_repeatable_and_loads_in_both_modes,
-                        CustomizationFixture)
+BOOST_FIXTURE_TEST_CASE(single_compact_representation, CustomizationFixture)
 {
     auto config = getConfig();
-    config.CompactOutputPath.clear();
     osrm::customize(config);
-    BOOST_REQUIRE(osrm::storage::hasQueryData(config.base_path));
-    BOOST_CHECK(!osrm::storage::isCompactDataset(config.base_path));
-    const auto generation = osrm::storage::readQueryGeneration(Source.string() + ".mldgr",
-                                                               osrm::storage::MLD_GENERATION_ENTRY);
-    const auto query = std::filesystem::path(Source.string() + ".query");
-    const auto hidden = Root / "query.reference";
-    osrm::RouteParameters route;
-    route.coordinates = get_locations_in_big_component();
-    route.steps = true;
-    route.annotations = true;
-    route.annotations_type = osrm::RouteParameters::AnnotationsType::All;
-    for (const bool mmap : {false, true})
+    BOOST_CHECK(!std::filesystem::exists(Source.string() + ".query"));
     {
-        std::filesystem::rename(query, hidden);
-        auto ordinary = loadMLD(Source, mmap);
-        std::filesystem::rename(hidden, query);
-        auto optimized = loadMLD(Source, mmap);
-        osrm::json::Object expected, actual;
-        BOOST_CHECK(ordinary.Route(route, expected) == optimized.Route(route, actual));
-        CHECK_EQUAL_JSON(expected, actual);
-        osrm::NearestParameters nearest;
-        nearest.coordinates = {route.coordinates.front()};
-        nearest.number_of_results = 5;
-        BOOST_CHECK(ordinary.Nearest(nearest, expected) == optimized.Nearest(nearest, actual));
-        CHECK_EQUAL_JSON(expected, actual);
+        osrm::storage::tar::FileReader graph(Source.string() + ".mldgr",
+                                             osrm::storage::tar::FileReader::VerifyFingerprint);
+        BOOST_CHECK(graph.HasEntry("/mld/multilevelgraph/edge_array6"));
+        BOOST_CHECK(!graph.HasEntry("/mld/multilevelgraph/edge_array"));
+        BOOST_CHECK(graph.HasEntry("/common/turn_data/turn_instructions"));
+        osrm::storage::tar::FileReader metrics(Source.string() + ".cell_metrics",
+                                               osrm::storage::tar::FileReader::VerifyFingerprint);
+        BOOST_CHECK(metrics.HasEntry("/mld/metrics/routability/shared/weights"));
+        BOOST_CHECK(!metrics.HasEntry("/mld/metrics/routability/exclude/0/weights"));
     }
-    osrm::customize(config);
-    BOOST_CHECK(osrm::storage::hasQueryData(config.base_path));
-    BOOST_CHECK_NE(osrm::storage::readQueryGeneration(Source.string() + ".mldgr",
-                                                      osrm::storage::MLD_GENERATION_ENTRY),
-                   generation);
-    BOOST_CHECK(!std::filesystem::exists(Target.parent_path()));
-}
-
-BOOST_FIXTURE_TEST_CASE(first_customization_emits_compact_query_dataset, CustomizationFixture)
-{
-    for (const auto &suffix : {".mldgr", ".cell_metrics", ".datasource_names"})
-        std::filesystem::remove(Source.string() + suffix);
-    const auto config = getConfig();
-    osrm::customize(config);
-    BOOST_CHECK(!osrm::storage::isCompactDataset(config.base_path));
-    BOOST_CHECK(osrm::storage::hasQueryData(config.base_path));
-    BOOST_CHECK(osrm::storage::isCompactDataset(osrm::storage::StorageConfig(Target).base_path));
-    checkGeneration(Target);
-    auto original = loadMLD(Source);
-    auto compact = loadMLD(Target);
-    osrm::RouteParameters route;
-    route.coordinates = get_locations_in_big_component();
-    route.steps = true;
-    route.annotations = true;
-    route.annotations_type = osrm::RouteParameters::AnnotationsType::All;
-    osrm::json::Object a, b;
-    BOOST_CHECK(original.Route(route, a) == compact.Route(route, b));
-    CHECK_EQUAL_JSON(a, b);
-    for (const auto &coordinate : route.coordinates)
-    {
-        osrm::NearestParameters nearest;
-        nearest.coordinates = {coordinate};
-        nearest.number_of_results = 5;
-        BOOST_CHECK(original.Nearest(nearest, a) == compact.Nearest(nearest, b));
-        CHECK_EQUAL_JSON(a, b);
-    }
-}
-
-BOOST_FIXTURE_TEST_CASE(split_outputs_and_traffic_recustomization, CustomizationFixture)
-{
-    auto config = getConfig();
-    for (const auto &suffix : {".mldgr", ".cell_metrics"})
-        std::filesystem::remove(Source.string() + suffix);
-    const auto metrics = Root / "metrics" / "monaco";
-    std::filesystem::create_directory(metrics.parent_path());
-    config.output_path = metrics;
-    osrm::customize(config);
-    BOOST_CHECK(!std::filesystem::exists(Source.string() + ".mldgr"));
-    checkGeneration(Target, metrics);
-    auto first = loadMLD(Target);
     osrm::NearestParameters nearest;
     nearest.coordinates = {get_dummy_location()};
-    osrm::json::Object first_result, after_result;
-    BOOST_CHECK(first.Nearest(nearest, first_result) == osrm::Status::Ok);
-
-    config.updater_config.segment_speed_lookup_paths = {writeTraffic().string()};
-    config.CompactOutputPath = Root / "updated" / "monaco.osrm";
-    osrm::customize(config);
-    osrm::extractor::SegmentDataContainer updated;
-    osrm::extractor::files::readSegmentData(Source.string() + ".geometry", updated);
-    bool has_traffic = false;
-    for (unsigned geometry = 0; geometry < updated.GetNumberOfGeometries(); ++geometry)
-        for (auto datasource : updated.GetForwardDatasources(geometry))
-            has_traffic |= datasource != 0;
-    BOOST_CHECK(has_traffic);
-    checkGeneration(config.CompactOutputPath, metrics);
-    std::filesystem::rename(Source.parent_path(), Root / "hidden-source");
-    std::filesystem::rename(metrics.parent_path(), Root / "hidden-metrics");
-    auto independent = loadMLD(config.CompactOutputPath);
-    BOOST_CHECK(independent.Nearest(nearest, after_result) == osrm::Status::Ok);
-    BOOST_CHECK(first.Nearest(nearest, after_result) == osrm::Status::Ok);
-    CHECK_EQUAL_JSON(first_result, after_result);
-}
-
-BOOST_FIXTURE_TEST_CASE(compact_preflight_runs_before_updates, CustomizationFixture)
-{
-    auto config = getConfig();
-    config.updater_config.segment_speed_lookup_paths = {"nonexistent-traffic.csv"};
-    std::filesystem::create_directory(Target.parent_path());
-    const auto sentinel = Target.parent_path() / "keep-me";
-    std::ofstream(sentinel) << "existing generation";
-    std::map<std::filesystem::path, std::pair<std::uintmax_t, std::filesystem::file_time_type>>
-        before;
-    for (const auto &entry : std::filesystem::directory_iterator(Source.parent_path()))
-        before.emplace(entry.path(), std::make_pair(entry.file_size(), entry.last_write_time()));
-    BOOST_CHECK_EXCEPTION(
-        osrm::customize(config),
-        osrm::util::exception,
-        [](const auto &error)
-        {
-            return std::string(error.what()).find("Output directory must be new") !=
-                   std::string::npos;
-        });
-    BOOST_CHECK(std::filesystem::exists(sentinel));
-    for (const auto &[path, state] : before)
+    osrm::RouteParameters route;
+    route.coordinates = get_locations_in_big_component();
+    route.steps = true;
+    for (bool mmap : {false, true})
     {
-        BOOST_CHECK_EQUAL(std::filesystem::file_size(path), state.first);
-        BOOST_CHECK(std::filesystem::last_write_time(path) == state.second);
+        osrm::json::Object a, b, route_a, route_b;
+        {
+            auto before = loadMLD(Source, mmap);
+            BOOST_CHECK(before.Nearest(nearest, a) == osrm::Status::Ok);
+            BOOST_CHECK(before.Route(route, route_a) == osrm::Status::Ok);
+        }
+        osrm::customize(config);
+        auto after = loadMLD(Source, mmap);
+        BOOST_CHECK(after.Nearest(nearest, b) == osrm::Status::Ok);
+        CHECK_EQUAL_JSON(a, b);
+        BOOST_CHECK(after.Route(route, route_b) == osrm::Status::Ok);
+        CHECK_EQUAL_JSON(route_a, route_b);
     }
-    config.CompactOutputPath = Root / "missing" / "new" / "monaco.osrm";
-    BOOST_CHECK_THROW(osrm::customize(config), osrm::util::exception);
-    BOOST_CHECK(!std::filesystem::exists(Root / "missing"));
 }
-
-BOOST_FIXTURE_TEST_CASE(failed_customization_does_not_publish_compact_output, CustomizationFixture)
+BOOST_FIXTURE_TEST_CASE(repeated_traffic_keeps_original_turn_identities, CustomizationFixture)
 {
     auto config = getConfig();
-    config.updater_config.segment_speed_lookup_paths = {"nonexistent-traffic.csv"};
-    BOOST_CHECK_THROW(osrm::customize(config), std::exception);
-    BOOST_CHECK(!std::filesystem::exists(Target.parent_path()));
-}
-
-BOOST_FIXTURE_TEST_CASE(default_customization_keeps_mutable_format, CustomizationFixture)
-{
-    auto config = getConfig();
-    config.CompactOutputPath.clear();
+    const auto identities =
+        osrm::guidance::readOriginalTurnData(Source.string() + ".edges").Mapping;
+    config.updater_config.segment_speed_lookup_paths = {writeTraffic().string()};
     osrm::customize(config);
-    BOOST_CHECK(!osrm::storage::isCompactDataset(config.base_path));
-    BOOST_CHECK(!std::filesystem::exists(Target.parent_path()));
-    auto raw = loadMLD(Source);
+    osrm::extractor::SegmentDataContainer segments;
+    osrm::extractor::files::readSegmentData(Source.string() + ".geometry", segments);
+    bool updated = false;
+    for (unsigned g = 0; g < segments.GetNumberOfGeometries(); ++g)
+        for (auto value : segments.GetForwardDatasources(g))
+            updated |= value != 0;
+    BOOST_CHECK(updated);
+    osrm::customize(config);
+    BOOST_CHECK(osrm::guidance::readOriginalTurnData(Source.string() + ".edges").Mapping ==
+                identities);
+    auto engine = loadMLD(Source, true);
     osrm::NearestParameters nearest;
     nearest.coordinates = {get_dummy_location()};
     osrm::json::Object result;
-    BOOST_CHECK(raw.Nearest(nearest, result) == osrm::Status::Ok);
+    BOOST_CHECK(engine.Nearest(nearest, result) == osrm::Status::Ok);
 }
-
-BOOST_FIXTURE_TEST_CASE(default_compaction_waits_for_stale_ch_graph, CustomizationFixture)
+BOOST_FIXTURE_TEST_CASE(redirected_output_uses_the_same_compact_format, CustomizationFixture)
 {
     auto config = getConfig();
-    config.CompactOutputPath.clear();
-    std::uint32_t checksum;
-    {
-        osrm::storage::tar::FileReader reader(Source.string() + ".edges",
-                                              osrm::storage::tar::FileReader::VerifyFingerprint);
-        reader.ReadInto("/common/connectivity_checksum", checksum);
-    }
-    const auto ch_path = Source.string() + ".hsgr";
-    {
-        osrm::storage::tar::FileWriter writer(ch_path,
-                                              osrm::storage::tar::FileWriter::GenerateFingerprint);
-        writer.WriteFrom("/ch/connectivity_checksum", checksum ^ std::uint32_t{1});
-    }
-    BOOST_CHECK_NO_THROW(osrm::customize(config));
-    BOOST_CHECK(!std::filesystem::exists(Source.string() + ".query"));
-    BOOST_CHECK(std::filesystem::exists(Source.string() + ".mldgr"));
-    std::filesystem::remove(ch_path);
-    BOOST_CHECK_NO_THROW(osrm::customize(config));
-    BOOST_CHECK(osrm::storage::hasQueryData(config.base_path));
+    config.output_path = Root / "other";
+    osrm::customize(config);
+    osrm::storage::tar::FileReader graph(config.output_path.string() + ".osrm.mldgr",
+                                         osrm::storage::tar::FileReader::VerifyFingerprint);
+    BOOST_CHECK(graph.HasEntry("/mld/multilevelgraph/edge_array6"));
 }
-
 BOOST_AUTO_TEST_SUITE_END()
