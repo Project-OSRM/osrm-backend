@@ -393,5 +393,10 @@ Shared builds keep OSRM's exception definitions in `osrm_exception`; install tha
 library alongside the other OSRM libraries. CMake targets propagate this dependency,
 and `libosrm.pc` includes it for installed consumers. Static builds and default
 Python wheels link the same exception library statically.
+Native shared installs use a loader-relative install RPATH by default; an explicit
+`CMAKE_INSTALL_RPATH` overrides it. Public preprocessing headers can be installed
+on their own with `cmake --install build --component Development`. The
+`installed-preprocessing-headers` CTest check compiles a consumer using only those
+installed OSRM headers, without the source include directory.
 See [the compact dataset workflow](../mld-compact.md) for compatibility, fallback,
 and rollout requirements.
