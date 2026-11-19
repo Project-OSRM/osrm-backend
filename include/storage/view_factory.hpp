@@ -286,6 +286,13 @@ inline auto make_partition_view(const SharedDataIndex &index, const std::string 
     auto level_data_ptr =
         index.template GetBlockPtr<partitioner::MultiLevelPartitionView::LevelData>(name +
                                                                                     "/level_data");
+    if (index.HasBlock(name + "/partition_blocks/headers"))
+        return partitioner::MultiLevelPartitionView{
+            level_data_ptr,
+            make_vector_view<CellID>(index, name + "/cell_to_children"),
+            make_vector_view<util::BlockDeltaHeader>(index, name + "/partition_blocks/headers"),
+            make_vector_view<std::uint64_t>(index, name + "/partition_blocks/words"),
+            index.GetBlockPtr<std::uint64_t>(name + "/partition_blocks/count")};
     auto partition = make_vector_view<PartitionID>(index, name + "/partition");
     auto cell_to_children = make_vector_view<CellID>(index, name + "/cell_to_children");
 
