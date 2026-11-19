@@ -24,6 +24,7 @@ using TestNodeID = NodeID;
 using TestKey = int;
 using TestWeight = int;
 using storage_types = boost::mpl::list<ArrayStorage<TestNodeID, TestKey>,
+                                       CompactArrayStorage<TestNodeID, TestKey>,
                                        UnorderedMapStorage<TestNodeID, TestKey>,
                                        LinearHashStorage<TestNodeID, TestKey>>;
 

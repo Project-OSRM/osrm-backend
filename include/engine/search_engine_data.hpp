@@ -180,22 +180,15 @@ using MLDUnpackingCache = util::BrowseResistantCache<MLDUnpackingCacheKey,
 
 template <> struct SearchEngineData<routing_algorithms::mld::Algorithm>
 {
-    using QueryHeap = util::QueryHeap<NodeID,
-                                      NodeID,
-                                      EdgeWeight,
-                                      MultiLayerDijkstraHeapData,
-                                      util::TwoLevelStorage<NodeID, int>>;
+    using IndexStorage =
+        util::TwoLevelStorage<NodeID, int, util::UnorderedMapStorage, util::CompactArrayStorage>;
+    using QueryHeap =
+        util::QueryHeap<NodeID, NodeID, EdgeWeight, MultiLayerDijkstraHeapData, IndexStorage>;
 
-    using ManyToManyQueryHeap = util::QueryHeap<NodeID,
-                                                NodeID,
-                                                EdgeWeight,
-                                                ManyToManyMultiLayerDijkstraHeapData,
-                                                util::TwoLevelStorage<NodeID, int>>;
-    using MapMatchingQueryHeap = util::QueryHeap<NodeID,
-                                                 NodeID,
-                                                 EdgeWeight,
-                                                 MapMatchingMultiLayerDijkstraHeapData,
-                                                 util::TwoLevelStorage<NodeID, int>>;
+    using ManyToManyQueryHeap = util::
+        QueryHeap<NodeID, NodeID, EdgeWeight, ManyToManyMultiLayerDijkstraHeapData, IndexStorage>;
+    using MapMatchingQueryHeap = util::
+        QueryHeap<NodeID, NodeID, EdgeWeight, MapMatchingMultiLayerDijkstraHeapData, IndexStorage>;
 
     using SearchEngineHeapPtr = std::unique_ptr<QueryHeap>;
     using ManyToManyHeapPtr = std::unique_ptr<ManyToManyQueryHeap>;
