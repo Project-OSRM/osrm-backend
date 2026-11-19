@@ -3,6 +3,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdint>
 #include <limits>
 #include <vector>
 
@@ -84,6 +85,19 @@ BOOST_AUTO_TEST_CASE(sparse_overflow_is_cleared_and_reused)
     BOOST_CHECK_EQUAL(storage.peek_index(5), 0);
     storage[5] = 2;
     BOOST_CHECK_EQUAL(storage.peek_index(5), 2);
+}
+
+BOOST_AUTO_TEST_CASE(generation_rollover_discards_untouched_blocks)
+{
+    osrm::util::CompactArrayStorage<unsigned, int> storage(1024);
+    storage[513] = 23;
+    for (unsigned clear = 0; clear < std::numeric_limits<std::uint16_t>::max(); ++clear)
+        storage.Clear();
+
+    BOOST_CHECK_EQUAL(storage.peek_index(513), 0);
+    storage[514] = 19;
+    BOOST_CHECK_EQUAL(storage.peek_index(513), 0);
+    BOOST_CHECK_EQUAL(storage.peek_index(514), 19);
 }
 
 BOOST_AUTO_TEST_CASE(two_level_proxy_and_heap_reuse)

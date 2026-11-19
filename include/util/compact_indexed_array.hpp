@@ -129,8 +129,8 @@ template <typename NodeID, typename Key> class CompactArrayStorage
 
     std::unique_ptr<std::uint16_t[]> m_positions;
     std::size_t m_size;
-    std::vector<std::uint32_t> m_block_generations;
-    std::uint32_t m_generation = 1;
+    std::vector<std::uint16_t> m_block_generations;
+    std::uint16_t m_generation = 1;
     std::unordered_map<NodeID, Key> m_overflow;
     std::vector<Key> m_wide;
 };
