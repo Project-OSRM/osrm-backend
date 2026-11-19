@@ -1,6 +1,7 @@
 #ifndef STATIC_GRAPH_HPP
 #define STATIC_GRAPH_HPP
 
+#include "util/block_delta.hpp"
 #include "util/graph_traits.hpp"
 #include "util/integer_range.hpp"
 #include "util/percent.hpp"
@@ -133,12 +134,31 @@ class StaticGraph
     StaticGraph(Vector<NodeArrayEntry> node_array_, Vector<EdgeArrayEntry> edge_array_)
         : node_array(std::move(node_array_)), edge_array(std::move(edge_array_))
     {
-        BOOST_ASSERT(!node_array.empty());
+        if (node_array.empty())
+        {
+            BOOST_ASSERT(Ownership == storage::Ownership::View);
+            return;
+        }
 
         number_of_nodes = static_cast<decltype(number_of_nodes)>(node_array.size() - 1);
         number_of_edges = static_cast<decltype(number_of_edges)>(node_array.back().first_edge);
         BOOST_ASSERT(number_of_edges <= edge_array.size());
         BOOST_ASSERT(number_of_nodes == node_array.size() - 1);
+    }
+
+    void bindNodeBlocks(Vector<util::BlockDeltaHeader> headers,
+                        Vector<std::uint64_t> words,
+                        std::uint64_t *count)
+        requires(Ownership == storage::Ownership::View)
+    {
+        node_headers = std::move(headers);
+        node_words = std::move(words);
+        node_count = count;
+        if (*node_count != 0)
+        {
+            number_of_nodes = static_cast<NodeIterator>(*node_count - 1);
+            number_of_edges = readFirstEdge(number_of_nodes);
+        }
     }
 
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
@@ -154,11 +174,9 @@ class StaticGraph
 
     const auto &GetEdgeData(const EdgeIterator e) const { return edge_array[e].data; }
 
-    EdgeIterator BeginEdges(const NodeIterator n) const
-    { return EdgeIterator(node_array.at(n).first_edge); }
+    EdgeIterator BeginEdges(const NodeIterator n) const { return EdgeIterator(readFirstEdge(n)); }
 
-    EdgeIterator EndEdges(const NodeIterator n) const
-    { return EdgeIterator(node_array.at(n + 1).first_edge); }
+    EdgeIterator EndEdges(const NodeIterator n) const { return EdgeIterator(readFirstEdge(n + 1)); }
 
     // searches for a specific edge
     EdgeIterator FindEdge(const NodeIterator from, const NodeIterator to) const
@@ -295,10 +313,22 @@ class StaticGraph
     }
 
   protected:
+    EdgeIterator readFirstEdge(NodeIterator node) const
+    {
+        if constexpr (Ownership == storage::Ownership::View)
+            if (node_count)
+                return static_cast<EdgeIterator>(
+                    util::decodeBlockDelta(node_headers, node_words, node));
+        return node_array.at(node).first_edge;
+    }
+
     NodeIterator number_of_nodes = 0;
     EdgeIterator number_of_edges = 0;
 
     Vector<NodeArrayEntry> node_array;
+    Vector<util::BlockDeltaHeader> node_headers;
+    Vector<std::uint64_t> node_words;
+    std::uint64_t *node_count = nullptr;
     Vector<EdgeArrayEntry> edge_array;
 };
 

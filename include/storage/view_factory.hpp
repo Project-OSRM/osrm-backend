@@ -361,8 +361,11 @@ inline auto make_cell_metric_view(const SharedDataIndex &index, const std::strin
 
 inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std::string &name)
 {
-    auto node_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry>(
-        index, name + "/node_array");
+    util::vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry> node_list;
+    const bool block_nodes = index.HasBlock(name + "/node_blocks/headers");
+    if (!block_nodes)
+        node_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry>(
+            index, name + "/node_array");
     auto edge_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry>(
         index, name + "/edge_array");
     auto node_to_offset = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset>(
@@ -373,14 +376,20 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
     auto is_forward_edge = make_vector_view<bool>(index, name + "/is_forward_edge");
     auto is_backward_edge = make_vector_view<bool>(index, name + "/is_backward_edge");
 
-    return customizer::MultiLevelEdgeBasedGraphView(node_list,
-                                                    edge_list,
-                                                    node_to_offset,
-                                                    node_weights,
-                                                    node_durations,
-                                                    node_distances,
-                                                    is_forward_edge,
-                                                    is_backward_edge);
+    auto graph = customizer::MultiLevelEdgeBasedGraphView(node_list,
+                                                          edge_list,
+                                                          node_to_offset,
+                                                          node_weights,
+                                                          node_durations,
+                                                          node_distances,
+                                                          is_forward_edge,
+                                                          is_backward_edge);
+    if (block_nodes)
+        graph.bindNodeBlocks(
+            make_vector_view<util::BlockDeltaHeader>(index, name + "/node_blocks/headers"),
+            make_vector_view<std::uint64_t>(index, name + "/node_blocks/words"),
+            index.GetBlockPtr<std::uint64_t>(name + "/node_blocks/count"));
+    return graph;
 }
 
 inline auto make_maneuver_overrides_views(const SharedDataIndex &index, const std::string &name)

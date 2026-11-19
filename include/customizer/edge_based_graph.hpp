@@ -70,6 +70,8 @@ class MultiLevelGraph : public partitioner::MultiLevelGraph<EdgeDataT, Ownership
                  SuperT::connectivity_checksum) = std::move(graph).data();
 
         SuperT::edge_array.reserve(original_edge_array.size());
+        SuperT::number_of_nodes = SuperT::node_array.size() - 1;
+        SuperT::number_of_edges = original_edge_array.size();
         for (const auto &edge : original_edge_array)
         {
             SuperT::edge_array.push_back({edge.target, {edge.data.turn_id}});
