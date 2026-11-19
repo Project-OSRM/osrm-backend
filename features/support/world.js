@@ -158,8 +158,8 @@ class OSRMWorld extends World {
       return table[p1] || p1;
     }
 
-    options = options.replaceAll(/\{(\w+)\}/g, replacer);
-    return options.split(/\s+/);
+    options = options.replaceAll(/\{(\w+)\}/g, replacer).trim();
+    return options.length ? options.split(/\s+/) : [];
   }
 }
 
