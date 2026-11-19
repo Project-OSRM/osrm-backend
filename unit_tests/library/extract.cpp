@@ -268,4 +268,35 @@ BOOST_AUTO_TEST_CASE(test_turn_runtime_error)
                 std::string::npos);
 }
 
+BOOST_AUTO_TEST_CASE(redirected_extraction_invalidates_only_destination_graphs)
+{
+    TemporaryFile temporary;
+    const auto root = temporary.path.string() + "-dataset";
+    std::filesystem::create_directory(root);
+    const auto source = std::filesystem::path(root) / "source";
+    const auto destination = std::filesystem::path(root) / "destination";
+    const auto pbf = source.string() + ".osm.pbf";
+    std::filesystem::copy_file(OSRM_TEST_DATA_DIR "/monaco.osm.pbf", pbf);
+    for (const auto *suffix : {".partition", ".cells", ".mldgr", ".cell_metrics", ".hsgr"})
+    {
+        std::ofstream(source.string() + ".osrm" + suffix) << "original";
+        std::ofstream(destination.string() + ".osrm" + suffix) << "stale";
+    }
+    osrm::ExtractorConfig config;
+    config.input_path = pbf;
+    config.UseDefaultOutputNames(destination);
+    config.profile_path = OSRM_TEST_DATA_DIR "/../../profiles/car.lua";
+    config.requested_num_threads = 2;
+    BOOST_CHECK_NO_THROW(osrm::extract(config));
+    for (const auto *suffix : {".partition", ".cells", ".mldgr", ".cell_metrics", ".hsgr"})
+    {
+        std::string value;
+        std::ifstream(source.string() + ".osrm" + suffix) >> value;
+        BOOST_CHECK_EQUAL(value, "original");
+        BOOST_CHECK(!std::filesystem::exists(destination.string() + ".osrm" + suffix));
+    }
+    BOOST_CHECK(std::filesystem::exists(destination.string() + ".osrm.edges"));
+    std::filesystem::remove_all(root);
+}
+
 BOOST_AUTO_TEST_SUITE_END()
