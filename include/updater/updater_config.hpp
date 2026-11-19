@@ -31,6 +31,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "storage/io_config.hpp"
 #include "storage/storage_config.hpp"
 
+#include <ctime>
 #include <filesystem>
 #include <string>
 

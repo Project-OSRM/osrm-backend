@@ -361,3 +361,8 @@ After the run finishes, check:
 On a tag checkout (e.g. `v26.4.0`), the Python version resolves cleanly to
 `26.4.0`, matching the `package.json` version that `release-monthly.yml`
 committed when creating the tag.
+
+## Public preprocessing headers
+
+Install public headers with `cmake --install build --component Development`.
+CTest compiles a consumer against the installed customization headers.
