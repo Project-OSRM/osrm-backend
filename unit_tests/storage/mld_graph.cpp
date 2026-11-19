@@ -1,4 +1,5 @@
 #include "customizer/files.hpp"
+#include "partitioner/files.hpp"
 
 #include "../common/temporary_file.hpp"
 
@@ -41,6 +42,11 @@ BOOST_AUTO_TEST_CASE(read_compressed_offsets_into_owned_graph)
     BOOST_REQUIRE(reader.HasEntry("/mld/multilevelgraph/node_blocks/headers"));
     BOOST_CHECK(!reader.HasEntry("/mld/multilevelgraph/node_array"));
 
+    osrm::customizer::MultiLevelEdgeBasedGraphView unbound_view;
+    std::uint32_t view_checksum = 0;
+    BOOST_CHECK_THROW(osrm::customizer::files::readGraph(archive.path, unbound_view, view_checksum),
+                      osrm::util::exception);
+
     Graph restored;
     std::uint32_t restored_checksum = 0;
     osrm::customizer::files::readGraph(archive.path, restored, restored_checksum);
@@ -57,6 +63,25 @@ BOOST_AUTO_TEST_CASE(read_compressed_offsets_into_owned_graph)
         BOOST_CHECK_EQUAL(restored.GetTarget(edge), original.GetTarget(edge));
         BOOST_CHECK_EQUAL(restored.GetEdgeData(edge).turn_id, original.GetEdgeData(edge).turn_id);
     }
+}
+
+BOOST_AUTO_TEST_CASE(rejects_unbound_compressed_partition_view)
+{
+    const osrm::partitioner::MultiLevelPartition original{{std::vector<CellID>(512, 0)}, {1}};
+    TemporaryFile archive;
+    osrm::partitioner::files::writePartition(archive.path, original);
+    const osrm::storage::tar::FileReader reader(archive.path,
+                                                osrm::storage::tar::FileReader::VerifyFingerprint);
+    BOOST_REQUIRE(reader.HasEntry("/mld/multilevelpartition/partition_blocks/headers"));
+
+    osrm::partitioner::MultiLevelPartitionView unbound_view;
+    BOOST_CHECK_THROW(osrm::partitioner::files::readPartition(archive.path, unbound_view),
+                      osrm::util::exception);
+
+    osrm::partitioner::MultiLevelPartitionView::LevelData levels;
+    osrm::partitioner::MultiLevelPartitionView plain_view(&levels, {}, {});
+    BOOST_CHECK_THROW(osrm::partitioner::files::readPartition(archive.path, plain_view),
+                      osrm::util::exception);
 }
 
 BOOST_AUTO_TEST_SUITE_END()
