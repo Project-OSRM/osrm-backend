@@ -11,10 +11,11 @@
 // at whitespace.
 namespace boost::program_options
 {
-inline void validate(boost::any &v,
-                     const std::vector<std::string> &values,
-                     std::filesystem::path * /*target_type*/,
-                     int /*unused*/)
+template <>
+inline void validate<std::filesystem::path, char>(boost::any &v,
+                                                  const std::vector<std::string> &values,
+                                                  std::filesystem::path * /*target_type*/,
+                                                  long /*unused*/)
 {
     validators::check_first_occurrence(v);
     const std::string &s = validators::get_single_string(values);
