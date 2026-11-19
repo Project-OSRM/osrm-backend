@@ -204,6 +204,8 @@ link it automatically. Static Python wheels link this code into their binaries.
 
 ## Running tests
 
+Parallel library tests lock their shared generated data during builds and reads.
+
 Build the test data (requires the package to be installed so the `osrm`
 executables are available):
 
@@ -372,11 +374,3 @@ committed when creating the tag.
 
 Install public headers with `cmake --install build --component Development`.
 CTest compiles a consumer against the installed customization headers.
-
-## Native libraries and headers
-
-The storage library `osrm_store` owns the exception types shared by routing and
-preprocessing. CMake targets and `libosrm.pc` link it automatically. Static
-Python wheels link storage and exception code into their binaries.
-
-Parallel library tests lock their shared generated data during builds and reads.

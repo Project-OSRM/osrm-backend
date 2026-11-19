@@ -670,7 +670,6 @@ install(TARGETS osrm-datastore DESTINATION bin)
 install(TARGETS osrm-routed DESTINATION bin)
 
 install(TARGETS osrm DESTINATION lib)
-install(TARGETS osrm_compact DESTINATION lib)
 install(TARGETS osrm_extract DESTINATION lib)
 install(TARGETS osrm_partition DESTINATION lib)
 install(TARGETS osrm_customize DESTINATION lib)
