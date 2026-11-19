@@ -163,11 +163,13 @@ int Customizer::Run(const CustomizationConfig &config)
     }
 
     TIMER_START(writing_mld_data);
-    std::unordered_map<std::string, std::vector<CellMetric>> metric_exclude_classes = {
-        {properties.GetWeightName(), std::move(metrics)},
-    };
-    files::writeCellMetrics(
-        config.GetOutputPath(".osrm.cell_metrics"), metric_exclude_classes, storage.GetCellData());
+    {
+        std::unordered_map<std::string, std::vector<CellMetric>> metric_exclude_classes;
+        metric_exclude_classes.emplace(properties.GetWeightName(), std::move(metrics));
+        files::writeCellMetrics(config.GetOutputPath(".osrm.cell_metrics"),
+                                metric_exclude_classes,
+                                storage.GetCellData());
+    }
     TIMER_STOP(writing_mld_data);
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 

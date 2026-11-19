@@ -69,8 +69,8 @@ int Contractor::Run()
     util::Log() << "Contracted graph has " << query_graph.GetNumberOfEdges() << " edges.";
     util::Log() << "Contraction took " << TIMER_SEC(contraction) << " sec";
 
-    std::unordered_map<std::string, ContractedMetric> metrics = {
-        {metric_name, {std::move(query_graph), std::move(edge_filters)}}};
+    std::unordered_map<std::string, ContractedMetric> metrics;
+    metrics.emplace(metric_name, ContractedMetric{std::move(query_graph), std::move(edge_filters)});
 
     files::writeGraph(config.GetOutputPath(".osrm.hsgr"), metrics, connectivity_checksum);
 
