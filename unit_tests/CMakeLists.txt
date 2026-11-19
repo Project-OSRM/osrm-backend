@@ -173,6 +173,13 @@ target_link_libraries(contractor-tests osrm_contract ${CONTRACTOR_LIBRARIES} ${B
 target_link_libraries(storage-tests osrm_store ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 
 # Register unit test executables with CTest.
+add_test(NAME installed-preprocessing-headers
+    COMMAND ${CMAKE_COMMAND}
+        -DOSRM_BUILD_DIR=${CMAKE_BINARY_DIR}
+        -DOSRM_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -DOSRM_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/install/check_headers.cmake)
+
 # Each test uses a fixture so that ctest automatically builds the executable
 # (and test data where needed) before running it.
 set(TEST_TARGETS
