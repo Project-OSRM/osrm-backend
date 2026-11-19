@@ -61,6 +61,16 @@ struct UpdaterConfig final : storage::IOConfig
     void UseDefaultOutputNames(const std::filesystem::path &base)
     { IOConfig::UseDefaultOutputNames(base); }
 
+    std::filesystem::path GetOutputPath(const std::string &extension) const
+    {
+        return output_path.empty() ? GetPath(extension)
+                                   : std::filesystem::path(output_path.string() + extension);
+    }
+
+    bool updatesTurnPenalties() const
+    { return valid_now != 0 || !turn_penalty_lookup_paths.empty(); }
+
+    std::filesystem::path output_path;
     double log_edge_updates_factor = 0.0;
     std::time_t valid_now;
 
