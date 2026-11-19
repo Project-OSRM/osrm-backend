@@ -1,6 +1,7 @@
 #include "storage/storage.hpp"
 
 #include "storage/io.hpp"
+#include "storage/serialization.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
