@@ -618,7 +618,11 @@ jobs:
         run: |
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             sudo apt-get update -y
-            sudo apt-get install -y ${CCOMPILER} ${CXXCOMPILER} ccache
+            compiler_packages=("${CCOMPILER}" ccache)
+            if [[ "${CXXCOMPILER}" != clang++* ]]; then
+              compiler_packages+=("${CXXCOMPILER}")
+            fi
+            sudo apt-get install -y "${compiler_packages[@]}"
             if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
               sudo apt-get install -y lcov llvm-20
             fi
