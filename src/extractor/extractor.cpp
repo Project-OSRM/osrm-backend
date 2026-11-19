@@ -401,7 +401,7 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         for (const auto *suffix :
              {".osrm.partition", ".osrm.cells", ".osrm.mldgr", ".osrm.cell_metrics", ".osrm.hsgr"})
         {
-            std::filesystem::remove(config.GetPath(suffix));
+            std::filesystem::remove(config.base_path.string() + suffix);
         }
 
         // write .timestamp data file

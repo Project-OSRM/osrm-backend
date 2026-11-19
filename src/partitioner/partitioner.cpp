@@ -131,9 +131,10 @@ int Partitioner::Run(const PartitionerConfig &config)
         util::Log(logWARNING)
             << "Removed stale .osrm.hsgr. Re-run osrm-contract after osrm-partition.";
     }
+    const auto &output_path = config.output_path.empty() ? config.base_path : config.output_path;
     for (const auto *suffix : {".osrm.mldgr", ".osrm.cell_metrics"})
     {
-        std::filesystem::remove(config.GetOutputPath(suffix));
+        std::filesystem::remove(output_path.string() + suffix);
     }
 
     {
