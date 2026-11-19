@@ -11,8 +11,7 @@ namespace osrm::engine::datafacade
 
 /**
  * This allocator uses a process-local memory block to load
- * data into.  The structure and layout is the same as when using
- * shared memory.
+ * data into. Its layout matches shared memory.
  * This class holds a unique_ptr to the memory block, so it
  * is auto-freed upon destruction.
  */

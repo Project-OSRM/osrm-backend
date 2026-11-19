@@ -370,17 +370,6 @@ inline auto make_filtered_cell_metric_view(const SharedDataIndex &index,
     return customizer::CellMetricView{weights, durations, distances, {}};
 }
 
-inline auto make_cell_metric_view(const SharedDataIndex &index, const std::string &name)
-{
-    std::vector<std::string> metric_prefixes;
-    index.List(name + "/exclude/", std::back_inserter(metric_prefixes));
-    std::vector<customizer::CellMetricView> metrics;
-    metrics.reserve(metric_prefixes.size());
-    for (std::size_t i = 0; i < metric_prefixes.size(); ++i)
-        metrics.push_back(make_filtered_cell_metric_view(index, name, i));
-    return metrics;
-}
-
 inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std::string &name)
 {
     util::vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry> node_list;

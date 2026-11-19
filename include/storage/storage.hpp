@@ -58,7 +58,6 @@ class Storage
     std::string PopulateLayoutWithOpenAreaRTree(storage::BaseDataLayout &layout);
     std::vector<std::pair<bool, std::filesystem::path>> GetUpdatableFiles();
     std::vector<std::pair<bool, std::filesystem::path>> GetStaticFiles();
-    bool hasNativeTurnData() const { return m_native_turn_data; }
 
   private:
     StorageConfig config;

@@ -30,9 +30,8 @@ class ExternalProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
   public:
     using Facade = DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
-    ExternalProvider(const storage::StorageConfig &config, bool share_cell_metrics = false)
-        : facade_factory(
-              std::make_shared<datafacade::MMapMemoryAllocator>(config, share_cell_metrics))
+    explicit ExternalProvider(const storage::StorageConfig &config)
+        : facade_factory(std::make_shared<datafacade::MMapMemoryAllocator>(config))
     {
     }
 
@@ -51,7 +50,7 @@ class ImmutableProvider final : public DataFacadeProvider<AlgorithmT, FacadeT>
   public:
     using Facade = DataFacadeProvider<AlgorithmT, FacadeT>::Facade;
 
-    ImmutableProvider(const storage::StorageConfig &config)
+    explicit ImmutableProvider(const storage::StorageConfig &config)
         : facade_factory(std::make_shared<datafacade::ProcessMemoryAllocator>(config))
     {
     }

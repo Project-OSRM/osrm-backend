@@ -530,13 +530,11 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
                               config.GetPath(".osrm.edges").string());
 }
 
-void Storage::PopulateUpdatableData(const SharedDataIndex &index, bool load_cell_metrics)
+void Storage::PopulateUpdatableData(const SharedDataIndex &index)
 {
     for (const auto &[required, path] : GetUpdatableFiles())
     {
         (void)required;
-        if (!load_cell_metrics && path == config.GetPath(".osrm.cell_metrics"))
-            continue;
         if (std::filesystem::exists(path))
             populateArchive(index, path);
     }

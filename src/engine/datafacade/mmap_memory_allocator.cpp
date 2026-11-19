@@ -1,7 +1,4 @@
 #include "engine/datafacade/mmap_memory_allocator.hpp"
-#include "engine/datafacade/shared_cell_metrics.hpp"
-
-#include "customizer/shared_cell_metrics.hpp"
 
 #include "storage/block.hpp"
 #include "storage/compact_dataset.hpp"
@@ -15,8 +12,7 @@
 namespace osrm::engine::datafacade
 {
 
-MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config,
-                                         bool share_cell_metrics)
+MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
 {
     (void)storage::isCompactDataset(config.base_path);
     storage::Storage storage(config);
@@ -56,14 +52,8 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config,
     auto updatable_files = storage.GetUpdatableFiles();
     files.insert(files.end(), updatable_files.begin(), updatable_files.end());
 
-    std::string metric_name;
-    if (share_cell_metrics && !storage.hasNativeTurnData())
-        shared_cell_metrics = makeSharedCellMetrics(config, metric_name);
-
     for (const auto &file : files)
     {
-        if (shared_cell_metrics && file.second == config.GetPath(".osrm.cell_metrics"))
-            continue;
         if (std::filesystem::exists(file.second))
         {
             std::unique_ptr<storage::BaseDataLayout> layout =
@@ -75,9 +65,6 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config,
             allocated_regions.push_back({const_cast<char *>(data), std::move(layout)});
         }
     }
-    if (shared_cell_metrics)
-        appendSharedCellMetrics(allocated_regions, *shared_cell_metrics, metric_name);
-
     index = storage::SharedDataIndex{std::move(allocated_regions)};
 }
 
