@@ -257,6 +257,11 @@ inline auto make_intersection_bearings_view(const SharedDataIndex &index, const 
     util::RangeTable<16, storage::Ownership::View> bearing_range_table(
         bearing_offsets, bearing_blocks, static_cast<unsigned>(bearing_values.size()));
 
+    if (index.HasBlock(name + "/node_to_class_id16"))
+        return extractor::IntersectionBearingsView{
+            bearing_values,
+            make_vector_view<std::uint16_t>(index, name + "/node_to_class_id16"),
+            bearing_range_table};
     auto bearing_class_id = make_vector_view<BearingClassID>(index, name + "/node_to_class_id");
     return extractor::IntersectionBearingsView{
         bearing_values, bearing_class_id, bearing_range_table};

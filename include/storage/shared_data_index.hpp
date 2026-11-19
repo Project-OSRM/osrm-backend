@@ -24,6 +24,7 @@ class SharedDataIndex
     };
 
     SharedDataIndex() = default;
+    bool HasBlock(const std::string &name) const { return block_to_region.contains(name); }
     SharedDataIndex(std::vector<AllocatedRegion> regions_) : regions(std::move(regions_))
     {
         // Build mapping from block name to region

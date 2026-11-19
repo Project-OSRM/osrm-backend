@@ -25,8 +25,25 @@ inline void read(storage::tar::FileReader &reader,
                  detail::IntersectionBearingsContainer<Ownership> &intersection_bearings)
 {
     storage::serialization::read(reader, name + "/bearing_values", intersection_bearings.values_);
-    storage::serialization::read(
-        reader, name + "/node_to_class_id", intersection_bearings.node_to_class_id_);
+    if (reader.HasEntry(name + "/node_to_class_id16"))
+    {
+        storage::serialization::read(
+            reader, name + "/node_to_class_id16", intersection_bearings.packed_classes_);
+        if constexpr (Ownership != storage::Ownership::View)
+        {
+            intersection_bearings.node_to_class_id_.resize(
+                intersection_bearings.packed_classes_.size());
+            for (std::size_t i = 0; i < intersection_bearings.packed_classes_.size(); ++i)
+                intersection_bearings.node_to_class_id_[i] =
+                    intersection_bearings.packed_classes_[i] == 65535
+                        ? 0xffffffff
+                        : intersection_bearings.packed_classes_[i];
+            intersection_bearings.packed_classes_.clear();
+        }
+    }
+    else
+        storage::serialization::read(
+            reader, name + "/node_to_class_id", intersection_bearings.node_to_class_id_);
     util::serialization::read(
         reader, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table_);
 }
@@ -37,8 +54,28 @@ inline void write(storage::tar::FileWriter &writer,
                   const detail::IntersectionBearingsContainer<Ownership> &intersection_bearings)
 {
     storage::serialization::write(writer, name + "/bearing_values", intersection_bearings.values_);
-    storage::serialization::write(
-        writer, name + "/node_to_class_id", intersection_bearings.node_to_class_id_);
+    if (!intersection_bearings.packed_classes_.empty())
+    {
+        storage::serialization::write(
+            writer, name + "/node_to_class_id16", intersection_bearings.packed_classes_);
+        util::serialization::write(
+            writer, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table_);
+        return;
+    }
+    const auto &classes = intersection_bearings.node_to_class_id_;
+    const auto narrow =
+        std::all_of(classes.begin(),
+                    classes.end(),
+                    [](auto value) { return value == 0xffffffff || value < 65535; });
+    if (narrow)
+    {
+        std::vector<std::uint16_t> packed(classes.size());
+        for (std::size_t i = 0; i < classes.size(); ++i)
+            packed[i] = classes[i] == 0xffffffff ? 65535 : classes[i];
+        storage::serialization::write(writer, name + "/node_to_class_id16", packed);
+    }
+    else
+        storage::serialization::write(writer, name + "/node_to_class_id", classes);
     util::serialization::write(
         writer, name + "/class_id_to_ranges", intersection_bearings.class_id_to_ranges_table_);
 }

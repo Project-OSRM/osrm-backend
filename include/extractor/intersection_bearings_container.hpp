@@ -8,6 +8,7 @@
 #include "util/range_table.hpp"
 #include "util/vector_view.hpp"
 
+#include <limits>
 #include <numeric>
 
 namespace osrm::extractor
@@ -74,10 +75,23 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer
     {
     }
 
+    IntersectionBearingsContainer(Vector<DiscreteBearing> values,
+                                  Vector<std::uint16_t> packed_classes,
+                                  RangeTable<16> ranges)
+        requires(Ownership == storage::Ownership::View)
+        : values_(std::move(values)), class_id_to_ranges_table_(std::move(ranges)),
+          packed_classes_(std::move(packed_classes))
+    {
+    }
+
     // Returns the bearing class for an intersection node
     util::guidance::BearingClass GetBearingClass(const NodeID node) const
     {
-        auto class_id = node_to_class_id_[node];
+        const auto class_id =
+            packed_classes_.empty()
+                ? node_to_class_id_[node]
+                : (packed_classes_[node] == 65535 ? std::numeric_limits<BearingClassID>::max()
+                                                  : BearingClassID(packed_classes_[node]));
         auto range = class_id_to_ranges_table_.GetRange(class_id);
         util::guidance::BearingClass result;
         std::for_each(values_.begin() + range.front(),
@@ -98,6 +112,7 @@ template <storage::Ownership Ownership> class IntersectionBearingsContainer
     Vector<DiscreteBearing> values_;
     Vector<BearingClassID> node_to_class_id_;
     RangeTable<16> class_id_to_ranges_table_;
+    Vector<std::uint16_t> packed_classes_;
 };
 } // namespace detail
 
