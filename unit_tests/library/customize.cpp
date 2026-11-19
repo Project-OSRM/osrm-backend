@@ -1,6 +1,7 @@
 #include "../common/temporary_file.hpp"
 #include "coordinates.hpp"
 #include "equal_json.hpp"
+#include "extractor/edge_based_graph_factory.hpp"
 #include "extractor/files.hpp"
 #include "guidance/compact_turn_data.hpp"
 #include "storage/view_factory.hpp"
@@ -166,9 +167,30 @@ BOOST_FIXTURE_TEST_CASE(redirected_output_uses_the_same_compact_format, Customiz
 {
     auto config = getConfig();
     config.output_path = Root / "other";
+    std::ofstream(Source.string() + ".query") << "source";
+    std::ofstream(config.output_path.string() + ".osrm.query") << "destination";
+
+    std::vector<osrm::util::Coordinate> coordinates;
+    osrm::extractor::PackedOSMIDs osm_nodes;
+    osrm::extractor::files::readNodes(Source.string() + ".nbg_nodes", coordinates, osm_nodes);
+    std::vector<osrm::extractor::lookup::TurnIndexBlock> turns;
+    osrm::extractor::files::readTurnPenaltiesIndex(Source.string() + ".turn_penalties_index",
+                                                   turns);
+    BOOST_REQUIRE(!turns.empty());
+    const auto turn = turns.front();
+    const auto penalty = Root / "penalty.csv";
+    std::ofstream(penalty) << osm_nodes[turn.from_id] << ',' << osm_nodes[turn.via_id] << ','
+                           << osm_nodes[turn.to_id] << ",37\n";
+    config.updater_config.turn_penalty_lookup_paths = {penalty.string()};
     osrm::customize(config);
+
+    BOOST_CHECK(std::filesystem::exists(Source.string() + ".query"));
+    BOOST_CHECK(!std::filesystem::exists(config.output_path.string() + ".osrm.query"));
     osrm::storage::tar::FileReader graph(config.output_path.string() + ".osrm.mldgr",
                                          osrm::storage::tar::FileReader::VerifyFingerprint);
     BOOST_CHECK(graph.HasEntry("/mld/multilevelgraph/edge_array6"));
+    std::vector<TurnPenalty> durations;
+    osrm::storage::serialization::read(graph, "/common/turn_penalty/duration", durations);
+    BOOST_CHECK(std::ranges::find(durations, TurnPenalty{370}) != durations.end());
 }
 BOOST_AUTO_TEST_SUITE_END()

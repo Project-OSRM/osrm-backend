@@ -3,6 +3,7 @@
 
 #include "extractor/files.hpp"
 #include "guidance/compact_turn_data.hpp"
+#include "updater/updater_config.hpp"
 
 namespace osrm::guidance
 {
@@ -21,12 +22,17 @@ struct QueryTurnData
     }
 };
 
-inline QueryTurnData makeQueryTurnData(const std::filesystem::path &base)
+inline QueryTurnData makeQueryTurnData(const updater::UpdaterConfig &config)
 {
-    auto original = readOriginalTurnData(base.string() + ".osrm.edges");
+    auto original = readOriginalTurnData(config.GetPath(".osrm.edges"));
     std::vector<TurnPenalty> weights, durations;
-    extractor::files::readTurnWeightPenalty(base.string() + ".osrm.turn_weight_penalties", weights);
-    extractor::files::readTurnDurationPenalty(base.string() + ".osrm.turn_duration_penalties",
+    const auto penalty_path = [&](const std::string &extension)
+    {
+        return config.updatesTurnPenalties() ? config.GetOutputPath(extension)
+                                             : config.GetPath(extension);
+    };
+    extractor::files::readTurnWeightPenalty(penalty_path(".osrm.turn_weight_penalties"), weights);
+    extractor::files::readTurnDurationPenalty(penalty_path(".osrm.turn_duration_penalties"),
                                               durations);
     if (weights.size() != original.Mapping.size() || durations.size() != weights.size())
         throw util::exception("Turn costs and original identities do not agree");

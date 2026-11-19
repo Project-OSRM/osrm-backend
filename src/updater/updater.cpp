@@ -533,7 +533,6 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                         std::vector<EdgeWeight> &node_weights,
                                         std::uint32_t &connectivity_checksum) const
 {
-    storage::requireMutableDataset(config.base_path);
     std::vector<EdgeDuration> node_durations(node_weights.size());
     return LoadAndUpdateEdgeExpandedGraph(
         edge_based_edge_list, node_weights, node_durations, connectivity_checksum);
@@ -546,7 +545,10 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                         std::uint32_t &connectivity_checksum) const
 {
     storage::requireMutableDataset(config.base_path);
-    storage::invalidateQueryData(config.base_path);
+    const auto &output_base = config.output_path.empty() ? config.base_path : config.output_path;
+    if (!config.output_path.empty())
+        storage::requireMutableDataset(output_base);
+    storage::invalidateQueryData(output_base);
     TIMER_START(load_edges);
 
     EdgeID number_of_edge_based_nodes = 0;

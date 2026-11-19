@@ -2,8 +2,6 @@
 #include "contractor/files.hpp"
 #include "contractor/graph_contractor.hpp"
 #include "contractor/graph_contractor_adaptors.hpp"
-#include "storage/compact_dataset.hpp"
-
 #include "extractor/files.hpp"
 
 #include "updater/updater.hpp"
@@ -23,12 +21,6 @@ namespace osrm::contractor
 
 int Contractor::Run()
 {
-    storage::requireMutableDataset(config.base_path);
-    if (!config.output_path.empty())
-        storage::requireMutableDataset(config.output_path);
-    storage::invalidateQueryData(config.base_path);
-    if (!config.output_path.empty())
-        storage::invalidateQueryData(config.output_path);
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
 
@@ -46,12 +38,12 @@ int Contractor::Run()
 
         auto updater_config = config.updater_config;
         updater_config.output_path = config.output_path;
-        updater::Updater updater(std::move(updater_config));
+        updater::Updater updater(updater_config);
         std::uint32_t connectivity_checksum = 0;
         EdgeID number_of_edge_based_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
             edge_based_edge_list, node_weights, connectivity_checksum);
 
-        auto turns = guidance::makeQueryTurnData(config.base_path);
+        auto turns = guidance::makeQueryTurnData(updater_config);
         // Contracting the edge-expanded graph
 
         TIMER_START(contraction);

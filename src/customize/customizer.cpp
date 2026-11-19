@@ -74,15 +74,14 @@ void printUnreachableStatistics(const Partition &partition,
 }
 
 auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
+                                    const updater::UpdaterConfig &updater_config,
                                     const partitioner::MultiLevelPartition &mlp,
                                     std::vector<EdgeWeight> &node_weights,
                                     std::vector<EdgeDuration> &node_durations,
                                     std::vector<EdgeDistance> &node_distances,
                                     std::uint32_t &connectivity_checksum)
 {
-    auto updater_config = config.updater_config;
-    updater_config.output_path = config.output_path;
-    updater::Updater updater(std::move(updater_config));
+    updater::Updater updater(updater_config);
 
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
     EdgeID num_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
@@ -132,8 +131,15 @@ int customizeDataset(const CustomizationConfig &config)
     std::vector<EdgeDuration> node_durations; // TODO: remove when durations are optional
     std::vector<EdgeDistance> node_distances; // TODO: remove when distances are optional
     std::uint32_t connectivity_checksum = 0;
-    auto graph = LoadAndUpdateEdgeExpandedGraph(
-        config, mlp, node_weights, node_durations, node_distances, connectivity_checksum);
+    auto updater_config = config.updater_config;
+    updater_config.output_path = config.output_path;
+    auto graph = LoadAndUpdateEdgeExpandedGraph(config,
+                                                updater_config,
+                                                mlp,
+                                                node_weights,
+                                                node_durations,
+                                                node_distances,
+                                                connectivity_checksum);
     BOOST_ASSERT(graph.GetNumberOfNodes() == node_weights.size());
     std::for_each(
         node_weights.begin(), node_weights.end(), [](auto &w) { w &= EdgeWeight{0x7fffffff}; });
@@ -176,7 +182,7 @@ int customizeDataset(const CustomizationConfig &config)
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
-    auto turns = guidance::makeQueryTurnData(config.base_path);
+    auto turns = guidance::makeQueryTurnData(updater_config);
     MultiLevelEdgeBasedGraph shaved_graph{std::move(graph),
                                           std::move(node_weights),
                                           std::move(node_durations),
@@ -192,15 +198,6 @@ int customizeDataset(const CustomizationConfig &config)
 
 } // namespace
 
-int Customizer::Run(const CustomizationConfig &config)
-{
-    storage::requireMutableDataset(config.base_path);
-    if (!config.output_path.empty())
-        storage::requireMutableDataset(config.output_path);
-    storage::invalidateQueryData(config.base_path);
-    if (!config.output_path.empty())
-        storage::invalidateQueryData(config.output_path);
-    return customizeDataset(config);
-}
+int Customizer::Run(const CustomizationConfig &config) { return customizeDataset(config); }
 
 } // namespace osrm::customizer
