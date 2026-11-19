@@ -21,8 +21,15 @@ inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  detail::MultiLevelPartitionImpl<Ownership> &mlp)
 {
+    const bool has_partition_blocks = reader.HasEntry(name + "/partition_blocks/headers");
+    if constexpr (Ownership == storage::Ownership::View)
+    {
+        if (!mlp.level_data || (has_partition_blocks && !mlp.partition_count))
+            throw util::exception("Partition view storage is not bound for the archive layout");
+    }
+
     reader.ReadInto(name + "/level_data", *mlp.level_data);
-    if (reader.HasEntry(name + "/partition_blocks/headers"))
+    if (has_partition_blocks)
     {
         if constexpr (Ownership != storage::Ownership::View)
             storage::readCompactVector(reader, name + "/partition", mlp.partition);

@@ -74,6 +74,9 @@ inline void read(storage::tar::FileReader &reader,
         }
         else
         {
+            if (!graph.node_count)
+                throw util::exception(
+                    "Graph view storage is not bound for compressed node offsets");
             storage::serialization::read(reader, name + "/node_blocks/headers", graph.node_headers);
             storage::serialization::read(reader, name + "/node_blocks/words", graph.node_words);
             reader.ReadInto(name + "/node_blocks/count", *graph.node_count);
