@@ -329,6 +329,14 @@ inline auto make_filtered_cell_metric_view(const SharedDataIndex &index,
     customizer::CellMetricView cell_metric;
 
     auto prefix = name + "/exclude/" + std::to_string(exclude_index);
+    if (index.HasBlock(prefix + "/cell_value_offsets"))
+    {
+        auto weights = make_vector_view<EdgeWeight>(index, name + "/shared/weights");
+        auto durations = make_vector_view<EdgeDuration>(index, name + "/shared/durations");
+        auto distances = make_vector_view<EdgeDistance>(index, name + "/shared/distances");
+        auto offsets = make_vector_view<std::uint64_t>(index, prefix + "/cell_value_offsets");
+        return customizer::CellMetricView{weights, durations, distances, offsets};
+    }
     auto weights_block_id = prefix + "/weights";
     auto durations_block_id = prefix + "/durations";
     auto distances_block_id = prefix + "/distances";
@@ -337,29 +345,18 @@ inline auto make_filtered_cell_metric_view(const SharedDataIndex &index,
     auto durations = make_vector_view<EdgeDuration>(index, durations_block_id);
     auto distances = make_vector_view<EdgeDistance>(index, distances_block_id);
 
-    return customizer::CellMetricView{weights, durations, distances};
+    return customizer::CellMetricView{weights, durations, distances, {}};
 }
 
 inline auto make_cell_metric_view(const SharedDataIndex &index, const std::string &name)
 {
-    std::vector<customizer::CellMetricView> cell_metric_excludes;
-
-    std::vector<std::string> metric_prefix_names;
-    index.List(name + "/exclude/", std::back_inserter(metric_prefix_names));
-    for (const auto &prefix : metric_prefix_names)
-    {
-        auto weights_block_id = prefix + "/weights";
-        auto durations_block_id = prefix + "/durations";
-        auto distances_block_id = prefix + "/distances";
-
-        auto weights = make_vector_view<EdgeWeight>(index, weights_block_id);
-        auto durations = make_vector_view<EdgeDuration>(index, durations_block_id);
-        auto distances = make_vector_view<EdgeDistance>(index, distances_block_id);
-
-        cell_metric_excludes.push_back(customizer::CellMetricView{weights, durations, distances});
-    }
-
-    return cell_metric_excludes;
+    std::vector<std::string> metric_prefixes;
+    index.List(name + "/exclude/", std::back_inserter(metric_prefixes));
+    std::vector<customizer::CellMetricView> metrics;
+    metrics.reserve(metric_prefixes.size());
+    for (std::size_t i = 0; i < metric_prefixes.size(); ++i)
+        metrics.push_back(make_filtered_cell_metric_view(index, name, i));
+    return metrics;
 }
 
 inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std::string &name)

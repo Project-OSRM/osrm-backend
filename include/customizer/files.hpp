@@ -2,6 +2,7 @@
 #define OSRM_CUSTOMIZER_FILES_HPP
 
 #include "customizer/serialization.hpp"
+#include "customizer/shared_cell_metrics.hpp"
 
 #include "storage/tar.hpp"
 
@@ -33,10 +34,28 @@ inline void readCellMetrics(const std::filesystem::path &path,
         auto num_exclude_classes = reader.ReadElementCount64(prefix);
         metric_exclude_classes.resize(num_exclude_classes);
 
+        const auto shared_prefix = "/mld/metrics/" + metric_name + "/shared";
         auto id = 0;
         for (auto &metric : metric_exclude_classes)
         {
-            serialization::read(reader, prefix + "/" + std::to_string(id++), metric);
+            const auto exclude_prefix = prefix + "/" + std::to_string(id);
+            if (reader.HasEntry(shared_prefix + "/weights"))
+            {
+                if (std::is_same_v<CellMetric, CellMetricT> || id == 0)
+                {
+                    storage::serialization::read(
+                        reader, shared_prefix + "/weights", metric.weights);
+                    storage::serialization::read(
+                        reader, shared_prefix + "/durations", metric.durations);
+                    storage::serialization::read(
+                        reader, shared_prefix + "/distances", metric.distances);
+                }
+                storage::serialization::read(
+                    reader, exclude_prefix + "/cell_value_offsets", metric.cell_value_offsets);
+            }
+            else
+                serialization::read(reader, exclude_prefix, metric);
+            ++id;
         }
     }
 }
@@ -45,7 +64,8 @@ inline void readCellMetrics(const std::filesystem::path &path,
 template <typename CellMetricT>
 inline void
 writeCellMetrics(const std::filesystem::path &path,
-                 const std::unordered_map<std::string, std::vector<CellMetricT>> &metrics)
+                 const std::unordered_map<std::string, std::vector<CellMetricT>> &metrics,
+                 std::span<const partitioner::CellStorage::CellData> cells)
 {
     static_assert(std::is_same<CellMetricView, CellMetricT>::value ||
                       std::is_same<CellMetric, CellMetricT>::value,
@@ -59,14 +79,19 @@ writeCellMetrics(const std::filesystem::path &path,
         const auto &metric_name = pair.first;
         const auto &metric_exclude_classes = pair.second;
 
-        auto prefix = "/mld/metrics/" + metric_name + "/exclude";
-        writer.WriteElementCount64(prefix, metric_exclude_classes.size());
-
-        auto id = 0;
-        for (auto &exclude_metric : metric_exclude_classes)
-        {
-            serialization::write(writer, prefix + "/" + std::to_string(id++), exclude_metric);
-        }
+        const auto shared = shareCellMetrics(cells, metric_exclude_classes);
+        const auto prefix = "/mld/metrics/" + metric_name;
+        storage::serialization::write(writer, prefix + "/shared/weights", shared.values.weights);
+        storage::serialization::write(
+            writer, prefix + "/shared/durations", shared.values.durations);
+        storage::serialization::write(
+            writer, prefix + "/shared/distances", shared.values.distances);
+        writer.WriteElementCount64(prefix + "/exclude", shared.offsets.size());
+        for (std::size_t i = 0; i < shared.offsets.size(); ++i)
+            storage::serialization::write(writer,
+                                          prefix + "/exclude/" + std::to_string(i) +
+                                              "/cell_value_offsets",
+                                          shared.offsets[i]);
     }
 }
 

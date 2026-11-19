@@ -15,6 +15,7 @@
 #include "customizer/cell_metric.hpp"
 
 #include <ranges>
+#include <span>
 #include <tbb/parallel_sort.h>
 
 #include <algorithm>
@@ -247,6 +248,8 @@ template <storage::Ownership Ownership> class CellStorageImpl
     using Cell = CellImpl<EdgeWeight, EdgeDuration, EdgeDistance>;
     using ConstCell = CellImpl<const EdgeWeight, const EdgeDuration, const EdgeDistance>;
 
+    std::span<const CellData> GetCellData() const { return {cells.data(), cells.size()}; }
+
     CellStorageImpl() {}
 
     template <typename GraphT>
@@ -421,7 +424,13 @@ template <storage::Ownership Ownership> class CellStorageImpl
         const auto offset = level_to_cell_offset[level_index];
         const auto cell_index = offset + id;
         BOOST_ASSERT(cell_index < cells.size());
-        return ConstCell{cells[cell_index],
+        auto data = cells[cell_index];
+        if (!metric.cell_value_offsets.empty())
+        {
+            BOOST_ASSERT(cell_index < metric.cell_value_offsets.size());
+            data.value_offset = metric.cell_value_offsets[cell_index];
+        }
+        return ConstCell{data,
                          metric.weights.data(),
                          metric.durations.data(),
                          metric.distances.data(),
@@ -444,6 +453,7 @@ template <storage::Ownership Ownership> class CellStorageImpl
     Cell GetCell(customizer::CellMetric &metric, LevelID level, CellID id) const
         requires(Ownership == storage::Ownership::Container)
     {
+        BOOST_ASSERT(metric.cell_value_offsets.empty());
         const auto level_index = LevelIDToIndex(level);
         BOOST_ASSERT(level_index < level_to_cell_offset.size());
         const auto offset = level_to_cell_offset[level_index];

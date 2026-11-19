@@ -19,6 +19,7 @@ template <storage::Ownership Ownership> struct CellMetricImpl
     Vector<EdgeWeight> weights;
     Vector<EdgeDuration> durations;
     Vector<EdgeDistance> distances;
+    Vector<std::uint64_t> cell_value_offsets;
 };
 } // namespace detail
 
