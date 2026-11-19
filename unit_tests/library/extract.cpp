@@ -4,7 +4,10 @@
 #include "osrm/extractor.hpp"
 #include "osrm/extractor_config.hpp"
 
+#include "../common/temporary_file.hpp"
+
 #include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <mutex>
 #include <sstream>
@@ -69,6 +72,51 @@ BOOST_AUTO_TEST_CASE(test_extract_with_invalid_config)
     config.requested_num_threads = std::thread::hardware_concurrency();
     BOOST_CHECK_THROW(osrm::extract(config),
                       std::exception); // including osrm::util::exception, osmium::io_error, etc.
+}
+
+BOOST_AUTO_TEST_CASE(exclusion_combinations_cannot_overwrite_profile_properties)
+{
+    const auto root = std::filesystem::temp_directory_path() / random_string(16);
+    std::filesystem::create_directory(root);
+    const auto profile = root / "capacity.lua";
+    {
+        std::ofstream stream(profile);
+        stream << R"(api_version = 4
+return {
+    setup = function()
+        return {
+            properties = { weight_name = 'duration' },
+            classes = { 'a', 'b', 'c', 'd', 'e', 'f', 'g' },
+            excludable = {
+                { a = true }, { b = true }, { c = true }, { d = true },
+                { e = true }, { f = true }, { g = true }
+            }
+        }
+    end,
+    process_way = function(profile, way, result)
+        result.forward_mode = mode.driving
+        result.backward_mode = mode.driving
+        result.forward_speed = 36
+        result.backward_speed = 36
+    end
+}
+)";
+    }
+    osrm::ExtractorConfig config;
+    config.input_path = OSRM_TEST_DATA_DIR "/monaco.osm.pbf";
+    config.UseDefaultOutputNames(root / "capacity.osrm");
+    config.profile_path = profile;
+    config.requested_num_threads = 2;
+    BOOST_CHECK_EXCEPTION(osrm::extract(config),
+                          osrm::exception,
+                          [](const auto &error)
+                          {
+                              return std::string(error.what())
+                                         .find(
+                                             "Only 6 non-empty excludable combinations allowed") !=
+                                     std::string::npos;
+                          });
+    std::filesystem::remove_all(root);
 }
 
 BOOST_AUTO_TEST_CASE(test_extract_with_valid_config)
