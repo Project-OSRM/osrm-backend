@@ -124,6 +124,18 @@ int Partitioner::Run(const PartitionerConfig &config)
     auto permutation = makePermutation(edge_based_graph, partitions);
     renumber(edge_based_graph, permutation);
     renumber(partitions, permutation);
+
+    // Prepared routing graphs and cell metrics refer to the previous node order.
+    if (std::filesystem::remove(config.GetOutputPath(".osrm.hsgr")))
+    {
+        util::Log(logWARNING)
+            << "Removed stale .osrm.hsgr. Re-run osrm-contract after osrm-partition.";
+    }
+    for (const auto *suffix : {".osrm.mldgr", ".osrm.cell_metrics"})
+    {
+        std::filesystem::remove(config.GetOutputPath(suffix));
+    }
+
     {
         renumber(mapping, permutation);
         extractor::files::writeNBGMapping(config.GetOutputPath(".osrm.cnbg_to_ebg").string(),
@@ -179,12 +191,6 @@ int Partitioner::Run(const PartitionerConfig &config)
 
         extractor::files::writeManeuverOverrides(
             output_filename, maneuver_overrides, node_sequences);
-    }
-    if (std::filesystem::exists(config.GetOutputPath(".osrm.hsgr")))
-    {
-        util::Log(logWARNING) << "Found existing .osrm.hsgr file, removing. You need to re-run "
-                                 "osrm-contract after osrm-partition.";
-        std::filesystem::remove(config.GetOutputPath(".osrm.hsgr"));
     }
     TIMER_STOP(renumber);
     util::Log() << "Renumbered data in " << TIMER_SEC(renumber) << " seconds";
