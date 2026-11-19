@@ -43,7 +43,8 @@ inline void readCellMetrics(const std::filesystem::path &path,
             {
                 if (std::is_same_v<CellMetric, CellMetricT> || id == 0)
                 {
-                    storage::serialization::read(reader, shared_prefix + "/weights", metric.weights);
+                    storage::serialization::read(
+                        reader, shared_prefix + "/weights", metric.weights);
                     storage::serialization::read(
                         reader, shared_prefix + "/durations", metric.durations);
                     storage::serialization::read(
