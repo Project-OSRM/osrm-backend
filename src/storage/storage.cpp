@@ -1,16 +1,11 @@
 #include "storage/storage.hpp"
 
 #include "storage/io.hpp"
+#include "storage/serialization.hpp"
 #include "storage/shared_datatype.hpp"
 #include "storage/shared_memory.hpp"
 #include "storage/shared_monitor.hpp"
-#include "storage/view_factory.hpp"
-
-#include "contractor/files.hpp"
-#include "customizer/files.hpp"
-#include "extractor/files.hpp"
-#include "guidance/files.hpp"
-#include "partitioner/files.hpp"
+#include "storage/tar.hpp"
 
 #include "util/exception.hpp"
 #include "util/log.hpp"
@@ -24,6 +19,7 @@
 #include <chrono>
 #include <thread>
 
+#include <algorithm>
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
@@ -77,6 +73,21 @@ RegionHandle setupRegion(SharedRegionRegister &shared_register,
         std::copy_n(encoded_static_layout.data(), encoded_static_layout.size(), shared_memory_ptr);
 
     return RegionHandle{std::move(memory), data_ptr, proj_id};
+}
+
+void populateArchive(const SharedDataIndex &index, const std::filesystem::path &path)
+{
+    tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+    std::vector<tar::FileReader::FileEntry> entries;
+    reader.List(std::back_inserter(entries));
+    for (const auto &entry : entries)
+    {
+        if (entry.name.ends_with(".meta") || entry.name == "/ch/connectivity_checksum" ||
+            entry.name == "/mld/connectivity_checksum" || !index.HasBlock(entry.name))
+            continue;
+        reader.ReadInto(
+            entry.name, index.GetBlockPtr<char>(entry.name), index.GetBlockSize(entry.name));
+    }
 }
 
 bool swapData(Monitor &monitor,
@@ -298,7 +309,8 @@ std::vector<std::pair<bool, std::filesystem::path>> Storage::GetStaticFiles()
         {IS_OPTIONAL, config.GetPath(".osrm.partition")},
         // only present when the profile meshed pedestrian areas
         {IS_OPTIONAL, config.GetPath(".osrm.openareas")},
-        {IS_OPTIONAL, config.GetPath(".osrm.openareas.ramIndex")},
+        {std::filesystem::exists(config.GetPath(".osrm.openareas")),
+         config.GetPath(".osrm.openareas.ramIndex")},
         {IS_REQUIRED, config.GetPath(".osrm.ebg_nodes")},
         {IS_REQUIRED, config.GetPath(".osrm.maneuver_overrides")},
         {IS_REQUIRED, config.GetPath(".osrm.nbg_nodes")},
@@ -435,220 +447,45 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
         std::copy(absolute_path.begin(), absolute_path.end(), path_ptr);
     }
 
-    // Timestamp mark
+    for (const auto &file : GetStaticFiles())
     {
-        auto timestamp_ref = make_timestamp_view(index, "/common/timestamp");
-        std::string ts;
-        extractor::files::readTimestamp(config.GetPath(".osrm.timestamp"), ts);
-        if (!ts.empty())
-        {
-            memcpy(const_cast<char *>(timestamp_ref.data()), ts.data(), ts.size());
-        }
+        if (std::filesystem::exists(file.second))
+            populateArchive(index, file.second);
     }
 
-    // Turn lane data
-    if (config.IsRequiredConfiguredInput(".osrm.tld"))
-    {
-        auto turn_lane_data = make_lane_data_view(index, "/common/turn_lanes");
-        extractor::files::readTurnLaneData(config.GetPath(".osrm.tld"), turn_lane_data);
-    }
-
-    // Turn lane descriptions
-    if (config.IsRequiredConfiguredInput(".osrm.tls"))
-    {
-        auto views = make_turn_lane_description_views(index, "/common/turn_lanes");
-        extractor::files::readTurnLaneDescriptions(
-            config.GetPath(".osrm.tls"), std::get<0>(views), std::get<1>(views));
-    }
-
-    // Load intersection data
-    if (config.IsRequiredConfiguredInput(".osrm.icd"))
-    {
-        auto intersection_bearings_view =
-            make_intersection_bearings_view(index, "/common/intersection_bearings");
-        auto entry_classes = make_entry_classes_view(index, "/common/entry_classes");
-        extractor::files::readIntersections(
-            config.GetPath(".osrm.icd"), intersection_bearings_view, entry_classes);
-    }
-
-    // Name data
-    if (config.IsRequiredConfiguredInput(".osrm.names"))
-    {
-        auto string_table = make_string_table_view(index, "/common/names");
-        extractor::files::readNames(config.GetPath(".osrm.names"), string_table);
-    }
-
-    // Load original edge data
-    if (config.IsRequiredConfiguredInput(".osrm.edges"))
-    {
-        auto turn_data = make_turn_data_view(index, "/common/turn_data");
-
-        auto connectivity_checksum_ptr =
-            index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
-
-        guidance::files::readTurnData(
-            config.GetPath(".osrm.edges"), turn_data, *connectivity_checksum_ptr);
-    }
-
-    // Load edge-based nodes data
-    {
-        auto node_data = make_ebn_data_view(index, "/common/ebg_node_data");
-        extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
-    }
-
-    // Loading list of coordinates
-    {
-        auto views = make_nbn_data_view(index, "/common/nbn_data");
-        extractor::files::readNodes(
-            config.GetPath(".osrm.nbg_nodes"), std::get<0>(views), std::get<1>(views));
-    }
-
-    // store search tree portion of rtree
-    {
-        auto rtree = make_search_tree_view(index, "/common/rtree");
-        extractor::files::readRamIndex(config.GetPath(".osrm.ramIndex"), rtree);
-    }
-
-    // the meshed open areas, and the r-tree that finds them.  Only present when the
-    // profile meshed any, so everything downstream has to cope with their absence.
-    if (std::filesystem::exists(config.GetPath(".osrm.openareas")))
-    {
-        auto views = make_open_areas_view(index, "/common/open_areas");
-        extractor::files::readOpenAreas(config.GetPath(".osrm.openareas"),
-                                        std::get<0>(views),
-                                        std::get<1>(views),
-                                        std::get<2>(views),
-                                        std::get<3>(views));
-
-        auto rtree = make_open_area_tree_view(index, "/common/open_areas/rtree");
-        extractor::files::readRamIndex(
-            config.GetPath(".osrm.openareas.ramIndex"), rtree, "/common/open_areas/rtree");
-    }
-
-    // FIXME we only need to get the weight name
-    std::string metric_name;
-    // load profile properties
-    {
-        const auto profile_properties_ptr =
-            index.GetBlockPtr<extractor::ProfileProperties>("/common/properties");
-        extractor::files::readProfileProperties(config.GetPath(".osrm.properties"),
-                                                *profile_properties_ptr);
-
-        metric_name = profile_properties_ptr->GetWeightName();
-    }
-
-    if (std::filesystem::exists(config.GetPath(".osrm.partition")))
-    {
-        auto mlp = make_partition_view(index, "/mld/multilevelpartition");
-        partitioner::files::readPartition(config.GetPath(".osrm.partition"), mlp);
-    }
-
-    if (std::filesystem::exists(config.GetPath(".osrm.cells")))
-    {
-        auto storage = make_cell_storage_view(index, "/mld/cellstorage");
-        partitioner::files::readCells(config.GetPath(".osrm.cells"), storage);
-    }
-
-    // load maneuver overrides
-    {
-        auto views = make_maneuver_overrides_views(index, "/common/maneuver_overrides");
-        extractor::files::readManeuverOverrides(
-            config.GetPath(".osrm.maneuver_overrides"), std::get<0>(views), std::get<1>(views));
-    }
+    if (config.IsRequiredConfiguredInput(".osrm.edges") &&
+        index.GetBlockSize("/common/connectivity_checksum") != sizeof(std::uint32_t))
+        throw util::exception("Invalid connectivity checksum in " +
+                              config.GetPath(".osrm.edges").string());
 }
 
 void Storage::PopulateUpdatableData(const SharedDataIndex &index)
 {
-    // load compressed geometry
+    for (const auto &file : GetUpdatableFiles())
     {
-        auto segment_data = make_segment_data_view(index, "/common/segment_data");
-        extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
+        if (std::filesystem::exists(file.second))
+            populateArchive(index, file.second);
     }
 
+    for (const auto &[suffix, entry] : {std::pair{".osrm.hsgr", "/ch/connectivity_checksum"},
+                                        std::pair{".osrm.mldgr", "/mld/connectivity_checksum"}})
     {
-        const auto datasources_names_ptr =
-            index.GetBlockPtr<extractor::Datasources>("/common/data_sources_names");
-        extractor::files::readDatasources(config.GetPath(".osrm.datasource_names"),
-                                          *datasources_names_ptr);
-    }
-
-    // load turn weight penalties
-    {
-        auto turn_duration_penalties = make_turn_weight_view(index, "/common/turn_penalty");
-        extractor::files::readTurnWeightPenalty(config.GetPath(".osrm.turn_weight_penalties"),
-                                                turn_duration_penalties);
-    }
-
-    // load turn duration penalties
-    {
-        auto turn_duration_penalties = make_turn_duration_view(index, "/common/turn_penalty");
-        extractor::files::readTurnDurationPenalty(config.GetPath(".osrm.turn_duration_penalties"),
-                                                  turn_duration_penalties);
-    }
-
-    // FIXME we only need to get the weight name
-    std::string metric_name;
-    // load profile properties
-    {
-        extractor::ProfileProperties properties;
-        extractor::files::readProfileProperties(config.GetPath(".osrm.properties"), properties);
-
-        metric_name = properties.GetWeightName();
-    }
-
-    if (std::filesystem::exists(config.GetPath(".osrm.hsgr")))
-    {
-        const std::string metric_prefix = "/ch/metrics/" + metric_name;
-        auto contracted_metric = make_contracted_metric_view(index, metric_prefix);
-        std::unordered_map<std::string, contractor::ContractedMetricView> metrics = {
-            {metric_name, std::move(contracted_metric)}};
-
-        std::uint32_t graph_connectivity_checksum = 0;
-        contractor::files::readGraph(
-            config.GetPath(".osrm.hsgr"), metrics, graph_connectivity_checksum);
-
-        if (config.IsRequiredConfiguredInput("osrm.edges"))
+        const auto path = config.GetPath(suffix);
+        if (!std::filesystem::exists(path))
+            continue;
+        tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+        std::uint32_t checksum;
+        reader.ReadInto(entry, checksum);
+        if (config.IsRequiredConfiguredInput(".osrm.edges"))
         {
-            auto turns_connectivity_checksum =
+            const auto guidance_checksum =
                 *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
-            if (turns_connectivity_checksum != graph_connectivity_checksum)
+            if (checksum != guidance_checksum)
             {
-                throw util::exception(
-                    "Connectivity checksum " + std::to_string(graph_connectivity_checksum) +
-                    " in " + config.GetPath(".osrm.hsgr").string() +
-                    " does not equal to checksum " + std::to_string(turns_connectivity_checksum) +
-                    " in " + config.GetPath(".osrm.edges").string());
-            }
-        }
-    }
-
-    if (std::filesystem::exists(config.GetPath(".osrm.cell_metrics")))
-    {
-        auto exclude_metrics = make_cell_metric_view(index, "/mld/metrics/" + metric_name);
-        std::unordered_map<std::string, std::vector<customizer::CellMetricView>> metrics = {
-            {metric_name, std::move(exclude_metrics)},
-        };
-        customizer::files::readCellMetrics(config.GetPath(".osrm.cell_metrics"), metrics);
-    }
-
-    if (std::filesystem::exists(config.GetPath(".osrm.mldgr")))
-    {
-        auto graph_view = make_multi_level_graph_view(index, "/mld/multilevelgraph");
-        std::uint32_t graph_connectivity_checksum = 0;
-        customizer::files::readGraph(
-            config.GetPath(".osrm.mldgr"), graph_view, graph_connectivity_checksum);
-
-        if (config.IsRequiredConfiguredInput("osrm.edges"))
-        {
-            auto turns_connectivity_checksum =
-                *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
-            if (turns_connectivity_checksum != graph_connectivity_checksum)
-            {
-                throw util::exception(
-                    "Connectivity checksum " + std::to_string(graph_connectivity_checksum) +
-                    " in " + config.GetPath(".osrm.mldgr").string() +
-                    " does not equal to checksum " + std::to_string(turns_connectivity_checksum) +
-                    " in " + config.GetPath(".osrm.edges").string());
+                throw util::exception("Connectivity checksum " + std::to_string(checksum) + " in " +
+                                      path.string() + " does not equal to checksum " +
+                                      std::to_string(guidance_checksum) + " in " +
+                                      config.GetPath(".osrm.edges").string());
             }
         }
     }
