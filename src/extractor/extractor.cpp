@@ -160,6 +160,9 @@ void SetExcludableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
 
         if (mask > 0)
         {
+            if (combination_index >= MAX_EXCLUDABLE_CLASSES)
+                throw util::exception("Only " + std::to_string(MAX_EXCLUDABLE_CLASSES - 1) +
+                                      " non-empty excludable combinations allowed.");
             profile_properties.SetExcludableClasses(combination_index++, mask);
         }
     }
