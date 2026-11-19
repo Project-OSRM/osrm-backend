@@ -361,3 +361,9 @@ After the run finishes, check:
 On a tag checkout (e.g. `v26.4.0`), the Python version resolves cleanly to
 `26.4.0`, matching the `package.json` version that `release-monthly.yml`
 committed when creating the tag.
+
+## Shared builds
+
+The storage library `osrm_store` owns the exception types and logging state
+shared by the CLI, routing, and preprocessing. CMake targets and `libosrm.pc`
+link it automatically. Static Python wheels link this code into their binaries.
