@@ -107,7 +107,19 @@ inline void read(storage::tar::FileReader &reader,
                  detail::EdgeBasedNodeDataContainerImpl<Ownership> &node_data_container)
 {
     // read actual data
-    storage::serialization::read(reader, name + "/nodes", node_data_container.nodes);
+    if (reader.HasEntry(name + "/nodes8"))
+    {
+        storage::serialization::read(reader, name + "/nodes8", node_data_container.packed_nodes);
+        if constexpr (Ownership != storage::Ownership::View)
+        {
+            node_data_container.nodes.resize(node_data_container.packed_nodes.size());
+            for (std::size_t i = 0; i < node_data_container.nodes.size(); ++i)
+                node_data_container.nodes[i] = node_data_container.GetNode(i);
+            node_data_container.packed_nodes.clear();
+        }
+    }
+    else
+        storage::serialization::read(reader, name + "/nodes", node_data_container.nodes);
     storage::serialization::read(
         reader, name + "/annotations", node_data_container.annotation_data);
 }
@@ -117,7 +129,31 @@ inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::EdgeBasedNodeDataContainerImpl<Ownership> &node_data_container)
 {
-    storage::serialization::write(writer, name + "/nodes", node_data_container.nodes);
+    const auto count = node_data_container.NumberOfNodes();
+    bool narrow = true;
+    for (std::size_t i = 0; i < count; ++i)
+    {
+        const auto node = node_data_container.GetNode(i);
+        narrow &= node.geometry_id.id <= 0xffffff && node.component_id.id <= 0x1ffff &&
+                  node.annotation_id <= 0xfffff;
+    }
+    if (narrow)
+    {
+        std::vector<std::uint64_t> packed(count);
+        for (std::size_t i = 0; i < count; ++i)
+        {
+            const auto node = node_data_container.GetNode(i);
+            packed[i] = std::uint64_t(node.geometry_id.id) |
+                        (std::uint64_t(node.geometry_id.forward) << 24) |
+                        (std::uint64_t(node.component_id.id) << 25) |
+                        (std::uint64_t(node.component_id.is_tiny) << 42) |
+                        (std::uint64_t(node.annotation_id) << 43) |
+                        (std::uint64_t(node.segregated) << 63);
+        }
+        storage::serialization::write(writer, name + "/nodes8", packed);
+    }
+    else
+        storage::serialization::write(writer, name + "/nodes", node_data_container.nodes);
     storage::serialization::write(
         writer, name + "/annotations", node_data_container.annotation_data);
 }

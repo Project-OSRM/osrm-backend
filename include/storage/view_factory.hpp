@@ -88,6 +88,10 @@ inline auto make_turn_lane_description_views(const SharedDataIndex &index, const
 
 inline auto make_ebn_data_view(const SharedDataIndex &index, const std::string &name)
 {
+    if (index.HasBlock(name + "/nodes8"))
+        return extractor::EdgeBasedNodeDataView{
+            make_vector_view<std::uint64_t>(index, name + "/nodes8"),
+            make_vector_view<extractor::NodeBasedEdgeAnnotation>(index, name + "/annotations")};
     auto edge_based_node_data = make_vector_view<extractor::EdgeBasedNode>(index, name + "/nodes");
     auto annotation_data =
         make_vector_view<extractor::NodeBasedEdgeAnnotation>(index, name + "/annotations");

@@ -63,23 +63,30 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
     {
     }
 
-    GeometryID GetGeometryID(const NodeID node_id) const { return nodes[node_id].geometry_id; }
+    EdgeBasedNodeDataContainerImpl(Vector<std::uint64_t> packed,
+                                   Vector<NodeBasedEdgeAnnotation> annotations)
+        requires(Ownership == storage::Ownership::View)
+        : annotation_data(std::move(annotations)), packed_nodes(std::move(packed))
+    {
+    }
 
-    ComponentID GetComponentID(const NodeID node_id) const { return nodes[node_id].component_id; }
+    GeometryID GetGeometryID(const NodeID node_id) const { return GetNode(node_id).geometry_id; }
+
+    ComponentID GetComponentID(const NodeID node_id) const { return GetNode(node_id).component_id; }
 
     TravelMode GetTravelMode(const NodeID node_id) const
-    { return annotation_data[nodes[node_id].annotation_id].travel_mode; }
+    { return annotation_data[GetNode(node_id).annotation_id].travel_mode; }
 
     bool IsLeftHandDriving(const NodeID node_id) const
-    { return annotation_data[nodes[node_id].annotation_id].is_left_hand_driving; }
+    { return annotation_data[GetNode(node_id).annotation_id].is_left_hand_driving; }
 
-    bool IsSegregated(const NodeID node_id) const { return nodes[node_id].segregated; }
+    bool IsSegregated(const NodeID node_id) const { return GetNode(node_id).segregated; }
 
     StringViewID GetNameID(const NodeID node_id) const
-    { return annotation_data[nodes[node_id].annotation_id].string_view_id; }
+    { return annotation_data[GetNode(node_id).annotation_id].string_view_id; }
 
     ClassData GetClassData(const NodeID node_id) const
-    { return annotation_data[nodes[node_id].annotation_id].classes; }
+    { return annotation_data[GetNode(node_id).annotation_id].classes; }
 
     friend void serialization::read<Ownership>(storage::tar::FileReader &reader,
                                                const std::string &name,
@@ -93,13 +100,25 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
         requires(Ownership == storage::Ownership::Container)
     { util::inplacePermutation(nodes.begin(), nodes.end(), permutation); }
 
-    NodeID NumberOfNodes() const { return nodes.size(); }
+    NodeID NumberOfNodes() const
+    { return packed_nodes.empty() ? nodes.size() : packed_nodes.size(); }
 
     // the number of annotations differs from the number of nodes, since annotations can be shared
     // between a large set of nodes
     AnnotationID NumberOfAnnotations() const { return annotation_data.size(); }
 
-    EdgeBasedNode const &GetNode(const NodeID node_id) const { return nodes[node_id]; }
+    EdgeBasedNode GetNode(const NodeID node_id) const
+    {
+        if (packed_nodes.empty())
+            return nodes[node_id];
+        const auto word = packed_nodes[node_id];
+        EdgeBasedNode node;
+        node.geometry_id = {unsigned(word & 0xffffff), bool((word >> 24) & 1)};
+        node.component_id = {unsigned((word >> 25) & 0x1ffff), bool((word >> 42) & 1)};
+        node.annotation_id = (word >> 43) & 0xfffff;
+        node.segregated = word >> 63;
+        return node;
+    }
 
     NodeBasedEdgeAnnotation const &GetAnnotation(const AnnotationID annotation) const
     { return annotation_data[annotation]; }
@@ -107,6 +126,7 @@ template <storage::Ownership Ownership> class EdgeBasedNodeDataContainerImpl
   private:
     Vector<EdgeBasedNode> nodes;
     Vector<NodeBasedEdgeAnnotation> annotation_data;
+    Vector<std::uint64_t> packed_nodes;
 };
 } // namespace detail
 
