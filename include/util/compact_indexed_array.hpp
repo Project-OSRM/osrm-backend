@@ -46,7 +46,7 @@ template <typename NodeID, typename Key> class CompactArrayStorage
   public:
     explicit CompactArrayStorage(std::size_t size)
         : m_positions(size ? std::make_unique_for_overwrite<std::uint16_t[]>(size) : nullptr),
-          m_size(size), m_initialized(size / m_block_size + (size % m_block_size != 0), 0)
+          m_size(size), m_block_generations(size / m_block_size + (size % m_block_size != 0))
     {
     }
 
@@ -57,14 +57,11 @@ template <typename NodeID, typename Key> class CompactArrayStorage
 
     Key peek_index(NodeID node) const
     {
-        if (!m_positions)
-        {
-            BOOST_ASSERT(node < m_wide.size());
-            return m_wide[node];
-        }
         BOOST_ASSERT(node < m_size);
-        if (!m_initialized[node / m_block_size])
+        if (m_block_generations[node / m_block_size] != m_generation)
             return 0;
+        if (!m_positions)
+            return m_wide[node];
         const auto position = m_positions[node];
         if (position != m_overflow_flag)
             return position;
@@ -74,19 +71,22 @@ template <typename NodeID, typename Key> class CompactArrayStorage
 
     void setIndex(NodeID node, Key value)
     {
-        if (!m_positions)
-        {
-            BOOST_ASSERT(node < m_wide.size());
-            m_wide[node] = value;
-            return;
-        }
         BOOST_ASSERT(node < m_size);
         const auto block = node / m_block_size;
-        if (!m_initialized[block])
+        if (m_block_generations[block] != m_generation)
         {
             const auto begin = block * m_block_size;
-            std::fill_n(m_positions.get() + begin, std::min(m_block_size, m_size - begin), 0);
-            m_initialized[block] = 1;
+            const auto count = std::min(m_block_size, m_size - begin);
+            if (m_positions)
+                std::fill_n(m_positions.get() + begin, count, 0);
+            else
+                std::fill_n(m_wide.begin() + begin, count, 0);
+            m_block_generations[block] = m_generation;
+        }
+        if (!m_positions)
+        {
+            m_wide[node] = value;
+            return;
         }
         if (static_cast<std::uint64_t>(value) < m_overflow_flag)
         {
@@ -105,7 +105,15 @@ template <typename NodeID, typename Key> class CompactArrayStorage
         m_positions[node] = m_overflow_flag;
     }
 
-    void Clear() { m_overflow.clear(); }
+    void Clear()
+    {
+        m_overflow.clear();
+        if (++m_generation == 0)
+        {
+            std::fill(m_block_generations.begin(), m_block_generations.end(), 0);
+            m_generation = 1;
+        }
+    }
 
   private:
     void promote()
@@ -116,13 +124,13 @@ template <typename NodeID, typename Key> class CompactArrayStorage
             wide.push_back(peek_index(static_cast<NodeID>(node)));
         m_wide.swap(wide);
         m_positions.reset();
-        std::vector<std::uint8_t>().swap(m_initialized);
         std::unordered_map<NodeID, Key>().swap(m_overflow);
     }
 
     std::unique_ptr<std::uint16_t[]> m_positions;
     std::size_t m_size;
-    std::vector<std::uint8_t> m_initialized;
+    std::vector<std::uint16_t> m_block_generations;
+    std::uint16_t m_generation = 1;
     std::unordered_map<NodeID, Key> m_overflow;
     std::vector<Key> m_wide;
 };

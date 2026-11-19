@@ -3,6 +3,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <cstdint>
 #include <limits>
 #include <vector>
 
@@ -22,8 +23,8 @@ BOOST_AUTO_TEST_CASE(unwritten_blocks_and_partial_tail_read_as_zero)
         BOOST_CHECK_EQUAL(storage.peek_index(node), expected);
     }
     storage.Clear();
-    BOOST_CHECK_EQUAL(storage.peek_index(1024), std::numeric_limits<int>::max());
-    BOOST_CHECK_EQUAL(storage.peek_index(1023), 0);
+    for (unsigned node = 0; node < 1025; ++node)
+        BOOST_CHECK_EQUAL(storage.peek_index(node), 0);
     storage[1024] = 11;
     BOOST_CHECK_EQUAL(storage.peek_index(1024), 11);
 }
@@ -68,8 +69,12 @@ BOOST_AUTO_TEST_CASE(full_width_fallback_preserves_all_slots)
     for (unsigned node = 0; node < expected.size(); ++node)
         BOOST_CHECK_EQUAL(view[node], expected[node]);
     storage.Clear();
+    for (unsigned node = 0; node < expected.size(); ++node)
+        BOOST_CHECK_EQUAL(view[node], 0);
     storage[200] = std::numeric_limits<int>::max();
-    BOOST_CHECK_EQUAL(storage.peek_index(200), std::numeric_limits<int>::max());
+    BOOST_CHECK_EQUAL(view[200], std::numeric_limits<int>::max());
+    BOOST_CHECK_EQUAL(view[199], 0);
+    BOOST_CHECK_EQUAL(view[0], 0);
 }
 
 BOOST_AUTO_TEST_CASE(sparse_overflow_is_cleared_and_reused)
@@ -77,9 +82,22 @@ BOOST_AUTO_TEST_CASE(sparse_overflow_is_cleared_and_reused)
     osrm::util::CompactArrayStorage<unsigned, int> storage(8192);
     storage[5] = 70000;
     storage.Clear();
-    BOOST_CHECK_EQUAL(storage.peek_index(5), std::numeric_limits<int>::max());
+    BOOST_CHECK_EQUAL(storage.peek_index(5), 0);
     storage[5] = 2;
     BOOST_CHECK_EQUAL(storage.peek_index(5), 2);
+}
+
+BOOST_AUTO_TEST_CASE(generation_rollover_discards_untouched_blocks)
+{
+    osrm::util::CompactArrayStorage<unsigned, int> storage(1024);
+    storage[513] = 23;
+    for (unsigned clear = 0; clear < std::numeric_limits<std::uint16_t>::max(); ++clear)
+        storage.Clear();
+
+    BOOST_CHECK_EQUAL(storage.peek_index(513), 0);
+    storage[514] = 19;
+    BOOST_CHECK_EQUAL(storage.peek_index(513), 0);
+    BOOST_CHECK_EQUAL(storage.peek_index(514), 19);
 }
 
 BOOST_AUTO_TEST_CASE(two_level_proxy_and_heap_reuse)
