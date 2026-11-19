@@ -3,11 +3,14 @@
 
 #include <boost/assert.hpp>
 
+#include "compact_indexed_array.hpp"
 #include "d_ary_heap.hpp"
 #include <algorithm>
 #include <cstddef>
 #include <limits>
+#include <type_traits>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 namespace osrm::util
@@ -70,16 +73,28 @@ class TwoLevelStorage
     {
     }
 
-    Key &operator[](const NodeID node)
+    decltype(auto) operator[](const NodeID node)
     {
-        if (node < number_of_overlay_nodes)
+        using OverlayReference = decltype(std::declval<OverlayIndexStorage<NodeID, Key> &>()[node]);
+        if constexpr (std::is_same_v<OverlayReference, Key &>)
         {
-            return overlay[node];
+            if (node < number_of_overlay_nodes)
+                return overlay[node];
+            else
+                return base[node];
         }
         else
         {
-            return base[node];
+            return IndexStorageReference<TwoLevelStorage, NodeID, Key>{*this, node};
         }
+    }
+
+    void setIndex(NodeID node, Key value)
+    {
+        if (node < number_of_overlay_nodes)
+            overlay[node] = value;
+        else
+            base[node] = value;
     }
 
     Key peek_index(const NodeID node) const
@@ -94,15 +109,20 @@ class TwoLevelStorage
         }
     }
 
-    Key const &operator[](const NodeID node) const
+    decltype(auto) operator[](const NodeID node) const
     {
-        if (node < number_of_overlay_nodes)
+        using OverlayReference =
+            decltype(std::declval<const OverlayIndexStorage<NodeID, Key> &>()[node]);
+        if constexpr (std::is_same_v<OverlayReference, const Key &>)
         {
-            return overlay[node];
+            if (node < number_of_overlay_nodes)
+                return overlay[node];
+            else
+                return base[node];
         }
         else
         {
-            return base[node];
+            return peek_index(node);
         }
     }
 
