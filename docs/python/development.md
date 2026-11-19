@@ -196,6 +196,12 @@ which does not support `CMAKE_CXX_COMPILER_LAUNCHER`. The build dir reuse
 from `--no-build-isolation` is the main speed optimisation for local Windows
 development.
 
+### Shared builds
+
+The storage library `osrm_store` owns the exception types and logging state
+shared by the CLI, routing, and preprocessing. CMake targets and `libosrm.pc`
+link it automatically. Static Python wheels link this code into their binaries.
+
 ## Running tests
 
 Build the test data (requires the package to be installed so the `osrm`

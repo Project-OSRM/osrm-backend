@@ -77,8 +77,14 @@ endif()
 # add @loader_path/$ORIGIN to rpath to make binaries relocatable
 if(APPLE)
   set(CMAKE_BUILD_RPATH "@loader_path")
+  if(NOT CMAKE_INSTALL_RPATH)
+    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+  endif()
 elseif(NOT WIN32)
   set(CMAKE_BUILD_RPATH "\$ORIGIN")
+  if(NOT CMAKE_INSTALL_RPATH)
+    set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+  endif()
   # https://stackoverflow.com/questions/6324131/rpath-origin-not-having-desired-effect
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,origin")
 endif()
@@ -168,6 +174,10 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/include/util/version.hpp
 )
 file(GLOB UtilGlob src/util/*.cpp src/util/*/*.cpp)
+set(SharedUtilSources
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/util/exception.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/util/log.cpp")
+list(REMOVE_ITEM UtilGlob ${SharedUtilSources})
 file(GLOB ExtractorGlob src/extractor/*.cpp src/extractor/*/*.cpp)
 file(GLOB GuidanceGlob src/guidance/*.cpp src/extractor/intersection/*.cpp)
 file(GLOB PartitionerGlob src/partitioner/*.cpp)
@@ -201,13 +211,15 @@ add_executable(osrm-partition src/tools/partition.cpp)
 add_executable(osrm-customize src/tools/customize.cpp)
 add_executable(osrm-contract src/tools/contract.cpp)
 add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
-add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract src/osrm/contractor.cpp $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_extract src/osrm/extractor.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_partition src/osrm/partitioner.cpp $<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_customize src/osrm/customizer.cpp $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_update $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
+# Share exception types and logging state across OSRM libraries.
+add_library(osrm_store ${SharedUtilSources} $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
+set_target_properties(osrm_store PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 # ALIAS targets with :: provide compile-time safety: typos error at configure time, not link time
 add_library(osrm::osrm ALIAS osrm)
@@ -590,20 +602,20 @@ set(UTIL_LIBRARIES
     ${ZLIB_LIBRARY})
 
 # Libraries
-target_link_libraries(osrm ${ENGINE_LIBRARIES} LibArchive::LibArchive)
-target_link_libraries(osrm_update ${UPDATER_LIBRARIES} LibArchive::LibArchive)
+target_link_libraries(osrm ${ENGINE_LIBRARIES} osrm_store)
+target_link_libraries(osrm_update ${UPDATER_LIBRARIES} osrm_store)
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES} osrm_update osrm_store)
-target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES} LibArchive::LibArchive)
-target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES} LibArchive::LibArchive)
+target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES} osrm_store)
+target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES} osrm_store)
 target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES} osrm_update osrm_store)
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES} LibArchive::LibArchive)
 
 add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:UTIL>)
-target_link_libraries(osrm-components ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${UTIL_LIBRARIES} LibArchive::LibArchive)
+target_link_libraries(osrm-components osrm_store ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${UTIL_LIBRARIES})
 install(TARGETS osrm-components DESTINATION bin)
 
 add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
-target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES})
+target_link_libraries(osrm-io-benchmark osrm_store ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES})
 install(TARGETS osrm-io-benchmark DESTINATION bin)
 
 if(ENABLE_ASSERTIONS)
@@ -692,7 +704,7 @@ if(BUILD_AS_SUBPROJECT)
   set(LibOSRM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include" PARENT_SCOPE)
   set(LibOSRM_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE)
   set(LibOSRM_LIBRARIES "osrm" PARENT_SCOPE)
-  set(LibOSRM_DEPENDENT_LIBRARIES "${ENGINE_LIBRARIES}" PARENT_SCOPE)
+  set(LibOSRM_DEPENDENT_LIBRARIES "osrm_store;${ENGINE_LIBRARIES}" PARENT_SCOPE)
   set(LibOSRM_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/osrm"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
