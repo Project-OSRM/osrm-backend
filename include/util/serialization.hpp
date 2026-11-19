@@ -57,9 +57,32 @@ inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  StaticGraph<EdgeDataT, Ownership> &graph)
 {
-    storage::serialization::read(reader, name + "/node_array", graph.node_array);
+    if (reader.HasEntry(name + "/node_blocks/headers"))
+    {
+        if constexpr (Ownership != storage::Ownership::View)
+        {
+            std::vector<util::BlockDeltaHeader> headers;
+            std::vector<std::uint64_t> words;
+            storage::serialization::read(reader, name + "/node_blocks/headers", headers);
+            storage::serialization::read(reader, name + "/node_blocks/words", words);
+            std::uint64_t count;
+            reader.ReadInto(name + "/node_blocks/count", count);
+            graph.node_array.resize(count);
+            for (std::size_t i = 0; i < count; ++i)
+                graph.node_array[i].first_edge = util::decodeBlockDelta(
+                    {headers.data(), headers.size()}, {words.data(), words.size()}, i);
+        }
+        else
+        {
+            storage::serialization::read(reader, name + "/node_blocks/headers", graph.node_headers);
+            storage::serialization::read(reader, name + "/node_blocks/words", graph.node_words);
+            reader.ReadInto(name + "/node_blocks/count", *graph.node_count);
+        }
+    }
+    else
+        storage::serialization::read(reader, name + "/node_array", graph.node_array);
     storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
-    graph.number_of_nodes = graph.node_array.size() - 1;
+    graph.number_of_nodes = (graph.node_count ? *graph.node_count : graph.node_array.size()) - 1;
     graph.number_of_edges = graph.edge_array.size();
 }
 
