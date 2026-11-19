@@ -216,10 +216,13 @@ endforeach()
 if (NOT WIN32)
     add_test(NAME test-data-build
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target test-data --config $<CONFIG>)
-    set_tests_properties(test-data-build PROPERTIES FIXTURES_SETUP test-data-fixture)
+    set_tests_properties(test-data-build PROPERTIES
+        FIXTURES_SETUP test-data-fixture
+        RESOURCE_LOCK osrm-test-data)
 
     foreach(t ${LIBRARY_TEST_TARGETS})
         set_tests_properties(${t} PROPERTIES FIXTURES_REQUIRED "${t}-fixture;test-data-fixture")
+        set_tests_properties(${t}-build ${t} PROPERTIES RESOURCE_LOCK osrm-test-data)
     endforeach()
 endif()
 
