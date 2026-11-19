@@ -378,7 +378,8 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
         node_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry>(
             index, name + "/node_array");
     util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry> edge_list;
-    const bool packed = index.HasBlock(name + "/edge_array6");
+    const auto packed_name = name + "/edge_array6";
+    const bool packed = index.HasBlock(packed_name);
     if (!packed)
         edge_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry>(
             index, name + "/edge_array");
@@ -398,13 +399,18 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
                                                           node_distances,
                                                           is_forward_edge,
                                                           is_backward_edge);
-    if (packed)
-        graph.bindPackedEdges(make_vector_view<std::uint8_t>(index, name + "/edge_array6"));
     if (block_nodes)
         graph.bindNodeBlocks(
             make_vector_view<util::BlockDeltaHeader>(index, name + "/node_blocks/headers"),
             make_vector_view<std::uint64_t>(index, name + "/node_blocks/words"),
             index.GetBlockPtr<std::uint64_t>(name + "/node_blocks/count"));
+    if (packed)
+    {
+        const auto bytes = make_vector_view<std::uint8_t>(index, packed_name);
+        if (index.GetBlockSize(packed_name) != bytes.size())
+            throw util::exception("Packed graph byte count does not match the archive");
+        graph.bindPackedEdges(bytes);
+    }
     return graph;
 }
 

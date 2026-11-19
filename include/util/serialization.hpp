@@ -84,34 +84,45 @@ inline void read(storage::tar::FileReader &reader,
     }
     else
         storage::serialization::read(reader, name + "/node_array", graph.node_array);
-    if (reader.HasEntry(name + "/edge_array6"))
+    graph.number_of_nodes = (graph.node_count ? *graph.node_count : graph.node_array.size()) - 1;
+    const auto packed_name = name + "/edge_array6";
+    if (reader.HasEntry(packed_name))
     {
         if constexpr (!requires { EdgeDataT::SupportsPackedRecords; })
             throw util::exception("Packed graph edge type is unsupported");
-        else if constexpr (Ownership == storage::Ownership::View)
-            storage::serialization::read(reader, name + "/edge_array6", graph.packed_edges);
         else
         {
-            std::vector<std::uint8_t> packed;
-            storage::serialization::read(reader, name + "/edge_array6", packed);
-            if (packed.size() < 8 || (packed.size() - 8) % 6 != 0)
-                throw util::exception("Invalid packed graph dimensions");
-            graph.edge_array.resize((packed.size() - 8) / 6);
-            for (std::size_t i = 0; i < graph.edge_array.size(); ++i)
+            graph.number_of_edges = graph.readFirstEdge(graph.number_of_nodes);
+            if constexpr (Ownership == storage::Ownership::View)
             {
-                std::array<std::uint8_t, 8> bytes;
-                std::copy_n(packed.begin() + i * 6, 8, bytes.begin());
-                const auto value = std::bit_cast<std::uint64_t>(bytes);
-                graph.edge_array[i] = {NodeID(value & ((1u << 25) - 1)),
-                                       {NodeID((value >> 25) & ((1u << 22) - 1))}};
+                const auto byte_count = reader.ReadElementCount64(packed_name);
+                if (byte_count != graph.packed_edges.size())
+                    throw util::exception("Packed graph view storage does not match the archive");
+                graph.validatePackedEdgeSize(graph.packed_edges.size(), graph.number_of_edges);
+                reader.ReadInto(packed_name, graph.packed_edges.data(), graph.packed_edges.size());
+            }
+            else
+            {
+                std::vector<std::uint8_t> packed;
+                storage::serialization::read(reader, packed_name, packed);
+                graph.validatePackedEdgeSize(packed.size(), graph.number_of_edges);
+                graph.edge_array.resize(graph.number_of_edges);
+                for (std::size_t i = 0; i < graph.edge_array.size(); ++i)
+                {
+                    std::array<std::uint8_t, 8> bytes;
+                    std::copy_n(packed.begin() + i * 6, 8, bytes.begin());
+                    const auto value = std::bit_cast<std::uint64_t>(bytes);
+                    graph.edge_array[i] = {NodeID(value & ((1u << 25) - 1)),
+                                           {NodeID((value >> 25) & ((1u << 22) - 1))}};
+                }
             }
         }
     }
     else
+    {
         storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
-    graph.number_of_nodes = (graph.node_count ? *graph.node_count : graph.node_array.size()) - 1;
-    graph.number_of_edges =
-        graph.packed_edges.empty() ? graph.edge_array.size() : (graph.packed_edges.size() - 8) / 6;
+        graph.number_of_edges = graph.edge_array.size();
+    }
 }
 
 template <typename EdgeDataT, storage::Ownership Ownership>

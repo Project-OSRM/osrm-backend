@@ -2,6 +2,7 @@
 #define STATIC_GRAPH_HPP
 
 #include "util/block_delta.hpp"
+#include "util/exception.hpp"
 #include "util/graph_traits.hpp"
 #include "util/integer_range.hpp"
 #include "util/percent.hpp"
@@ -185,7 +186,10 @@ class StaticGraph
 
     void bindPackedEdges(Vector<std::uint8_t> bytes)
         requires(Ownership == storage::Ownership::View)
-    { packed_edges = std::move(bytes); }
+    {
+        validatePackedEdgeSize(bytes.size(), number_of_edges);
+        packed_edges = std::move(bytes);
+    }
 
     EdgeIterator BeginEdges(const NodeIterator n) const { return EdgeIterator(readFirstEdge(n)); }
 
@@ -326,6 +330,12 @@ class StaticGraph
     }
 
   protected:
+    static void validatePackedEdgeSize(std::size_t bytes, std::size_t edges)
+    {
+        if (bytes < 8 || (bytes - 8) % 6 != 0 || (bytes - 8) / 6 != edges)
+            throw util::exception("Invalid packed graph dimensions");
+    }
+
     EdgeArrayEntry readEdge(EdgeIterator edge) const
     {
         if constexpr (requires { EdgeDataT::SupportsPackedRecords; })
