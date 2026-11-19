@@ -373,19 +373,11 @@ committed when creating the tag.
 Install public headers with `cmake --install build --component Development`.
 CTest compiles a consumer against the installed customization headers.
 
-## Compact dataset storage
-
-Preprocessing writes compact blocks into the normal dataset files. Direct, mmap
-and datastore loaders use those blocks without an extra conversion command.
-The Python CLI exposes the same six preprocessing and serving tools as the
-native installation.
+## Native libraries and headers
 
 Shared builds keep exception definitions in `osrm_exception`, which must be
 installed with the other shared libraries. CMake targets and `libosrm.pc`
 propagate this dependency. Targets embedding `UTIL` objects directly must also
 link it. Static wheels link the exception library statically.
 
-Public preprocessing headers can be installed with `cmake --install build
---component Development`; CTest compiles a consumer against those headers.
 Parallel library tests lock their shared generated data during builds and reads.
-See [compact query data](../mld-compact.md) for the normal workflow.

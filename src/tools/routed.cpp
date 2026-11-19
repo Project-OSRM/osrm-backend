@@ -207,8 +207,11 @@ inline unsigned generateServerProgramOptions(const int argc,
 
     // hidden options, will be allowed on command line, but will not be shown to the user
     boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "base,b", value<std::filesystem::path>(&base_path), "base path to .osrm file");
+    hidden_options.add_options()                                                        //
+        ("base,b", value<std::filesystem::path>(&base_path), "base path to .osrm file") //
+        ("experimental-share-cell-metrics",
+         value<bool>(&config.share_cell_metrics)->implicit_value(true)->default_value(false),
+         "Share identical MLD cell metrics at load time for older datasets.");
 
     // positional option
     boost::program_options::positional_options_description positional_options;

@@ -240,12 +240,11 @@ python -m osrm customize data.osrm
 python -m osrm routed --algorithm mld data.osrm
 ```
 
-MLD customization creates compact query data by default. Direct loading,
-`use_mmap=True`, and datastore loading select it automatically:
+Open the prepared MLD dataset by passing its base path to `osrm.OSRM`.
 
 ```python
 engine = osrm.OSRM(storage_config="data.osrm", algorithm="MLD", use_shared_memory=False)
 ```
 
-Traffic updates use the normal prepared dataset and refresh its query archive.
-See [compact query data](../mld-compact.md).
+The same [dataset format](../dataset-format.md) supports `use_mmap=True` and
+datastore loading. Rerun customization to apply traffic updates.

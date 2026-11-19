@@ -1,8 +1,8 @@
 # Command-Line Tools
 
-OSRM ships seven command-line tools that cover the full data pipeline, from raw
-OSM data to a running routing server. All tools share a set of common options
-described below, followed by per-tool reference sections.
+OSRM's command-line tools cover the full data pipeline, from raw OSM data to a
+running routing server. See [routing dataset format](dataset-format.md) for how
+OSRM stores and loads the files produced by preprocessing.
 
 ## Common Options
 
@@ -85,12 +85,9 @@ osrm-partition <input.osrm> [options]
 
 ## osrm-customize
 
-Applies live traffic data (speed and turn-penalty files) to a partitioned MLD
-graph. Can be run repeatedly without re-partitioning when speeds change.
-
-Preprocessing writes compact records directly into the normal dataset files.
-Direct, mmap and datastore loading use them automatically. Traffic updates keep
-the original turn identities. See [compact dataset storage](mld-compact.md).
+Computes routing metrics for a partitioned MLD graph. Exclusion variants with
+identical matrices for a cell share the same stored values. Run customization
+again to apply speed and turn penalty updates without repartitioning.
 
 ```
 osrm-customize <input.osrm> [options]
