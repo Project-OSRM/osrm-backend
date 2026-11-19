@@ -17,6 +17,7 @@ inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  detail::CellMetricImpl<Ownership> &metric)
 {
+    BOOST_ASSERT(metric.cell_value_offsets.empty());
     storage::serialization::read(reader, name + "/weights", metric.weights);
     storage::serialization::read(reader, name + "/durations", metric.durations);
     storage::serialization::read(reader, name + "/distances", metric.distances);
@@ -27,6 +28,7 @@ inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::CellMetricImpl<Ownership> &metric)
 {
+    BOOST_ASSERT(metric.cell_value_offsets.empty());
     storage::serialization::write(writer, name + "/weights", metric.weights);
     storage::serialization::write(writer, name + "/durations", metric.durations);
     storage::serialization::write(writer, name + "/distances", metric.distances);

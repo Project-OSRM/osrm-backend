@@ -87,6 +87,8 @@ class FileReader
     FileReader(const FileReader &) = delete;
     FileReader &operator=(const FileReader &) = delete;
 
+    bool HasEntry(const std::string &name) const { return index.contains(name); }
+
     std::uint64_t ReadElementCount64(const std::string &name)
     {
         std::uint64_t size;
