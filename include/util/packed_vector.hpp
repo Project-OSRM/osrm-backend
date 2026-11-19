@@ -294,12 +294,58 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         {
         }
 
-        reference operator*() const { return (*container)[index]; }
-        reference operator[](difference_type n) const { return (*container)[index + n]; }
+        static iterator_impl encoded(const WordT *words,
+                                     std::uint32_t base_bit,
+                                     unsigned width,
+                                     bool sentinel,
+                                     unsigned position)
+            requires(std::is_same_v<ReferenceT, T> && Bits < 32)
+        {
+            BOOST_ASSERT(width <= Bits && Bits < 32 && position <= 65535);
+            iterator_impl it;
+            it.container =
+                reinterpret_cast<ContainerT *>(reinterpret_cast<std::uintptr_t>(words) | 1);
+            it.index = std::uint64_t(base_bit) | (std::uint64_t(position) << 32) |
+                       (std::uint64_t(width) << 48) | (std::uint64_t(sentinel) << 53);
+            return it;
+        }
+
+        reference operator*() const
+        {
+            if constexpr (std::is_same_v<ReferenceT, T> && Bits < 32)
+            {
+                if (encodedMode())
+                {
+                    const auto words = reinterpret_cast<const WordT *>(
+                        reinterpret_cast<std::uintptr_t>(container) & ~std::uintptr_t(1));
+                    const auto width = (index >> 48) & 31;
+                    const auto bit = (index & 0xffffffff) + ((index >> 32) & 65535) * width;
+                    const auto offset = bit % 64;
+                    const auto mask = (WordT{1} << width) - 1;
+                    auto value = words[bit / 64] >> offset;
+                    if (offset + width > 64)
+                        value |= words[bit / 64 + 1] << (64 - offset);
+                    value &= mask;
+                    if (((index >> 53) & 1) && value == mask)
+                        value = (WordT{1} << Bits) - 1;
+                    if constexpr (std::is_integral_v<T>)
+                        return static_cast<T>(value);
+                    else
+                        return T{static_cast<typename T::value_type>(value)};
+                }
+            }
+            return (*container)[index];
+        }
+        reference operator[](difference_type n) const
+        {
+            auto it = *this;
+            it += n;
+            return *it;
+        }
 
         iterator_impl &operator++()
         {
-            ++index;
+            index += encodedMode() ? (std::uint64_t{1} << 32) : 1;
             return *this;
         }
 
@@ -312,7 +358,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
         iterator_impl &operator--()
         {
-            --index;
+            index -= encodedMode() ? (std::uint64_t{1} << 32) : 1;
             return *this;
         }
 
@@ -325,13 +371,15 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
 
         iterator_impl &operator+=(difference_type offset)
         {
-            index += offset;
+            index += encodedMode() ? std::uint64_t(offset) * (std::uint64_t{1} << 32)
+                                   : std::uint64_t(offset);
             return *this;
         }
 
         iterator_impl &operator-=(difference_type offset)
         {
-            index -= offset;
+            index -= encodedMode() ? std::uint64_t(offset) * (std::uint64_t{1} << 32)
+                                   : std::uint64_t(offset);
             return *this;
         }
 
@@ -355,7 +403,12 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         }
 
         difference_type operator-(const iterator_impl &other) const
-        { return static_cast<difference_type>(index) - static_cast<difference_type>(other.index); }
+        {
+            const auto delta =
+                static_cast<difference_type>(index) - static_cast<difference_type>(other.index);
+            return encodedMode() ? delta / static_cast<difference_type>(std::uint64_t{1} << 32)
+                                 : delta;
+        }
 
         bool operator==(const iterator_impl &other) const { return index == other.index; }
         bool operator!=(const iterator_impl &other) const { return !(*this == other); }
@@ -366,6 +419,13 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
         bool operator>=(const iterator_impl &other) const { return !(*this < other); }
 
       private:
+        bool encodedMode() const
+        {
+            if constexpr (std::is_same_v<ReferenceT, T> && Bits < 32)
+                return reinterpret_cast<std::uintptr_t>(container) & 1;
+            else
+                return false;
+        }
         ContainerT *container;
         std::size_t index;
     };
@@ -469,6 +529,7 @@ template <typename T, std::size_t Bits, storage::Ownership Ownership> class Pack
     }
 
     std::size_t size() const { return num_elements; }
+    const WordT *data() const { return vec.data(); }
 
     void resize(std::size_t elements)
     {

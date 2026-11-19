@@ -69,6 +69,20 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     {
     }
 
+    SegmentDataContainerImpl(Vector<std::uint32_t> index_,
+                             SegmentNodeVector nodes_,
+                             SegmentDatasourceVector fwd_sources,
+                             SegmentDatasourceVector rev_sources,
+                             Vector<std::uint64_t> descriptors,
+                             SegmentWeightVector weights,
+                             SegmentDurationVector durations)
+        : index(std::move(index_)), nodes(std::move(nodes_)),
+          fwd_datasources(std::move(fwd_sources)), rev_datasources(std::move(rev_sources)),
+          shared_descriptors(std::move(descriptors)), shared_weights(std::move(weights)),
+          shared_durations(std::move(durations))
+    {
+    }
+
     auto GetForwardGeometry(const DirectionalGeometryID id)
     {
         auto ptr = nodes.data() + index[id];
@@ -113,6 +127,12 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetForwardDatasources(const DirectionalGeometryID id)
     {
+        if (fwd_datasources.size() != nodes.size())
+        {
+            const auto len = index[id + 1] - index[id] - 1;
+            BOOST_ASSERT(len <= fwd_datasources.size());
+            return std::span<DatasourceID>(fwd_datasources.data(), len);
+        }
         auto ptr = fwd_datasources.data() + index[id] + 1;
         auto len = static_cast<std::size_t>(index[id + 1] - (index[id] + 1));
         return std::span<DatasourceID>(ptr, len);
@@ -120,6 +140,12 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseDatasources(const DirectionalGeometryID id)
     {
+        if (rev_datasources.size() != nodes.size())
+        {
+            const auto len = index[id + 1] - index[id] - 1;
+            BOOST_ASSERT(len <= rev_datasources.size());
+            return std::span<DatasourceID>(rev_datasources.data(), len) | std::views::reverse;
+        }
         auto ptr = rev_datasources.data() + index[id];
         auto len = static_cast<std::size_t>((index[id + 1] - 1) - index[id]);
         return std::span<DatasourceID>(ptr, len) | std::views::reverse;
@@ -137,6 +163,26 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetForwardDurations(const DirectionalGeometryID id) const
     {
+        if (!shared_descriptors.empty())
+        {
+            const auto descriptor = shared_descriptors[id];
+            const auto length = (descriptor >> 32) & 65535;
+            const auto ordinal = ((descriptor >> 48) & 3);
+            if (descriptor >> 63)
+            {
+                const auto width = (descriptor >> 54) & 31;
+                const auto base = (descriptor & 0xffffffff) + ordinal * length * width;
+                using Iterator = typename SegmentDurationVector::const_iterator;
+                const auto begin = Iterator::encoded(
+                    shared_durations.data(), base, width, (descriptor >> 59) & 1, 0);
+                const auto end = Iterator::encoded(
+                    shared_durations.data(), base, width, (descriptor >> 59) & 1, length);
+                return std::ranges::subrange(begin, end);
+            }
+            const auto offset = (descriptor & 0xffffffff) + ordinal * length;
+            const auto begin = shared_durations.begin() + offset;
+            return std::ranges::subrange(begin, begin + length);
+        }
         const auto begin = fwd_durations.cbegin() + index[id] + 1;
         const auto end = fwd_durations.cbegin() + index[id + 1];
 
@@ -145,6 +191,26 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseDurations(const DirectionalGeometryID id) const
     {
+        if (!shared_descriptors.empty())
+        {
+            const auto descriptor = shared_descriptors[id];
+            const auto length = (descriptor >> 32) & 65535;
+            const auto ordinal = ((descriptor >> 52) & 3);
+            if (descriptor >> 63)
+            {
+                const auto width = (descriptor >> 54) & 31;
+                const auto base = (descriptor & 0xffffffff) + ordinal * length * width;
+                using Iterator = typename SegmentDurationVector::const_iterator;
+                const auto begin = Iterator::encoded(
+                    shared_durations.data(), base, width, (descriptor >> 59) & 1, 0);
+                const auto end = Iterator::encoded(
+                    shared_durations.data(), base, width, (descriptor >> 59) & 1, length);
+                return std::ranges::subrange(begin, end) | std::views::reverse;
+            }
+            const auto offset = (descriptor & 0xffffffff) + ordinal * length;
+            const auto begin = shared_durations.begin() + offset;
+            return std::ranges::subrange(begin, begin + length) | std::views::reverse;
+        }
         const auto begin = rev_durations.cbegin() + index[id];
         const auto end = rev_durations.cbegin() + index[id + 1] - 1;
 
@@ -153,6 +219,26 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetForwardWeights(const DirectionalGeometryID id) const
     {
+        if (!shared_descriptors.empty())
+        {
+            const auto descriptor = shared_descriptors[id];
+            const auto length = (descriptor >> 32) & 65535;
+            const auto ordinal = 0;
+            if (descriptor >> 63)
+            {
+                const auto width = (descriptor >> 54) & 31;
+                const auto base = (descriptor & 0xffffffff) + ordinal * length * width;
+                using Iterator = typename SegmentWeightVector::const_iterator;
+                const auto begin = Iterator::encoded(
+                    shared_weights.data(), base, width, (descriptor >> 59) & 1, 0);
+                const auto end = Iterator::encoded(
+                    shared_weights.data(), base, width, (descriptor >> 59) & 1, length);
+                return std::ranges::subrange(begin, end);
+            }
+            const auto offset = (descriptor & 0xffffffff) + ordinal * length;
+            const auto begin = shared_weights.begin() + offset;
+            return std::ranges::subrange(begin, begin + length);
+        }
         const auto begin = fwd_weights.cbegin() + index[id] + 1;
         const auto end = fwd_weights.cbegin() + index[id + 1];
 
@@ -161,6 +247,26 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseWeights(const DirectionalGeometryID id) const
     {
+        if (!shared_descriptors.empty())
+        {
+            const auto descriptor = shared_descriptors[id];
+            const auto length = (descriptor >> 32) & 65535;
+            const auto ordinal = ((descriptor >> 50) & 3);
+            if (descriptor >> 63)
+            {
+                const auto width = (descriptor >> 54) & 31;
+                const auto base = (descriptor & 0xffffffff) + ordinal * length * width;
+                using Iterator = typename SegmentWeightVector::const_iterator;
+                const auto begin = Iterator::encoded(
+                    shared_weights.data(), base, width, (descriptor >> 59) & 1, 0);
+                const auto end = Iterator::encoded(
+                    shared_weights.data(), base, width, (descriptor >> 59) & 1, length);
+                return std::ranges::subrange(begin, end) | std::views::reverse;
+            }
+            const auto offset = (descriptor & 0xffffffff) + ordinal * length;
+            const auto begin = shared_weights.begin() + offset;
+            return std::ranges::subrange(begin, begin + length) | std::views::reverse;
+        }
         const auto begin = rev_weights.cbegin() + index[id];
         const auto end = rev_weights.cbegin() + index[id + 1] - 1;
 
@@ -169,6 +275,12 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetForwardDatasources(const DirectionalGeometryID id) const
     {
+        if (fwd_datasources.size() != nodes.size())
+        {
+            const auto len = index[id + 1] - index[id] - 1;
+            BOOST_ASSERT(len <= fwd_datasources.size());
+            return std::span<const DatasourceID>(fwd_datasources.data(), len);
+        }
         auto ptr = fwd_datasources.data() + index[id] + 1;
         auto len = static_cast<std::size_t>(index[id + 1] - (index[id] + 1));
         return std::span<const DatasourceID>(ptr, len);
@@ -176,13 +288,19 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseDatasources(const DirectionalGeometryID id) const
     {
+        if (rev_datasources.size() != nodes.size())
+        {
+            const auto len = index[id + 1] - index[id] - 1;
+            BOOST_ASSERT(len <= rev_datasources.size());
+            return std::span<const DatasourceID>(rev_datasources.data(), len) | std::views::reverse;
+        }
         auto ptr = rev_datasources.data() + index[id];
         auto len = static_cast<std::size_t>((index[id + 1] - 1) - index[id]);
         return std::span<const DatasourceID>(ptr, len) | std::views::reverse;
     }
 
-    auto GetNumberOfGeometries() const { return index.size() - 1; }
-    auto GetNumberOfSegments() const { return fwd_weights.size(); }
+    auto GetNumberOfGeometries() const { return index.empty() ? 0 : index.size() - 1; }
+    auto GetNumberOfSegments() const { return nodes.size(); }
 
     friend void
     serialization::read<Ownership>(storage::tar::FileReader &reader,
@@ -202,6 +320,9 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
     SegmentDurationVector rev_durations;
     SegmentDatasourceVector fwd_datasources;
     SegmentDatasourceVector rev_datasources;
+    Vector<std::uint64_t> shared_descriptors;
+    SegmentWeightVector shared_weights;
+    SegmentDurationVector shared_durations;
 };
 } // namespace detail
 
