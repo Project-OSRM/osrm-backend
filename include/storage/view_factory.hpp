@@ -120,11 +120,33 @@ inline auto make_turn_data_view(const SharedDataIndex &index, const std::string 
 
 inline auto make_segment_data_view(const SharedDataIndex &index, const std::string &name)
 {
+    const auto forward_sources_name = index.HasBlock(name + "/constant_forward_sources")
+                                          ? name + "/constant_forward_sources"
+                                          : name + "/forward_data_sources";
+    const auto reverse_sources_name = index.HasBlock(name + "/constant_reverse_sources")
+                                          ? name + "/constant_reverse_sources"
+                                          : name + "/reverse_data_sources";
+    const auto cost_prefix = name + "/adaptive_costs";
     auto geometry_begin_indices = make_vector_view<unsigned>(index, name + "/index");
 
     auto node_list = make_vector_view<NodeID>(index, name + "/nodes");
 
     auto num_entries = index.GetBlockEntries(name + "/nodes");
+    if (index.HasBlock(cost_prefix + "/descriptors"))
+    {
+        const auto pool = make_vector_view<std::uint64_t>(index, cost_prefix + "/packed");
+        const auto descriptors =
+            make_vector_view<std::uint64_t>(index, cost_prefix + "/descriptors");
+        const auto count = descriptors.back();
+        return extractor::SegmentDataView{
+            geometry_begin_indices,
+            node_list,
+            make_vector_view<DatasourceID>(index, forward_sources_name),
+            make_vector_view<DatasourceID>(index, reverse_sources_name),
+            descriptors,
+            extractor::SegmentDataView::SegmentWeightVector{pool, count},
+            extractor::SegmentDataView::SegmentDurationVector{pool, count}};
+    }
 
     extractor::SegmentDataView::SegmentWeightVector fwd_weight_list(
         make_vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
@@ -146,11 +168,9 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
             index, name + "/reverse_durations/packed"),
         num_entries);
 
-    auto fwd_datasources_list =
-        make_vector_view<DatasourceID>(index, name + "/forward_data_sources");
+    auto fwd_datasources_list = make_vector_view<DatasourceID>(index, forward_sources_name);
 
-    auto rev_datasources_list =
-        make_vector_view<DatasourceID>(index, name + "/reverse_data_sources");
+    auto rev_datasources_list = make_vector_view<DatasourceID>(index, reverse_sources_name);
 
     return extractor::SegmentDataView{geometry_begin_indices,
                                       node_list,
