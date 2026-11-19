@@ -285,7 +285,8 @@ BOOST_AUTO_TEST_CASE(redirected_extraction_invalidates_only_destination_graphs)
     }
     osrm::ExtractorConfig config;
     config.input_path = pbf;
-    config.UseDefaultOutputNames(destination);
+    config.output_path = destination.string() + ".osrm";
+    config.UseDefaultOutputNames(config.output_path);
     config.profile_path = OSRM_TEST_DATA_DIR "/../../profiles/car.lua";
     config.requested_num_threads = 2;
     BOOST_CHECK_NO_THROW(osrm::extract(config));
