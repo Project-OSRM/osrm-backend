@@ -75,11 +75,9 @@ inline SegmentDuration convertToDuration(double speed_in_kmh, double distance_in
 #if !defined(NDEBUG)
 void checkWeightsConsistency(
     const UpdaterConfig &config,
+    const extractor::SegmentDataContainer &segment_data,
     const std::vector<osrm::extractor::EdgeBasedEdge> &edge_based_edge_list)
 {
-    extractor::SegmentDataContainer segment_data;
-    extractor::files::readSegmentData(config.GetPath(".osrm.geometry"), segment_data);
-
     extractor::EdgeBasedNodeDataContainer node_data;
     extractor::files::readNodeData(config.GetPath(".osrm.ebg_nodes"), node_data);
 
@@ -410,7 +408,7 @@ void saveDatasourcesNames(const UpdaterConfig &config)
         source++;
     }
 
-    extractor::files::writeDatasources(config.GetPath(".osrm.datasource_names"), sources);
+    extractor::files::writeDatasources(config.GetOutputPath(".osrm.datasource_names"), sources);
 }
 
 std::vector<std::uint64_t>
@@ -624,7 +622,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                                              coordinates,
                                              osm_node_ids);
         // Now save out the updated compressed geometries
-        extractor::files::writeSegmentData(config.GetPath(".osrm.geometry"), segment_data);
+        extractor::files::writeSegmentData(config.GetOutputPath(".osrm.geometry"), segment_data);
         TIMER_STOP(segment);
         util::Log() << "Updating segment data took " << TIMER_MSEC(segment) << "ms.";
     }
@@ -836,18 +834,18 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
                           });
     }
 
-    if (update_turn_penalties || update_conditional_turns)
+    if (config.updatesTurnPenalties())
     {
         tbb::parallel_invoke(
             [&]
             {
                 extractor::files::writeTurnWeightPenalty(
-                    config.GetPath(".osrm.turn_weight_penalties"), turn_weight_penalties);
+                    config.GetOutputPath(".osrm.turn_weight_penalties"), turn_weight_penalties);
             },
             [&]
             {
                 extractor::files::writeTurnDurationPenalty(
-                    config.GetPath(".osrm.turn_duration_penalties"), turn_duration_penalties);
+                    config.GetOutputPath(".osrm.turn_duration_penalties"), turn_duration_penalties);
             });
     }
 
@@ -855,7 +853,7 @@ Updater::LoadAndUpdateEdgeExpandedGraph(std::vector<extractor::EdgeBasedEdge> &e
     if (config.turn_penalty_lookup_paths.empty())
     { // don't check weights consistency with turn updates that can break assertion
         // condition with turn weight penalties negative updates
-        checkWeightsConsistency(config, edge_based_edge_list);
+        checkWeightsConsistency(config, segment_data, edge_based_edge_list);
     }
 #endif
 

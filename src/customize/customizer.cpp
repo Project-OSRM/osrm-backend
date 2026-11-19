@@ -78,7 +78,9 @@ auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
                                     std::vector<EdgeDistance> &node_distances,
                                     std::uint32_t &connectivity_checksum)
 {
-    updater::Updater updater(config.updater_config);
+    auto updater_config = config.updater_config;
+    updater_config.output_path = config.output_path;
+    updater::Updater updater(std::move(updater_config));
 
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
     EdgeID num_nodes = updater.LoadAndUpdateEdgeExpandedGraph(

@@ -36,7 +36,9 @@ int Contractor::Run()
 
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
 
-    updater::Updater updater(config.updater_config);
+    auto updater_config = config.updater_config;
+    updater_config.output_path = config.output_path;
+    updater::Updater updater(std::move(updater_config));
     std::uint32_t connectivity_checksum = 0;
     EdgeID number_of_edge_based_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
         edge_based_edge_list, node_weights, connectivity_checksum);
