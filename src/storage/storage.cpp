@@ -82,7 +82,8 @@ void populateArchive(const SharedDataIndex &index, const std::filesystem::path &
     reader.List(std::back_inserter(entries));
     for (const auto &entry : entries)
     {
-        if (entry.name.ends_with(".meta") || !index.HasBlock(entry.name))
+        if (entry.name.ends_with(".meta") || entry.name == "/ch/connectivity_checksum" ||
+            entry.name == "/mld/connectivity_checksum" || !index.HasBlock(entry.name))
             continue;
         reader.ReadInto(
             entry.name, index.GetBlockPtr<char>(entry.name), index.GetBlockSize(entry.name));
@@ -472,11 +473,11 @@ void Storage::PopulateUpdatableData(const SharedDataIndex &index)
         const auto path = config.GetPath(suffix);
         if (!std::filesystem::exists(path))
             continue;
-        if (index.GetBlockSize(entry) != sizeof(std::uint32_t))
-            throw util::exception("Invalid connectivity checksum in " + path.string());
+        tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+        std::uint32_t checksum;
+        reader.ReadInto(entry, checksum);
         if (config.IsRequiredConfiguredInput(".osrm.edges"))
         {
-            const auto checksum = *index.GetBlockPtr<std::uint32_t>(entry);
             const auto guidance_checksum =
                 *index.GetBlockPtr<std::uint32_t>("/common/connectivity_checksum");
             if (checksum != guidance_checksum)
