@@ -375,9 +375,8 @@ CTest compiles a consumer against the installed customization headers.
 
 ## Native libraries and headers
 
-Shared builds keep exception definitions in `osrm_exception`, which must be
-installed with the other shared libraries. CMake targets and `libosrm.pc`
-propagate this dependency. Targets embedding `UTIL` objects directly must also
-link it. Static wheels link the exception library statically.
+The storage library `osrm_store` owns the exception types shared by routing and
+preprocessing. CMake targets and `libosrm.pc` link it automatically. Static
+Python wheels link storage and exception code into their binaries.
 
 Parallel library tests lock their shared generated data during builds and reads.

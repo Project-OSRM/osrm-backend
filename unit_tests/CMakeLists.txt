@@ -209,7 +209,6 @@ set(LIBRARY_TEST_TARGETS
 )
 
 foreach(t ${TEST_TARGETS})
-    target_link_libraries(${t} osrm_exception)
     # Build step: compile the test executable
     add_test(NAME ${t}-build
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target ${t} --config $<CONFIG>)
