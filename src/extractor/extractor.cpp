@@ -14,6 +14,7 @@
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/node_locations_for_ways.hpp"
 #include "extractor/node_restriction_map.hpp"
+#include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/restriction_graph.hpp"
 #include "extractor/restriction_parser.hpp"
@@ -260,7 +261,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                    parsed_osm_data.turn_restrictions,
                                                    parsed_osm_data.unresolved_maneuver_overrides,
                                                    std::move(parsed_osm_data.osm_coordinates),
-                                                   std::move(parsed_osm_data.osm_node_ids),
                                                    prepared_edges,
                                                    config.GetPath(".osrm.geometry").parent_path(),
                                                    std::move(parsed_osm_data.annotation_data));
@@ -282,11 +282,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "ok, after " << TIMER_SEC(segregated) << "s";
     util::Log() << "Segregated edges count = " << segregated_edges.size();
 
-    util::Log() << "Writing nodes for nodes-based and edges-based graphs ...";
     auto const &coordinates = node_based_graph_factory.GetCoordinates();
-    files::writeNodes(
-        config.GetPath(".osrm.nbg_nodes"), coordinates, node_based_graph_factory.GetOsmNodes());
-    node_based_graph_factory.ReleaseOsmNodes();
 
     auto const &node_based_graph = node_based_graph_factory.GetGraph();
 
@@ -856,11 +852,11 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         files::writeRecords(writer, "/extractor/edges", prepared_edges);
     }
 
+    files::writeNodes(config.GetPath(".osrm.nbg_nodes"), osm_coordinates, osm_node_ids);
     return ParsedOSMData{std::move(turn_lane_map),
                          std::move(extraction_containers.turn_restrictions),
                          std::move(extraction_containers.internal_maneuver_overrides),
                          std::move(osm_coordinates),
-                         std::move(osm_node_ids),
                          std::move(extraction_containers.all_edges_annotation_data_list)};
 }
 

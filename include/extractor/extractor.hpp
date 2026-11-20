@@ -34,7 +34,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extractor/extractor_config.hpp"
 #include "extractor/graph_compressor.hpp"
 #include "extractor/maneuver_override.hpp"
-#include "extractor/packed_osm_ids.hpp"
 #include "extractor/record_spool.hpp"
 
 #include "restriction_graph.hpp"
@@ -60,7 +59,6 @@ class Extractor
         std::vector<TurnRestriction> turn_restrictions;
         std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
         std::vector<util::Coordinate> osm_coordinates;
-        extractor::PackedOSMIDs osm_node_ids;
         std::vector<NodeBasedEdgeAnnotation> annotation_data;
     };
 

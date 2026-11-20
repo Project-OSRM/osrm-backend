@@ -103,7 +103,7 @@ BOOST_AUTO_TEST_CASE(finalizes_directed_geometry_only_when_both_directions_match
         container.CompressEdge(1, 3, 1, 0, {1}, {1}, {11}, {11});
 
         Graph graph(3, edges);
-        const auto geometry = container.ZipEdges(0, 1);
+        const auto geometry = container.ZipEdges(graph, 0, 1);
         graph.GetEdgeData(0).geometry_id = {geometry, true};
         graph.GetEdgeData(1).geometry_id = {geometry, !geometry_matches};
         BOOST_CHECK_EQUAL(container.finalizeGeometry(graph), geometry_matches);

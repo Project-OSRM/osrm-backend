@@ -8,6 +8,9 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include <boost/container/options.hpp>
+#include <boost/container/vector.hpp>
+
 #include <deque>
 #include <filesystem>
 #include <limits>
@@ -32,7 +35,13 @@ class CompressedEdgeContainer
         SegmentDuration duration; // the duration of the edge leading to this node
     };
 
-    using OnewayEdgeBucket = std::pmr::vector<OnewayCompressedEdge>;
+    using BucketOptions = boost::container::vector_options<
+        boost::container::stored_size<unsigned>,
+        boost::container::growth_factor<boost::container::growth_factor_50>>::type;
+    using OnewayEdgeBucket =
+        boost::container::vector<OnewayCompressedEdge,
+                                 std::pmr::polymorphic_allocator<OnewayCompressedEdge>,
+                                 BucketOptions>;
 
     explicit CompressedEdgeContainer(std::filesystem::path spool_parent = {});
     void initializeEdgeIndex(std::size_t edge_capacity);
@@ -51,16 +60,11 @@ class CompressedEdgeContainer
                       const EdgeWeight node_weight_penalty = INVALID_EDGE_WEIGHT,
                       const EdgeDuration node_duration_penalty = MAXIMAL_EDGE_DURATION);
 
-    void AddUncompressedEdge(const EdgeID edge_id,
-                             const NodeID target_node,
-                             const EdgeWeight weight,
-                             const EdgeDuration duration);
-
-    unsigned ZipEdges(const unsigned f_edge_pos, const unsigned r_edge_pos);
+    unsigned ZipEdges(const util::NodeBasedDynamicGraph &graph, EdgeID forward, EdgeID reverse);
     void releaseEquivalentEdgeGeometry(EdgeID forward, EdgeID reverse);
     bool finalizeGeometry(const util::NodeBasedDynamicGraph &graph);
 
-    auto getGeometryNodes(EdgeID edge, GeometryID geometry) const
+    auto getGeometryNodes(EdgeID edge, GeometryID geometry, NodeID target = SPECIAL_NODEID) const
     {
         std::span<const OnewayCompressedEdge> bucket;
         std::span<const NodeID> packed;
@@ -68,7 +72,10 @@ class CompressedEdgeContainer
         if ((!m_use_packed_geometry || m_has_fallback_geometry) && bucket_index != PackedGeometry)
         {
             if (m_geometry_buckets && bucket_index < m_geometry_buckets->buckets.size())
-                bucket = m_geometry_buckets->buckets[bucket_index];
+            {
+                const auto &stored = m_geometry_buckets->buckets[bucket_index];
+                bucket = {stored.data(), stored.size()};
+            }
         }
         else if (m_use_packed_geometry)
         {
@@ -76,19 +83,22 @@ class CompressedEdgeContainer
                 packed = std::as_const(*segment_data).GetForwardGeometry(geometry.id);
         }
 
-        const auto size = packed.empty() ? bucket.size() : packed.size() - 1;
+        const auto uncompressed =
+            !m_use_packed_geometry && bucket.empty() && target != SPECIAL_NODEID;
+        const auto size =
+            packed.empty() ? bucket.size() + unsigned(uncompressed) : packed.size() - 1;
         return std::views::iota(std::size_t{0}, size) |
                std::views::transform(
-                   [bucket, packed, forward = bool(geometry.forward)](auto i)
+                   [bucket, packed, target, forward = bool(geometry.forward)](auto i)
                    {
                        if (packed.empty())
-                           return bucket[i].node_id;
+                           return bucket.empty() ? target : bucket[i].node_id;
                        return packed[forward ? i + 1 : packed.size() - 2 - i];
                    });
     }
 
     bool HasEntryForID(const EdgeID edge_id) const;
-    void PrintStatistics() const;
+    void PrintStatistics(unsigned live_edges) const;
     unsigned GetPositionForID(const EdgeID edge_id) const;
     const OnewayEdgeBucket &GetBucketReference(const EdgeID edge_id) const;
     bool IsTrivial(const EdgeID edge_id) const;

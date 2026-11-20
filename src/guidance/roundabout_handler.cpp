@@ -274,7 +274,7 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
         double length = 0.;
         auto last_coord = node_coordinates[source_node];
         const auto geometry = compressed_geometries.getGeometryNodes(
-            eid, node_based_graph.GetEdgeData(eid).geometry_id);
+            eid, node_based_graph.GetEdgeData(eid).geometry_id, node_based_graph.GetTarget(eid));
         for (const auto node : geometry)
         {
             const auto next_coord = node_coordinates[node];

@@ -53,7 +53,7 @@ getEdgeCoordinates(const extractor::CompressedEdgeContainer &compressed_geometri
                    const GeometryID geometry_id,
                    const NodeID to_node)
 {
-    const auto geometry = compressed_geometries.getGeometryNodes(edge, geometry_id);
+    const auto geometry = compressed_geometries.getGeometryNodes(edge, geometry_id, to_node);
     if (geometry.empty())
         return {node_coordinates[from_node], node_coordinates[to_node]};
 

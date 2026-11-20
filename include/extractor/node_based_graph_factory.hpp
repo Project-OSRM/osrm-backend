@@ -5,7 +5,6 @@
 #include "extractor/maneuver_override.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/node_data_container.hpp"
-#include "extractor/packed_osm_ids.hpp"
 #include "extractor/record_spool.hpp"
 #include "extractor/scripting_environment.hpp"
 
@@ -36,7 +35,6 @@ class NodeBasedGraphFactory
                           std::vector<TurnRestriction> &turn_restrictions,
                           std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
                           std::vector<util::Coordinate> &&coordinates,
-                          extractor::PackedOSMIDs &&osm_node_ids,
                           RecordSpool<NodeBasedEdge> &prepared_edges,
                           const std::filesystem::path &geometry_spool_parent,
                           std::vector<NodeBasedEdgeAnnotation> &&annotation_data);
@@ -45,15 +43,12 @@ class NodeBasedGraphFactory
     auto const &GetCompressedEdges() const { return compressed_edge_container; }
     auto const &GetCoordinates() const { return coordinates; }
     auto const &GetAnnotationData() const { return annotation_data; }
-    auto const &GetOsmNodes() const { return osm_node_ids; }
     auto &GetCompressedEdges() { return compressed_edge_container; }
     auto &GetCoordinates() { return coordinates; }
     auto &GetAnnotationData() { return annotation_data; }
-    auto &GetOsmNodes() { return osm_node_ids; }
 
     // to reduce the memory footprint, the node-based graph factory allows releasing memory after it
     // might have been used for the last time:
-    void ReleaseOsmNodes();
     void releaseGraph() { compressed_output_graph = util::NodeBasedDynamicGraph{}; }
 
   private:
@@ -86,9 +81,6 @@ class NodeBasedGraphFactory
 
     // General Information about the graph, not used outside of extractor
     std::vector<util::Coordinate> coordinates;
-
-    // data to keep in sync with the node-based graph
-    extractor::PackedOSMIDs osm_node_ids;
 
     // for the compressed geometry
     extractor::CompressedEdgeContainer compressed_edge_container;

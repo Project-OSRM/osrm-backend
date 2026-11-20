@@ -19,18 +19,17 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     std::vector<TurnRestriction> &turn_restrictions,
     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
     std::vector<util::Coordinate> &&coordinates,
-    extractor::PackedOSMIDs &&osm_node_ids,
     RecordSpool<NodeBasedEdge> &prepared_edges,
     const std::filesystem::path &geometry_spool_parent,
     std::vector<NodeBasedEdgeAnnotation> &&annotation_data)
     : annotation_data(std::move(annotation_data)), coordinates(std::move(coordinates)),
-      osm_node_ids(std::move(osm_node_ids)), compressed_edge_container(geometry_spool_parent)
+      compressed_edge_container(geometry_spool_parent)
 {
     BuildCompressedOutputGraph(prepared_edges);
     prepared_edges.clear();
     releaseUnusedHeapPages();
     Compress(scripting_environment, turn_restrictions, maneuver_overrides);
-    compressed_edge_container.PrintStatistics();
+    compressed_edge_container.PrintStatistics(compressed_output_graph.GetNumberOfEdges());
     CompressGeometry();
     compressed_edge_container.finalizeGeometry(compressed_output_graph);
     releaseUnusedHeapPages();
@@ -125,7 +124,8 @@ void NodeBasedGraphFactory::CompressGeometry()
             const EdgeID edge_id_2 = compressed_output_graph.FindEdge(to, from);
             BOOST_ASSERT(edge_id_2 != SPECIAL_EDGEID);
 
-            auto packed_geometry_id = compressed_edge_container.ZipEdges(edge_id_1, edge_id_2);
+            auto packed_geometry_id =
+                compressed_edge_container.ZipEdges(compressed_output_graph, edge_id_1, edge_id_2);
 
             // remember the geometry ID for both edges in the node-based graph
             compressed_output_graph.GetEdgeData(edge_id_1).geometry_id = {packed_geometry_id, true};
@@ -236,12 +236,6 @@ void NodeBasedGraphFactory::CompressAnnotationData()
     util::Log() << " graph compression removed " << (old_size - annotation_data.size())
                 << " annotations of " << old_size << " in " << TIMER_SEC(compress_annotation)
                 << " seconds";
-}
-
-void NodeBasedGraphFactory::ReleaseOsmNodes()
-{
-    // replace with a new vector to release old memory
-    extractor::PackedOSMIDs().swap(osm_node_ids);
 }
 
 } // namespace osrm::extractor

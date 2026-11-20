@@ -526,6 +526,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
         struct EdgesPipelineBuffer
         {
             std::size_t nodes_processed = 0;
+            std::size_t node_based_edges = 0;
 
             std::vector<EdgeWithData> continuous_data; // may need this
             std::vector<EdgeWithData> delayed_data;    // may need this
@@ -761,10 +762,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     // an outgoing edge. Therefore, we have to search all connected edges for edges
                     // entering `b`
 
+                    buffer->node_based_edges += incoming_edges.size();
                     for (const intersection::IntersectionEdge &incoming_edge : incoming_edges)
                     {
-                        ++node_based_edge_counter;
-
                         const intersection::IntersectionView connected_roads =
                             intersection::getConnectedRoadsForEdgeGeometries(
                                 m_node_based_graph,
@@ -1135,6 +1135,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             [&](const auto &buffer)
             {
                 routing_progress.PrintAddition(buffer->nodes_processed);
+                node_based_edge_counter += buffer->node_based_edges;
 
                 m_connectivity_checksum = buffer->checksum.update_checksum(m_connectivity_checksum);
 

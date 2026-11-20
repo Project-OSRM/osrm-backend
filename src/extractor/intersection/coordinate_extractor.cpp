@@ -509,8 +509,10 @@ util::Coordinate CoordinateExtractor::GetCoordinateCloseToTurn(const NodeID from
 {
     const auto end_node = traversed_in_reverse ? from_node : to_node;
     const auto start_node = traversed_in_reverse ? to_node : from_node;
-    const auto geometry = compressed_geometries.getGeometryNodes(
-        turn_edge, node_based_graph.GetEdgeData(turn_edge).geometry_id);
+    const auto geometry =
+        compressed_geometries.getGeometryNodes(turn_edge,
+                                               node_based_graph.GetEdgeData(turn_edge).geometry_id,
+                                               node_based_graph.GetTarget(turn_edge));
     if (geometry.empty())
         return node_coordinates[end_node];
     else
@@ -560,8 +562,10 @@ CoordinateExtractor::GetCoordinatesAlongRoad(const NodeID intersection_node,
                                              const bool traversed_in_reverse,
                                              const NodeID to_node) const
 {
-    const auto geometry = compressed_geometries.getGeometryNodes(
-        turn_edge, node_based_graph.GetEdgeData(turn_edge).geometry_id);
+    const auto geometry =
+        compressed_geometries.getGeometryNodes(turn_edge,
+                                               node_based_graph.GetEdgeData(turn_edge).geometry_id,
+                                               node_based_graph.GetTarget(turn_edge));
     if (geometry.empty())
     {
         if (traversed_in_reverse)

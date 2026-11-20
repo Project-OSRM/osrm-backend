@@ -1093,11 +1093,11 @@ const ProfileProperties &Sol2ScriptingEnvironment::GetProfileProperties()
 
 LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 {
-    std::lock_guard<std::mutex> lock(init_mutex);
     bool initialized = false;
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
+        std::lock_guard<std::mutex> lock(init_mutex);
         ref = std::make_unique<LuaScriptingContext>(location_dependent_data, driving_side_index);
         InitContext(*ref);
     }
