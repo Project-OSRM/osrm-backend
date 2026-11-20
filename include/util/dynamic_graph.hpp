@@ -474,6 +474,11 @@ template <typename EdgeDataT, typename EdgeIteratorT = std::uint32_t> class Dyna
     // For graphs whose adjacency ranges are physically in node order. Edge IDs change.
     void compactEdgesInNodeOrder()
     {
+        compactEdgesInNodeOrder([](EdgeIterator, EdgeIterator, unsigned) {});
+    }
+
+    template <typename Relocate> void compactEdgesInNodeOrder(Relocate relocate)
+    {
         EdgeIterator next = 0;
         for (auto &node : node_array)
         {
@@ -482,6 +487,7 @@ template <typename EdgeDataT, typename EdgeIteratorT = std::uint32_t> class Dyna
             {
                 const auto first = edge_list.begin() + node.first_edge;
                 std::move(first, first + node.edges, edge_list.begin() + next);
+                relocate(node.first_edge, next, node.edges);
             }
             node.first_edge = next;
             next += node.edges;

@@ -304,11 +304,17 @@ BOOST_AUTO_TEST_CASE(skip_degree_two_nodes)
     GraphCompressor().Compress(
         scripting_environment, restrictions, maneuver_overrides, graph, annotations, container);
 
-    BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {0, 0}).edge), 4);
-    BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {4, 7}).edge), 0);
-    BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {5, 10}).edge), 4);
-    BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {6, 11}).edge), 4);
-    BOOST_CHECK_EQUAL(graph.GetTarget(skipDegreeTwoNodes(graph, {7, 12}).edge), 7);
+    const auto skip_from = [&](NodeID source, NodeID target)
+    {
+        const auto edge = graph.FindEdge(source, target);
+        BOOST_REQUIRE_NE(edge, SPECIAL_EDGEID);
+        return graph.GetTarget(skipDegreeTwoNodes(graph, {source, edge}).edge);
+    };
+    BOOST_CHECK_EQUAL(skip_from(0, 1), 4);
+    BOOST_CHECK_EQUAL(skip_from(4, 2), 0);
+    BOOST_CHECK_EQUAL(skip_from(5, 4), 4);
+    BOOST_CHECK_EQUAL(skip_from(6, 4), 4);
+    BOOST_CHECK_EQUAL(skip_from(7, 8), 7);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -507,27 +507,27 @@ void ExtractionContainers::PrepareNodes(NodeLocationIndex *locations)
             util::UnbufferedLog log;
             log << "Reading used nodes from OSM location index ... " << std::flush;
             TIMER_START(read_used_nodes);
-            used_nodes.resize(original_used_count);
+            releaseUnusedHeapPages();
+            std::vector<osmium::Location> selected_locations(original_used_count);
             tbb::parallel_for(tbb::blocked_range<std::size_t>(0, original_used_count),
                               [&](const tbb::blocked_range<std::size_t> &range)
                               {
                                   for (auto index = range.begin(); index != range.end(); ++index)
-                                  {
-                                      const auto id = used_node_id_list[index];
-                                      const auto location =
-                                          locations->get_noexcept(from_alias<std::uint64_t>(id));
-                                      if (location.is_defined())
-                                          used_nodes[index] = makeQueryNode(id, location);
-                                  }
+                                      selected_locations[index] = locations->get_noexcept(
+                                          from_alias<std::uint64_t>(used_node_id_list[index]));
                               });
             locations->clear();
-            std::erase_if(used_nodes,
-                          [](const auto &node) { return node.node_id == SPECIAL_OSM_NODEID; });
+            releaseUnusedHeapPages();
+            used_nodes.reserve(original_used_count);
+            for (std::size_t index = 0; index < original_used_count; ++index)
+            {
+                if (selected_locations[index].is_undefined())
+                    continue;
+                const auto id = used_node_id_list[index];
+                used_node_id_list[used_nodes.size()] = id;
+                used_nodes.push_back(makeQueryNode(id, selected_locations[index]));
+            }
             used_node_id_list.resize(used_nodes.size());
-            std::transform(used_nodes.begin(),
-                           used_nodes.end(),
-                           used_node_id_list.begin(),
-                           [](const auto &node) { return node.node_id; });
             TIMER_STOP(read_used_nodes);
             log << "ok, after " << TIMER_SEC(read_used_nodes) << "s";
         }

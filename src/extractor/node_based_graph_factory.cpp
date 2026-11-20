@@ -28,18 +28,10 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     BuildCompressedOutputGraph(edge_list);
     std::vector<NodeBasedEdge>().swap(edge_list);
     releaseUnusedHeapPages();
-    compressed_edge_container.initializeEdgeIndex(compressed_output_graph.GetEdgeCapacity());
     Compress(scripting_environment, turn_restrictions, maneuver_overrides);
     compressed_edge_container.PrintStatistics();
     CompressGeometry();
-    if (compressed_edge_container.finalizeGeometry(compressed_output_graph))
-    {
-        // Compression only deletes edges. Packed geometry no longer depends on edge IDs.
-        const auto slots = compressed_output_graph.GetEdgeCapacity();
-        compressed_output_graph.compactEdgesInNodeOrder();
-        util::Log() << "Compacted node-based graph from " << slots << " to "
-                    << compressed_output_graph.GetEdgeCapacity() << " edge slots";
-    }
+    compressed_edge_container.finalizeGeometry(compressed_output_graph);
     releaseUnusedHeapPages();
     CompressAnnotationData();
 }

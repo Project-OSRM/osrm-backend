@@ -1,6 +1,7 @@
 #ifndef GEOMETRY_COMPRESSOR_HPP_
 #define GEOMETRY_COMPRESSOR_HPP_
 
+#include "extractor/geometry_memory.hpp"
 #include "extractor/segment_data_container.hpp"
 
 #include "util/node_based_graph.hpp"
@@ -29,10 +30,12 @@ class CompressedEdgeContainer
         SegmentDuration duration; // the duration of the edge leading to this node
     };
 
-    using OnewayEdgeBucket = std::vector<OnewayCompressedEdge>;
+    using OnewayEdgeBucket = std::pmr::vector<OnewayCompressedEdge>;
 
     CompressedEdgeContainer();
     void initializeEdgeIndex(std::size_t edge_capacity);
+    void moveEdgeMappings(EdgeID source, EdgeID destination, unsigned count);
+    void resizeEdgeIndex(std::size_t edge_capacity);
     void CompressEdge(const EdgeID surviving_edge_id,
                       const EdgeID removed_edge_id,
                       const NodeID via_node_id,
@@ -110,9 +113,10 @@ class CompressedEdgeContainer
     std::atomic_size_t clipped_durations{0};
 
     void IncreaseFreeList();
-    std::vector<OnewayEdgeBucket> m_compressed_oneway_geometries;
+    GeometryMemory m_geometry_memory;
+    std::pmr::vector<OnewayEdgeBucket> m_compressed_oneway_geometries{&m_geometry_memory};
     std::vector<unsigned> m_free_list;
-    std::vector<unsigned> m_edge_id_to_list_index;
+    util::DeallocatingVector<unsigned> m_edge_id_to_list_index;
     std::unique_ptr<SegmentDataContainer> segment_data;
     bool m_use_packed_geometry = false;
     bool m_has_fallback_geometry = false;
