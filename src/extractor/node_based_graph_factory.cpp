@@ -29,7 +29,14 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     Compress(scripting_environment, turn_restrictions, maneuver_overrides);
     CompressGeometry();
     compressed_edge_container.PrintStatistics();
-    compressed_edge_container.finalizeGeometry(compressed_output_graph);
+    if (compressed_edge_container.finalizeGeometry(compressed_output_graph))
+    {
+        // Compression only deletes edges. Packed geometry no longer depends on edge IDs.
+        const auto slots = compressed_output_graph.GetEdgeCapacity();
+        compressed_output_graph.compactEdgesInNodeOrder();
+        util::Log() << "Compacted node-based graph from " << slots << " to "
+                    << compressed_output_graph.GetEdgeCapacity() << " edge slots";
+    }
     CompressAnnotationData();
 }
 

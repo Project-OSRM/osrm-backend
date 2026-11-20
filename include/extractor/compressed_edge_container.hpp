@@ -51,7 +51,7 @@ class CompressedEdgeContainer
 
     void InitializeBothwayVector();
     unsigned ZipEdges(const unsigned f_edge_pos, const unsigned r_edge_pos);
-    void finalizeGeometry(const util::NodeBasedDynamicGraph &graph);
+    bool finalizeGeometry(const util::NodeBasedDynamicGraph &graph);
 
     auto getGeometryNodes(EdgeID edge, GeometryID geometry) const
     {

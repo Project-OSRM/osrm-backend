@@ -284,7 +284,7 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     return zipped_geometry_id;
 }
 
-void CompressedEdgeContainer::finalizeGeometry(const util::NodeBasedDynamicGraph &graph)
+bool CompressedEdgeContainer::finalizeGeometry(const util::NodeBasedDynamicGraph &graph)
 {
     segment_data->index.push_back(segment_data->nodes.size());
     m_use_packed_geometry = true;
@@ -310,7 +310,7 @@ void CompressedEdgeContainer::finalizeGeometry(const util::NodeBasedDynamicGraph
         {
             m_use_packed_geometry = false;
             util::Log() << "Retaining per-edge geometry for expansion and guidance";
-            return;
+            return false;
         }
     }
 
@@ -318,6 +318,7 @@ void CompressedEdgeContainer::finalizeGeometry(const util::NodeBasedDynamicGraph
     decltype(m_edge_id_to_list_index_map)().swap(m_edge_id_to_list_index_map);
     decltype(m_free_list)().swap(m_free_list);
     util::Log() << "Using packed geometry for edge expansion and guidance";
+    return true;
 }
 
 void CompressedEdgeContainer::PrintStatistics() const

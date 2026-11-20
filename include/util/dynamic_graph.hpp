@@ -228,8 +228,7 @@ template <typename EdgeDataT, typename EdgeIteratorT = std::uint32_t> class Dyna
     unsigned GetNumberOfEdges() const { return number_of_edges; }
 
     // Number of edge slots, live and dummied out alike. This is what EdgeIterator has to index,
-    // so it is the quantity bounded by 2^32, and it only shrinks back to GetNumberOfEdges() when
-    // Renumber() compacts the list.
+    // so it is the quantity bounded by 2^32. Compaction removes the unused slots.
     auto GetEdgeCapacity() const { return edge_list.size(); }
 
     unsigned GetOutDegree(const NodeIterator n) const { return node_array[n].edges; }
@@ -424,6 +423,25 @@ template <typename EdgeDataT, typename EdgeIteratorT = std::uint32_t> class Dyna
             }
         }
         return current_iterator;
+    }
+
+    // For graphs whose adjacency ranges are physically in node order. Edge IDs change.
+    void compactEdgesInNodeOrder()
+    {
+        EdgeIterator next = 0;
+        for (auto &node : node_array)
+        {
+            BOOST_ASSERT(next <= node.first_edge);
+            if (node.edges != 0 && next != node.first_edge)
+            {
+                const auto first = edge_list.begin() + node.first_edge;
+                std::move(first, first + node.edges, edge_list.begin() + next);
+            }
+            node.first_edge = next;
+            next += node.edges;
+        }
+        BOOST_ASSERT(next == GetNumberOfEdges());
+        edge_list.resize(next);
     }
 
     void Renumber(const std::vector<NodeID> &old_to_new_node)
