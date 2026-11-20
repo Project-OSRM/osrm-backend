@@ -37,6 +37,7 @@ struct LuaScriptingContext final
                     ExtractionWay &result,
                     const ExtractionRelationContainer &relations);
     void ProcessRelation(const osmium::Relation &, const ExtractionRelationContainer &relations);
+    void collectUnusedMemory();
 
     ProfileProperties properties;
     RasterContainer raster_sources;
@@ -56,7 +57,7 @@ struct LuaScriptingContext final
 
     int api_version = 4;
     unsigned turns_since_heap_check = 0;
-    std::size_t live_turn_heap_bytes = 0;
+    std::size_t live_heap_bytes = 0;
     sol::table profile_table;
 
     // Reference to immutable location dependent data and locations memo

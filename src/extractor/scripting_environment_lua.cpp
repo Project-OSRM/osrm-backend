@@ -1180,6 +1180,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
             break;
         }
     }
+    local_context.collectUnusedMemory();
 }
 
 std::vector<std::string>
@@ -1339,6 +1340,16 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetRelations()
     }
 }
 
+void LuaScriptingContext::collectUnusedMemory()
+{
+    constexpr std::size_t HeapGrowthLimit = 16 * 1024 * 1024;
+    if (state.is_gc_on() && state.memory_used() > live_heap_bytes + HeapGrowthLimit)
+    {
+        state.collect_garbage();
+        live_heap_bytes = state.memory_used();
+    }
+}
+
 void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
 {
     auto &context = GetSol2Context();
@@ -1408,18 +1419,11 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
         break;
     }
 
-    // Long turn batches can grow the Lua heap between automatic collections.
     constexpr unsigned HeapCheckInterval = 65536;
-    constexpr std::size_t HeapGrowthLimit = 16 * 1024 * 1024;
     if (context.has_turn_penalty_function && ++context.turns_since_heap_check == HeapCheckInterval)
     {
         context.turns_since_heap_check = 0;
-        if (context.state.is_gc_on() &&
-            context.state.memory_used() > context.live_turn_heap_bytes + HeapGrowthLimit)
-        {
-            context.state.collect_garbage();
-            context.live_turn_heap_bytes = context.state.memory_used();
-        }
+        context.collectUnusedMemory();
     }
 
     // Cap turn duration to prevent int16_t overflow on storage (duration is always in seconds,

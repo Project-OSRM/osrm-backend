@@ -813,6 +813,7 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
                 << " relations, " << number_of_restrictions << " restrictions";
 
     extractor_callbacks.reset();
+    releaseUnusedHeapPages();
 
     if (!extraction_containers.hasEdges())
     {

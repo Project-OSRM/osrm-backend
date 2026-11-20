@@ -29,7 +29,7 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
 {
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
     const unsigned original_number_of_edges = graph.GetNumberOfEdges();
-    constexpr auto ReclaimSlots = (256 * 1024 * 1024) / sizeof(util::NodeBasedDynamicGraph::Edge);
+    constexpr auto ReclaimSlots = (128 * 1024 * 1024) / sizeof(util::NodeBasedDynamicGraph::Edge);
     const auto original_slots = graph.GetEdgeCapacity();
     geometry_compressor.initializeEdgeIndex(original_slots);
     const auto compact_edges = [&]
