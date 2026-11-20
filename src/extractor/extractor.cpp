@@ -330,6 +330,9 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                                   edge_based_node_weights,
                                                                   edge_based_node_durations,
                                                                   edge_based_node_distances);
+    std::vector<EdgeWeight>().swap(edge_based_node_weights);
+    std::vector<EdgeDuration>().swap(edge_based_node_durations);
+    std::vector<EdgeDistance>().swap(edge_based_node_distances);
     TIMER_STOP(timer_write_node_weights);
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
 
@@ -339,6 +342,26 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                    edge_based_node_segments,
                    edge_based_nodes_container);
 
+    if (std::none_of(edge_based_node_segments.begin(),
+                     edge_based_node_segments.end(),
+                     [](const auto &segment) { return segment.is_startpoint; }))
+    {
+        throw util::exception("There are no snappable edges left after processing.  Are you "
+                              "setting travel modes correctly in the profile?  Cannot continue." +
+                              SOURCE_REF);
+    }
+
+    const auto edge_count = edge_based_edge_list.size();
+    util::Log() << "Writing edge-based-graph edges       ... " << std::flush;
+    TIMER_START(write_edges);
+    files::writeEdgeBasedGraph(config.GetPath(".osrm.ebg"),
+                               number_of_edge_based_nodes,
+                               edge_based_edge_list,
+                               ebg_connectivity_checksum);
+    edge_based_edge_list.clear();
+    TIMER_STOP(write_edges);
+    util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s";
+
     util::Log() << "Building r-tree ...";
     TIMER_START(rtree);
     BuildRTree(std::move(edge_based_node_segments), coordinates);
@@ -347,16 +370,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     files::writeNodeData(config.GetPath(".osrm.ebg_nodes"), edge_based_nodes_container);
 
-    util::Log() << "Writing edge-based-graph edges       ... " << std::flush;
-    TIMER_START(write_edges);
-    files::writeEdgeBasedGraph(config.GetPath(".osrm.ebg"),
-                               number_of_edge_based_nodes,
-                               edge_based_edge_list,
-                               ebg_connectivity_checksum);
-    TIMER_STOP(write_edges);
-    util::Log() << "ok, after " << TIMER_SEC(write_edges) << "s";
-
-    util::Log() << "Processed " << edge_based_edge_list.size() << " edges";
+    util::Log() << "Processed " << edge_count << " edges";
 
     const auto nodes_per_second =
         static_cast<std::uint64_t>(number_of_node_based_nodes / TIMER_SEC(expansion));
@@ -848,6 +862,7 @@ void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
     edges.erase(std::unique(edges.begin(), edges.end()), edges.end());
 
     auto uncontracted_graph = UncontractedGraph(number_of_edge_based_nodes, edges);
+    std::vector<InputEdge>().swap(edges);
 
     util::TarjanSCC<UncontractedGraph> component_search(uncontracted_graph);
     component_search.Run();
@@ -1043,19 +1058,6 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
 {
     util::Log() << "Constructing r-tree of " << edge_based_node_segments.size()
                 << " segments build on-top of " << coordinates.size() << " coordinates";
-
-    // Filter node based edges based on startpoint
-    auto start_point_count = std::accumulate(edge_based_node_segments.begin(),
-                                             edge_based_node_segments.end(),
-                                             0,
-                                             [](const size_t so_far, const auto &segment)
-                                             { return so_far + (segment.is_startpoint ? 1 : 0); });
-    if (start_point_count == 0)
-    {
-        throw util::exception("There are no snappable edges left after processing.  Are you "
-                              "setting travel modes correctly in the profile?  Cannot continue." +
-                              SOURCE_REF);
-    }
 
     TIMER_START(construction);
     util::StaticRTree<EdgeBasedNodeSegment> rtree(
