@@ -123,6 +123,7 @@ thread_local SearchEngineData<MLD>::MapMatchingHeapPtr
 thread_local SearchEngineData<MLD>::MapMatchingHeapPtr
     SearchEngineData<MLD>::map_matching_reverse_heap_1;
 thread_local SearchEngineData<MLD>::ManyToManyHeapPtr SearchEngineData<MLD>::many_to_many_heap;
+thread_local SearchEngineData<MLD>::ReachabilityHeapPtr SearchEngineData<MLD>::reachability_heap;
 thread_local SearchEngineData<MLD>::UnpackingCachePtr SearchEngineData<MLD>::unpacking_cache;
 thread_local unsigned SearchEngineData<MLD>::unpacking_cache_node_count = 0;
 thread_local unsigned SearchEngineData<MLD>::unpacking_cache_edge_count = 0;
@@ -185,6 +186,16 @@ void SearchEngineData<MLD>::InitializeOrClearManyToManyThreadLocalStorage(
         many_to_many_heap.reset(new ManyToManyQueryHeap(number_of_nodes, number_of_boundary_nodes));
     }
 }
+
+void SearchEngineData<MLD>::InitializeOrClearReachabilityThreadLocalStorage(
+    unsigned number_of_nodes)
+{
+    if (reachability_heap)
+        reachability_heap->Clear();
+    else
+        reachability_heap = std::make_unique<ReachabilityQueryHeap>(number_of_nodes);
+}
+
 void SearchEngineData<MLD>::InitializeUnpackingCache(unsigned number_of_nodes,
                                                      unsigned number_of_edges)
 {
