@@ -509,17 +509,16 @@ util::Coordinate CoordinateExtractor::GetCoordinateCloseToTurn(const NodeID from
 {
     const auto end_node = traversed_in_reverse ? from_node : to_node;
     const auto start_node = traversed_in_reverse ? to_node : from_node;
-    if (!compressed_geometries.HasEntryForID(turn_edge))
+    const auto geometry = compressed_geometries.getGeometryNodes(
+        turn_edge, node_based_graph.GetEdgeData(turn_edge).geometry_id);
+    if (geometry.empty())
         return node_coordinates[end_node];
     else
     {
-        const auto &geometry = compressed_geometries.GetBucketReference(turn_edge);
-
         // the compressed edges contain node ids, we transfer them to coordinates accessing the
         // node_coordinates array
-        const auto compressedGeometryToCoordinate =
-            [this](const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge)
-        { return node_coordinates[compressed_edge.node_id]; };
+        const auto compressedGeometryToCoordinate = [this](NodeID node)
+        { return node_coordinates[node]; };
 
         // return the first coordinate that is reasonably far away from the start node
         const util::Coordinate start_coordinate = node_coordinates[start_node];
@@ -527,21 +526,20 @@ util::Coordinate CoordinateExtractor::GetCoordinateCloseToTurn(const NodeID from
         // OSM data has a tendency to include repeated nodes with identical coordinates. To skip
         // over these, we search for the first coordinate along the path that is at least a meter
         // away from the first entry
-        const auto far_enough_away =
-            [start_coordinate, compressedGeometryToCoordinate](
-                const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge)
+        const auto far_enough_away = [start_coordinate, compressedGeometryToCoordinate](NodeID node)
         {
             return util::coordinate_calculation::greatCircleDistance(
-                       compressedGeometryToCoordinate(compressed_edge), start_coordinate) > 1;
+                       compressedGeometryToCoordinate(node), start_coordinate) > 1;
         };
 
         // find the first coordinate, that is at least unequal to the begin of the edge
         if (traversed_in_reverse)
         {
-            const auto far_enough =
-                std::find_if(geometry.rbegin(), geometry.rend(), far_enough_away);
-            return (far_enough != geometry.rend()) ? compressedGeometryToCoordinate(*far_enough)
-                                                   : node_coordinates[end_node];
+            const auto reverse_geometry = geometry | std::views::reverse;
+            const auto far_enough = std::ranges::find_if(reverse_geometry, far_enough_away);
+            return (far_enough != reverse_geometry.end())
+                       ? compressedGeometryToCoordinate(*far_enough)
+                       : node_coordinates[end_node];
         }
         else
         {
@@ -562,7 +560,9 @@ CoordinateExtractor::GetCoordinatesAlongRoad(const NodeID intersection_node,
                                              const bool traversed_in_reverse,
                                              const NodeID to_node) const
 {
-    if (!compressed_geometries.HasEntryForID(turn_edge))
+    const auto geometry = compressed_geometries.getGeometryNodes(
+        turn_edge, node_based_graph.GetEdgeData(turn_edge).geometry_id);
+    if (geometry.empty())
     {
         if (traversed_in_reverse)
             return {{node_coordinates[to_node]}, {node_coordinates[intersection_node]}};
@@ -573,23 +573,20 @@ CoordinateExtractor::GetCoordinatesAlongRoad(const NodeID intersection_node,
     {
         // extracts the geometry in coordinates from the compressed edge container
         std::vector<util::Coordinate> result;
-        const auto &geometry = compressed_geometries.GetBucketReference(turn_edge);
         result.reserve(geometry.size() + 2);
 
         // the compressed edges contain node ids, we transfer them to coordinates accessing the
         // node_coordinates array
-        const auto compressedGeometryToCoordinate =
-            [this](const CompressedEdgeContainer::OnewayCompressedEdge &compressed_edge)
-            -> util::Coordinate { return node_coordinates[compressed_edge.node_id]; };
+        const auto compressedGeometryToCoordinate = [this](NodeID node)
+        { return node_coordinates[node]; };
 
         // add the coordinates to the result in either normal or reversed order, based on
         // traversed_in_reverse
         if (traversed_in_reverse)
         {
-            std::transform(geometry.rbegin(),
-                           geometry.rend(),
-                           std::back_inserter(result),
-                           compressedGeometryToCoordinate);
+            std::ranges::transform(geometry | std::views::reverse,
+                                   std::back_inserter(result),
+                                   compressedGeometryToCoordinate);
             BOOST_ASSERT(intersection_node < node_coordinates.size());
             result.push_back(node_coordinates[intersection_node]);
         }

@@ -50,9 +50,11 @@ getEdgeCoordinates(const extractor::CompressedEdgeContainer &compressed_geometri
                    const std::vector<util::Coordinate> &node_coordinates,
                    const NodeID from_node,
                    const EdgeID edge,
+                   const GeometryID geometry_id,
                    const NodeID to_node)
 {
-    if (!compressed_geometries.HasEntryForID(edge))
+    const auto geometry = compressed_geometries.getGeometryNodes(edge, geometry_id);
+    if (geometry.empty())
         return {node_coordinates[from_node], node_coordinates[to_node]};
 
     BOOST_ASSERT(from_node < node_coordinates.size());
@@ -60,15 +62,13 @@ getEdgeCoordinates(const extractor::CompressedEdgeContainer &compressed_geometri
 
     // extracts the geometry in coordinates from the compressed edge container
     std::vector<util::Coordinate> result;
-    const auto &geometry = compressed_geometries.GetBucketReference(edge);
     result.reserve(geometry.size() + 1);
 
     result.push_back(node_coordinates[from_node]);
     std::transform(geometry.begin(),
                    geometry.end(),
                    std::back_inserter(result),
-                   [&node_coordinates](const auto &compressed_edge)
-                   { return node_coordinates[compressed_edge.node_id]; });
+                   [&node_coordinates](NodeID node) { return node_coordinates[node]; });
 
     // filter duplicated coordinates
     result.erase(std::unique(result.begin(), result.end()), result.end());
@@ -209,8 +209,12 @@ getIntersectionOutgoingGeometries(const util::NodeBasedDynamicGraph &graph,
     {
         const auto remote_node = graph.GetTarget(outgoing_edge);
 
-        const auto &geometry = getEdgeCoordinates(
-            compressed_geometries, node_coordinates, intersection_node, outgoing_edge, remote_node);
+        const auto &geometry = getEdgeCoordinates(compressed_geometries,
+                                                  node_coordinates,
+                                                  intersection_node,
+                                                  outgoing_edge,
+                                                  graph.GetEdgeData(outgoing_edge).geometry_id,
+                                                  remote_node);
 
         // OSRM_ASSERT(geometry.size() >= 2, node_coordinates[intersection_node]);
 

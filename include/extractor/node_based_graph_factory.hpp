@@ -36,7 +36,7 @@ class NodeBasedGraphFactory
                           std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
                           std::vector<util::Coordinate> &&coordinates,
                           extractor::PackedOSMIDs &&osm_node_ids,
-                          const std::vector<NodeBasedEdge> &edge_list,
+                          std::vector<NodeBasedEdge> edge_list,
                           std::vector<NodeBasedEdgeAnnotation> &&annotation_data);
 
     auto const &GetGraph() const { return compressed_output_graph; }
@@ -52,6 +52,7 @@ class NodeBasedGraphFactory
     // to reduce the memory footprint, the node-based graph factory allows releasing memory after it
     // might have been used for the last time:
     void ReleaseOsmNodes();
+    void releaseGraph() { compressed_output_graph = util::NodeBasedDynamicGraph{}; }
 
   private:
     // Build and validate compressed output graph

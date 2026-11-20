@@ -244,7 +244,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                    parsed_osm_data.unresolved_maneuver_overrides,
                                                    std::move(parsed_osm_data.osm_coordinates),
                                                    std::move(parsed_osm_data.osm_node_ids),
-                                                   parsed_osm_data.edge_list,
+                                                   std::move(parsed_osm_data.edge_list),
                                                    std::move(parsed_osm_data.annotation_data));
 
     StringTable string_table;
@@ -276,8 +276,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     // That's the reason we can only here write out the final compressed node based graph.
     files::writeCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string(),
                                          toEdgeList(node_based_graph));
-
-    node_based_graph_factory.GetCompressedEdges().PrintStatistics();
 
     // stealing the annotation data from the node-based graph
     edge_based_nodes_container =
@@ -319,6 +317,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                          scripting_environment);
 
     TIMER_STOP(expansion);
+    node_based_graph_factory.releaseGraph();
 
     // output the geometry of the node-based graph, needs to be done after the last usage, since it
     // destroys internal containers

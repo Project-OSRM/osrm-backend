@@ -3,6 +3,7 @@
 
 #include <boost/assert.hpp>
 
+#include <algorithm>
 #include <filesystem>
 
 namespace osrm::extractor
@@ -30,39 +31,11 @@ bool CompressedEdgeContainer::HasEntryForID(const EdgeID edge_id) const
     return iter != m_edge_id_to_list_index_map.end();
 }
 
-bool CompressedEdgeContainer::HasZippedEntryForForwardID(const EdgeID edge_id) const
-{
-    auto iter = m_forward_edge_id_to_zipped_index_map.find(edge_id);
-    return iter != m_forward_edge_id_to_zipped_index_map.end();
-}
-
-bool CompressedEdgeContainer::HasZippedEntryForReverseID(const EdgeID edge_id) const
-{
-    auto iter = m_reverse_edge_id_to_zipped_index_map.find(edge_id);
-    return iter != m_reverse_edge_id_to_zipped_index_map.end();
-}
-
 unsigned CompressedEdgeContainer::GetPositionForID(const EdgeID edge_id) const
 {
     auto map_iterator = m_edge_id_to_list_index_map.find(edge_id);
     BOOST_ASSERT(map_iterator != m_edge_id_to_list_index_map.end());
     BOOST_ASSERT(map_iterator->second < m_compressed_oneway_geometries.size());
-    return map_iterator->second;
-}
-
-unsigned CompressedEdgeContainer::GetZippedPositionForForwardID(const EdgeID edge_id) const
-{
-    auto map_iterator = m_forward_edge_id_to_zipped_index_map.find(edge_id);
-    BOOST_ASSERT(map_iterator != m_forward_edge_id_to_zipped_index_map.end());
-    BOOST_ASSERT(map_iterator->second < segment_data->nodes.size());
-    return map_iterator->second;
-}
-
-unsigned CompressedEdgeContainer::GetZippedPositionForReverseID(const EdgeID edge_id) const
-{
-    auto map_iterator = m_reverse_edge_id_to_zipped_index_map.find(edge_id);
-    BOOST_ASSERT(map_iterator != m_reverse_edge_id_to_zipped_index_map.end());
-    BOOST_ASSERT(map_iterator->second < segment_data->nodes.size());
     return map_iterator->second;
 }
 
@@ -267,8 +240,6 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     BOOST_ASSERT(forward_bucket.size() == reverse_bucket.size());
 
     const unsigned zipped_geometry_id = segment_data->index.size();
-    m_forward_edge_id_to_zipped_index_map[f_edge_id] = zipped_geometry_id;
-    m_reverse_edge_id_to_zipped_index_map[r_edge_id] = zipped_geometry_id;
 
     segment_data->index.emplace_back(segment_data->nodes.size());
 
@@ -311,6 +282,42 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     segment_data->rev_datasources.emplace_back(LUA_SOURCE);
 
     return zipped_geometry_id;
+}
+
+void CompressedEdgeContainer::finalizeGeometry(const util::NodeBasedDynamicGraph &graph)
+{
+    segment_data->index.push_back(segment_data->nodes.size());
+    m_use_packed_geometry = true;
+
+    // Check both directions before releasing the node lists used by compression.
+    const auto matches = [&](EdgeID edge)
+    {
+        const auto geometry = graph.GetEdgeData(edge).geometry_id;
+        const auto bucket = m_edge_id_to_list_index_map.find(edge);
+        if (geometry.id == SPECIAL_GEOMETRYID)
+            return bucket == m_edge_id_to_list_index_map.end();
+        return geometry.id < segment_data->GetNumberOfGeometries() &&
+               bucket != m_edge_id_to_list_index_map.end() &&
+               std::ranges::equal(m_compressed_oneway_geometries[bucket->second],
+                                  getGeometryNodes(edge, geometry),
+                                  {},
+                                  &OnewayCompressedEdge::node_id);
+    };
+
+    for (const auto node : util::irange(0u, graph.GetNumberOfNodes()))
+    {
+        if (!std::ranges::all_of(graph.GetAdjacentEdgeRange(node), matches))
+        {
+            m_use_packed_geometry = false;
+            util::Log() << "Retaining per-edge geometry for expansion and guidance";
+            return;
+        }
+    }
+
+    decltype(m_compressed_oneway_geometries)().swap(m_compressed_oneway_geometries);
+    decltype(m_edge_id_to_list_index_map)().swap(m_edge_id_to_list_index_map);
+    decltype(m_free_list)().swap(m_free_list);
+    util::Log() << "Using packed geometry for edge expansion and guidance";
 }
 
 void CompressedEdgeContainer::PrintStatistics() const
@@ -384,10 +391,5 @@ NodeID CompressedEdgeContainer::GetLastEdgeSourceID(const EdgeID edge_id) const
 }
 
 std::unique_ptr<SegmentDataContainer> CompressedEdgeContainer::ToSegmentData()
-{
-    // Finalize the index
-    segment_data->index.push_back(segment_data->nodes.size());
-
-    return std::move(segment_data);
-}
+{ return std::move(segment_data); }
 } // namespace osrm::extractor

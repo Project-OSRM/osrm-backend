@@ -124,20 +124,15 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
         m_edge_based_node_weights[nbe_to_ebn_mapping[edge_id_1]] |=
             EdgeWeight{static_cast<EdgeWeight::value_type>(0x80000000)};
 
-    BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1) ==
-                 m_compressed_edge_container.HasEntryForID(edge_id_2));
-    BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1));
-    BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_2));
-    const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(edge_id_1);
-    BOOST_ASSERT(forward_geometry.size() ==
-                 m_compressed_edge_container.GetBucketReference(edge_id_2).size());
+    const auto forward_geometry =
+        m_compressed_edge_container.getGeometryNodes(edge_id_1, forward_data.geometry_id);
+    BOOST_ASSERT(
+        forward_geometry.size() ==
+        m_compressed_edge_container.getGeometryNodes(edge_id_2, reverse_data.geometry_id).size());
     const auto segment_count = forward_geometry.size();
 
     // There should always be some geometry
     BOOST_ASSERT(0 != segment_count);
-
-    // const unsigned packed_geometry_id = m_compressed_edge_container.ZipEdges(edge_id_1,
-    // edge_id_2);
 
     NodeID current_edge_source_coordinate_id = node_u;
 
@@ -173,11 +168,10 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     // Add segments of edge-based nodes
     for (const auto i : util::irange(std::size_t{0}, segment_count))
     {
-        BOOST_ASSERT(
-            current_edge_source_coordinate_id ==
-            m_compressed_edge_container.GetBucketReference(edge_id_2)[segment_count - 1 - i]
-                .node_id);
-        const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
+        BOOST_ASSERT(current_edge_source_coordinate_id ==
+                     m_compressed_edge_container.getGeometryNodes(
+                         edge_id_2, reverse_data.geometry_id)[segment_count - 1 - i]);
+        const NodeID current_edge_target_coordinate_id = forward_geometry[i];
 
         // don't add node-segments for penalties
         if (current_edge_target_coordinate_id == current_edge_source_coordinate_id)
@@ -394,7 +388,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             // an input location can snap to. Without this, it would be possible to not find
             // certain routes that end on a via-way, because they are only routable via the
             // duplicated edge.
-            const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(eid);
+            const auto forward_geometry =
+                m_compressed_edge_container.getGeometryNodes(eid, edge_data.geometry_id);
             const auto segment_count = forward_geometry.size();
 
             NodeID current_edge_source_coordinate_id = node_u;
@@ -413,7 +408,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             // Add segments of edge-based nodes
             for (const auto i : util::irange(std::size_t{0}, segment_count))
             {
-                const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
+                const NodeID current_edge_target_coordinate_id = forward_geometry[i];
 
                 // don't add node-segments for penalties
                 if (current_edge_target_coordinate_id == current_edge_source_coordinate_id)
@@ -699,14 +694,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // `node_along_road_entering`;
             // otherwise, we need to look up the node immediately preceding the turn from the
             // compressed edge container.
-            const bool isTrivial = m_compressed_edge_container.IsTrivial(node_based_edge_from);
+            auto entering = m_compressed_edge_container.getGeometryNodes(node_based_edge_from,
+                                                                         edge_data1.geometry_id);
+            BOOST_ASSERT(!entering.empty());
+            const auto from_node =
+                entering.size() == 1 ? node_along_road_entering : entering[entering.size() - 2];
 
-            const auto &from_node =
-                isTrivial ? node_along_road_entering
-                          : m_compressed_edge_container.GetLastEdgeSourceID(node_based_edge_from);
-
-            const auto &to_node =
-                m_compressed_edge_container.GetFirstEdgeTargetID(node_based_edge_to);
+            auto exiting = m_compressed_edge_container.getGeometryNodes(node_based_edge_to,
+                                                                        edge_data2.geometry_id);
+            BOOST_ASSERT(!exiting.empty());
+            const auto to_node = exiting.front();
 
             lookup::TurnIndexBlock turn_index_block = {from_node, intersection_node, to_node};
 

@@ -19,14 +19,17 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
     std::vector<util::Coordinate> &&coordinates,
     extractor::PackedOSMIDs &&osm_node_ids,
-    const std::vector<NodeBasedEdge> &edge_list,
+    std::vector<NodeBasedEdge> edge_list,
     std::vector<NodeBasedEdgeAnnotation> &&annotation_data)
     : annotation_data(std::move(annotation_data)), coordinates(std::move(coordinates)),
       osm_node_ids(std::move(osm_node_ids))
 {
     BuildCompressedOutputGraph(edge_list);
+    std::vector<NodeBasedEdge>().swap(edge_list);
     Compress(scripting_environment, turn_restrictions, maneuver_overrides);
     CompressGeometry();
+    compressed_edge_container.PrintStatistics();
+    compressed_edge_container.finalizeGeometry(compressed_output_graph);
     CompressAnnotationData();
 }
 
