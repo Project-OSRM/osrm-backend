@@ -47,7 +47,6 @@
 #include <oneapi/tbb/parallel_pipeline.h>
 
 #include <osmium/handler/node_locations_for_ways.hpp>
-#include <osmium/index/map/flex_mem.hpp>
 #include <osmium/io/any_input.hpp>
 #include <osmium/io/xml_output.hpp>
 #include <osmium/storage/item_stash.hpp>
@@ -469,13 +468,16 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
             });
     };
 
-    // Node locations cache (assumes nodes are placed before ways)
-    using osmium_index_type =
-        osmium::index::map::FlexMem<osmium::unsigned_object_id_type, osmium::Location>;
-    using osmium_location_handler_type = osmium::handler::NodeLocationsForWays<osmium_index_type>;
+    auto &area_manager = scripting_environment.m_area_manager;
+    const bool cache_locations =
+        scripting_environment.NeedsWayLocations() && config.use_locations_cache;
+    const bool share_locations = cache_locations && !area_manager.is_enabled() &&
+                                 std::filesystem::is_regular_file(config.input_path);
+    bool unique_sorted_node_ids = true;
+    osmium::object_id_type last_node_id = 0;
 
-    osmium_index_type location_cache;
-    osmium_location_handler_type location_handler(location_cache);
+    NodeLocationIndex location_cache;
+    osmium::handler::NodeLocationsForWays<NodeLocationIndex> location_handler(location_cache);
     // A way referencing a node the file does not contain is a broken extract,
     // not a reason to abort the parse: the handler would otherwise throw
     // osmium::not_found straight out of the pipeline, before OSRM gets to say
@@ -540,7 +542,18 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
             // put parsed objects thru extractor callbacks
             for (const auto &result : results.resulting_nodes)
             {
-                extractor_callbacks->ProcessNode(result.first, result.second);
+                const auto &node = result.first;
+                if (share_locations)
+                {
+                    if (!node.location().valid())
+                        throw osmium::invalid_location{"invalid location"};
+                    unique_sorted_node_ids &= node.id() > last_node_id;
+                    last_node_id = node.id();
+                }
+                else
+                {
+                    extractor_callbacks->ProcessNode(node);
+                }
             }
 
             number_of_ways += results.resulting_ways.size();
@@ -610,7 +623,6 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         util::Log() << "... " << scripting_environment.m_relations_stash.get_relations_num()
                     << " relations in " << TIMER_SEC(parse_relations) << " seconds";
     }
-    auto &area_manager = scripting_environment.m_area_manager;
     if (area_manager.is_enabled())
     {
         // Next we read the relations again and pass them to LUA's process_relation
@@ -640,8 +652,6 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         // Both optional stages are serial and in order, so neither is spliced in
         // unless it has work to do: an unused one would still hold every buffer
         // to a single file at that point in the pipeline.
-        const bool cache_locations =
-            scripting_environment.NeedsWayLocations() && config.use_locations_cache;
         const bool measure_extent = scripting_environment.ObservesNodesForDrivingSide();
         const auto tail = process_elements_filter & extractor_callbacks_filter;
 
@@ -677,7 +687,25 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         util::Log() << "... in " << TIMER_SEC(parse_ways) << " seconds";
     }
 
-    if (area_manager.number_of_ways + area_manager.number_of_relations)
+    const bool has_areas = area_manager.number_of_ways + area_manager.number_of_relations != 0;
+    const bool reread_nodes = share_locations && (!unique_sorted_node_ids || has_areas);
+    const bool reuse_location_index = share_locations && !reread_nodes;
+    if (!reuse_location_index)
+        location_handler.clear();
+    if (reread_nodes)
+    {
+        // Preserve the original node list for unusual IDs and areas registered during parsing.
+        util::Log() << "Reading OSM nodes separately for area processing or irregular IDs";
+        osmium::io::Reader reader(input_file, pool, osmium::osm_entity_bits::node, read_meta);
+        while (const auto buffer = reader.read())
+        {
+            for (const auto &node : buffer.select<osmium::Node>())
+                extractor_callbacks->ProcessNode(node);
+        }
+        reader.close();
+    }
+
+    if (has_areas)
     {
         util::Log() << "Parse pedestrian areas ...";
         TIMER_START(areas_second_pass);
@@ -777,7 +805,8 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     }
 
     extraction_containers.PrepareData(scripting_environment,
-                                      config.GetPath(".osrm.names").string());
+                                      config.GetPath(".osrm.names").string(),
+                                      reuse_location_index ? &location_cache : nullptr);
 
     SetClassNames(scripting_environment.GetClassNames(), classes_map, profile_properties);
     auto excludable_classes = scripting_environment.GetExcludableClasses();

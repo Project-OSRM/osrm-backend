@@ -55,13 +55,10 @@ ExtractorCallbacks::ExtractorCallbacks(ExtractionContainers &extraction_containe
  *
  * warning: caller needs to take care of synchronization!
  */
-void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node, const ExtractionNode &)
+void ExtractorCallbacks::ProcessNode(const osmium::Node &input_node)
 {
     const auto id = to_alias<OSMNodeID>(input_node.id());
-    external_memory.all_nodes_list.push_back(
-        QueryNode{util::toFixed(util::UnsafeFloatLongitude{input_node.location().lon()}),
-                  util::toFixed(util::UnsafeFloatLatitude{input_node.location().lat()}),
-                  id});
+    external_memory.all_nodes_list.push_back(makeQueryNode(id, input_node.location()));
 }
 
 void ExtractorCallbacks::ProcessRestriction(const InputTurnRestriction &restriction)

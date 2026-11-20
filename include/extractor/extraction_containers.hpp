@@ -2,6 +2,7 @@
 #define EXTRACTION_CONTAINERS_HPP
 
 #include "extractor/internal_extractor_edge.hpp"
+#include "extractor/node_location_index.hpp"
 #include "extractor/nodes_of_way.hpp"
 #include "extractor/query_node.hpp"
 #include "extractor/restriction.hpp"
@@ -30,7 +31,8 @@ class ExtractionContainers
     ReferencedWays IdentifyRestrictionWays();
     ReferencedWays IdentifyManeuverOverrideWays();
 
-    void PrepareNodes();
+    void PrepareNodes(NodeLocationIndex *locations);
+    void checkUsedNodeCount(std::size_t original_used_count);
     void PrepareManeuverOverrides(const ReferencedWays &maneuver_override_ways);
     void PrepareRestrictions(const ReferencedWays &restriction_ways);
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
@@ -75,7 +77,8 @@ class ExtractionContainers
     ExtractionContainers();
 
     void PrepareData(ScriptingEnvironment &scripting_environment,
-                     const std::string &names_data_path);
+                     const std::string &names_data_path,
+                     NodeLocationIndex *locations);
 };
 } // namespace osrm::extractor
 
