@@ -10,6 +10,8 @@
 
 #include "storage/tar_fwd.hpp"
 
+#include <filesystem>
+#include <fstream>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -38,6 +40,15 @@ class ExtractionContainers
     void PrepareEdges(ScriptingEnvironment &scripting_environment);
 
     void WriteCharData(const std::string &file_name);
+
+    void writeEdgeBatch();
+    void restoreEdges();
+    void removeEdgeSpool();
+
+    std::filesystem::path m_edge_spool_parent;
+    std::filesystem::path m_edge_spool_directory;
+    std::ofstream m_edge_spool;
+    std::size_t m_spooled_edges = 0;
 
   public:
     using NodeIDVector = std::vector<OSMNodeID>;
@@ -74,7 +85,11 @@ class ExtractionContainers
     std::vector<UnresolvedManeuverOverride> internal_maneuver_overrides;
     NodeVector used_nodes;
 
-    ExtractionContainers();
+    explicit ExtractionContainers(std::filesystem::path edge_spool_parent = {});
+    ~ExtractionContainers();
+
+    void appendEdge(const InternalExtractorEdge &edge);
+    bool hasEdges() const { return m_spooled_edges != 0 || !all_edges_list.empty(); }
 
     void PrepareData(ScriptingEnvironment &scripting_environment,
                      const std::string &names_data_path,

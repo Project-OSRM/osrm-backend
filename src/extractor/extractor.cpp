@@ -43,6 +43,7 @@
 #include <boost/assert.hpp>
 
 #include <oneapi/tbb/global_control.h>
+#include <oneapi/tbb/parallel_for.h>
 #include <oneapi/tbb/parallel_for_each.h>
 #include <oneapi/tbb/parallel_pipeline.h>
 
@@ -55,6 +56,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <limits>
 #include <memory>
 #include <thread>
 #include <tuple>
@@ -246,6 +248,10 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                    std::move(parsed_osm_data.edge_list),
                                                    std::move(parsed_osm_data.annotation_data));
 
+    util::Log() << "Writing segment geometry before edge expansion";
+    node_based_graph_factory.GetCompressedEdges().writeGeometryAndReleaseCosts(
+        config.GetPath(".osrm.geometry"));
+
     StringTable string_table;
     files::readNames(config.GetPath(".osrm.names"), string_table);
 
@@ -317,11 +323,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     TIMER_STOP(expansion);
     node_based_graph_factory.releaseGraph();
-
-    // output the geometry of the node-based graph, needs to be done after the last usage, since it
-    // destroys internal containers
-    files::writeSegmentData(config.GetPath(".osrm.geometry"),
-                            *node_based_graph_factory.GetCompressedEdges().ToSegmentData());
+    node_based_graph_factory.GetCompressedEdges().releaseGeometry();
 
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
@@ -439,7 +441,7 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     ProfileProperties profile_properties = scripting_environment.GetProfileProperties();
 
     // Extraction containers and restriction parser
-    ExtractionContainers extraction_containers;
+    ExtractionContainers extraction_containers(config.GetPath(".osrm.names").parent_path());
     ExtractorCallbacks::ClassesMap classes_map;
     LaneDescriptionMap turn_lane_map;
     auto extractor_callbacks = std::make_unique<ExtractorCallbacks>(
@@ -798,7 +800,7 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
 
     extractor_callbacks.reset();
 
-    if (extraction_containers.all_edges_list.empty())
+    if (!extraction_containers.hasEdges())
     {
         throw util::exception(std::string("There are no edges remaining after parsing.") +
                               SOURCE_REF);
@@ -852,46 +854,79 @@ void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
                                const std::vector<EdgeBasedNodeSegment> &input_node_segments,
                                EdgeBasedNodeDataContainer &nodes_container) const
 {
-    using InputEdge = util::static_graph_details::SortableEdgeWithData<void>;
     using UncontractedGraph = util::StaticGraph<void>;
-    std::vector<InputEdge> edges;
-    edges.reserve(input_edge_list.size() * 2);
-
-    for (const auto &edge : input_edge_list)
+    const auto for_each_arc = [&](auto emit)
     {
-        BOOST_ASSERT_MSG((std::max(edge.data.weight, EdgeWeight{1})) > EdgeWeight{0},
-                         "edge distance < 1");
-        BOOST_ASSERT(edge.source < number_of_edge_based_nodes);
-        BOOST_ASSERT(edge.target < number_of_edge_based_nodes);
-        if (edge.data.forward)
+        for (const auto &edge : input_edge_list)
         {
-            edges.push_back({edge.source, edge.target});
+            BOOST_ASSERT(edge.source < number_of_edge_based_nodes);
+            BOOST_ASSERT(edge.target < number_of_edge_based_nodes);
+            if (edge.data.forward)
+                emit(edge.source, edge.target);
+            if (edge.data.backward)
+                emit(edge.target, edge.source);
         }
 
-        if (edge.data.backward)
+        // Virtual reverse arcs put the two directions of a snappable segment in one component.
+        std::pair<NodeID, NodeID> previous{SPECIAL_NODEID, SPECIAL_NODEID};
+        for (const auto &segment : input_node_segments)
         {
-            edges.push_back({edge.target, edge.source});
+            if (!segment.reverse_segment_id.enabled)
+                continue;
+            const std::pair<NodeID, NodeID> endpoints{segment.forward_segment_id.id,
+                                                      segment.reverse_segment_id.id};
+            if (endpoints == previous)
+                continue;
+            BOOST_ASSERT(endpoints.first < number_of_edge_based_nodes);
+            BOOST_ASSERT(endpoints.second < number_of_edge_based_nodes);
+            emit(endpoints.first, endpoints.second);
+            emit(endpoints.second, endpoints.first);
+            previous = endpoints;
         }
-    }
+    };
 
-    // Connect forward and backward nodes of each edge to enforce
-    // forward and backward edge-based nodes be in one strongly-connected component
-    for (const auto &segment : input_node_segments)
+    std::vector<std::size_t> offsets(std::size_t(number_of_edge_based_nodes) + 1);
+    for_each_arc([&](NodeID source, NodeID) { ++offsets[std::size_t(source) + 1]; });
+    for (std::size_t i = 1; i < offsets.size(); ++i)
+        offsets[i] += offsets[i - 1];
+
+    std::vector<UncontractedGraph::EdgeArrayEntry> edges(offsets.back());
+    for_each_arc([&](NodeID source, NodeID target) { edges[offsets[source]++].target = target; });
+    std::move_backward(offsets.begin(), offsets.end() - 1, offsets.end());
+    offsets.front() = 0;
+
+    // Tarjan visits targets in the same order as the sorted source/target pairs.
+    const auto target_less = [](const auto &left, const auto &right)
+    { return left.target < right.target; };
+    tbb::parallel_for(NodeID{0},
+                      number_of_edge_based_nodes,
+                      [&](NodeID node)
+                      {
+                          std::sort(edges.begin() + offsets[node],
+                                    edges.begin() + offsets[std::size_t(node) + 1],
+                                    target_less);
+                      });
+
+    std::vector<UncontractedGraph::NodeArrayEntry> nodes(offsets.size());
+    std::size_t written = 0;
+    for (std::size_t node = 0; node < number_of_edge_based_nodes; ++node)
     {
-        if (segment.reverse_segment_id.enabled)
-        {
-            BOOST_ASSERT(segment.forward_segment_id.id < number_of_edge_based_nodes);
-            BOOST_ASSERT(segment.reverse_segment_id.id < number_of_edge_based_nodes);
-            edges.push_back({segment.forward_segment_id.id, segment.reverse_segment_id.id});
-            edges.push_back({segment.reverse_segment_id.id, segment.forward_segment_id.id});
-        }
+        const auto begin = edges.begin() + offsets[node];
+        const auto end = std::unique(begin,
+                                     edges.begin() + offsets[node + 1],
+                                     [](const auto &left, const auto &right)
+                                     { return left.target == right.target; });
+        nodes[node].first_edge = static_cast<EdgeID>(written);
+        if (written < offsets[node])
+            std::move(begin, end, edges.begin() + written);
+        written += end - begin;
+        if (written > std::numeric_limits<EdgeID>::max())
+            throw util::exception("Too many edges in the component graph" + SOURCE_REF);
     }
-
-    tbb::parallel_sort(edges.begin(), edges.end());
-    edges.erase(std::unique(edges.begin(), edges.end()), edges.end());
-
-    auto uncontracted_graph = UncontractedGraph(number_of_edge_based_nodes, edges);
-    std::vector<InputEdge>().swap(edges);
+    nodes.back().first_edge = static_cast<EdgeID>(written);
+    edges.resize(written);
+    std::vector<std::size_t>().swap(offsets);
+    const auto uncontracted_graph = UncontractedGraph(std::move(nodes), std::move(edges));
 
     util::TarjanSCC<UncontractedGraph> component_search(uncontracted_graph);
     component_search.Run();

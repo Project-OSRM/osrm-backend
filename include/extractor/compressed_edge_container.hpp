@@ -6,6 +6,7 @@
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include <filesystem>
 #include <memory>
 #include <ranges>
 #include <span>
@@ -88,8 +89,8 @@ class CompressedEdgeContainer
     NodeID GetLastEdgeTargetID(const EdgeID edge_id) const;
     NodeID GetLastEdgeSourceID(const EdgeID edge_id) const;
 
-    // Invalidates the internal storage
-    std::unique_ptr<SegmentDataContainer> ToSegmentData();
+    void writeGeometryAndReleaseCosts(const std::filesystem::path &path);
+    void releaseGeometry();
 
   private:
     SegmentWeight ClipWeight(const EdgeWeight weight);

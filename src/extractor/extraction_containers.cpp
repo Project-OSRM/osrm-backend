@@ -25,10 +25,14 @@
 
 #include <algorithm>
 #include <limits>
+#include <random>
+#include <type_traits>
 
 namespace
 {
 namespace oe = osrm::extractor;
+constexpr std::size_t EDGE_BATCH_SIZE = (16 * 1024 * 1024) / sizeof(oe::InternalExtractorEdge);
+static_assert(std::is_trivially_copyable_v<oe::InternalExtractorEdge>);
 
 struct CmpEdgeByOSMStartID
 {
@@ -377,7 +381,8 @@ get_via_node_path_from_OSM_ids(const std::string &turn_relation_type,
 namespace osrm::extractor
 {
 
-ExtractionContainers::ExtractionContainers()
+ExtractionContainers::ExtractionContainers(std::filesystem::path edge_spool_parent)
+    : m_edge_spool_parent(std::move(edge_spool_parent))
 {
     // Insert four empty strings offsets for name, ref, destination, pronunciation, and exits
     name_offsets.push_back(0);
@@ -389,6 +394,80 @@ ExtractionContainers::ExtractionContainers()
     name_offsets.push_back(0);
     // Sentinel for offset into used_nodes
     way_node_id_offsets.push_back(0);
+}
+
+ExtractionContainers::~ExtractionContainers() { removeEdgeSpool(); }
+
+void ExtractionContainers::removeEdgeSpool()
+{
+    if (m_edge_spool_directory.empty())
+        return;
+    if (m_edge_spool.is_open())
+        m_edge_spool.close();
+    std::error_code error;
+    std::filesystem::remove(m_edge_spool_directory / "edges", error);
+    std::filesystem::remove(m_edge_spool_directory, error);
+    m_edge_spool_directory.clear();
+}
+
+void ExtractionContainers::appendEdge(const InternalExtractorEdge &edge)
+{
+    if (all_edges_list.size() == EDGE_BATCH_SIZE)
+        writeEdgeBatch();
+    all_edges_list.push_back(edge);
+}
+
+void ExtractionContainers::writeEdgeBatch()
+{
+    if (!m_edge_spool.is_open())
+    {
+        std::random_device entropy;
+        std::filesystem::path directory;
+        do
+        {
+            directory = m_edge_spool_parent / ("osrm-extract-" + std::to_string(entropy()) + "-" +
+                                               std::to_string(entropy()));
+        } while (!std::filesystem::create_directory(directory));
+        m_edge_spool_directory = std::move(directory);
+        m_edge_spool.open(m_edge_spool_directory / "edges", std::ios::binary);
+    }
+    m_edge_spool.write(reinterpret_cast<const char *>(all_edges_list.data()),
+                       all_edges_list.size() * sizeof(InternalExtractorEdge));
+    if (!m_edge_spool)
+        throw util::exception("Failed writing the temporary extraction edge list" + SOURCE_REF);
+    m_spooled_edges += all_edges_list.size();
+    all_edges_list.clear();
+}
+
+void ExtractionContainers::restoreEdges()
+{
+    if (m_spooled_edges == 0)
+        return;
+
+    writeEdgeBatch();
+    m_edge_spool.close();
+    if (!m_edge_spool)
+        throw util::exception("Failed closing the temporary extraction edge list" + SOURCE_REF);
+
+    util::UnbufferedLog log;
+    log << "Reading " << m_spooled_edges << " spooled road edges ... " << std::flush;
+    TIMER_START(read_spooled_edges);
+    {
+        std::ifstream input(m_edge_spool_directory / "edges", std::ios::binary);
+        all_edges_list.resize(m_spooled_edges);
+        for (std::size_t offset = 0; offset < all_edges_list.size(); offset += EDGE_BATCH_SIZE)
+        {
+            const auto count = std::min(EDGE_BATCH_SIZE, all_edges_list.size() - offset);
+            input.read(reinterpret_cast<char *>(all_edges_list.data() + offset),
+                       count * sizeof(InternalExtractorEdge));
+            if (!input)
+                throw util::exception("Failed reading the temporary extraction edge list" +
+                                      SOURCE_REF);
+        }
+    }
+    removeEdgeSpool();
+    TIMER_STOP(read_spooled_edges);
+    log << "ok, after " << TIMER_SEC(read_spooled_edges) << "s";
 }
 
 /**
@@ -417,7 +496,9 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
     way_node_id_offsets.shrink_to_fit();
 
     PrepareNodes(locations);
+    restoreEdges();
     PrepareEdges(scripting_environment);
+    EdgeVector().swap(all_edges_list);
     scripting_environment.m_obstacle_map.fixupNodes(used_node_id_list);
 
     PrepareManeuverOverrides(maneuver_override_ways);

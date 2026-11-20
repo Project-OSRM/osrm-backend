@@ -1,4 +1,5 @@
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/files.hpp"
 #include "util/log.hpp"
 
 #include <boost/assert.hpp>
@@ -391,6 +392,16 @@ NodeID CompressedEdgeContainer::GetLastEdgeSourceID(const EdgeID edge_id) const
     return bucket[bucket.size() - 2].node_id;
 }
 
-std::unique_ptr<SegmentDataContainer> CompressedEdgeContainer::ToSegmentData()
-{ return std::move(segment_data); }
+void CompressedEdgeContainer::writeGeometryAndReleaseCosts(const std::filesystem::path &path)
+{
+    files::writeSegmentData(path, *segment_data);
+    segment_data->fwd_weights = {};
+    segment_data->rev_weights = {};
+    segment_data->fwd_durations = {};
+    segment_data->rev_durations = {};
+    decltype(segment_data->fwd_datasources)().swap(segment_data->fwd_datasources);
+    decltype(segment_data->rev_datasources)().swap(segment_data->rev_datasources);
+}
+
+void CompressedEdgeContainer::releaseGeometry() { segment_data.reset(); }
 } // namespace osrm::extractor

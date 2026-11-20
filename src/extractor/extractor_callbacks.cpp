@@ -420,7 +420,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                      parsed_way.highway_turn_classification,
                                      parsed_way.access_turn_classification}};
 
-                                external_memory.all_edges_list.push_back(InternalExtractorEdge(
+                                external_memory.appendEdge(InternalExtractorEdge(
                                     edge, forward_weight_data, forward_duration_data, {}));
                             });
     }
@@ -455,7 +455,7 @@ void ExtractorCallbacks::ProcessWay(const osmium::Way &input_way, const Extracti
                                      parsed_way.highway_turn_classification,
                                      parsed_way.access_turn_classification}};
 
-                                external_memory.all_edges_list.push_back(InternalExtractorEdge(
+                                external_memory.appendEdge(InternalExtractorEdge(
                                     edge, backward_weight_data, backward_duration_data, {}));
                             });
     }
