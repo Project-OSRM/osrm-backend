@@ -53,6 +53,14 @@ changes — otherwise the wheel build either misses the cache (slow) or
 fails on a missing port. The manylinux repo's `Build` workflow takes an
 `osrmRef` input for that purpose; see its README.
 
+CI runs every build-matrix entry even when another entry fails. Failed Linux
+wheel builds print the retained container's vcpkg configuration and error logs
+to help diagnose dependency rebuilds.
+
+The Linux wheel setup installs `perl-IPC-Cmd` and `perl-Time-Piece` before
+building. OpenSSL's vcpkg port needs these Perl modules when a registry update
+invalidates the image's prebuilt dependency cache.
+
 For local source builds outside the manylinux image, e.g macOS, install vcpkg
 yourself, point CMake at its toolchain, and use the release-only triplet
 to match the cache:
@@ -188,7 +196,15 @@ which does not support `CMAKE_CXX_COMPILER_LAUNCHER`. The build dir reuse
 from `--no-build-isolation` is the main speed optimisation for local Windows
 development.
 
+### Shared builds
+
+The storage library `osrm_store` owns the exception types and logging state
+shared by the CLI, routing, and preprocessing. CMake targets and `libosrm.pc`
+link it automatically. Static Python wheels link this code into their binaries.
+
 ## Running tests
+
+Parallel library tests lock their shared generated data during builds and reads.
 
 Build the test data (requires the package to be installed so the `osrm`
 executables are available):
@@ -212,6 +228,11 @@ Run the test suite:
 ```bash
 pytest test/python/
 ```
+
+Standalone CMake builds enable `OSRM_BUILD_TESTING` and
+`OSRM_BUILD_BENCHMARKS` by default. Both default to `OFF` when OSRM is
+embedded with `add_subdirectory()` or `FetchContent`; set either option
+explicitly to include those auxiliary targets in a superproject.
 
 ## Running cibuildwheel locally
 
@@ -348,3 +369,8 @@ After the run finishes, check:
 On a tag checkout (e.g. `v26.4.0`), the Python version resolves cleanly to
 `26.4.0`, matching the `package.json` version that `release-monthly.yml`
 committed when creating the tag.
+
+## Public preprocessing headers
+
+Install public headers with `cmake --install build --component Development`.
+CTest compiles a consumer against the installed customization headers.

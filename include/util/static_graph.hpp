@@ -1,6 +1,8 @@
 #ifndef STATIC_GRAPH_HPP
 #define STATIC_GRAPH_HPP
 
+#include "util/block_delta.hpp"
+#include "util/exception.hpp"
 #include "util/graph_traits.hpp"
 #include "util/integer_range.hpp"
 #include "util/percent.hpp"
@@ -14,6 +16,8 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <array>
+#include <bit>
 #include <utility>
 #include <vector>
 
@@ -133,12 +137,32 @@ class StaticGraph
     StaticGraph(Vector<NodeArrayEntry> node_array_, Vector<EdgeArrayEntry> edge_array_)
         : node_array(std::move(node_array_)), edge_array(std::move(edge_array_))
     {
-        BOOST_ASSERT(!node_array.empty());
+        if (node_array.empty())
+        {
+            BOOST_ASSERT(Ownership == storage::Ownership::View);
+            return;
+        }
 
         number_of_nodes = static_cast<decltype(number_of_nodes)>(node_array.size() - 1);
         number_of_edges = static_cast<decltype(number_of_edges)>(node_array.back().first_edge);
-        BOOST_ASSERT(number_of_edges <= edge_array.size());
+        BOOST_ASSERT(number_of_edges <= edge_array.size() ||
+                     (Ownership == storage::Ownership::View && edge_array.empty()));
         BOOST_ASSERT(number_of_nodes == node_array.size() - 1);
+    }
+
+    void bindNodeBlocks(Vector<util::BlockDeltaHeader> headers,
+                        Vector<std::uint64_t> words,
+                        std::uint64_t *count)
+        requires(Ownership == storage::Ownership::View)
+    {
+        node_headers = std::move(headers);
+        node_words = std::move(words);
+        node_count = count;
+        if (*node_count != 0)
+        {
+            number_of_nodes = static_cast<NodeIterator>(*node_count - 1);
+            number_of_edges = readFirstEdge(number_of_nodes);
+        }
     }
 
     unsigned GetNumberOfNodes() const { return number_of_nodes; }
@@ -148,24 +172,35 @@ class StaticGraph
     unsigned GetOutDegree(const NodeIterator n) const { return EndEdges(n) - BeginEdges(n); }
 
     inline NodeIterator GetTarget(const EdgeIterator e) const
-    { return NodeIterator(edge_array[e].target); }
+    { return NodeIterator(readEdge(e).target); }
 
     auto &GetEdgeData(const EdgeIterator e) { return edge_array[e].data; }
 
-    const auto &GetEdgeData(const EdgeIterator e) const { return edge_array[e].data; }
+    decltype(auto) GetEdgeData(const EdgeIterator e) const
+    {
+        if constexpr (requires { EdgeDataT::SupportsPackedRecords; })
+            return EdgeDataT(readEdge(e).data);
+        else
+            return (edge_array[e].data);
+    }
 
-    EdgeIterator BeginEdges(const NodeIterator n) const
-    { return EdgeIterator(node_array.at(n).first_edge); }
+    void bindPackedEdges(Vector<std::uint8_t> bytes)
+        requires(Ownership == storage::Ownership::View)
+    {
+        validatePackedEdgeSize(bytes.size(), number_of_edges);
+        packed_edges = std::move(bytes);
+    }
 
-    EdgeIterator EndEdges(const NodeIterator n) const
-    { return EdgeIterator(node_array.at(n + 1).first_edge); }
+    EdgeIterator BeginEdges(const NodeIterator n) const { return EdgeIterator(readFirstEdge(n)); }
+
+    EdgeIterator EndEdges(const NodeIterator n) const { return EdgeIterator(readFirstEdge(n + 1)); }
 
     // searches for a specific edge
     EdgeIterator FindEdge(const NodeIterator from, const NodeIterator to) const
     {
         for (const auto i : irange(BeginEdges(from), EndEdges(from)))
         {
-            if (to == edge_array[i].target)
+            if (to == GetTarget(i))
             {
                 return i;
             }
@@ -295,11 +330,47 @@ class StaticGraph
     }
 
   protected:
+    static void validatePackedEdgeSize(std::size_t bytes, std::size_t edges)
+    {
+        if (bytes < 8 || (bytes - 8) % 6 != 0 || (bytes - 8) / 6 != edges)
+            throw util::exception("Invalid packed graph dimensions");
+    }
+
+    EdgeArrayEntry readEdge(EdgeIterator edge) const
+    {
+        if constexpr (requires { EdgeDataT::SupportsPackedRecords; })
+        {
+            if (!packed_edges.empty())
+            {
+                std::array<std::uint8_t, sizeof(std::uint64_t)> bytes;
+                std::copy_n(
+                    packed_edges.data() + std::size_t(edge) * 6, bytes.size(), bytes.begin());
+                const auto bits = std::bit_cast<std::uint64_t>(bytes);
+                return {static_cast<NodeID>(bits & ((std::uint64_t{1} << 25) - 1)),
+                        {static_cast<NodeID>((bits >> 25) & ((std::uint64_t{1} << 22) - 1))}};
+            }
+        }
+        return edge_array[edge];
+    }
+
+    EdgeIterator readFirstEdge(NodeIterator node) const
+    {
+        if constexpr (Ownership == storage::Ownership::View)
+            if (node_count)
+                return static_cast<EdgeIterator>(
+                    util::decodeBlockDelta(node_headers, node_words, node));
+        return node_array.at(node).first_edge;
+    }
+
     NodeIterator number_of_nodes = 0;
     EdgeIterator number_of_edges = 0;
 
     Vector<NodeArrayEntry> node_array;
+    Vector<util::BlockDeltaHeader> node_headers;
+    Vector<std::uint64_t> node_words;
+    std::uint64_t *node_count = nullptr;
     Vector<EdgeArrayEntry> edge_array;
+    Vector<std::uint8_t> packed_edges;
 };
 
 } // namespace osrm::util

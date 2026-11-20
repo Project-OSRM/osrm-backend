@@ -62,7 +62,7 @@ file(GLOB UtilTestsSources
 
 add_executable(engine-tests EXCLUDE_FROM_ALL
 	${EngineTestsSources}
-        $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
+        $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL>)
 
 add_executable(contractor-tests EXCLUDE_FROM_ALL
     ${ContractorTestsSources}
@@ -86,7 +86,7 @@ add_executable(updater-tests EXCLUDE_FROM_ALL
 
 add_executable(storage-tests EXCLUDE_FROM_ALL
     ${StorageTestsSources}
-    $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
+    $<TARGET_OBJECTS:UTIL>)
 
 add_executable(library-tests EXCLUDE_FROM_ALL
 	${LibraryTestsSources})
@@ -157,7 +157,7 @@ target_include_directories(updater-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(contractor-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_include_directories(storage-tests PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-target_link_libraries(engine-tests ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
+target_link_libraries(engine-tests osrm_store ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(extractor-tests osrm_extract ${EXTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(partitioner-tests osrm_partition ${PARTITIONER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(customizer-tests osrm_customize ${CUSTOMIZER_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
@@ -165,14 +165,21 @@ target_link_libraries(updater-tests osrm_update ${UPDATER_LIBRARIES} ${Boost_UNI
 target_link_libraries(library-tests osrm ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-extract-tests osrm_extract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-contract-tests osrm_contract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(library-customize-tests osrm_customize ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(library-customize-tests osrm_customize osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-partition-tests osrm_partition ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(util-tests ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
+target_link_libraries(util-tests osrm_store ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(contractor-tests osrm_contract ${CONTRACTOR_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 target_link_libraries(storage-tests osrm_store ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} LibArchive::LibArchive)
 
 # Register unit test executables with CTest.
+add_test(NAME installed-preprocessing-headers
+    COMMAND ${CMAKE_COMMAND}
+        -DOSRM_BUILD_DIR=${CMAKE_BINARY_DIR}
+        -DOSRM_SOURCE_DIR=${CMAKE_SOURCE_DIR}
+        -DOSRM_CXX_COMPILER=${CMAKE_CXX_COMPILER}
+        -P ${CMAKE_CURRENT_SOURCE_DIR}/install/check_headers.cmake)
+
 # Each test uses a fixture so that ctest automatically builds the executable
 # (and test data where needed) before running it.
 set(TEST_TARGETS
@@ -216,10 +223,13 @@ endforeach()
 if (NOT WIN32)
     add_test(NAME test-data-build
         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR} --target test-data --config $<CONFIG>)
-    set_tests_properties(test-data-build PROPERTIES FIXTURES_SETUP test-data-fixture)
+    set_tests_properties(test-data-build PROPERTIES
+        FIXTURES_SETUP test-data-fixture
+        RESOURCE_LOCK osrm-test-data)
 
     foreach(t ${LIBRARY_TEST_TARGETS})
         set_tests_properties(${t} PROPERTIES FIXTURES_REQUIRED "${t}-fixture;test-data-fixture")
+        set_tests_properties(${t}-build ${t} PROPERTIES RESOURCE_LOCK osrm-test-data)
     endforeach()
 endif()
 

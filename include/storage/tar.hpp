@@ -87,6 +87,8 @@ class FileReader
     FileReader(const FileReader &) = delete;
     FileReader &operator=(const FileReader &) = delete;
 
+    bool HasEntry(const std::string &name) const { return index.contains(name); }
+
     std::uint64_t ReadElementCount64(const std::string &name)
     {
         std::uint64_t size;
@@ -362,6 +364,25 @@ class FileWriter
 
     FileWriter(const FileWriter &) = delete;
     FileWriter &operator=(const FileWriter &) = delete;
+
+    void Close()
+    {
+        if (!a)
+            return;
+        const auto ret = archive_write_close(a);
+        try
+        {
+            detail::checkArchiveError(a, ret, path, "close archive");
+        }
+        catch (...)
+        {
+            archive_write_free(a);
+            a = nullptr;
+            throw;
+        }
+        archive_write_free(a);
+        a = nullptr;
+    }
 
     void WriteElementCount64(const std::string &name, const std::uint64_t count)
     { WriteFrom(name + ".meta", count); }

@@ -257,7 +257,16 @@ export default class Data {
 
   runAndStamp(what, extra_params, params) {
     const stampFile = `${this.osrmCacheFile}.stamp_${what}`;
-    if (!fs.existsSync(stampFile)) {
+    const outputs = {
+      extract: ['.ebg'],
+      partition: ['.partition', '.cells'],
+      customize: ['.mldgr', '.cell_metrics'],
+      contract: ['.hsgr'],
+    };
+    const outputsExist = outputs[what].every(
+      (suffix) => fs.existsSync(`${this.osrmCacheFile}${suffix}`),
+    );
+    if (!fs.existsSync(stampFile) || !outputsExist) {
       runBinSync(
         `osrm-${what}`,
         extra_params.concat(params),

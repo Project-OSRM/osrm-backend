@@ -18,7 +18,7 @@ env:
   ENABLE_NODE_BINDINGS: 'ON'
   # vcpkg baseline is also pinned in vcpkg-configuration.json; this env var
   # is what lukka/run-vcpkg consumes to pick the vcpkg tool version.
-  VCPKG_COMMIT_ID: d015e31e90838a4c9dfa3eed45979bc70d9357fc
+  VCPKG_COMMIT_ID: 9eec002df1cd109f8f104cd966a763daf9751489
   # Use a local filesystem directory as vcpkg's binary cache. The directory
   # itself is persisted across CI runs via actions/cache@v5. The x-gha
   # backend was removed upstream; files+actions/cache is the replacement.
@@ -391,6 +391,7 @@ jobs:
     needs: [format-taginfo-docs, vcpkg-smoke-prereq]
     if: github.repository == 'Project-OSRM/osrm-backend'
     strategy:
+      fail-fast: false
       matrix:
         include:
           - name: clang-20-release
@@ -617,7 +618,11 @@ jobs:
         run: |
           if [[ "${RUNNER_OS}" == "Linux" ]]; then
             sudo apt-get update -y
-            sudo apt-get install -y ${CCOMPILER} ${CXXCOMPILER} ccache
+            compiler_packages=("${CCOMPILER}" ccache)
+            if [[ "${CXXCOMPILER}" != clang++* ]]; then
+              compiler_packages+=("${CXXCOMPILER}")
+            fi
+            sudo apt-get install -y "${compiler_packages[@]}"
             if [[ "${ENABLE_COVERAGE}" == "ON" ]]; then
               sudo apt-get install -y lcov llvm-20
             fi
@@ -794,6 +799,7 @@ jobs:
         run: echo "path=$(ls dist/*.tar.gz | head -n1)" >> "$GITHUB_OUTPUT"
 
       - name: Run cibuildwheel
+        id: wheel
         uses: pypa/cibuildwheel@v4.3.5
         if: ${{ env.BUILD_BINDINGS }}
         with:
@@ -805,8 +811,18 @@ jobs:
           # vcpkg toolchain) lives in [tool.cibuildwheel.linux].environment in
           # pyproject.toml. Setting CIBW_ENVIRONMENT_LINUX here would *replace*
           # that whole block (cibuildwheel doesn't merge), so we don't.
+          CIBW_DEBUG_KEEP_CONTAINER: "TRUE"
           CIBW_CONTAINER_ENGINE: "docker; create_args: --volume /home/runner/.ccache:/ccache"
           CIBW_CONFIG_SETTINGS_MACOS: "cmake.define.CMAKE_CXX_COMPILER_LAUNCHER=ccache cmake.define.CMAKE_C_COMPILER_LAUNCHER=ccache"
+
+      - name: Show wheel dependency failure logs
+        if: ${{ failure() && steps.wheel.outcome == 'failure' && runner.os == 'Linux' }}
+        shell: bash
+        run: |
+          for container in $(docker ps -aq --filter name=cibuildwheel); do
+            docker start "$container"
+            docker exec "$container" sh -c 'find /opt/vcpkg/buildtrees -type f \( -name "*-err.log" -o -name "config-*-out.log" \) -print -exec tail -n 100 {} \;'
+          done
 
       - name: Upload wheels and sdist
         if: ${{ env.BUILD_BINDINGS && env.PUBLISH == 'On' }}

@@ -235,9 +235,16 @@ The package also installs OSRM command-line tools, accessible via `python -m osr
 
 ```bash
 python -m osrm extract data.osm.pbf -p profiles/car.lua
-python -m osrm contract data.osrm
 python -m osrm partition data.osrm
 python -m osrm customize data.osrm
-python -m osrm datastore data.osrm
-python -m osrm routed data.osrm
+python -m osrm routed --algorithm mld data.osrm
 ```
+
+Open the prepared MLD dataset by passing its base path to `osrm.OSRM`.
+
+```python
+engine = osrm.OSRM(storage_config="data.osrm", algorithm="MLD", use_shared_memory=False)
+```
+
+The same [dataset format](../dataset-format.md) supports `use_mmap=True` and
+datastore loading. Rerun customization to apply traffic updates.

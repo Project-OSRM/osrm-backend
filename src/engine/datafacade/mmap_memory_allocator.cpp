@@ -1,6 +1,7 @@
 #include "engine/datafacade/mmap_memory_allocator.hpp"
 
 #include "storage/block.hpp"
+#include "storage/compact_dataset.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/storage.hpp"
@@ -13,6 +14,7 @@ namespace osrm::engine::datafacade
 
 MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
 {
+    (void)storage::isCompactDataset(config.base_path);
     storage::Storage storage(config);
     std::vector<storage::SharedDataIndex::AllocatedRegion> allocated_regions;
 
@@ -59,11 +61,10 @@ MMapMemoryAllocator::MMapMemoryAllocator(const storage::StorageConfig &config)
             boost::iostreams::mapped_file_source mapped_memory_file;
             auto data = util::mmapFile<char>(file.second, mapped_memory_file).data();
             mapped_memory_files.push_back(std::move(mapped_memory_file));
-            storage::populateLayoutFromFile(file.second, *layout);
+            storage.PopulateLayout(*layout, {file});
             allocated_regions.push_back({const_cast<char *>(data), std::move(layout)});
         }
     }
-
     index = storage::SharedDataIndex{std::move(allocated_regions)};
 }
 

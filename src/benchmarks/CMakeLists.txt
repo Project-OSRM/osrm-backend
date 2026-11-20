@@ -13,6 +13,7 @@ target_include_directories(rtree-bench
 	${PROJECT_SOURCE_DIR}/unit_tests)
 
 target_link_libraries(rtree-bench
+	osrm_store
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
@@ -75,6 +76,7 @@ add_executable(alias-bench
 	$<TARGET_OBJECTS:UTIL>)
 
 target_link_libraries(alias-bench
+	osrm_store
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
@@ -86,6 +88,7 @@ add_executable(packedvector-bench
 	$<TARGET_OBJECTS:UTIL>)
 
 target_link_libraries(packedvector-bench
+	osrm_store
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}
@@ -97,6 +100,7 @@ add_executable(storage-bench
 	$<TARGET_OBJECTS:UTIL>)
 
 target_link_libraries(storage-bench
+	osrm_store
 	${BOOST_BASE_LIBRARIES}
 	${CMAKE_THREAD_LIBS_INIT}
 	${TBB_LIBRARIES}

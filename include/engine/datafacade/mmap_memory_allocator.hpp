@@ -5,11 +5,10 @@
 
 #include "storage/storage_config.hpp"
 
-#include "util/vector_view.hpp"
-
 #include <boost/iostreams/device/mapped_file.hpp>
 
 #include <string>
+#include <vector>
 
 namespace osrm::engine::datafacade
 {
