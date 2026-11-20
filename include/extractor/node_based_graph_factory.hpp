@@ -6,6 +6,7 @@
 #include "extractor/node_based_edge.hpp"
 #include "extractor/node_data_container.hpp"
 #include "extractor/packed_osm_ids.hpp"
+#include "extractor/record_spool.hpp"
 #include "extractor/scripting_environment.hpp"
 
 #include "util/coordinate.hpp"
@@ -36,7 +37,8 @@ class NodeBasedGraphFactory
                           std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
                           std::vector<util::Coordinate> &&coordinates,
                           extractor::PackedOSMIDs &&osm_node_ids,
-                          std::vector<NodeBasedEdge> edge_list,
+                          RecordSpool<NodeBasedEdge> &prepared_edges,
+                          const std::filesystem::path &geometry_spool_parent,
                           std::vector<NodeBasedEdgeAnnotation> &&annotation_data);
 
     auto const &GetGraph() const { return compressed_output_graph; }
@@ -56,7 +58,7 @@ class NodeBasedGraphFactory
 
   private:
     // Build and validate compressed output graph
-    void BuildCompressedOutputGraph(const std::vector<NodeBasedEdge> &edge_list);
+    void BuildCompressedOutputGraph(const RecordSpool<NodeBasedEdge> &prepared_edges);
 
     // Compress the node-based graph into a compact representation of itself. This removes storing a
     // single edge for every part of the geometry and might also combine meta-data for multiple

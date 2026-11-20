@@ -37,7 +37,8 @@ class ExtractionContainers
     void checkUsedNodeCount(std::size_t original_used_count);
     void PrepareManeuverOverrides(const ReferencedWays &maneuver_override_ways);
     void PrepareRestrictions(const ReferencedWays &restriction_ways);
-    void PrepareEdges(ScriptingEnvironment &scripting_environment);
+    void PrepareEdges(ScriptingEnvironment &scripting_environment,
+                      RecordSpool<NodeBasedEdge> &prepared_edges);
 
     void WriteCharData(const std::string &file_name);
 
@@ -67,8 +68,6 @@ class ExtractionContainers
 
     unsigned max_internal_node_id;
 
-    std::vector<NodeBasedEdge> used_edges;
-
     // List of restrictions (conditional and unconditional) before we transform them into the
     // output types. Input containers reference OSMNodeIDs. We can only transform them to the
     // correct internal IDs after we've read everything. Without a multi-parse approach,
@@ -87,7 +86,8 @@ class ExtractionContainers
 
     void PrepareData(ScriptingEnvironment &scripting_environment,
                      const std::string &names_data_path,
-                     NodeLocationIndex *locations);
+                     NodeLocationIndex *locations,
+                     RecordSpool<NodeBasedEdge> &prepared_edges);
 };
 } // namespace osrm::extractor
 

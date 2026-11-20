@@ -424,7 +424,8 @@ void ExtractionContainers::restoreEdges()
  */
 void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environment,
                                        const std::string &name_file_name,
-                                       NodeLocationIndex *locations)
+                                       NodeLocationIndex *locations,
+                                       RecordSpool<NodeBasedEdge> &prepared_edges)
 {
     const auto restriction_ways = IdentifyRestrictionWays();
     const auto maneuver_override_ways = IdentifyManeuverOverrideWays();
@@ -438,7 +439,7 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
     PrepareNodes(locations);
     releaseUnusedHeapPages();
     restoreEdges();
-    PrepareEdges(scripting_environment);
+    PrepareEdges(scripting_environment, prepared_edges);
     EdgeVector().swap(all_edges_list);
     scripting_environment.m_obstacle_map.fixupNodes(used_node_id_list);
 
@@ -621,7 +622,8 @@ void ExtractionContainers::PrepareNodes(NodeLocationIndex *locations)
     util::Log() << "Processed " << max_internal_node_id << " nodes";
 }
 
-void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environment)
+void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environment,
+                                        RecordSpool<NodeBasedEdge> &prepared_edges)
 {
     // Sort edges by start.
     {
@@ -912,7 +914,6 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         }
     }
 
-    used_edges.reserve(all_edges_list.size());
     {
         util::UnbufferedLog log;
         log << "Writing used edges       ... " << std::flush;
@@ -928,17 +929,18 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
 
             // IMPORTANT: here, we're using slicing to only write the data from the base
             // class of NodeBasedEdgeWithOSM
-            used_edges.push_back(edge.result);
+            prepared_edges.append(edge.result);
         }
 
-        if (used_edges.size() > std::numeric_limits<uint32_t>::max())
+        prepared_edges.finish();
+        if (prepared_edges.size() > std::numeric_limits<uint32_t>::max())
         {
             throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
         }
 
         TIMER_STOP(write_edges);
         log << "ok, after " << TIMER_SEC(write_edges) << "s";
-        log << " -- Processed " << used_edges.size() << " edges";
+        log << " -- Processed " << prepared_edges.size() << " edges";
     }
 }
 

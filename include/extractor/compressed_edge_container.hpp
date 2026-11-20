@@ -2,11 +2,13 @@
 #define GEOMETRY_COMPRESSOR_HPP_
 
 #include "extractor/geometry_memory.hpp"
+#include "extractor/record_spool.hpp"
 #include "extractor/segment_data_container.hpp"
 
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
+#include <deque>
 #include <filesystem>
 #include <limits>
 #include <memory>
@@ -32,7 +34,7 @@ class CompressedEdgeContainer
 
     using OnewayEdgeBucket = std::pmr::vector<OnewayCompressedEdge>;
 
-    CompressedEdgeContainer();
+    explicit CompressedEdgeContainer(std::filesystem::path spool_parent = {});
     void initializeEdgeIndex(std::size_t edge_capacity);
     void moveEdgeMappings(EdgeID source, EdgeID destination, unsigned count);
     void resizeEdgeIndex(std::size_t edge_capacity);
@@ -54,9 +56,8 @@ class CompressedEdgeContainer
                              const EdgeWeight weight,
                              const EdgeDuration duration);
 
-    void InitializeBothwayVector();
     unsigned ZipEdges(const unsigned f_edge_pos, const unsigned r_edge_pos);
-    void releaseEquivalentEdgeGeometry(EdgeID forward, EdgeID reverse, unsigned geometry_id);
+    void releaseEquivalentEdgeGeometry(EdgeID forward, EdgeID reverse);
     bool finalizeGeometry(const util::NodeBasedDynamicGraph &graph);
 
     auto getGeometryNodes(EdgeID edge, GeometryID geometry) const
@@ -66,8 +67,8 @@ class CompressedEdgeContainer
         const auto bucket_index = findBucket(edge);
         if ((!m_use_packed_geometry || m_has_fallback_geometry) && bucket_index != PackedGeometry)
         {
-            if (bucket_index < m_compressed_oneway_geometries.size())
-                bucket = m_compressed_oneway_geometries[bucket_index];
+            if (m_geometry_buckets && bucket_index < m_geometry_buckets->buckets.size())
+                bucket = m_geometry_buckets->buckets[bucket_index];
         }
         else if (m_use_packed_geometry)
         {
@@ -112,9 +113,27 @@ class CompressedEdgeContainer
     std::atomic_size_t clipped_weights{0};
     std::atomic_size_t clipped_durations{0};
 
+    struct GeometryRecord
+    {
+        NodeID node;
+        SegmentWeight forward_weight;
+        SegmentWeight reverse_weight;
+        SegmentDuration forward_duration;
+        SegmentDuration reverse_duration;
+    };
+
     void IncreaseFreeList();
-    GeometryMemory m_geometry_memory;
-    std::pmr::vector<OnewayEdgeBucket> m_compressed_oneway_geometries{&m_geometry_memory};
+    void releaseGeometryBuckets();
+    void loadPackedGeometry();
+
+    struct GeometryBuckets
+    {
+        GeometryMemory memory;
+        std::pmr::deque<OnewayEdgeBucket> buckets{&memory};
+    };
+
+    RecordSpool<GeometryRecord> m_geometry_records;
+    std::unique_ptr<GeometryBuckets> m_geometry_buckets;
     std::vector<unsigned> m_free_list;
     util::DeallocatingVector<unsigned> m_edge_id_to_list_index;
     std::unique_ptr<SegmentDataContainer> segment_data;

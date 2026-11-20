@@ -1408,6 +1408,20 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
         break;
     }
 
+    // Long turn batches can grow the Lua heap between automatic collections.
+    constexpr unsigned HeapCheckInterval = 65536;
+    constexpr std::size_t HeapGrowthLimit = 16 * 1024 * 1024;
+    if (context.has_turn_penalty_function && ++context.turns_since_heap_check == HeapCheckInterval)
+    {
+        context.turns_since_heap_check = 0;
+        if (context.state.is_gc_on() &&
+            context.state.memory_used() > context.live_turn_heap_bytes + HeapGrowthLimit)
+        {
+            context.state.collect_garbage();
+            context.live_turn_heap_bytes = context.state.memory_used();
+        }
+    }
+
     // Cap turn duration to prevent int16_t overflow on storage (duration is always in seconds,
     // converted to deciseconds at 1/10s resolution, independent of weight_precision).
     turn.duration = std::max(turn.duration, -from_alias<double>(MAXIMAL_TURN_PENALTY) / 10.0);

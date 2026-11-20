@@ -55,6 +55,8 @@ struct LuaScriptingContext final
     sol::protected_function relation_function;
 
     int api_version = 4;
+    unsigned turns_since_heap_check = 0;
+    std::size_t live_turn_heap_bytes = 0;
     sol::table profile_table;
 
     // Reference to immutable location dependent data and locations memo

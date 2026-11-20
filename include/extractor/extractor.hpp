@@ -35,6 +35,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extractor/graph_compressor.hpp"
 #include "extractor/maneuver_override.hpp"
 #include "extractor/packed_osm_ids.hpp"
+#include "extractor/record_spool.hpp"
 
 #include "restriction_graph.hpp"
 #include "util/typedefs.hpp"
@@ -60,7 +61,6 @@ class Extractor
         std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
         std::vector<util::Coordinate> osm_coordinates;
         extractor::PackedOSMIDs osm_node_ids;
-        std::vector<NodeBasedEdge> edge_list;
         std::vector<NodeBasedEdgeAnnotation> annotation_data;
     };
 
@@ -68,7 +68,8 @@ class Extractor
     ExtractorConfig config;
 
     ParsedOSMData ParseOSMData(ScriptingEnvironment &scripting_environment,
-                               const unsigned number_of_threads);
+                               unsigned number_of_threads,
+                               RecordSpool<NodeBasedEdge> &prepared_edges);
 
     EdgeID BuildEdgeExpandedGraph(
         // input data

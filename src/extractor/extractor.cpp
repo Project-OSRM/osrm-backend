@@ -172,23 +172,35 @@ void SetExcludableClasses(const ExtractorCallbacks::ClassesMap &classes_map,
     }
 }
 
-std::vector<CompressedNodeBasedGraphEdge> toEdgeList(const util::NodeBasedDynamicGraph &graph)
+void writeCompressedGraph(const std::filesystem::path &path,
+                          const util::NodeBasedDynamicGraph &graph)
 {
-    std::vector<CompressedNodeBasedGraphEdge> edges;
-    edges.reserve(graph.GetNumberOfEdges());
-
-    // For all nodes iterate over its edges and dump (from, to) pairs
-    for (const NodeID from_node : util::irange(0u, graph.GetNumberOfNodes()))
-    {
-        for (const EdgeID edge : graph.GetAdjacentEdgeRange(from_node))
+    const std::string name = "/extractor/cnbg";
+    storage::tar::FileWriter writer(path, storage::tar::FileWriter::GenerateFingerprint);
+    writer.WriteElementCount64(name, graph.GetNumberOfEdges());
+    writer.WriteBatches<CompressedNodeBasedGraphEdge>(
+        name,
+        graph.GetNumberOfEdges(),
+        [&](auto write)
         {
-            const auto to_node = graph.GetTarget(edge);
-
-            edges.push_back({from_node, to_node});
-        }
-    }
-
-    return edges;
+            constexpr std::size_t BatchSize = 16384;
+            std::vector<CompressedNodeBasedGraphEdge> batch;
+            batch.reserve(BatchSize);
+            for (const NodeID source : util::irange(0u, graph.GetNumberOfNodes()))
+            {
+                for (const EdgeID edge : graph.GetAdjacentEdgeRange(source))
+                {
+                    batch.push_back({source, graph.GetTarget(edge)});
+                    if (batch.size() == BatchSize)
+                    {
+                        write(batch);
+                        batch.clear();
+                    }
+                }
+            }
+            if (!batch.empty())
+                write(batch);
+        });
 }
 } // namespace
 
@@ -223,7 +235,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
 
-    auto parsed_osm_data = ParseOSMData(scripting_environment, number_of_threads);
+    RecordSpool<NodeBasedEdge> prepared_edges(config.GetPath(".osrm.nbg").parent_path());
+    auto parsed_osm_data = ParseOSMData(scripting_environment, number_of_threads, prepared_edges);
     releaseUnusedHeapPages();
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
@@ -248,7 +261,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                                    parsed_osm_data.unresolved_maneuver_overrides,
                                                    std::move(parsed_osm_data.osm_coordinates),
                                                    std::move(parsed_osm_data.osm_node_ids),
-                                                   std::move(parsed_osm_data.edge_list),
+                                                   prepared_edges,
+                                                   config.GetPath(".osrm.geometry").parent_path(),
                                                    std::move(parsed_osm_data.annotation_data));
 
     util::Log() << "Writing segment geometry before edge expansion";
@@ -283,8 +297,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     //
     // Luckily node based node ids still coincide with the coordinate array.
     // That's the reason we can only here write out the final compressed node based graph.
-    files::writeCompressedNodeBasedGraph(config.GetPath(".osrm.cnbg").string(),
-                                         toEdgeList(node_based_graph));
+    writeCompressedGraph(config.GetPath(".osrm.cnbg"), node_based_graph);
 
     // stealing the annotation data from the node-based graph
     edge_based_nodes_container =
@@ -384,7 +397,8 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 }
 
 Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting_environment,
-                                                 const unsigned number_of_threads)
+                                                 unsigned number_of_threads,
+                                                 RecordSpool<NodeBasedEdge> &prepared_edges)
 {
     TIMER_START(extracting);
 
@@ -808,7 +822,8 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
 
     extraction_containers.PrepareData(scripting_environment,
                                       config.GetPath(".osrm.names").string(),
-                                      reuse_location_index ? &location_cache : nullptr);
+                                      reuse_location_index ? &location_cache : nullptr,
+                                      prepared_edges);
 
     SetClassNames(scripting_environment.GetClassNames(), classes_map, profile_properties);
     auto excludable_classes = scripting_environment.GetExcludableClasses();
@@ -837,7 +852,7 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
         storage::tar::FileWriter writer(config.GetPath(".osrm.nbg").string(),
                                         storage::tar::FileWriter::GenerateFingerprint);
         storage::serialization::write(writer, "/extractor/nodes", extraction_containers.used_nodes);
-        storage::serialization::write(writer, "/extractor/edges", extraction_containers.used_edges);
+        files::writeRecords(writer, "/extractor/edges", prepared_edges);
     }
 
     return ParsedOSMData{std::move(turn_lane_map),
@@ -845,7 +860,6 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
                          std::move(extraction_containers.internal_maneuver_overrides),
                          std::move(osm_coordinates),
                          std::move(osm_node_ids),
-                         std::move(extraction_containers.used_edges),
                          std::move(extraction_containers.all_edges_annotation_data_list)};
 }
 

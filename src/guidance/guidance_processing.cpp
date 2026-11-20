@@ -2,7 +2,6 @@
 #include "guidance/turn_analysis.hpp"
 #include "guidance/turn_lane_handler.hpp"
 
-#include "extractor/heap_pages.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 
 #include "util/assert.hpp"
@@ -95,17 +94,14 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         // to give the serial final stage time to complete its tasks.
         const constexpr unsigned GRAINSIZE = 100;
 
-        constexpr NodeID GeometryBatchSize = 1000000;
-        NodeID batch_end = 0;
-
         // First part of the pipeline generates iterator ranges of IDs in sets of GRAINSIZE
         tbb::filter<void, tbb::blocked_range<NodeID>> generator_stage(
             tbb::filter_mode::serial_in_order,
             [&](tbb::flow_control &fc)
             {
-                if (current_node < batch_end)
+                if (current_node < node_count)
                 {
-                    auto next_node = current_node + std::min(GRAINSIZE, batch_end - current_node);
+                    auto next_node = std::min(current_node + GRAINSIZE, node_count);
                     auto result = tbb::blocked_range<NodeID>(current_node, next_node);
                     current_node = next_node;
                     return result;
@@ -336,13 +332,8 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
         // to be balanced with the GRAINSIZE above - ideally, the pipeline puts as much work
         // as possible in the `intersection_handler` step so that those parallel workers don't
         // get blocked too much by the slower (io-performing) `buffer_storage`
-        while (current_node < node_count)
-        {
-            batch_end = current_node + std::min(GeometryBatchSize, node_count - current_node);
-            tbb::parallel_pipeline(std::thread::hardware_concurrency() * 5,
-                                   generator_stage & guidance_stage & guidance_output_stage);
-            extractor::releaseUnusedHeapPages();
-        }
+        tbb::parallel_pipeline(std::thread::hardware_concurrency() * 5,
+                               generator_stage & guidance_stage & guidance_output_stage);
 
         // NOTE: EBG edges delayed_data and turns delayed_turn_data have the same index
         std::for_each(delayed_turn_data.begin(),

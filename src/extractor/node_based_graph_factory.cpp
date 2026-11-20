@@ -20,13 +20,14 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
     std::vector<util::Coordinate> &&coordinates,
     extractor::PackedOSMIDs &&osm_node_ids,
-    std::vector<NodeBasedEdge> edge_list,
+    RecordSpool<NodeBasedEdge> &prepared_edges,
+    const std::filesystem::path &geometry_spool_parent,
     std::vector<NodeBasedEdgeAnnotation> &&annotation_data)
     : annotation_data(std::move(annotation_data)), coordinates(std::move(coordinates)),
-      osm_node_ids(std::move(osm_node_ids))
+      osm_node_ids(std::move(osm_node_ids)), compressed_edge_container(geometry_spool_parent)
 {
-    BuildCompressedOutputGraph(edge_list);
-    std::vector<NodeBasedEdge>().swap(edge_list);
+    BuildCompressedOutputGraph(prepared_edges);
+    prepared_edges.clear();
     releaseUnusedHeapPages();
     Compress(scripting_environment, turn_restrictions, maneuver_overrides);
     compressed_edge_container.PrintStatistics();
@@ -36,10 +37,11 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
     CompressAnnotationData();
 }
 
-void NodeBasedGraphFactory::BuildCompressedOutputGraph(const std::vector<NodeBasedEdge> &edge_list)
+void NodeBasedGraphFactory::BuildCompressedOutputGraph(
+    const RecordSpool<NodeBasedEdge> &prepared_edges)
 {
     const auto number_of_node_based_nodes = coordinates.size();
-    if (edge_list.empty())
+    if (prepared_edges.empty())
     {
         throw util::exception("Node-based-graph contains no edges." + SOURCE_REF);
     }
@@ -47,7 +49,7 @@ void NodeBasedGraphFactory::BuildCompressedOutputGraph(const std::vector<NodeBas
     // at this point, the data isn't compressed, but since we update the graph in-place, we assign
     // it here.
     compressed_output_graph =
-        util::NodeBasedDynamicGraphFromEdges(number_of_node_based_nodes, edge_list);
+        util::NodeBasedDynamicGraphFromEdges(number_of_node_based_nodes, prepared_edges);
 
     // check whether the graph is sane
     BOOST_ASSERT(
@@ -129,8 +131,7 @@ void NodeBasedGraphFactory::CompressGeometry()
             compressed_output_graph.GetEdgeData(edge_id_1).geometry_id = {packed_geometry_id, true};
             compressed_output_graph.GetEdgeData(edge_id_2).geometry_id = {packed_geometry_id,
                                                                           false};
-            compressed_edge_container.releaseEquivalentEdgeGeometry(
-                edge_id_1, edge_id_2, packed_geometry_id);
+            compressed_edge_container.releaseEquivalentEdgeGeometry(edge_id_1, edge_id_2);
         }
     }
 }

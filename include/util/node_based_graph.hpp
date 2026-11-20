@@ -4,6 +4,7 @@
 #include "extractor/class_data.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/node_data_container.hpp"
+#include "extractor/record_spool.hpp"
 #include "util/dynamic_graph.hpp"
 #include <tbb/parallel_for.h>
 
@@ -68,31 +69,35 @@ using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
 /// two edges for undirected edges.
 inline NodeBasedDynamicGraph
 NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
-                               const std::vector<extractor::NodeBasedEdge> &input_edge_list)
+                               const extractor::RecordSpool<extractor::NodeBasedEdge> &input_edges)
 {
     const auto visit = [&](auto emit)
     {
-        for (const auto &edge : input_edge_list)
-        {
-            BOOST_ASSERT(edge.flags.forward);
-            BOOST_ASSERT(edge.source != edge.target);
-            BOOST_ASSERT(edge.weight > EdgeWeight{0});
-            BOOST_ASSERT(edge.duration > EdgeDuration{0});
-            BOOST_ASSERT(edge.distance >= EdgeDistance{0});
-            NodeBasedEdgeData data(edge.weight,
-                                   edge.duration,
-                                   edge.distance,
-                                   {0, false},
-                                   false,
-                                   edge.flags,
-                                   edge.annotation_data);
-            emit(edge.source, edge.target, data);
-            if (!edge.flags.is_split)
+        input_edges.forEachBatch(
+            [&](std::span<const extractor::NodeBasedEdge> batch)
             {
-                data.reversed = !edge.flags.backward;
-                emit(edge.target, edge.source, data);
-            }
-        }
+                for (const auto &edge : batch)
+                {
+                    BOOST_ASSERT(edge.flags.forward);
+                    BOOST_ASSERT(edge.source != edge.target);
+                    BOOST_ASSERT(edge.weight > EdgeWeight{0});
+                    BOOST_ASSERT(edge.duration > EdgeDuration{0});
+                    BOOST_ASSERT(edge.distance >= EdgeDistance{0});
+                    NodeBasedEdgeData data(edge.weight,
+                                           edge.duration,
+                                           edge.distance,
+                                           {0, false},
+                                           false,
+                                           edge.flags,
+                                           edge.annotation_data);
+                    emit(edge.source, edge.target, data);
+                    if (!edge.flags.is_split)
+                    {
+                        data.reversed = !edge.flags.backward;
+                        emit(edge.target, edge.source, data);
+                    }
+                }
+            });
     };
     auto graph = NodeBasedDynamicGraph::fromDirectedEdges(number_of_nodes, visit);
     tbb::parallel_for(
