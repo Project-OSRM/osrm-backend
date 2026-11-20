@@ -204,6 +204,8 @@ link it automatically. Static Python wheels link this code into their binaries.
 
 ## Running tests
 
+Parallel library tests lock their shared generated data during builds and reads.
+
 Build the test data (requires the package to be installed so the `osrm`
 executables are available):
 

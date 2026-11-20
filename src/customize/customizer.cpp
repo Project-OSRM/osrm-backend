@@ -1,9 +1,10 @@
-#include "extractor/node_data_container.hpp"
+#include "customizer/customizer.hpp"
 
 #include "customizer/cell_customizer.hpp"
-#include "customizer/customizer.hpp"
 #include "customizer/edge_based_graph.hpp"
 #include "customizer/files.hpp"
+
+#include "extractor/node_data_container.hpp"
 
 #include "partitioner/cell_statistics.hpp"
 #include "partitioner/cell_storage.hpp"
@@ -11,6 +12,7 @@
 #include "partitioner/files.hpp"
 #include "partitioner/multi_level_partition.hpp"
 
+#include "storage/compact_dataset.hpp"
 #include "storage/shared_memory_ownership.hpp"
 
 #include "updater/updater.hpp"
@@ -72,15 +74,14 @@ void printUnreachableStatistics(const Partition &partition,
 }
 
 auto LoadAndUpdateEdgeExpandedGraph(const CustomizationConfig &config,
+                                    const updater::UpdaterConfig &updater_config,
                                     const partitioner::MultiLevelPartition &mlp,
                                     std::vector<EdgeWeight> &node_weights,
                                     std::vector<EdgeDuration> &node_durations,
                                     std::vector<EdgeDistance> &node_distances,
                                     std::uint32_t &connectivity_checksum)
 {
-    auto updater_config = config.updater_config;
-    updater_config.output_path = config.output_path;
-    updater::Updater updater(std::move(updater_config));
+    updater::Updater updater(updater_config);
 
     std::vector<extractor::EdgeBasedEdge> edge_based_edge_list;
     EdgeID num_nodes = updater.LoadAndUpdateEdgeExpandedGraph(
@@ -116,9 +117,7 @@ std::vector<CellMetric> customizeFilteredMetrics(const partitioner::MultiLevelEd
 
     return metrics;
 }
-} // namespace
-
-int Customizer::Run(const CustomizationConfig &config)
+int customizeDataset(const CustomizationConfig &config)
 {
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
@@ -132,8 +131,15 @@ int Customizer::Run(const CustomizationConfig &config)
     std::vector<EdgeDuration> node_durations; // TODO: remove when durations are optional
     std::vector<EdgeDistance> node_distances; // TODO: remove when distances are optional
     std::uint32_t connectivity_checksum = 0;
-    auto graph = LoadAndUpdateEdgeExpandedGraph(
-        config, mlp, node_weights, node_durations, node_distances, connectivity_checksum);
+    auto updater_config = config.updater_config;
+    updater_config.output_path = config.output_path;
+    auto graph = LoadAndUpdateEdgeExpandedGraph(config,
+                                                updater_config,
+                                                mlp,
+                                                node_weights,
+                                                node_durations,
+                                                node_distances,
+                                                connectivity_checksum);
     BOOST_ASSERT(graph.GetNumberOfNodes() == node_weights.size());
     std::for_each(
         node_weights.begin(), node_weights.end(), [](auto &w) { w &= EdgeWeight{0x7fffffff}; });
@@ -176,16 +182,22 @@ int Customizer::Run(const CustomizationConfig &config)
     util::Log() << "MLD customization writing took " << TIMER_SEC(writing_mld_data) << " seconds";
 
     TIMER_START(writing_graph);
+    auto turns = guidance::makeQueryTurnData(updater_config);
     MultiLevelEdgeBasedGraph shaved_graph{std::move(graph),
                                           std::move(node_weights),
                                           std::move(node_durations),
-                                          std::move(node_distances)};
+                                          std::move(node_distances),
+                                          turns.Mapping};
     customizer::files::writeGraph(
-        config.GetOutputPath(".osrm.mldgr"), shaved_graph, connectivity_checksum);
+        config.GetOutputPath(".osrm.mldgr"), shaved_graph, connectivity_checksum, &turns);
     TIMER_STOP(writing_graph);
     util::Log() << "Graph writing took " << TIMER_SEC(writing_graph) << " seconds";
 
     return 0;
 }
+
+} // namespace
+
+int Customizer::Run(const CustomizationConfig &config) { return customizeDataset(config); }
 
 } // namespace osrm::customizer

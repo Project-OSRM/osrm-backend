@@ -1,5 +1,6 @@
 #include "osrm/osrm.hpp"
 
+#include "storage/compact_dataset.hpp"
 #include "engine/algorithm.hpp"
 #include "engine/api/match_parameters.hpp"
 #include "engine/api/nearest_parameters.hpp"
@@ -21,6 +22,9 @@ OSRM::OSRM(engine::EngineConfig &config)
 {
     using CH = engine::routing_algorithms::ch::Algorithm;
     using MLD = engine::routing_algorithms::mld::Algorithm;
+
+    if (!config.use_shared_memory)
+        (void)storage::isCompactDataset(config.storage_config.base_path);
 
     // First, check that necessary core data is available
     if (!config.use_shared_memory && !config.storage_config.IsValid())

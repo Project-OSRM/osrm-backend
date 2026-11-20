@@ -33,13 +33,16 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "storage/storage_config.hpp"
 
 #include <filesystem>
+#include <functional>
 #include <string>
 #include <vector>
 
 namespace osrm::storage
 {
 
-void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseDataLayout &layout);
+void populateLayoutFromFile(const std::filesystem::path &path,
+                            storage::BaseDataLayout &layout,
+                            const std::function<bool(const std::string &)> &include = {});
 
 class Storage
 {
@@ -58,6 +61,7 @@ class Storage
 
   private:
     StorageConfig config;
+    bool m_native_turn_data;
 };
 } // namespace osrm::storage
 

@@ -126,7 +126,9 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
     const auto reverse_sources_name = index.HasBlock(name + "/constant_reverse_sources")
                                           ? name + "/constant_reverse_sources"
                                           : name + "/reverse_data_sources";
-    const auto cost_prefix = name + "/adaptive_costs";
+    const auto cost_prefix = index.HasBlock(name + "/adaptive_costs/descriptors")
+                                 ? name + "/adaptive_costs"
+                                 : name + "/shared_costs";
     auto geometry_begin_indices = make_vector_view<unsigned>(index, name + "/index");
 
     auto node_list = make_vector_view<NodeID>(index, name + "/nodes");
@@ -368,17 +370,6 @@ inline auto make_filtered_cell_metric_view(const SharedDataIndex &index,
     return customizer::CellMetricView{weights, durations, distances, {}};
 }
 
-inline auto make_cell_metric_view(const SharedDataIndex &index, const std::string &name)
-{
-    std::vector<std::string> metric_prefixes;
-    index.List(name + "/exclude/", std::back_inserter(metric_prefixes));
-    std::vector<customizer::CellMetricView> metrics;
-    metrics.reserve(metric_prefixes.size());
-    for (std::size_t i = 0; i < metric_prefixes.size(); ++i)
-        metrics.push_back(make_filtered_cell_metric_view(index, name, i));
-    return metrics;
-}
-
 inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std::string &name)
 {
     util::vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry> node_list;
@@ -386,8 +377,12 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
     if (!block_nodes)
         node_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry>(
             index, name + "/node_array");
-    auto edge_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry>(
-        index, name + "/edge_array");
+    util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry> edge_list;
+    const auto packed_name = name + "/edge_array6";
+    const bool packed = index.HasBlock(packed_name);
+    if (!packed)
+        edge_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry>(
+            index, name + "/edge_array");
     auto node_to_offset = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset>(
         index, name + "/node_to_edge_offset");
     auto node_weights = make_vector_view<EdgeWeight>(index, name + "/node_weights");
@@ -409,6 +404,13 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
             make_vector_view<util::BlockDeltaHeader>(index, name + "/node_blocks/headers"),
             make_vector_view<std::uint64_t>(index, name + "/node_blocks/words"),
             index.GetBlockPtr<std::uint64_t>(name + "/node_blocks/count"));
+    if (packed)
+    {
+        const auto bytes = make_vector_view<std::uint8_t>(index, packed_name);
+        if (index.GetBlockSize(packed_name) != bytes.size())
+            throw util::exception("Packed graph byte count does not match the archive");
+        graph.bindPackedEdges(bytes);
+    }
     return graph;
 }
 

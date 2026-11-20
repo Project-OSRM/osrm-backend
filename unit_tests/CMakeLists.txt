@@ -165,7 +165,7 @@ target_link_libraries(updater-tests osrm_update ${UPDATER_LIBRARIES} ${Boost_UNI
 target_link_libraries(library-tests osrm ${ENGINE_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-extract-tests osrm_extract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-contract-tests osrm_contract ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
-target_link_libraries(library-customize-tests osrm_customize ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
+target_link_libraries(library-customize-tests osrm_customize osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(library-partition-tests osrm_partition ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(server-tests osrm ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})
 target_link_libraries(util-tests osrm_store ${UTIL_LIBRARIES} ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY})

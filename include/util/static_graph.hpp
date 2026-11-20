@@ -2,6 +2,7 @@
 #define STATIC_GRAPH_HPP
 
 #include "util/block_delta.hpp"
+#include "util/exception.hpp"
 #include "util/graph_traits.hpp"
 #include "util/integer_range.hpp"
 #include "util/percent.hpp"
@@ -15,6 +16,8 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <array>
+#include <bit>
 #include <utility>
 #include <vector>
 
@@ -142,7 +145,8 @@ class StaticGraph
 
         number_of_nodes = static_cast<decltype(number_of_nodes)>(node_array.size() - 1);
         number_of_edges = static_cast<decltype(number_of_edges)>(node_array.back().first_edge);
-        BOOST_ASSERT(number_of_edges <= edge_array.size());
+        BOOST_ASSERT(number_of_edges <= edge_array.size() ||
+                     (Ownership == storage::Ownership::View && edge_array.empty()));
         BOOST_ASSERT(number_of_nodes == node_array.size() - 1);
     }
 
@@ -168,11 +172,24 @@ class StaticGraph
     unsigned GetOutDegree(const NodeIterator n) const { return EndEdges(n) - BeginEdges(n); }
 
     inline NodeIterator GetTarget(const EdgeIterator e) const
-    { return NodeIterator(edge_array[e].target); }
+    { return NodeIterator(readEdge(e).target); }
 
     auto &GetEdgeData(const EdgeIterator e) { return edge_array[e].data; }
 
-    const auto &GetEdgeData(const EdgeIterator e) const { return edge_array[e].data; }
+    decltype(auto) GetEdgeData(const EdgeIterator e) const
+    {
+        if constexpr (requires { EdgeDataT::SupportsPackedRecords; })
+            return EdgeDataT(readEdge(e).data);
+        else
+            return (edge_array[e].data);
+    }
+
+    void bindPackedEdges(Vector<std::uint8_t> bytes)
+        requires(Ownership == storage::Ownership::View)
+    {
+        validatePackedEdgeSize(bytes.size(), number_of_edges);
+        packed_edges = std::move(bytes);
+    }
 
     EdgeIterator BeginEdges(const NodeIterator n) const { return EdgeIterator(readFirstEdge(n)); }
 
@@ -183,7 +200,7 @@ class StaticGraph
     {
         for (const auto i : irange(BeginEdges(from), EndEdges(from)))
         {
-            if (to == edge_array[i].target)
+            if (to == GetTarget(i))
             {
                 return i;
             }
@@ -313,6 +330,29 @@ class StaticGraph
     }
 
   protected:
+    static void validatePackedEdgeSize(std::size_t bytes, std::size_t edges)
+    {
+        if (bytes < 8 || (bytes - 8) % 6 != 0 || (bytes - 8) / 6 != edges)
+            throw util::exception("Invalid packed graph dimensions");
+    }
+
+    EdgeArrayEntry readEdge(EdgeIterator edge) const
+    {
+        if constexpr (requires { EdgeDataT::SupportsPackedRecords; })
+        {
+            if (!packed_edges.empty())
+            {
+                std::array<std::uint8_t, sizeof(std::uint64_t)> bytes;
+                std::copy_n(
+                    packed_edges.data() + std::size_t(edge) * 6, bytes.size(), bytes.begin());
+                const auto bits = std::bit_cast<std::uint64_t>(bytes);
+                return {static_cast<NodeID>(bits & ((std::uint64_t{1} << 25) - 1)),
+                        {static_cast<NodeID>((bits >> 25) & ((std::uint64_t{1} << 22) - 1))}};
+            }
+        }
+        return edge_array[edge];
+    }
+
     EdgeIterator readFirstEdge(NodeIterator node) const
     {
         if constexpr (Ownership == storage::Ownership::View)
@@ -330,6 +370,7 @@ class StaticGraph
     Vector<std::uint64_t> node_words;
     std::uint64_t *node_count = nullptr;
     Vector<EdgeArrayEntry> edge_array;
+    Vector<std::uint8_t> packed_edges;
 };
 
 } // namespace osrm::util

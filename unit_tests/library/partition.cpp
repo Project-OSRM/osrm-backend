@@ -9,16 +9,13 @@
 #include <fstream>
 #include <iterator>
 #include <map>
-#include <vector>
-
 #include <thread>
+#include <vector>
 
 BOOST_AUTO_TEST_SUITE(library_partition)
 
 BOOST_AUTO_TEST_CASE(test_partition_with_invalid_config)
 {
-    using namespace osrm;
-
     osrm::PartitionerConfig config;
     config.requested_num_threads = std::thread::hardware_concurrency();
     BOOST_CHECK_THROW(osrm::partition(config),
@@ -46,7 +43,7 @@ BOOST_AUTO_TEST_CASE(redirected_partition_preserves_source_dataset)
         std::filesystem::copy_file(entry.path(), copy);
         original.emplace(copy, read(copy));
     }
-    for (const auto *suffix : {".mldgr", ".cell_metrics", ".hsgr"})
+    for (const auto *suffix : {".mldgr", ".cell_metrics", ".hsgr", ".query"})
         std::ofstream(destination.string() + ".osrm" + suffix) << "stale";
     osrm::PartitionerConfig config;
     config.UseDefaultOutputNames(source / "monaco.osrm");
@@ -55,7 +52,7 @@ BOOST_AUTO_TEST_CASE(redirected_partition_preserves_source_dataset)
     BOOST_CHECK_NO_THROW(osrm::partition(config));
     for (const auto &[path, bytes] : original)
         BOOST_CHECK(read(path) == bytes);
-    for (const auto *suffix : {".mldgr", ".cell_metrics", ".hsgr"})
+    for (const auto *suffix : {".mldgr", ".cell_metrics", ".hsgr", ".query"})
         BOOST_CHECK(!std::filesystem::exists(destination.string() + ".osrm" + suffix));
     BOOST_CHECK(std::filesystem::exists(destination.string() + ".osrm.partition"));
     BOOST_CHECK(std::filesystem::exists(destination.string() + ".osrm.cells"));

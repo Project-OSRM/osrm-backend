@@ -1,5 +1,6 @@
 #include "storage/storage.hpp"
 
+#include "storage/compact_dataset.hpp"
 #include "storage/io.hpp"
 #include "storage/serialization.hpp"
 #include "storage/shared_datatype.hpp"
@@ -23,8 +24,11 @@
 #include <cstdint>
 #include <filesystem>
 #include <fstream>
+#include <functional>
 #include <iterator>
 #include <string>
+#include <utility>
+#include <vector>
 
 namespace osrm::storage
 {
@@ -75,7 +79,9 @@ RegionHandle setupRegion(SharedRegionRegister &shared_register,
     return RegionHandle{std::move(memory), data_ptr, proj_id};
 }
 
-void populateArchive(const SharedDataIndex &index, const std::filesystem::path &path)
+void populateArchive(const SharedDataIndex &index,
+                     const std::filesystem::path &path,
+                     bool include_turn_data = true)
 {
     tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
     std::vector<tar::FileReader::FileEntry> entries;
@@ -83,7 +89,8 @@ void populateArchive(const SharedDataIndex &index, const std::filesystem::path &
     for (const auto &entry : entries)
     {
         if (entry.name.ends_with(".meta") || entry.name == "/ch/connectivity_checksum" ||
-            entry.name == "/mld/connectivity_checksum" || !index.HasBlock(entry.name))
+            entry.name == "/mld/connectivity_checksum" || !index.HasBlock(entry.name) ||
+            (!include_turn_data && entry.name.starts_with("/common/turn_data/")))
             continue;
         reader.ReadInto(
             entry.name, index.GetBlockPtr<char>(entry.name), index.GetBlockSize(entry.name));
@@ -178,7 +185,9 @@ bool swapData(Monitor &monitor,
 }
 } // namespace
 
-void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseDataLayout &layout)
+void populateLayoutFromFile(const std::filesystem::path &path,
+                            storage::BaseDataLayout &layout,
+                            const std::function<bool(const std::string &)> &include)
 {
     tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
 
@@ -187,6 +196,10 @@ void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseData
 
     for (const auto &entry : entries)
     {
+        if (entry.name == COMPACT_VERSION_ENTRY || entry.name.starts_with("/preprocessing/"))
+            continue;
+        if (include && !include(entry.name))
+            continue;
         const auto name_end = entry.name.rfind(".meta");
         if (name_end == std::string::npos)
         {
@@ -196,10 +209,36 @@ void populateLayoutFromFile(const std::filesystem::path &path, storage::BaseData
     }
 }
 
-Storage::Storage(StorageConfig config_) : config(std::move(config_)) {}
+Storage::Storage(StorageConfig config_) : config(std::move(config_)), m_native_turn_data(false)
+{
+    for (const auto &[suffix, entry] : {std::pair{".osrm.mldgr", "/common/turn_penalty/weight"},
+                                        std::pair{".osrm.hsgr", "/ch/turn_penalty/weight"}})
+    {
+        const auto path = config.base_path.string() + suffix;
+        if (std::filesystem::exists(path))
+        {
+            tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+            m_native_turn_data |= reader.HasEntry(entry);
+        }
+    }
+    if (m_native_turn_data)
+        for (const auto &[suffix, entry] : {std::pair{".osrm.mldgr", "/common/turn_penalty/weight"},
+                                            std::pair{".osrm.hsgr", "/ch/turn_penalty/weight"}})
+        {
+            const auto path = config.base_path.string() + suffix;
+            if (std::filesystem::exists(path))
+            {
+                tar::FileReader reader(path, tar::FileReader::VerifyFingerprint);
+                if (!reader.HasEntry(entry))
+                    throw util::exception(
+                        "Rebuild both routing graphs with the current preprocessing tools");
+            }
+        }
+}
 
 int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric)
 {
+    const auto compact = isCompactDataset(config.base_path);
     BOOST_ASSERT_MSG(config.IsValid(), "Invalid storage config");
 
     util::LogPolicy::GetInstance().Unmute();
@@ -234,6 +273,13 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
     // Because of datastore_lock the only write operation can occur sequentially later.
     Monitor monitor(SharedRegionRegister{});
     auto &shared_register = monitor.data();
+    if (only_metric && compact)
+    {
+        if (shared_register.Find(dataset_name + "/static") ==
+            storage::SharedRegionRegister::INVALID_REGION_ID)
+            throw util::exception("Cannot update the metric to a dataset that does not exist yet.");
+        only_metric = false;
+    }
 
     // Populate a memory layout into stack memory
     std::vector<SharedDataIndex::AllocatedRegion> regions;
@@ -265,7 +311,7 @@ int Storage::Run(int max_wait, const std::string &dataset_name, bool only_metric
         regions.push_back({data_ptr, std::move(static_layout)});
         readonly_handles.push_back({std::move(static_memory), data_ptr, static_region.proj_id});
     }
-    else
+    if (!only_metric)
     {
         std::unique_ptr<storage::BaseDataLayout> static_layout =
             std::make_unique<storage::ContiguousDataLayout>();
@@ -359,6 +405,14 @@ std::vector<std::pair<bool, std::filesystem::path>> Storage::GetUpdatableFiles()
         }
     }
 
+    if (m_native_turn_data)
+        std::erase_if(files,
+                      [&](const auto &file)
+                      {
+                          return file.second == config.GetPath(".osrm.turn_weight_penalties") ||
+                                 file.second == config.GetPath(".osrm.turn_duration_penalties");
+                      });
+
     return files;
 }
 
@@ -412,7 +466,22 @@ void Storage::PopulateLayout(storage::BaseDataLayout &layout,
     {
         if (std::filesystem::exists(file.second))
         {
-            populateLayoutFromFile(file.second, layout);
+            populateLayoutFromFile(
+                file.second,
+                layout,
+                [&](const auto &name)
+                {
+                    if (m_native_turn_data &&
+                        file.second ==
+                            std::filesystem::path(config.base_path.string() + ".osrm.edges") &&
+                        name.starts_with("/common/turn_data/"))
+                        return false;
+                    if ((name.starts_with("/common/turn_data/") ||
+                         name.starts_with("/ch/turn_data/")) &&
+                        !config.IsRequiredConfiguredInput(".osrm.edges"))
+                        return false;
+                    return true;
+                });
         }
     }
 }
@@ -447,10 +516,12 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
         std::copy(absolute_path.begin(), absolute_path.end(), path_ptr);
     }
 
+    const auto original_turns_path = config.base_path.string() + ".osrm.edges";
     for (const auto &file : GetStaticFiles())
     {
         if (std::filesystem::exists(file.second))
-            populateArchive(index, file.second);
+            populateArchive(
+                index, file.second, !m_native_turn_data || file.second != original_turns_path);
     }
 
     if (config.IsRequiredConfiguredInput(".osrm.edges") &&
@@ -461,12 +532,12 @@ void Storage::PopulateStaticData(const SharedDataIndex &index)
 
 void Storage::PopulateUpdatableData(const SharedDataIndex &index)
 {
-    for (const auto &file : GetUpdatableFiles())
+    for (const auto &[required, path] : GetUpdatableFiles())
     {
-        if (std::filesystem::exists(file.second))
-            populateArchive(index, file.second);
+        (void)required;
+        if (std::filesystem::exists(path))
+            populateArchive(index, path);
     }
-
     for (const auto &[suffix, entry] : {std::pair{".osrm.hsgr", "/ch/connectivity_checksum"},
                                         std::pair{".osrm.mldgr", "/mld/connectivity_checksum"}})
     {

@@ -110,7 +110,9 @@ inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  detail::SegmentDataContainerImpl<Ownership> &segment_data)
 {
-    const auto cost_prefix = name + "/adaptive_costs";
+    const auto cost_prefix = reader.HasEntry(name + "/adaptive_costs/descriptors")
+                                 ? name + "/adaptive_costs"
+                                 : name + "/shared_costs";
     const auto forward_sources_name = reader.HasEntry(name + "/constant_forward_sources")
                                           ? name + "/constant_forward_sources"
                                           : name + "/forward_data_sources";

@@ -1,5 +1,6 @@
 #include "customizer/customizer.hpp"
 
+#include "storage/storage_config.hpp"
 #include "osrm/exception.hpp"
 #include "util/log.hpp"
 #include "util/meminfo.hpp"
@@ -76,15 +77,10 @@ return_code parseArguments(int argc,
             "time zone boundaries")(
             "output,o",
             boost::program_options::value<std::filesystem::path>(&customization_config.output_path),
-            "Output base path for generated files (default: same as input)");
-
-    // hidden options, will be allowed on command line, but will not be
-    // shown to the user
-    boost::program_options::options_description hidden_options("Hidden options");
-    hidden_options.add_options()(
-        "input,i",
-        boost::program_options::value<std::filesystem::path>(&customization_config.base_path),
-        "Input base file path");
+            "Output base path for generated files (default: same as input)")(
+            "input,i",
+            boost::program_options::value<std::filesystem::path>(&customization_config.base_path),
+            "Input base file path");
 
     // positional option
     boost::program_options::positional_options_description positional_options;
@@ -92,7 +88,7 @@ return_code parseArguments(int argc,
 
     // combine above options for parsing
     boost::program_options::options_description cmdline_options;
-    cmdline_options.add(generic_options).add(config_options).add(hidden_options);
+    cmdline_options.add(generic_options).add(config_options);
 
     const auto *executable = argv[0];
     boost::program_options::options_description visible_options(

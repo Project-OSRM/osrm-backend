@@ -5,6 +5,7 @@
 
 #include <boost/test/unit_test.hpp>
 
+#include <array>
 #include <cstdint>
 #include <utility>
 #include <vector>
@@ -82,6 +83,64 @@ BOOST_AUTO_TEST_CASE(rejects_unbound_compressed_partition_view)
     osrm::partitioner::MultiLevelPartitionView plain_view(&levels, {}, {});
     BOOST_CHECK_THROW(osrm::partitioner::files::readPartition(archive.path, plain_view),
                       osrm::util::exception);
+}
+
+BOOST_AUTO_TEST_CASE(packed_edge_view_rejects_invalid_byte_counts)
+{
+    using Graph = osrm::util::StaticGraph<osrm::customizer::EdgeBasedGraphEdgeData,
+                                          osrm::storage::Ownership::View>;
+    std::array<Graph::NodeArrayEntry, 2> offsets{{{0}, {1}}};
+    Graph graph({offsets.data(), offsets.size()}, {});
+    for (const auto bytes : {0u, 7u, 8u, 9u, 20u})
+    {
+        std::vector<std::uint8_t> payload(bytes);
+        BOOST_CHECK_THROW(graph.bindPackedEdges({payload.data(), payload.size()}),
+                          osrm::util::exception);
+    }
+
+    std::array<std::uint8_t, 14> payload{};
+    BOOST_CHECK_NO_THROW(graph.bindPackedEdges({payload.data(), payload.size()}));
+    BOOST_CHECK_EQUAL(graph.GetNumberOfEdges(), 1);
+    BOOST_CHECK_EQUAL(graph.GetTarget(0), 0);
+}
+
+BOOST_AUTO_TEST_CASE(packed_edge_deserialization_checks_bound_storage)
+{
+    using EdgeData = osrm::customizer::EdgeBasedGraphEdgeData;
+    using View = osrm::util::StaticGraph<EdgeData, osrm::storage::Ownership::View>;
+    using Graph = osrm::util::StaticGraph<EdgeData>;
+    std::vector<View::NodeArrayEntry> offsets{{0}, {1}};
+    std::array<std::uint8_t, 14> storage{};
+    View view({offsets.data(), offsets.size()}, {});
+    view.bindPackedEdges({storage.data(), storage.size()});
+    for (const auto bytes : {7u, 8u, 14u, 20u})
+    {
+        TemporaryFile archive;
+        {
+            osrm::storage::tar::FileWriter writer(
+                archive.path, osrm::storage::tar::FileWriter::GenerateFingerprint);
+            osrm::storage::serialization::write(writer, "/graph/node_array", offsets);
+            osrm::storage::serialization::write(
+                writer, "/graph/edge_array6", std::vector<std::uint8_t>(bytes));
+        }
+        osrm::storage::tar::FileReader reader(archive.path,
+                                              osrm::storage::tar::FileReader::VerifyFingerprint);
+        Graph owned;
+        if (bytes == storage.size())
+        {
+            BOOST_REQUIRE_NO_THROW(osrm::util::serialization::read(reader, "/graph", view));
+            BOOST_REQUIRE_NO_THROW(osrm::util::serialization::read(reader, "/graph", owned));
+            BOOST_CHECK_EQUAL(view.GetNumberOfEdges(), owned.GetNumberOfEdges());
+            BOOST_CHECK_EQUAL(view.GetTarget(0), owned.GetTarget(0));
+        }
+        else
+        {
+            BOOST_CHECK_THROW(osrm::util::serialization::read(reader, "/graph", view),
+                              osrm::util::exception);
+            BOOST_CHECK_THROW(osrm::util::serialization::read(reader, "/graph", owned),
+                              osrm::util::exception);
+        }
+    }
 }
 
 BOOST_AUTO_TEST_SUITE_END()

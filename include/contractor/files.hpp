@@ -2,6 +2,7 @@
 #define OSRM_CONTRACTOR_FILES_HPP
 
 #include "contractor/serialization.hpp"
+#include "guidance/query_turn_data.hpp"
 
 #include <unordered_map>
 
@@ -32,7 +33,8 @@ inline void readGraph(const std::filesystem::path &path,
 template <typename ContractedMetricT>
 inline void writeGraph(const std::filesystem::path &path,
                        const std::unordered_map<std::string, ContractedMetricT> &metrics,
-                       const std::uint32_t connectivity_checksum)
+                       const std::uint32_t connectivity_checksum,
+                       const guidance::QueryTurnData *turns = nullptr)
 {
     static_assert(std::is_same<ContractedMetric, ContractedMetricT>::value ||
                       std::is_same<ContractedMetricView, ContractedMetricT>::value,
@@ -47,6 +49,8 @@ inline void writeGraph(const std::filesystem::path &path,
     {
         serialization::write(writer, "/ch/metrics/" + pair.first, pair.second);
     }
+    if (turns)
+        turns->write(writer, "/ch");
 }
 } // namespace osrm::contractor::files
 

@@ -1,4 +1,5 @@
 #include "storage/io.hpp"
+#include "storage/storage_config.hpp"
 #include "osrm/contractor.hpp"
 #include "osrm/contractor_config.hpp"
 #include "osrm/exception.hpp"
