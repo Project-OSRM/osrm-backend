@@ -8,7 +8,9 @@
 #include "util/typedefs.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
+#include <limits>
 #include <memory>
 #include <vector>
 
@@ -23,10 +25,21 @@ template <routing_algorithms::RoutingAlgorithm Algorithm> struct SearchEngineDat
 {
 };
 
+// Where on its edge-based node the phantom a search was seeded from sits: its
+// PhantomNode::fwd_segment_position. Closures on a seed's node are found from this rather than
+// from the seed's weight, which also carries the approach and the cost of earlier legs. Heap nodes
+// that are not phantom seeds keep NODE_START_POSITION, the start of the node.
+using SeedPosition = std::uint16_t;
+static constexpr SeedPosition NODE_START_POSITION = std::numeric_limits<SeedPosition>::max();
+
 struct HeapData
 {
     NodeID parent;
-    /* explicit */ HeapData(NodeID p) : parent(p) {}
+    SeedPosition seed_position;
+    /* explicit */ HeapData(NodeID p, SeedPosition position = NODE_START_POSITION)
+        : parent(p), seed_position(position)
+    {
+    }
 };
 
 struct ManyToManyHeapData : HeapData
@@ -46,8 +59,9 @@ struct ManyToManyHeapData : HeapData
     ManyToManyHeapData(NodeID p,
                        EdgeDuration duration,
                        EdgeDistance distance,
-                       EdgeWeight approach = EdgeWeight{0})
-        : HeapData(p), duration(duration), distance(distance), approach(approach)
+                       EdgeWeight approach = EdgeWeight{0},
+                       SeedPosition position = NODE_START_POSITION)
+        : HeapData(p, position), duration(duration), distance(distance), approach(approach)
     {
     }
 };
@@ -92,19 +106,32 @@ struct MultiLayerDijkstraHeapData
 {
     NodeID parent;
     bool from_clique_arc;
+    SeedPosition seed_position = NODE_START_POSITION;
     MultiLayerDijkstraHeapData(NodeID p) : parent(p), from_clique_arc(false) {}
     MultiLayerDijkstraHeapData(NodeID p, bool from) : parent(p), from_clique_arc(from) {}
+    MultiLayerDijkstraHeapData(NodeID p, bool from, SeedPosition position)
+        : parent(p), from_clique_arc(from), seed_position(position)
+    {
+    }
 };
 
 struct MapMatchingMultiLayerDijkstraHeapData
 {
     NodeID parent;
     bool from_clique_arc;
+    SeedPosition seed_position = NODE_START_POSITION;
     EdgeDistance distance = {0};
     MapMatchingMultiLayerDijkstraHeapData(NodeID p) : parent(p), from_clique_arc(false) {}
     MapMatchingMultiLayerDijkstraHeapData(NodeID p, bool from) : parent(p), from_clique_arc(from) {}
     MapMatchingMultiLayerDijkstraHeapData(NodeID p, bool from, EdgeDistance d)
         : parent(p), from_clique_arc(from), distance(d)
+    {
+    }
+    MapMatchingMultiLayerDijkstraHeapData(NodeID p,
+                                          bool from,
+                                          EdgeDistance d,
+                                          SeedPosition position)
+        : parent(p), from_clique_arc(from), seed_position(position), distance(d)
     {
     }
 };
@@ -118,8 +145,10 @@ struct ManyToManyMultiLayerDijkstraHeapData : MultiLayerDijkstraHeapData
     ManyToManyMultiLayerDijkstraHeapData(NodeID p,
                                          EdgeDuration duration,
                                          EdgeDistance distance,
-                                         EdgeWeight approach = EdgeWeight{0})
-        : MultiLayerDijkstraHeapData(p), duration(duration), distance(distance), approach(approach)
+                                         EdgeWeight approach = EdgeWeight{0},
+                                         SeedPosition position = NODE_START_POSITION)
+        : MultiLayerDijkstraHeapData(p, false, position), duration(duration), distance(distance),
+          approach(approach)
     {
     }
     ManyToManyMultiLayerDijkstraHeapData(NodeID p,

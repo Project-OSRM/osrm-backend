@@ -30,11 +30,10 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
     std::vector<extractor::EdgeBasedEdge> directed;
     directed.reserve(edges.size() * 2);
 
+    // Edges leaving a node with a closed segment keep INVALID_EDGE_WEIGHT rather than being
+    // dropped: a route starting on that node past the closure still needs to leave it.
     for (const auto &edge : edges)
     {
-        if (edge.data.weight == INVALID_EDGE_WEIGHT)
-            continue;
-
         directed.emplace_back(edge.source,
                               edge.target,
                               edge.data.turn_id,
