@@ -5,13 +5,13 @@
 #include "extractor/node_location_index.hpp"
 #include "extractor/nodes_of_way.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/record_spool.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/scripting_environment.hpp"
 
 #include "storage/tar_fwd.hpp"
 
 #include <filesystem>
-#include <fstream>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -41,14 +41,9 @@ class ExtractionContainers
 
     void WriteCharData(const std::string &file_name);
 
-    void writeEdgeBatch();
     void restoreEdges();
-    void removeEdgeSpool();
 
-    std::filesystem::path m_edge_spool_parent;
-    std::filesystem::path m_edge_spool_directory;
-    std::ofstream m_edge_spool;
-    std::size_t m_spooled_edges = 0;
+    RecordSpool<InternalExtractorEdge> m_edge_spool;
 
   public:
     using NodeIDVector = std::vector<OSMNodeID>;
@@ -86,10 +81,9 @@ class ExtractionContainers
     NodeVector used_nodes;
 
     explicit ExtractionContainers(std::filesystem::path edge_spool_parent = {});
-    ~ExtractionContainers();
 
-    void appendEdge(const InternalExtractorEdge &edge);
-    bool hasEdges() const { return m_spooled_edges != 0 || !all_edges_list.empty(); }
+    void appendEdge(const InternalExtractorEdge &edge) { m_edge_spool.append(edge); }
+    bool hasEdges() const { return !m_edge_spool.empty(); }
 
     void PrepareData(ScriptingEnvironment &scripting_environment,
                      const std::string &names_data_path,

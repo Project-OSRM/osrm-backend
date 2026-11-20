@@ -7,10 +7,10 @@
 #include "util/typedefs.hpp"
 
 #include <filesystem>
+#include <limits>
 #include <memory>
 #include <ranges>
 #include <span>
-#include <unordered_map>
 #include <utility>
 
 #include <vector>
@@ -32,6 +32,7 @@ class CompressedEdgeContainer
     using OnewayEdgeBucket = std::vector<OnewayCompressedEdge>;
 
     CompressedEdgeContainer();
+    void initializeEdgeIndex(std::size_t edge_capacity);
     void CompressEdge(const EdgeID surviving_edge_id,
                       const EdgeID removed_edge_id,
                       const NodeID via_node_id,
@@ -52,21 +53,23 @@ class CompressedEdgeContainer
 
     void InitializeBothwayVector();
     unsigned ZipEdges(const unsigned f_edge_pos, const unsigned r_edge_pos);
+    void releaseEquivalentEdgeGeometry(EdgeID forward, EdgeID reverse, unsigned geometry_id);
     bool finalizeGeometry(const util::NodeBasedDynamicGraph &graph);
 
     auto getGeometryNodes(EdgeID edge, GeometryID geometry) const
     {
         std::span<const OnewayCompressedEdge> bucket;
         std::span<const NodeID> packed;
-        if (m_use_packed_geometry)
+        const auto bucket_index = findBucket(edge);
+        if ((!m_use_packed_geometry || m_has_fallback_geometry) && bucket_index != PackedGeometry)
+        {
+            if (bucket_index < m_compressed_oneway_geometries.size())
+                bucket = m_compressed_oneway_geometries[bucket_index];
+        }
+        else if (m_use_packed_geometry)
         {
             if (geometry.id != SPECIAL_GEOMETRYID)
                 packed = std::as_const(*segment_data).GetForwardGeometry(geometry.id);
-        }
-        else if (const auto it = m_edge_id_to_list_index_map.find(edge);
-                 it != m_edge_id_to_list_index_map.end())
-        {
-            bucket = m_compressed_oneway_geometries.at(it->second);
         }
 
         const auto size = packed.empty() ? bucket.size() : packed.size() - 1;
@@ -96,6 +99,12 @@ class CompressedEdgeContainer
     SegmentWeight ClipWeight(const EdgeWeight weight);
     SegmentDuration ClipDuration(const EdgeDuration duration);
 
+    static constexpr unsigned NoBucket = std::numeric_limits<unsigned>::max();
+    static constexpr unsigned PackedGeometry = NoBucket - 1;
+    unsigned findBucket(EdgeID edge) const
+    { return edge < m_edge_id_to_list_index.size() ? m_edge_id_to_list_index[edge] : NoBucket; }
+    void assignBucket(EdgeID edge);
+
     int free_list_maximum = 0;
     std::atomic_size_t clipped_weights{0};
     std::atomic_size_t clipped_durations{0};
@@ -103,9 +112,10 @@ class CompressedEdgeContainer
     void IncreaseFreeList();
     std::vector<OnewayEdgeBucket> m_compressed_oneway_geometries;
     std::vector<unsigned> m_free_list;
-    std::unordered_map<EdgeID, unsigned> m_edge_id_to_list_index_map;
+    std::vector<unsigned> m_edge_id_to_list_index;
     std::unique_ptr<SegmentDataContainer> segment_data;
     bool m_use_packed_geometry = false;
+    bool m_has_fallback_geometry = false;
 };
 } // namespace osrm::extractor
 

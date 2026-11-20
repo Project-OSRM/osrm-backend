@@ -2,12 +2,14 @@
 #define OSRM_EXTRACTOR_NODE_LOCATION_INDEX_HPP
 
 #include "extractor/query_node.hpp"
+#include "util/block_delta_encoding.hpp"
 
 #include <osmium/index/map/flex_mem.hpp>
 #include <osmium/osm/location.hpp>
 #include <osmium/osm/types.hpp>
 
 #include <algorithm>
+#include <bit>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -26,6 +28,71 @@ class NodeLocationIndex final
         ID prefix;
         std::vector<std::uint16_t> suffixes;
         std::vector<osmium::Location> locations;
+        util::EncodedBlocks longitudes;
+        util::EncodedBlocks latitudes;
+
+        std::size_t usedMemory() const
+        {
+            return suffixes.capacity() * sizeof(std::uint16_t) +
+                   locations.capacity() * sizeof(osmium::Location) +
+                   (longitudes.Headers.capacity() + latitudes.Headers.capacity()) *
+                       sizeof(util::BlockDeltaHeader) +
+                   (longitudes.Words.capacity() + latitudes.Words.capacity()) *
+                       sizeof(std::uint64_t);
+        }
+
+        void finish()
+        {
+            suffixes.shrink_to_fit();
+            locations.shrink_to_fit();
+            if (locations.size() < 128)
+                return;
+
+            std::vector<std::uint32_t> column(locations.size());
+            const auto encode = [&](auto coordinate)
+            {
+                std::transform(locations.begin(),
+                               locations.end(),
+                               column.begin(),
+                               [&](const auto &location)
+                               {
+                                   return std::bit_cast<std::uint32_t>(coordinate(location)) ^
+                                          (std::uint32_t{1} << 31);
+                               });
+                return util::encodeBlockDelta<std::uint32_t>(column);
+            };
+            auto lon = encode([](const auto &location) { return location.x(); });
+            auto lat = encode([](const auto &location) { return location.y(); });
+            if (!lon || !lat)
+                return;
+            const auto bytes =
+                (lon->Headers.size() + lat->Headers.size()) * sizeof(util::BlockDeltaHeader) +
+                (lon->Words.size() + lat->Words.size()) * sizeof(std::uint64_t);
+            if (bytes >= locations.size() * sizeof(osmium::Location))
+                return;
+
+            lon->Headers.shrink_to_fit();
+            lon->Words.shrink_to_fit();
+            lat->Headers.shrink_to_fit();
+            lat->Words.shrink_to_fit();
+            longitudes = std::move(*lon);
+            latitudes = std::move(*lat);
+            std::vector<osmium::Location>().swap(locations);
+        }
+
+        osmium::Location at(std::size_t index) const noexcept
+        {
+            if (!locations.empty())
+                return locations[index];
+            const auto coordinate = [&](const util::EncodedBlocks &column)
+            {
+                const auto value =
+                    util::decodeBlockDeltaValues(column.Headers, column.Words, index);
+                return std::bit_cast<std::int32_t>(static_cast<std::uint32_t>(value) ^
+                                                   (std::uint32_t{1} << 31));
+            };
+            return osmium::Location(coordinate(longitudes), coordinate(latitudes));
+        }
     };
 
     std::vector<Block> m_blocks;
@@ -52,7 +119,7 @@ class NodeLocationIndex final
             {
                 for (std::size_t i = 0; i < block.suffixes.size(); ++i)
                     m_legacy_index->set((block.prefix << SuffixBits) | block.suffixes[i],
-                                        block.locations[i]);
+                                        block.at(i));
             }
             releaseBlocks();
         }
@@ -66,12 +133,9 @@ class NodeLocationIndex final
         if (m_blocks.empty() || m_blocks.back().prefix != prefix)
         {
             if (!m_blocks.empty())
-            {
-                m_blocks.back().suffixes.shrink_to_fit();
-                m_blocks.back().locations.shrink_to_fit();
-            }
+                m_blocks.back().finish();
             m_block_by_prefix.emplace(prefix, m_blocks.size());
-            m_blocks.push_back(Block{prefix, {}, {}});
+            m_blocks.push_back(Block{prefix, {}, {}, {}, {}});
         }
         m_blocks.back().suffixes.push_back(static_cast<std::uint16_t>(id));
         m_blocks.back().locations.push_back(location);
@@ -92,7 +156,7 @@ class NodeLocationIndex final
             std::lower_bound(block.suffixes.begin(), block.suffixes.end(), suffix);
         if (position == block.suffixes.end() || *position != suffix)
             return osmium::Location{};
-        return block.locations[position - block.suffixes.begin()];
+        return block.at(position - block.suffixes.begin());
     }
 
     osmium::Location get(ID id) const final
@@ -110,8 +174,10 @@ class NodeLocationIndex final
     {
         if (m_legacy_index)
             return m_legacy_index->used_memory();
-        return sizeof(*this) + m_blocks.capacity() * sizeof(Block) +
-               m_node_count * (sizeof(std::uint16_t) + sizeof(osmium::Location));
+        auto bytes = sizeof(*this) + m_blocks.capacity() * sizeof(Block);
+        for (const auto &block : m_blocks)
+            bytes += block.usedMemory();
+        return bytes;
     }
 
     void clear() final

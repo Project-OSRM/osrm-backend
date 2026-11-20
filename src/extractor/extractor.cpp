@@ -9,6 +9,7 @@
 #include "extractor/extraction_relation.hpp"
 #include "extractor/extractor_callbacks.hpp"
 #include "extractor/files.hpp"
+#include "extractor/heap_pages.hpp"
 #include "extractor/maneuver_override_relation_parser.hpp"
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/node_locations_for_ways.hpp"
@@ -223,6 +224,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                            config.requested_num_threads);
 
     auto parsed_osm_data = ParseOSMData(scripting_environment, number_of_threads);
+    releaseUnusedHeapPages();
 
     // Transform the node-based graph that OSM is based on into an edge-based graph
     // that is better for routing.  Every edge becomes a node, and every valid
@@ -232,8 +234,9 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     TIMER_START(expansion);
 
     EdgeBasedNodeDataContainer edge_based_nodes_container;
-    std::vector<EdgeBasedNodeSegment> edge_based_node_segments;
-    util::DeallocatingVector<EdgeBasedEdge> edge_based_edge_list;
+    RecordSpool<EdgeBasedNodeSegment> edge_based_node_segments(
+        config.GetPath(".osrm.fileIndex").parent_path());
+    RecordSpool<EdgeBasedEdge> edge_based_edge_list(config.GetPath(".osrm.ebg").parent_path());
     std::vector<EdgeWeight> edge_based_node_weights;
     std::vector<EdgeDuration> edge_based_node_durations;
     std::vector<EdgeDistance> edge_based_node_distances;
@@ -251,6 +254,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     util::Log() << "Writing segment geometry before edge expansion";
     node_based_graph_factory.GetCompressedEdges().writeGeometryAndReleaseCosts(
         config.GetPath(".osrm.geometry"));
+    releaseUnusedHeapPages();
 
     StringTable string_table;
     files::readNames(config.GetPath(".osrm.names"), string_table);
@@ -312,19 +316,6 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
                                edge_based_edge_list,
                                ebg_connectivity_checksum);
 
-    ProcessGuidanceTurns(node_based_graph,
-                         edge_based_nodes_container,
-                         coordinates,
-                         node_based_graph_factory.GetCompressedEdges(),
-                         restriction_graph,
-                         string_table,
-                         std::move(parsed_osm_data.turn_lane_map),
-                         scripting_environment);
-
-    TIMER_STOP(expansion);
-    node_based_graph_factory.releaseGraph();
-    node_based_graph_factory.GetCompressedEdges().releaseGeometry();
-
     util::Log() << "Saving edge-based node weights to file.";
     TIMER_START(timer_write_node_weights);
     extractor::files::writeEdgeBasedNodeWeightsDurationsDistances(config.GetPath(".osrm.enw"),
@@ -336,16 +327,22 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
     std::vector<EdgeDistance>().swap(edge_based_node_distances);
     TIMER_STOP(timer_write_node_weights);
     util::Log() << "Done writing. (" << TIMER_SEC(timer_write_node_weights) << ")";
+    releaseUnusedHeapPages();
+
+    ProcessGuidanceTurns(node_based_graph_factory,
+                         edge_based_nodes_container,
+                         restriction_graph,
+                         string_table,
+                         std::move(parsed_osm_data.turn_lane_map),
+                         scripting_environment);
+
+    TIMER_STOP(expansion);
 
     util::Log() << "Computing strictly connected components ...";
-    FindComponents(number_of_edge_based_nodes,
-                   edge_based_edge_list,
-                   edge_based_node_segments,
-                   edge_based_nodes_container);
-
-    if (std::none_of(edge_based_node_segments.begin(),
-                     edge_based_node_segments.end(),
-                     [](const auto &segment) { return segment.is_startpoint; }))
+    if (!FindComponents(number_of_edge_based_nodes,
+                        edge_based_edge_list,
+                        edge_based_node_segments,
+                        edge_based_nodes_container))
     {
         throw util::exception("There are no snappable edges left after processing.  Are you "
                               "setting travel modes correctly in the profile?  Cannot continue." +
@@ -365,7 +362,7 @@ int Extractor::run(ScriptingEnvironment &scripting_environment)
 
     util::Log() << "Building r-tree ...";
     TIMER_START(rtree);
-    BuildRTree(std::move(edge_based_node_segments), coordinates);
+    BuildRTree(edge_based_node_segments.takeVector(), coordinates);
 
     TIMER_STOP(rtree);
 
@@ -692,6 +689,9 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
     const bool has_areas = area_manager.number_of_ways + area_manager.number_of_relations != 0;
     const bool reread_nodes = share_locations && (!unique_sorted_node_ids || has_areas);
     const bool reuse_location_index = share_locations && !reread_nodes;
+    if (reuse_location_index)
+        util::Log() << "Node location index block storage: " << location_cache.used_memory()
+                    << " bytes";
     if (!reuse_location_index)
         location_handler.clear();
     if (reread_nodes)
@@ -849,40 +849,50 @@ Extractor::ParsedOSMData Extractor::ParseOSMData(ScriptingEnvironment &scripting
                          std::move(extraction_containers.all_edges_annotation_data_list)};
 }
 
-void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
-                               const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
-                               const std::vector<EdgeBasedNodeSegment> &input_node_segments,
+bool Extractor::FindComponents(unsigned number_of_edge_based_nodes,
+                               const RecordSpool<EdgeBasedEdge> &input_edge_list,
+                               const RecordSpool<EdgeBasedNodeSegment> &input_node_segments,
                                EdgeBasedNodeDataContainer &nodes_container) const
 {
     using UncontractedGraph = util::StaticGraph<void>;
+    bool has_startpoint = false;
     const auto for_each_arc = [&](auto emit)
     {
-        for (const auto &edge : input_edge_list)
-        {
-            BOOST_ASSERT(edge.source < number_of_edge_based_nodes);
-            BOOST_ASSERT(edge.target < number_of_edge_based_nodes);
-            if (edge.data.forward)
-                emit(edge.source, edge.target);
-            if (edge.data.backward)
-                emit(edge.target, edge.source);
-        }
+        input_edge_list.forEachBatch(
+            [&](std::span<const EdgeBasedEdge> edges)
+            {
+                for (const auto &edge : edges)
+                {
+                    BOOST_ASSERT(edge.source < number_of_edge_based_nodes);
+                    BOOST_ASSERT(edge.target < number_of_edge_based_nodes);
+                    if (edge.data.forward)
+                        emit(edge.source, edge.target);
+                    if (edge.data.backward)
+                        emit(edge.target, edge.source);
+                }
+            });
 
         // Virtual reverse arcs put the two directions of a snappable segment in one component.
         std::pair<NodeID, NodeID> previous{SPECIAL_NODEID, SPECIAL_NODEID};
-        for (const auto &segment : input_node_segments)
-        {
-            if (!segment.reverse_segment_id.enabled)
-                continue;
-            const std::pair<NodeID, NodeID> endpoints{segment.forward_segment_id.id,
-                                                      segment.reverse_segment_id.id};
-            if (endpoints == previous)
-                continue;
-            BOOST_ASSERT(endpoints.first < number_of_edge_based_nodes);
-            BOOST_ASSERT(endpoints.second < number_of_edge_based_nodes);
-            emit(endpoints.first, endpoints.second);
-            emit(endpoints.second, endpoints.first);
-            previous = endpoints;
-        }
+        input_node_segments.forEachBatch(
+            [&](std::span<const EdgeBasedNodeSegment> segments)
+            {
+                for (const auto &segment : segments)
+                {
+                    has_startpoint |= segment.is_startpoint;
+                    if (!segment.reverse_segment_id.enabled)
+                        continue;
+                    const std::pair<NodeID, NodeID> endpoints{segment.forward_segment_id.id,
+                                                              segment.reverse_segment_id.id};
+                    if (endpoints == previous)
+                        continue;
+                    BOOST_ASSERT(endpoints.first < number_of_edge_based_nodes);
+                    BOOST_ASSERT(endpoints.second < number_of_edge_based_nodes);
+                    emit(endpoints.first, endpoints.second);
+                    emit(endpoints.second, endpoints.first);
+                    previous = endpoints;
+                }
+            });
     };
 
     std::vector<std::size_t> offsets(std::size_t(number_of_edge_based_nodes) + 1);
@@ -939,6 +949,7 @@ void Extractor::FindComponents(unsigned number_of_edge_based_nodes,
         BOOST_ASSERT(node_id < nodes_container.NumberOfNodes());
         nodes_container.nodes[node_id].component_id = {1 + forward_component, is_tiny};
     }
+    return has_startpoint;
 }
 
 /**
@@ -959,11 +970,11 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
     ScriptingEnvironment &scripting_environment,
     // output data
     EdgeBasedNodeDataContainer &edge_based_nodes_container,
-    std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
+    RecordSpool<EdgeBasedNodeSegment> &edge_based_node_segments,
     std::vector<EdgeWeight> &edge_based_node_weights,
     std::vector<EdgeDuration> &edge_based_node_durations,
     std::vector<EdgeDistance> &edge_based_node_distances,
-    util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+    RecordSpool<EdgeBasedEdge> &edge_based_edge_list,
     std::uint32_t &connectivity_checksum)
 {
     EdgeBasedGraphFactory edge_based_graph_factory(node_based_graph,
@@ -972,7 +983,9 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
                                                    coordinates,
                                                    string_table,
                                                    segregated_edges,
-                                                   turn_lane_map);
+                                                   turn_lane_map,
+                                                   edge_based_edge_list,
+                                                   edge_based_node_segments);
 
     const auto create_edge_based_edges = [&]()
     {
@@ -996,8 +1009,6 @@ EdgeID Extractor::BuildEdgeExpandedGraph(
 
     const auto number_of_edge_based_nodes = create_edge_based_edges();
 
-    edge_based_graph_factory.GetEdgeBasedEdges(edge_based_edge_list);
-    edge_based_graph_factory.GetEdgeBasedNodeSegments(edge_based_node_segments);
     edge_based_graph_factory.GetEdgeBasedNodeWeights(edge_based_node_weights);
     edge_based_graph_factory.GetEdgeBasedNodeDurations(edge_based_node_durations);
     edge_based_graph_factory.GetEdgeBasedNodeDistances(edge_based_node_distances);
@@ -1134,10 +1145,8 @@ void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_seg
 }
 
 void Extractor::ProcessGuidanceTurns(
-    const util::NodeBasedDynamicGraph &node_based_graph,
+    NodeBasedGraphFactory &node_based_graph_factory,
     const extractor::EdgeBasedNodeDataContainer &edge_based_node_container,
-    const std::vector<util::Coordinate> &node_coordinates,
-    const CompressedEdgeContainer &compressed_edge_container,
     const RestrictionGraph &restriction_graph,
     const StringTable &string_table,
     LaneDescriptionMap lane_description_map,
@@ -1160,10 +1169,10 @@ void Extractor::ProcessGuidanceTurns(
         RestrictionMap unconditional_node_restriction_map(restriction_graph);
         WayRestrictionMap way_restriction_map(restriction_graph);
 
-        osrm::guidance::annotateTurns(node_based_graph,
+        osrm::guidance::annotateTurns(node_based_graph_factory.GetGraph(),
                                       edge_based_node_container,
-                                      node_coordinates,
-                                      compressed_edge_container,
+                                      node_based_graph_factory.GetCoordinates(),
+                                      node_based_graph_factory.GetCompressedEdges(),
                                       scripting_environment.m_obstacle_map,
                                       unconditional_node_restriction_map,
                                       way_restriction_map,
@@ -1180,6 +1189,9 @@ void Extractor::ProcessGuidanceTurns(
     }
 
     TIMER_STOP(turn_annotations);
+    node_based_graph_factory.releaseGraph();
+    node_based_graph_factory.GetCompressedEdges().releaseGeometry();
+    releaseUnusedHeapPages();
     util::Log() << "Guidance turn annotations took " << TIMER_SEC(turn_annotations) << "s";
 
     util::Log() << "Writing Intersection Classification Data";

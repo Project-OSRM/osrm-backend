@@ -5,6 +5,7 @@
 #include "util/integer_range.hpp"
 
 #include <algorithm>
+#include <compare>
 #include <limits>
 #include <utility>
 #include <vector>
@@ -205,6 +206,10 @@ template <typename ElementT, std::size_t ELEMENTS_PER_BLOCK> class DeallocatingV
 
     friend bool operator!=(DeallocatingVectorIterator const &a, DeallocatingVectorIterator const &b)
     { return !(a == b); }
+
+    friend auto operator<=>(const DeallocatingVectorIterator &a,
+                            const DeallocatingVectorIterator &b)
+    { return a.current_state.index <=> b.current_state.index; }
 
     friend std::ptrdiff_t operator-(DeallocatingVectorIterator const &a,
                                     DeallocatingVectorIterator const &b)

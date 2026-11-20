@@ -1,6 +1,7 @@
 #include "extractor/node_based_graph_factory.hpp"
 #include "extractor/files.hpp"
 #include "extractor/graph_compressor.hpp"
+#include "extractor/heap_pages.hpp"
 #include "storage/io.hpp"
 
 #include "util/log.hpp"
@@ -26,9 +27,11 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
 {
     BuildCompressedOutputGraph(edge_list);
     std::vector<NodeBasedEdge>().swap(edge_list);
+    releaseUnusedHeapPages();
+    compressed_edge_container.initializeEdgeIndex(compressed_output_graph.GetEdgeCapacity());
     Compress(scripting_environment, turn_restrictions, maneuver_overrides);
-    CompressGeometry();
     compressed_edge_container.PrintStatistics();
+    CompressGeometry();
     if (compressed_edge_container.finalizeGeometry(compressed_output_graph))
     {
         // Compression only deletes edges. Packed geometry no longer depends on edge IDs.
@@ -37,6 +40,7 @@ NodeBasedGraphFactory::NodeBasedGraphFactory(
         util::Log() << "Compacted node-based graph from " << slots << " to "
                     << compressed_output_graph.GetEdgeCapacity() << " edge slots";
     }
+    releaseUnusedHeapPages();
     CompressAnnotationData();
 }
 
@@ -133,6 +137,8 @@ void NodeBasedGraphFactory::CompressGeometry()
             compressed_output_graph.GetEdgeData(edge_id_1).geometry_id = {packed_geometry_id, true};
             compressed_output_graph.GetEdgeData(edge_id_2).geometry_id = {packed_geometry_id,
                                                                           false};
+            compressed_edge_container.releaseEquivalentEdgeGeometry(
+                edge_id_1, edge_id_2, packed_geometry_id);
         }
     }
 }

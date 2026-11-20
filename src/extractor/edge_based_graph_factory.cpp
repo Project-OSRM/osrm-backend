@@ -2,6 +2,7 @@
 #include "extractor/conditional_turn_penalty.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/files.hpp"
+#include "extractor/heap_pages.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/scripting_environment.hpp"
 #include "extractor/serialization.hpp"
@@ -42,27 +43,16 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::vector<util::Coordinate> &coordinates,
     const StringTable &string_table,
     const std::unordered_set<EdgeID> &segregated_edges,
-    const extractor::LaneDescriptionMap &lane_description_map)
-    : m_edge_based_node_container(node_data_container), m_connectivity_checksum(0),
+    const extractor::LaneDescriptionMap &lane_description_map,
+    RecordSpool<EdgeBasedEdge> &edge_records,
+    RecordSpool<EdgeBasedNodeSegment> &segment_records)
+    : m_edge_based_node_segments(segment_records), m_edge_based_node_container(node_data_container),
+      m_edge_based_edge_list(edge_records), m_connectivity_checksum(0),
       m_number_of_edge_based_nodes(0), m_coordinates(coordinates),
       m_node_based_graph(node_based_graph), m_compressed_edge_container(compressed_edge_container),
       string_table(string_table), segregated_edges(segregated_edges),
       lane_description_map(lane_description_map)
 {
-}
-
-void EdgeBasedGraphFactory::GetEdgeBasedEdges(
-    util::DeallocatingVector<EdgeBasedEdge> &output_edge_list)
-{
-    BOOST_ASSERT_MSG(0 == output_edge_list.size(), "Vector is not empty");
-    using std::swap; // Koenig swap
-    swap(m_edge_based_edge_list, output_edge_list);
-}
-
-void EdgeBasedGraphFactory::GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes)
-{
-    using std::swap; // Koenig swap
-    swap(nodes, m_edge_based_node_segments);
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights)
@@ -180,13 +170,13 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
         BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
         // build edges
-        m_edge_based_node_segments.emplace_back(
-            edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_1]),
-            edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_2]),
-            current_edge_source_coordinate_id,
-            current_edge_target_coordinate_id,
-            i,
-            forward_data.flags.startpoint || reverse_data.flags.startpoint);
+        m_edge_based_node_segments.append(
+            EdgeBasedNodeSegment(edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_1]),
+                                 edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_2]),
+                                 current_edge_source_coordinate_id,
+                                 current_edge_target_coordinate_id,
+                                 i,
+                                 forward_data.flags.startpoint || reverse_data.flags.startpoint));
 
         current_edge_source_coordinate_id = current_edge_target_coordinate_id;
     }
@@ -224,7 +214,9 @@ void EdgeBasedGraphFactory::Run(
         auto mapping = GenerateEdgeExpandedNodes(way_restriction_map);
         files::writeNBGMapping(cnbg_ebg_mapping_path, mapping);
     }
+    m_edge_based_node_segments.finish();
     TIMER_STOP(generate_nodes);
+    releaseUnusedHeapPages();
 
     TIMER_START(generate_edges);
     GenerateEdgeExpandedEdges(scripting_environment,
@@ -418,12 +410,13 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
                              current_edge_source_coordinate_id);
 
                 // build edges
-                m_edge_based_node_segments.emplace_back(edge_id_to_segment_id(edge_based_node_id),
-                                                        SegmentID{SPECIAL_SEGMENTID, false},
-                                                        current_edge_source_coordinate_id,
-                                                        current_edge_target_coordinate_id,
-                                                        i,
-                                                        forward_data.flags.startpoint);
+                m_edge_based_node_segments.append(
+                    EdgeBasedNodeSegment(edge_id_to_segment_id(edge_based_node_id),
+                                         SegmentID{SPECIAL_SEGMENTID, false},
+                                         current_edge_source_coordinate_id,
+                                         current_edge_target_coordinate_id,
+                                         i,
+                                         forward_data.flags.startpoint));
 
                 current_edge_source_coordinate_id = current_edge_target_coordinate_id;
             }
@@ -488,7 +481,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // FIXME these need to be tuned in pre-allocated size
     std::vector<TurnPenalty> turn_weight_penalties;
     std::vector<TurnPenalty> turn_duration_penalties;
-    std::vector<lookup::TurnIndexBlock> turn_penalties_index;
+    RecordSpool<lookup::TurnIndexBlock> turn_penalties_index{
+        std::filesystem::path(turn_penalties_index_filename).parent_path()};
 
     // Now, renumber all our maneuver overrides to use edge-based-nodes
     std::vector<StorageManeuverOverride> storage_maneuver_overrides;
@@ -521,10 +515,14 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
         auto const transfer_data = [&](const EdgeWithData &edge_with_data)
         {
-            m_edge_based_edge_list.push_back(edge_with_data.edge);
+            auto edge = edge_with_data.edge;
+            if (m_edge_based_edge_list.size() == std::numeric_limits<EdgeID>::max())
+                throw util::exception("Too many edge-expanded edges" + SOURCE_REF);
+            edge.data.turn_id = static_cast<EdgeID>(m_edge_based_edge_list.size());
+            m_edge_based_edge_list.append(edge);
             turn_weight_penalties.push_back(edge_with_data.turn_weight_penalty);
             turn_duration_penalties.push_back(edge_with_data.turn_duration_penalty);
-            turn_penalties_index.push_back(edge_with_data.turn_index);
+            turn_penalties_index.append(edge_with_data.turn_index);
         };
 
         struct EdgesPipelineBuffer
@@ -1256,17 +1254,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     }
 
     util::Log() << "done.";
-    util::Log() << "Renumbering turns";
-    // Now, update the turn_id property on every EdgeBasedEdge - it will equal the position in the
-    // m_edge_based_edge_list array for each object.
-    tbb::parallel_for(tbb::blocked_range<NodeID>(0, m_edge_based_edge_list.size()),
-                      [this](const tbb::blocked_range<NodeID> &range)
-                      {
-                          for (auto x = range.begin(), end = range.end(); x != end; ++x)
-                          {
-                              m_edge_based_edge_list[x].data.turn_id = x;
-                          }
-                      });
+    m_edge_based_edge_list.finish();
+    turn_penalties_index.finish();
 
     // re-hash conditionals to connect to their respective edge-based edges. Due to the ordering, we
     // do not really have a choice but to index the conditional penalties and walk over all
@@ -1292,6 +1281,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 std::vector<ConditionalTurnPenalty>
 EdgeBasedGraphFactory::IndexConditionals(std::vector<Conditional> &&conditionals) const
 {
+    if (conditionals.empty())
+        return {};
+
     std::unordered_multimap<std::pair<NodeID, NodeID>, ConditionalTurnPenalty *> index;
 
     // build and index of all conditional restrictions
@@ -1301,15 +1293,19 @@ EdgeBasedGraphFactory::IndexConditionals(std::vector<Conditional> &&conditionals
 
     std::vector<ConditionalTurnPenalty> indexed_restrictions;
 
-    for (auto const &edge : m_edge_based_edge_list)
-    {
-        auto const range = index.equal_range(std::make_pair(edge.source, edge.target));
-        for (auto itr = range.first; itr != range.second; ++itr)
+    m_edge_based_edge_list.forEachBatch(
+        [&](std::span<const EdgeBasedEdge> edges)
         {
-            itr->second->turn_offset = edge.data.turn_id;
-            indexed_restrictions.push_back(*itr->second);
-        }
-    }
+            for (const auto &edge : edges)
+            {
+                const auto range = index.equal_range(std::make_pair(edge.source, edge.target));
+                for (auto itr = range.first; itr != range.second; ++itr)
+                {
+                    itr->second->turn_offset = edge.data.turn_id;
+                    indexed_restrictions.push_back(*itr->second);
+                }
+            }
+        });
 
     return indexed_restrictions;
 }

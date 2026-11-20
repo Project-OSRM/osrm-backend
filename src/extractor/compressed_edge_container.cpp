@@ -26,18 +26,27 @@ void CompressedEdgeContainer::IncreaseFreeList()
     }
 }
 
-bool CompressedEdgeContainer::HasEntryForID(const EdgeID edge_id) const
+void CompressedEdgeContainer::initializeEdgeIndex(std::size_t edge_capacity)
+{ m_edge_id_to_list_index.assign(edge_capacity, NoBucket); }
+
+void CompressedEdgeContainer::assignBucket(EdgeID edge)
 {
-    auto iter = m_edge_id_to_list_index_map.find(edge_id);
-    return iter != m_edge_id_to_list_index_map.end();
+    if (edge >= m_edge_id_to_list_index.size())
+        m_edge_id_to_list_index.resize(std::size_t(edge) + 1, NoBucket);
+    if (m_free_list.empty())
+        IncreaseFreeList();
+    m_edge_id_to_list_index[edge] = m_free_list.back();
+    m_free_list.pop_back();
 }
+
+bool CompressedEdgeContainer::HasEntryForID(const EdgeID edge_id) const
+{ return findBucket(edge_id) < m_compressed_oneway_geometries.size(); }
 
 unsigned CompressedEdgeContainer::GetPositionForID(const EdgeID edge_id) const
 {
-    auto map_iterator = m_edge_id_to_list_index_map.find(edge_id);
-    BOOST_ASSERT(map_iterator != m_edge_id_to_list_index_map.end());
-    BOOST_ASSERT(map_iterator->second < m_compressed_oneway_geometries.size());
-    return map_iterator->second;
+    const auto bucket = findBucket(edge_id);
+    BOOST_ASSERT(bucket < m_compressed_oneway_geometries.size());
+    return bucket;
 }
 
 SegmentWeight CompressedEdgeContainer::ClipWeight(const EdgeWeight weight)
@@ -97,26 +106,9 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     // 1. append via node id to list of edge_id_1
     // 2. find list for edge_id_2, if yes add all elements and delete it
 
-    // Add via node id. List is created if it does not exist
     if (!HasEntryForID(edge_id_1))
-    {
-        // create a new entry in the map
-        if (0 == m_free_list.size())
-        {
-            // make sure there is a place to put the entries
-            IncreaseFreeList();
-        }
-        BOOST_ASSERT(!m_free_list.empty());
-        m_edge_id_to_list_index_map[edge_id_1] = m_free_list.back();
-        m_free_list.pop_back();
-    }
-
-    // find bucket index
-    const auto iter = m_edge_id_to_list_index_map.find(edge_id_1);
-    BOOST_ASSERT(iter != m_edge_id_to_list_index_map.end());
-    const unsigned edge_bucket_id1 = iter->second;
-    BOOST_ASSERT(edge_bucket_id1 == GetPositionForID(edge_id_1));
-    BOOST_ASSERT(edge_bucket_id1 < m_compressed_oneway_geometries.size());
+        assignBucket(edge_id_1);
+    const auto edge_bucket_id1 = GetPositionForID(edge_id_1);
 
     std::vector<OnewayCompressedEdge> &edge_bucket_list1 =
         m_compressed_oneway_geometries[edge_bucket_id1];
@@ -157,8 +149,7 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
             edge_bucket_list1.end(), edge_bucket_list2.begin(), edge_bucket_list2.end());
 
         // remove the list of edge_id_2
-        m_edge_id_to_list_index_map.erase(edge_id_2);
-        BOOST_ASSERT(!m_edge_id_to_list_index_map.contains(edge_id_2));
+        m_edge_id_to_list_index[edge_id_2] = NoBucket;
         edge_bucket_list2.clear();
         BOOST_ASSERT(0 == edge_bucket_list2.size());
         m_free_list.emplace_back(list_to_remove_index);
@@ -183,29 +174,9 @@ void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
     BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight);
     BOOST_ASSERT(INVALID_EDGE_DURATION != duration);
 
-    // Add via node id. List is created if it does not exist
     if (!HasEntryForID(edge_id))
-    {
-        // create a new entry in the map
-        if (0 == m_free_list.size())
-        {
-            // make sure there is a place to put the entries
-            IncreaseFreeList();
-        }
-        BOOST_ASSERT(!m_free_list.empty());
-        m_edge_id_to_list_index_map[edge_id] = m_free_list.back();
-        m_free_list.pop_back();
-    }
-
-    // find bucket index
-    const auto iter = m_edge_id_to_list_index_map.find(edge_id);
-    BOOST_ASSERT(iter != m_edge_id_to_list_index_map.end());
-    const unsigned edge_bucket_id = iter->second;
-    BOOST_ASSERT(edge_bucket_id == GetPositionForID(edge_id));
-    BOOST_ASSERT(edge_bucket_id < m_compressed_oneway_geometries.size());
-
-    std::vector<OnewayCompressedEdge> &edge_bucket_list =
-        m_compressed_oneway_geometries[edge_bucket_id];
+        assignBucket(edge_id);
+    auto &edge_bucket_list = m_compressed_oneway_geometries[GetPositionForID(edge_id)];
 
     // note we don't save the start coordinate: it is implicitly given by edge_id
     // weight is the distance to the (currently) last coordinate in the bucket
@@ -220,14 +191,23 @@ void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
 void CompressedEdgeContainer::InitializeBothwayVector()
 {
     segment_data = std::make_unique<SegmentDataContainer>();
-    segment_data->index.reserve(m_compressed_oneway_geometries.size());
-    segment_data->nodes.reserve(m_compressed_oneway_geometries.size());
-    segment_data->fwd_weights.reserve(m_compressed_oneway_geometries.size());
-    segment_data->rev_weights.reserve(m_compressed_oneway_geometries.size());
-    segment_data->fwd_durations.reserve(m_compressed_oneway_geometries.size());
-    segment_data->rev_durations.reserve(m_compressed_oneway_geometries.size());
-    segment_data->fwd_datasources.reserve(m_compressed_oneway_geometries.size());
-    segment_data->rev_datasources.reserve(m_compressed_oneway_geometries.size());
+    std::size_t nonempty_buckets = 0;
+    std::size_t segments = 0;
+    for (const auto &bucket : m_compressed_oneway_geometries)
+    {
+        nonempty_buckets += !bucket.empty();
+        segments += bucket.size();
+    }
+    const auto geometries = nonempty_buckets / 2;
+    const auto locations = segments / 2 + geometries;
+    segment_data->index.reserve(geometries + 1);
+    segment_data->nodes.reserve(locations);
+    segment_data->fwd_weights.reserve(locations);
+    segment_data->rev_weights.reserve(locations);
+    segment_data->fwd_durations.reserve(locations);
+    segment_data->rev_durations.reserve(locations);
+    segment_data->fwd_datasources.reserve(locations);
+    segment_data->rev_datasources.reserve(locations);
 }
 
 unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID r_edge_id)
@@ -285,21 +265,47 @@ unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID 
     return zipped_geometry_id;
 }
 
+void CompressedEdgeContainer::releaseEquivalentEdgeGeometry(EdgeID forward,
+                                                            EdgeID reverse,
+                                                            unsigned geometry_id)
+{
+    BOOST_ASSERT(geometry_id + 1 == segment_data->index.size());
+    const auto nodes =
+        std::span<const NodeID>(segment_data->nodes).subspan(segment_data->index[geometry_id]);
+    const auto forward_bucket = GetPositionForID(forward);
+    const auto reverse_bucket = GetPositionForID(reverse);
+    if (std::ranges::equal(m_compressed_oneway_geometries[forward_bucket],
+                           nodes.subspan(1),
+                           {},
+                           &OnewayCompressedEdge::node_id) &&
+        std::ranges::equal(m_compressed_oneway_geometries[reverse_bucket],
+                           nodes.first(nodes.size() - 1) | std::views::reverse,
+                           {},
+                           &OnewayCompressedEdge::node_id))
+    {
+        OnewayEdgeBucket().swap(m_compressed_oneway_geometries[forward_bucket]);
+        OnewayEdgeBucket().swap(m_compressed_oneway_geometries[reverse_bucket]);
+        m_edge_id_to_list_index[forward] = PackedGeometry;
+        m_edge_id_to_list_index[reverse] = PackedGeometry;
+    }
+}
+
 bool CompressedEdgeContainer::finalizeGeometry(const util::NodeBasedDynamicGraph &graph)
 {
     segment_data->index.push_back(segment_data->nodes.size());
     m_use_packed_geometry = true;
 
-    // Check both directions before releasing the node lists used by compression.
     const auto matches = [&](EdgeID edge)
     {
         const auto geometry = graph.GetEdgeData(edge).geometry_id;
-        const auto bucket = m_edge_id_to_list_index_map.find(edge);
+        const auto bucket = findBucket(edge);
+        if (bucket == PackedGeometry)
+            return true;
         if (geometry.id == SPECIAL_GEOMETRYID)
-            return bucket == m_edge_id_to_list_index_map.end();
+            return bucket == NoBucket;
         return geometry.id < segment_data->GetNumberOfGeometries() &&
-               bucket != m_edge_id_to_list_index_map.end() &&
-               std::ranges::equal(m_compressed_oneway_geometries[bucket->second],
+               bucket < m_compressed_oneway_geometries.size() &&
+               std::ranges::equal(m_compressed_oneway_geometries[bucket],
                                   getGeometryNodes(edge, geometry),
                                   {},
                                   &OnewayCompressedEdge::node_id);
@@ -309,14 +315,14 @@ bool CompressedEdgeContainer::finalizeGeometry(const util::NodeBasedDynamicGraph
     {
         if (!std::ranges::all_of(graph.GetAdjacentEdgeRange(node), matches))
         {
-            m_use_packed_geometry = false;
-            util::Log() << "Retaining per-edge geometry for expansion and guidance";
+            m_has_fallback_geometry = true;
+            util::Log() << "Retaining per-edge geometry for mismatched sequences";
             return false;
         }
     }
 
     decltype(m_compressed_oneway_geometries)().swap(m_compressed_oneway_geometries);
-    decltype(m_edge_id_to_list_index_map)().swap(m_edge_id_to_list_index_map);
+    decltype(m_edge_id_to_list_index)().swap(m_edge_id_to_list_index);
     decltype(m_free_list)().swap(m_free_list);
     util::Log() << "Using packed geometry for edge expansion and guidance";
     return true;
@@ -359,7 +365,7 @@ void CompressedEdgeContainer::PrintStatistics() const
 const CompressedEdgeContainer::OnewayEdgeBucket &
 CompressedEdgeContainer::GetBucketReference(const EdgeID edge_id) const
 {
-    const unsigned index = m_edge_id_to_list_index_map.at(edge_id);
+    const unsigned index = GetPositionForID(edge_id);
     return m_compressed_oneway_geometries.at(index);
 }
 

@@ -14,6 +14,7 @@
 #include <cstdio>
 #include <cstring>
 #include <filesystem>
+#include <span>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -420,6 +421,16 @@ class FileWriter
     template <typename T>
     void WriteFrom(const std::string &name, const T *data, const std::size_t number_of_elements)
     {
+        WriteBatches<T>(name,
+                        number_of_elements,
+                        [&](auto write) { write(std::span<const T>(data, number_of_elements)); });
+    }
+
+    template <typename T, typename ForEachBatch>
+    void WriteBatches(const std::string &name,
+                      std::size_t number_of_elements,
+                      ForEachBatch for_each_batch)
+    {
         auto number_of_bytes = number_of_elements * sizeof(T);
 
         struct archive_entry *ae = archive_entry_new();
@@ -432,18 +443,28 @@ class FileWriter
         archive_entry_free(ae);
         detail::checkArchiveError(a, ret, path, name);
 
-        const char *data_ptr = reinterpret_cast<const char *>(data);
         std::size_t remaining = number_of_bytes;
-        while (remaining > 0)
-        {
-            const auto written = archive_write_data(a, data_ptr, remaining);
-            if (written <= 0 || static_cast<std::size_t>(written) > remaining)
+        for_each_batch(
+            [&](std::span<const T> batch)
             {
-                detail::checkArchiveError(a, ARCHIVE_FATAL, path, name);
-            }
-
-            data_ptr += written;
-            remaining -= static_cast<std::size_t>(written);
+                const char *data_ptr = reinterpret_cast<const char *>(batch.data());
+                std::size_t batch_bytes = batch.size_bytes();
+                if (batch_bytes > remaining)
+                    throw util::exception("Too many records for archive member " + name +
+                                          SOURCE_REF);
+                remaining -= batch_bytes;
+                while (batch_bytes > 0)
+                {
+                    const auto written = archive_write_data(a, data_ptr, batch_bytes);
+                    if (written <= 0 || static_cast<std::size_t>(written) > batch_bytes)
+                        detail::checkArchiveError(a, ARCHIVE_FATAL, path, name);
+                    data_ptr += written;
+                    batch_bytes -= static_cast<std::size_t>(written);
+                }
+            });
+        if (remaining != 0)
+        {
+            throw util::exception("Too few records for archive member " + name + SOURCE_REF);
         }
     }
 
