@@ -65,10 +65,9 @@ getEdgeCoordinates(const extractor::CompressedEdgeContainer &compressed_geometri
     result.reserve(geometry.size() + 1);
 
     result.push_back(node_coordinates[from_node]);
-    std::transform(geometry.begin(),
-                   geometry.end(),
-                   std::back_inserter(result),
-                   [&node_coordinates](NodeID node) { return node_coordinates[node]; });
+    std::ranges::transform(geometry,
+                           std::back_inserter(result),
+                           [&node_coordinates](NodeID node) { return node_coordinates[node]; });
 
     // filter duplicated coordinates
     result.erase(std::unique(result.begin(), result.end()), result.end());

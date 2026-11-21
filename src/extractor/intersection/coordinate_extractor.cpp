@@ -545,7 +545,7 @@ util::Coordinate CoordinateExtractor::GetCoordinateCloseToTurn(const NodeID from
         }
         else
         {
-            const auto far_enough = std::find_if(geometry.begin(), geometry.end(), far_enough_away);
+            const auto far_enough = std::ranges::find_if(geometry, far_enough_away);
             return (far_enough != geometry.end()) ? compressedGeometryToCoordinate(*far_enough)
                                                   : node_coordinates[end_node];
         }
@@ -598,10 +598,8 @@ CoordinateExtractor::GetCoordinatesAlongRoad(const NodeID intersection_node,
         {
             BOOST_ASSERT(intersection_node < node_coordinates.size());
             result.push_back(node_coordinates[intersection_node]);
-            std::transform(geometry.begin(),
-                           geometry.end(),
-                           std::back_inserter(result),
-                           compressedGeometryToCoordinate);
+            std::ranges::transform(
+                geometry, std::back_inserter(result), compressedGeometryToCoordinate);
         }
         // filter duplicated coordinates
         auto end = std::unique(result.begin(), result.end());
