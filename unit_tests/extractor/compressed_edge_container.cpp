@@ -1,4 +1,5 @@
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/geometry_memory.hpp"
 #include "util/typedefs.hpp"
 
 #include <boost/test/unit_test.hpp>
@@ -10,6 +11,14 @@
 BOOST_AUTO_TEST_SUITE(compressed_edge_container)
 
 using osrm::extractor::CompressedEdgeContainer;
+
+BOOST_AUTO_TEST_CASE(geometry_memory_resources_compare_by_identity)
+{
+    const osrm::extractor::GeometryMemory first{};
+    const osrm::extractor::GeometryMemory second{};
+    BOOST_CHECK(first.is_equal(first));
+    BOOST_CHECK(!first.is_equal(second));
+}
 
 BOOST_AUTO_TEST_CASE(long_road_test)
 {

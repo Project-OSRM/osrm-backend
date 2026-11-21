@@ -6,6 +6,9 @@
 #include "util/iterator_adapters.hpp"
 #include <boost/test/unit_test.hpp>
 
+#include <array>
+#include <span>
+
 BOOST_AUTO_TEST_SUITE(tar)
 
 using namespace osrm;
@@ -91,6 +94,27 @@ BOOST_AUTO_TEST_CASE(write_tar_file)
 
     CHECK_EQUAL_COLLECTIONS(result_64bit_vector, vector_64bit);
     CHECK_EQUAL_COLLECTIONS(result_32bit_vector, vector_32bit);
+}
+
+BOOST_AUTO_TEST_CASE(write_batches_rejects_an_incorrect_record_count)
+{
+    const auto write_records = [](std::size_t count)
+    {
+        const TemporaryFile file;
+        storage::tar::FileWriter writer(file.path, storage::tar::FileWriter::HasNoFingerprint);
+        const std::array<std::uint32_t, 3> records{1, 2, 3};
+        writer.WriteBatches<std::uint32_t>("records",
+                                           count,
+                                           [&](auto write)
+                                           {
+                                               const std::span batch(records);
+                                               write(batch.first(2));
+                                               write(batch.subspan(2));
+                                           });
+    };
+
+    BOOST_CHECK_THROW(write_records(2), util::exception);
+    BOOST_CHECK_THROW(write_records(4), util::exception);
 }
 
 BOOST_AUTO_TEST_CASE(write_large_tar_file)
