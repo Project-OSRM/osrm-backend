@@ -1093,11 +1093,11 @@ const ProfileProperties &Sol2ScriptingEnvironment::GetProfileProperties()
 
 LuaScriptingContext &Sol2ScriptingEnvironment::GetSol2Context()
 {
-    std::lock_guard<std::mutex> lock(init_mutex);
     bool initialized = false;
     auto &ref = script_contexts.local(initialized);
     if (!initialized)
     {
+        std::lock_guard<std::mutex> lock(init_mutex);
         ref = std::make_unique<LuaScriptingContext>(location_dependent_data, driving_side_index);
         InitContext(*ref);
     }
@@ -1180,6 +1180,7 @@ void Sol2ScriptingEnvironment::ProcessElements(
             break;
         }
     }
+    local_context.collectUnusedMemory();
 }
 
 std::vector<std::string>
@@ -1339,6 +1340,16 @@ std::vector<std::string> Sol2ScriptingEnvironment::GetRelations()
     }
 }
 
+void LuaScriptingContext::collectUnusedMemory()
+{
+    constexpr std::size_t HeapGrowthLimit = 16 * 1024 * 1024;
+    if (state.is_gc_on() && state.memory_used() > live_heap_bytes + HeapGrowthLimit)
+    {
+        state.collect_garbage();
+        live_heap_bytes = state.memory_used();
+    }
+}
+
 void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
 {
     auto &context = GetSol2Context();
@@ -1406,6 +1417,13 @@ void Sol2ScriptingEnvironment::ProcessTurn(ExtractionTurn &turn)
         // Turn weight falls back to the duration value in deciseconds
         turn.weight = turn.duration;
         break;
+    }
+
+    constexpr unsigned HeapCheckInterval = 65536;
+    if (context.has_turn_penalty_function && ++context.turns_since_heap_check == HeapCheckInterval)
+    {
+        context.turns_since_heap_check = 0;
+        context.collectUnusedMemory();
     }
 
     // Cap turn duration to prevent int16_t overflow on storage (duration is always in seconds,
