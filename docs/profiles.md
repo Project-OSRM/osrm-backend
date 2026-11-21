@@ -59,6 +59,15 @@ Profiles can also define a `process_segment` function to handle differences in s
 
 At the end of the file, a table is returned with references to the setup and processing functions the profile has defined.
 
+### Optional tag filters
+
+A profile can add `tag_filters` to its returned function table. Each entry is keyed by its `process_node` or `process_way` function. For example, `[process_way] = {any = {'highway', 'route'}}` skips the callback for ways that lack both keys. With an empty list, the callback receives its usual inputs. A filter may also specify a `callback` to process matching objects in place of the original function.
+
+Use a filter only when processing an object with none of the listed keys would have no effect. Keep the list in the Lua profile up to date when adding a tag that can affect an otherwise skipped object. Declare the setup and filtered function in the selected profile file. Imported profiles and replacement callbacks retain their regular behavior unless the selected profile declares its own filter for them.
+
+`way:snapshot_tags()` copies the way's tags into a Lua table for repeated reads. It includes every key, keeps empty values, and uses the first value for duplicate keys.
+
+
 ## Understanding speed, weight and rate
 When computing a route from A to B there can be different measures of what is the best route. That's why there's a need for different profiles.
 

@@ -29,6 +29,10 @@
 #include <osmium/osm/way.hpp>
 #include <sol/sol.hpp>
 
+#include <algorithm>
+#include <span>
+#include <string_view>
+
 namespace sol
 {
 template <> struct is_container<osmium::OSMObject> : std::false_type
@@ -58,6 +62,27 @@ template <class T> bool has_key(const T &object, const char *key)
 {
     const char *value = object.get_value_by_key(key);
     return value && *value;
+}
+
+bool matchesTagFilter(const osmium::OSMObject &object, std::span<const std::string> keys)
+{
+    if (keys.empty())
+        return true;
+    for (const auto &tag : object.tags())
+    {
+        if (std::ranges::find(keys, std::string_view(tag.key())) != keys.end())
+            return true;
+    }
+    return false;
+}
+
+bool isFromProfileScript(const sol::protected_function &function, std::string_view source)
+{
+    if (!function.valid())
+        return false;
+    lua_Debug info{};
+    function.push();
+    return lua_getinfo(function.lua_state(), ">S", &info) && source == info.source;
 }
 
 template <class T> bool has_tag(const T &object, const char *key, const char *val)
@@ -377,6 +402,18 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         &osmium::Way::is_closed,
         "get_nodes",
         [](const osmium::Way &way) { return sol::as_table(&way.nodes()); },
+        "snapshot_tags",
+        [](const osmium::Way &way, sol::this_state state)
+        {
+            sol::state_view lua(state);
+            auto tags = lua.create_table(0, way.tags().size());
+            for (const auto &tag : way.tags())
+            {
+                if (tags.raw_get<sol::type>(tag.key()) == sol::type::lua_nil)
+                    tags.raw_set(tag.key(), tag.value());
+            }
+            return tags;
+        },
         "get_location_tag",
         get_location_tag,
         "is_left_hand_traffic",
@@ -744,6 +781,31 @@ void Sol2ScriptingEnvironment::InitContext(LuaScriptingContext &context)
         context.has_node_function = context.node_function.valid();
         context.has_way_function = context.way_function.valid();
         context.has_segment_function = context.segment_function.valid();
+
+        const auto filters = function_table->raw_get<sol::optional<sol::table>>("tag_filters");
+        const auto source = "@" + file_name;
+        // Imported profile functions keep their original callback behavior.
+        if (filters && isFromProfileScript(setup_function, source))
+        {
+            const auto configure = [&](sol::protected_function &callback, auto &keys)
+            {
+                if (!isFromProfileScript(callback, source))
+                    return;
+                const auto filter = filters->raw_get<sol::optional<sol::table>>(callback);
+                if (!filter)
+                    return;
+                const auto tags = filter->raw_get<sol::optional<sol::table>>("any");
+                if (!tags)
+                    return;
+                keys = tags->as<sol::as_table_t<std::vector<std::string>>>();
+                const auto handler =
+                    filter->raw_get<sol::optional<sol::protected_function>>("callback");
+                if (!keys.empty() && handler)
+                    callback = *handler;
+            };
+            configure(context.node_function, context.node_required_tags);
+            configure(context.way_function, context.way_required_tags);
+        }
 
         // read properties from 'profile.properties' table
         sol::table properties = context.profile_table["properties"];
@@ -1140,7 +1202,8 @@ void Sol2ScriptingEnvironment::ProcessElements(
             const auto &node = static_cast<const osmium::Node &>(*entity);
             result_node.node = &node;
             if (local_context.has_node_function &&
-                (!node.tags().empty() || local_context.properties.call_tagless_node_function))
+                (!node.tags().empty() || local_context.properties.call_tagless_node_function) &&
+                matchesTagFilter(node, local_context.node_required_tags))
             {
                 local_context.ProcessNode(node, result_node, m_relations_stash);
             }
@@ -1153,7 +1216,8 @@ void Sol2ScriptingEnvironment::ProcessElements(
             const osmium::Way &way = static_cast<const osmium::Way &>(*entity);
             // NOLINTNEXTLINE(bugprone-use-after-move)
             result_way.clear();
-            if (local_context.has_way_function)
+            if (local_context.has_way_function &&
+                matchesTagFilter(way, local_context.way_required_tags))
             {
                 local_context.ProcessWay(way, result_way, m_relations_stash);
             }
