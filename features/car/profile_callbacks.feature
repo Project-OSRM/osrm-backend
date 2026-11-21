@@ -102,3 +102,41 @@ Feature: Car - Custom profile callbacks
         When I route I should get
             | from | to | route         |
             | a    | b  | custom,custom |
+
+    Scenario Outline: A filter with no required keys uses the original callback
+        Given the profile file
+        """
+        local functions = require('car')
+        local setup, process_way = functions.setup, functions.process_way
+        functions.setup = function()
+          return setup()
+        end
+        functions.process_node = <node callback>
+        functions.process_way = function(profile, way, result, relations)
+          process_way(profile, way, result, relations)
+        end
+        functions.tag_filters = {
+          [functions.process_way] = {
+            callback = function()
+              error('a filter with no keys must use the original callback')
+            end,
+            <required keys>
+          }
+        }
+        return functions
+        """
+        And the node map
+        """
+        a b
+        """
+        And the ways
+            | nodes | highway |
+            | ab    | primary |
+        When I route I should get
+            | from | to | route |
+            | a    | b  | ab,ab |
+
+        Examples:
+            | node callback  | required keys |
+            | nil            | any = {}     |
+            | function() end |              |
