@@ -1139,7 +1139,7 @@ void Extractor::WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons)
 
     Saves tree into '.ramIndex' and leaves into '.fileIndex'.
  */
-void Extractor::BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_segments,
+void Extractor::BuildRTree(const std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
                            const std::vector<util::Coordinate> &coordinates)
 {
     util::Log() << "Constructing r-tree of " << edge_based_node_segments.size()

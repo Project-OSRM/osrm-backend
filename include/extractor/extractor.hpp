@@ -94,7 +94,7 @@ class Extractor
                         const RecordSpool<EdgeBasedEdge> &input_edge_list,
                         const RecordSpool<EdgeBasedNodeSegment> &input_node_segments,
                         EdgeBasedNodeDataContainer &nodes_container) const;
-    void BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_segments,
+    void BuildRTree(const std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
                     const std::vector<util::Coordinate> &coordinates);
 
     /**
