@@ -7,6 +7,7 @@
 #include <bit>
 #include <boost/assert.hpp>
 #include <cstdint>
+#include <span>
 
 namespace osrm::util
 {
@@ -18,9 +19,9 @@ struct BlockDeltaHeader
     std::uint8_t reserved[3]{};
 };
 static_assert(sizeof(BlockDeltaHeader) == 16);
-inline std::uint64_t decodeBlockDelta(vector_view<BlockDeltaHeader> headers,
-                                      vector_view<std::uint64_t> words,
-                                      std::size_t index)
+inline std::uint64_t decodeBlockDeltaValues(std::span<const BlockDeltaHeader> headers,
+                                            std::span<const std::uint64_t> words,
+                                            std::size_t index)
 {
     const auto &header = headers[index / 128];
     const auto width = header.width;
@@ -44,6 +45,14 @@ inline std::uint64_t decodeBlockDelta(vector_view<BlockDeltaHeader> headers,
     if (width < 64)
         delta &= (std::uint64_t{1} << width) - 1;
     return header.base + delta;
+}
+
+inline std::uint64_t decodeBlockDelta(vector_view<BlockDeltaHeader> headers,
+                                      vector_view<std::uint64_t> words,
+                                      std::size_t index)
+{
+    return decodeBlockDeltaValues(
+        {headers.data(), headers.size()}, {words.data(), words.size()}, index);
 }
 } // namespace osrm::util
 #endif

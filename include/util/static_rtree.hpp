@@ -28,6 +28,7 @@
 
 #include <algorithm>
 #include <filesystem>
+#include <fstream>
 #include <limits>
 #include <queue>
 #include <string>
@@ -302,22 +303,23 @@ class StaticRTree
         // sort the hilbert-value representatives
         tbb::parallel_sort(input_wrapper_vector.begin(), input_wrapper_vector.end());
         {
-            boost::iostreams::mapped_file out_objects_region;
-            auto out_objects = mmapFile<EdgeDataT>(on_disk_file_name,
-                                                   out_objects_region,
-                                                   input_data_vector.size() * sizeof(EdgeDataT));
-
-            // Note, we can't just write everything in one go, because the input_data_vector
-            // is not sorted by hilbert code, only the input_wrapper_vector is in the correct
-            // order.  Instead, we iterate over input_wrapper_vector, copy the hilbert-indexed
-            // entries from input_data_vector into a temporary contiguous array, then write
-            // that array to disk.
+            std::ofstream out_objects(on_disk_file_name, std::ios::binary);
+            constexpr std::size_t BatchSize = 4096;
+            std::vector<EdgeDataT> batch;
+            batch.reserve(BatchSize);
+            const auto flush = [&]
+            {
+                out_objects.write(reinterpret_cast<const char *>(batch.data()),
+                                  batch.size() * sizeof(EdgeDataT));
+                if (!out_objects)
+                    throw util::exception("Failed writing spatial index " +
+                                          on_disk_file_name.string());
+                batch.clear();
+            };
 
             // Create the first level of TreeNodes - each bounding LEAF_NODE_COUNT EdgeDataT
             // objects.
             std::size_t wrapped_element_index = 0;
-            auto objects_iter = out_objects.begin();
-
             while (wrapped_element_index < element_count)
             {
                 TreeNode current_node;
@@ -333,7 +335,9 @@ class StaticRTree
                         input_wrapper_vector[wrapped_element_index].m_original_index;
                     const EdgeDataT &object = input_data_vector[input_object_index];
 
-                    *objects_iter++ = object;
+                    batch.push_back(object);
+                    if (batch.size() == BatchSize)
+                        flush();
 
                     Coordinate projected_u{
                         web_mercator::fromWGS84(Coordinate{m_coordinate_list[object.u]})};
@@ -362,6 +366,11 @@ class StaticRTree
 
                 m_search_tree.emplace_back(current_node);
             }
+            if (!batch.empty())
+                flush();
+            out_objects.close();
+            if (!out_objects)
+                throw util::exception("Failed closing spatial index " + on_disk_file_name.string());
         }
         // mmap as read-only now
         m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);

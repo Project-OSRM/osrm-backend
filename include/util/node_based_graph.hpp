@@ -4,10 +4,9 @@
 #include "extractor/class_data.hpp"
 #include "extractor/node_based_edge.hpp"
 #include "extractor/node_data_container.hpp"
+#include "extractor/record_spool.hpp"
 #include "util/dynamic_graph.hpp"
-#include "util/graph_utils.hpp"
-
-#include <tbb/parallel_sort.h>
+#include <tbb/parallel_for.h>
 
 namespace osrm::util
 {
@@ -70,27 +69,40 @@ using NodeBasedDynamicGraph = DynamicGraph<NodeBasedEdgeData>;
 /// two edges for undirected edges.
 inline NodeBasedDynamicGraph
 NodeBasedDynamicGraphFromEdges(NodeID number_of_nodes,
-                               const std::vector<extractor::NodeBasedEdge> &input_edge_list)
+                               const extractor::RecordSpool<extractor::NodeBasedEdge> &input_edges)
 {
-    auto edges_list = directedEdgesFromCompressed<NodeBasedDynamicGraph::InputEdge>(
-        input_edge_list,
-        [](NodeBasedDynamicGraph::InputEdge &output_edge,
-           const extractor::NodeBasedEdge &input_edge)
-        {
-            output_edge.data.weight = input_edge.weight;
-            output_edge.data.duration = input_edge.duration;
-            output_edge.data.distance = input_edge.distance;
-            output_edge.data.flags = input_edge.flags;
-            output_edge.data.annotation_data = input_edge.annotation_data;
-
-            BOOST_ASSERT(output_edge.data.weight > EdgeWeight{0});
-            BOOST_ASSERT(output_edge.data.duration > EdgeDuration{0});
-            BOOST_ASSERT(output_edge.data.distance >= EdgeDistance{0});
-        });
-
-    tbb::parallel_sort(edges_list.begin(), edges_list.end());
-
-    return NodeBasedDynamicGraph(number_of_nodes, edges_list);
+    const auto visit = [&](auto emit)
+    {
+        input_edges.forEachBatch(
+            [&](std::span<const extractor::NodeBasedEdge> batch)
+            {
+                for (const auto &edge : batch)
+                {
+                    BOOST_ASSERT(edge.flags.forward);
+                    BOOST_ASSERT(edge.source != edge.target);
+                    BOOST_ASSERT(edge.weight > EdgeWeight{0});
+                    BOOST_ASSERT(edge.duration > EdgeDuration{0});
+                    BOOST_ASSERT(edge.distance >= EdgeDistance{0});
+                    NodeBasedEdgeData data(edge.weight,
+                                           edge.duration,
+                                           edge.distance,
+                                           {0, false},
+                                           false,
+                                           edge.flags,
+                                           edge.annotation_data);
+                    emit(edge.source, edge.target, data);
+                    if (!edge.flags.is_split)
+                    {
+                        data.reversed = !edge.flags.backward;
+                        emit(edge.target, edge.source, data);
+                    }
+                }
+            });
+    };
+    auto graph = NodeBasedDynamicGraph::fromDirectedEdges(number_of_nodes, visit);
+    tbb::parallel_for(
+        NodeID{0}, number_of_nodes, [&](NodeID node) { graph.sortEdgesByTarget(node); });
+    return graph;
 }
 } // namespace osrm::util
 

@@ -27,6 +27,34 @@ using TestInputEdge = TestDynamicGraph::InputEdge;
 // index. Filling 2^32 of them is not testable, so narrow the index instead.
 using NarrowDynamicGraph = DynamicGraph<TestData, std::uint16_t>;
 
+BOOST_AUTO_TEST_CASE(compact_preserves_live_adjacency_order)
+{
+    const std::vector<TestInputEdge> input{{0, 1, TestData{10}},
+                                           {0, 2, TestData{20}},
+                                           {0, 3, TestData{30}},
+                                           {2, 0, TestData{40}},
+                                           {2, 1, TestData{50}}};
+    TestDynamicGraph graph(4, input);
+    graph.DeleteEdge(0, 0);
+    graph.DeleteEdge(2, 4);
+    graph.compactEdgesInNodeOrder();
+
+    BOOST_CHECK_EQUAL(graph.GetNumberOfEdges(), 3);
+    BOOST_CHECK_EQUAL(graph.GetEdgeCapacity(), 3);
+    BOOST_CHECK_EQUAL(graph.BeginEdges(0), 0);
+    BOOST_CHECK_EQUAL(graph.EndEdges(0), 2);
+    BOOST_CHECK_EQUAL(graph.BeginEdges(1), graph.EndEdges(1));
+    BOOST_CHECK_EQUAL(graph.BeginEdges(2), 2);
+    BOOST_CHECK_EQUAL(graph.EndEdges(2), 3);
+    BOOST_CHECK_EQUAL(graph.BeginEdges(3), graph.EndEdges(3));
+    BOOST_CHECK_EQUAL(graph.GetTarget(0), 3);
+    BOOST_CHECK_EQUAL(graph.GetTarget(1), 2);
+    BOOST_CHECK_EQUAL(graph.GetTarget(2), 0);
+    BOOST_CHECK_EQUAL(graph.GetEdgeData(0).id, 30);
+    BOOST_CHECK_EQUAL(graph.GetEdgeData(1).id, 20);
+    BOOST_CHECK_EQUAL(graph.GetEdgeData(2).id, 40);
+}
+
 BOOST_AUTO_TEST_CASE(find_test)
 {
     /*

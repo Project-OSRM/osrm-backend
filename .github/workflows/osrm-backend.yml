@@ -587,6 +587,8 @@ jobs:
           # otherwise pick up overlay port manifests in vcpkg-overlay-ports/.
           vcpkgJsonGlob: 'vcpkg.json'
       - name: Enable test cache
+        # Restored graphs skip preprocessing, which must run to collect coverage.
+        if: matrix.ENABLE_COVERAGE != 'ON'
         uses: actions/cache@v6
         with:
           path: ${{github.workspace}}/test/cache

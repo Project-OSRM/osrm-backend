@@ -2,13 +2,16 @@
 #define EXTRACTION_CONTAINERS_HPP
 
 #include "extractor/internal_extractor_edge.hpp"
+#include "extractor/node_location_index.hpp"
 #include "extractor/nodes_of_way.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/record_spool.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/scripting_environment.hpp"
 
 #include "storage/tar_fwd.hpp"
 
+#include <filesystem>
 #include <unordered_map>
 #include <unordered_set>
 
@@ -30,12 +33,18 @@ class ExtractionContainers
     ReferencedWays IdentifyRestrictionWays();
     ReferencedWays IdentifyManeuverOverrideWays();
 
-    void PrepareNodes();
+    void PrepareNodes(NodeLocationIndex *locations);
+    void checkUsedNodeCount(std::size_t original_used_count);
     void PrepareManeuverOverrides(const ReferencedWays &maneuver_override_ways);
     void PrepareRestrictions(const ReferencedWays &restriction_ways);
-    void PrepareEdges(ScriptingEnvironment &scripting_environment);
+    void PrepareEdges(ScriptingEnvironment &scripting_environment,
+                      RecordSpool<NodeBasedEdge> &prepared_edges);
 
     void WriteCharData(const std::string &file_name);
+
+    void restoreEdges();
+
+    RecordSpool<InternalExtractorEdge> m_edge_spool;
 
   public:
     using NodeIDVector = std::vector<OSMNodeID>;
@@ -59,8 +68,6 @@ class ExtractionContainers
 
     unsigned max_internal_node_id;
 
-    std::vector<NodeBasedEdge> used_edges;
-
     // List of restrictions (conditional and unconditional) before we transform them into the
     // output types. Input containers reference OSMNodeIDs. We can only transform them to the
     // correct internal IDs after we've read everything. Without a multi-parse approach,
@@ -72,10 +79,15 @@ class ExtractionContainers
     std::vector<UnresolvedManeuverOverride> internal_maneuver_overrides;
     NodeVector used_nodes;
 
-    ExtractionContainers();
+    explicit ExtractionContainers(std::filesystem::path edge_spool_parent = {});
+
+    void appendEdge(const InternalExtractorEdge &edge) { m_edge_spool.append(edge); }
+    bool hasEdges() const { return !m_edge_spool.empty(); }
 
     void PrepareData(ScriptingEnvironment &scripting_environment,
-                     const std::string &names_data_path);
+                     const std::string &names_data_path,
+                     NodeLocationIndex *locations,
+                     RecordSpool<NodeBasedEdge> &prepared_edges);
 };
 } // namespace osrm::extractor
 

@@ -7,6 +7,7 @@
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/record_spool.hpp"
 #include "extractor/serialization.hpp"
 #include "extractor/turn_lane_types.hpp"
 
@@ -22,6 +23,19 @@
 
 namespace osrm::extractor::files
 {
+template <typename Records>
+void writeRecords(storage::tar::FileWriter &writer, const std::string &name, const Records &records)
+{ storage::serialization::write(writer, name, records); }
+
+template <typename Record>
+void writeRecords(storage::tar::FileWriter &writer,
+                  const std::string &name,
+                  const RecordSpool<Record> &records)
+{
+    writer.WriteElementCount64(name, records.size());
+    writer.WriteBatches<Record>(
+        name, records.size(), [&](auto write) { records.forEachBatch(write); });
+}
 
 // writes the .osrm.icd file
 template <typename IntersectionBearingsT, typename EntryClassVectorT>
@@ -86,7 +100,7 @@ void writeEdgeBasedGraph(const std::filesystem::path &path,
 
     writer.WriteElementCount64("/common/number_of_edge_based_nodes", 1);
     writer.WriteFrom("/common/number_of_edge_based_nodes", number_of_edge_based_nodes);
-    storage::serialization::write(writer, "/common/edge_based_edge_list", edge_based_edge_list);
+    writeRecords(writer, "/common/edge_based_edge_list", edge_based_edge_list);
     writer.WriteElementCount64("/common/connectivity_checksum", 1);
     writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
 }
@@ -465,7 +479,7 @@ inline void writeTurnPenaltiesIndex(const std::filesystem::path &path,
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
-    storage::serialization::write(writer, "/extractor/turn_index", turn_penalties_index);
+    writeRecords(writer, "/extractor/turn_index", turn_penalties_index);
 }
 
 // read .osrm.turn_penalties_index

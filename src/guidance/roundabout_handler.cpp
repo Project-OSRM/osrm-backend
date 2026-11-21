@@ -273,10 +273,11 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     {
         double length = 0.;
         auto last_coord = node_coordinates[source_node];
-        const auto &edge_bucket = compressed_geometries.GetBucketReference(eid);
-        for (const auto &compressed_edge : edge_bucket)
+        const auto geometry = compressed_geometries.getGeometryNodes(
+            eid, node_based_graph.GetEdgeData(eid).geometry_id, node_based_graph.GetTarget(eid));
+        for (const auto node : geometry)
         {
-            const auto next_coord = node_coordinates[compressed_edge.node_id];
+            const auto next_coord = node_coordinates[node];
             length += util::coordinate_calculation::greatCircleDistance(last_coord, next_coord);
             last_coord = next_coord;
         }

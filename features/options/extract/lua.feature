@@ -178,3 +178,56 @@ Feature: osrm-extract lua ways:get_nodes()
         When I run "osrm-extract --profile {profile_file} {osm_file}"
         Then it should exit successfully
         And stdout should contain "segment forward true backward false"
+
+    Scenario: osrm-extract reads unsorted nodes with the location cache enabled
+        Given the profile file
+        """
+        local functions = require('testbot')
+        functions.process_way = function(profile, way, result)
+          for _, node in ipairs(way:get_nodes()) do
+            print(node:id() .. ' latitude ' .. node:location():lat())
+          end
+          result.forward_mode = mode.driving
+          result.forward_speed = 1
+        end
+        return functions
+        """
+        And the node locations
+            | node | lat  | lon | id |
+            | a    | 1.0  | 1.0 |  2 |
+            | b    | 1.01 | 1.0 |  1 |
+        And the ways
+            | nodes |
+            | ab    |
+        And the data has been saved to disk
+
+        When I run "osrm-extract --profile {profile_file} {osm_file} --location-dependent-data test/data/regions/null-island.geojson --dump-nbg-graph"
+        Then it should exit successfully
+        And stdout should contain "2 latitude 1.0"
+        And stdout should contain "1 latitude 1.01"
+        And stdout should contain "Processed 2 nodes"
+        And stdout should contain "Reading OSM nodes separately"
+
+    Scenario: osrm-extract rejects a graph with no snappable segments
+        Given the profile file
+        """
+        local functions = require('testbot')
+        local process_way = functions.process_way
+        functions.process_way = function(profile, way, result)
+          process_way(profile, way, result)
+          result.is_startpoint = false
+        end
+        return functions
+        """
+        And the node map
+            """
+            a b
+            """
+        And the ways
+            | nodes |
+            | ab    |
+        And the data has been saved to disk
+
+        When I try to run "osrm-extract --profile {profile_file} {osm_file}"
+        Then it should exit with an error
+        And stderr should contain "There are no snappable edges left after processing"

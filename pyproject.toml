@@ -92,7 +92,15 @@ CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake 
 """
 
 # Needed when a newer registry rebuilds OpenSSL instead of using the image cache.
-before-all = "dnf install -y perl-IPC-Cmd perl-Time-Piece"
+# Retry against the upstream AppStream repository if the mirrors fail.
+before-all = '''
+dnf install -y perl-IPC-Cmd perl-Time-Piece || (
+    dnf clean metadata &&
+    dnf --setopt=appstream.mirrorlist= \
+        --setopt='appstream.baseurl=https://repo.almalinux.org/almalinux/$releasever/AppStream/$basearch/os/' \
+        install -y perl-IPC-Cmd perl-Time-Piece
+)
+'''
 before-build = "ccache -s && ccache -M 500M"
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 

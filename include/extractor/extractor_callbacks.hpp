@@ -61,7 +61,7 @@ class ExtractorCallbacks
     ExtractorCallbacks &operator=(const ExtractorCallbacks &) = delete;
 
     // warning: caller needs to take care of synchronization!
-    void ProcessNode(const osmium::Node &current_node, const ExtractionNode &result_node);
+    void ProcessNode(const osmium::Node &current_node);
 
     // warning: caller needs to take care of synchronization!
     void ProcessRestriction(const InputTurnRestriction &restriction);

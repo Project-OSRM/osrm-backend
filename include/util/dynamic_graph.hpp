@@ -135,6 +135,52 @@ template <typename EdgeDataT, typename EdgeIteratorT = std::uint32_t> class Dyna
         BOOST_ASSERT(node_array.size() == number_of_nodes);
     }
 
+    // The visitor produces the same directed edges on each pass.
+    template <typename ForEachEdge>
+    static DynamicGraph fromDirectedEdges(NodeIterator nodes, ForEachEdge for_each_edge)
+    {
+        DynamicGraph graph;
+        graph.number_of_nodes = nodes;
+        graph.node_array.resize(nodes);
+        std::size_t total = 0;
+        for_each_edge(
+            [&](NodeIterator source, [[maybe_unused]] NodeIterator target, const EdgeDataT &)
+            {
+                BOOST_ASSERT(source < nodes);
+                BOOST_ASSERT(target < nodes);
+                ++graph.node_array[source].edges;
+                ++total;
+            });
+        if (total > std::numeric_limits<EdgeIterator>::max())
+            throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
+
+        EdgeIterator start = 0;
+        for (auto &node : graph.node_array)
+        {
+            node.first_edge = start;
+            start += node.edges;
+            node.edges = 0;
+        }
+        graph.edge_list.resize(total);
+        graph.number_of_edges = static_cast<EdgeIterator>(total);
+        for_each_edge(
+            [&](NodeIterator source, NodeIterator target, const EdgeDataT &data)
+            {
+                auto &node = graph.node_array[source];
+                graph.edge_list[node.first_edge + node.edges++] = {target, data};
+            });
+        return graph;
+    }
+
+    void sortEdgesByTarget(NodeIterator node)
+    {
+        auto begin = edge_list.begin() + BeginEdges(node);
+        auto end = edge_list.begin() + EndEdges(node);
+        std::sort(begin,
+                  end,
+                  [](const auto &left, const auto &right) { return left.target < right.target; });
+    }
+
     // Copy&move for the same data
     //
 
@@ -228,8 +274,7 @@ template <typename EdgeDataT, typename EdgeIteratorT = std::uint32_t> class Dyna
     unsigned GetNumberOfEdges() const { return number_of_edges; }
 
     // Number of edge slots, live and dummied out alike. This is what EdgeIterator has to index,
-    // so it is the quantity bounded by 2^32, and it only shrinks back to GetNumberOfEdges() when
-    // Renumber() compacts the list.
+    // so it is the quantity bounded by 2^32. Compaction removes the unused slots.
     auto GetEdgeCapacity() const { return edge_list.size(); }
 
     unsigned GetOutDegree(const NodeIterator n) const { return node_array[n].edges; }
@@ -424,6 +469,31 @@ template <typename EdgeDataT, typename EdgeIteratorT = std::uint32_t> class Dyna
             }
         }
         return current_iterator;
+    }
+
+    // For graphs whose adjacency ranges are physically in node order. Edge IDs change.
+    void compactEdgesInNodeOrder()
+    {
+        compactEdgesInNodeOrder([](EdgeIterator, EdgeIterator, unsigned) {});
+    }
+
+    template <typename Relocate> void compactEdgesInNodeOrder(Relocate relocate)
+    {
+        EdgeIterator next = 0;
+        for (auto &node : node_array)
+        {
+            BOOST_ASSERT(next <= node.first_edge);
+            if (node.edges != 0 && next != node.first_edge)
+            {
+                const auto first = edge_list.begin() + node.first_edge;
+                std::move(first, first + node.edges, edge_list.begin() + next);
+                relocate(node.first_edge, next, node.edges);
+            }
+            node.first_edge = next;
+            next += node.edges;
+        }
+        BOOST_ASSERT(next == GetNumberOfEdges());
+        edge_list.resize(next);
     }
 
     void Renumber(const std::vector<NodeID> &old_to_new_node)
