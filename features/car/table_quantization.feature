@@ -99,6 +99,32 @@ Feature: Table routes between nearby points with equal rounded weights
             | 1 | 0 | 0.2 |
             | 2 |   | 0   |
 
+    # Drawn against the travel direction, so the searches run on reverse segments.
+    Scenario: Equal rounded weights do not allow travel against a reversed one-way road
+        Given the ways
+            | nodes | highway     | oneway | side_road |
+            | ab    | residential | -1     |           |
+            | bc    | residential | -1     | yes       |
+            | cd    | residential | -1     |           |
+        And the query options
+            | scale_factor | 1.6 |
+
+        When I request a travel time matrix I should get
+            |   | 1   | 2 |
+            | 1 | 0   |   |
+            | 2 | 0.2 | 0 |
+        When I request a travel time matrix I should get
+            |   | 1 | 2 |
+            | 1 | 0 |   |
+        When I request a travel time matrix I should get
+            |   | 2 |
+            | 1 |   |
+            | 2 | 0 |
+        When I request a travel distance matrix I should get
+            |   | 1   | 2 |
+            | 1 | 0   |   |
+            | 2 | 0.2 | 0 |
+
     Scenario: Nearby points on a one-way loop take the reachable detour
         Given the node locations
             | node | lon       | lat   |

@@ -3,22 +3,60 @@
 
 #include "engine/algorithm.hpp"
 #include "engine/datafacade.hpp"
+#include "engine/phantom_node.hpp"
 #include "engine/search_engine_data.hpp"
 
 #include "util/typedefs.hpp"
 
+#include <boost/assert.hpp>
+
+#include <algorithm>
+#include <tuple>
 #include <vector>
 
 namespace osrm::engine::routing_algorithms
 {
 namespace
 {
-// Rounded weight offsets can be equal even when a target lies before the source.
-// Reject the backwards pairing instead of treating its negative duration or distance
-// as a zero-weight path. The caller subtracts any open-area approach weight first.
-inline bool
-isValidTablePath(const EdgeWeight weight, const EdgeDuration duration, const EdgeDistance distance)
-{ return weight >= EdgeWeight{0} && duration >= EdgeDuration{0} && distance >= EdgeDistance{0}; }
+// The table's counterpart of requiresForwardForce and requiresBackwardForce.
+// Those compare rounded weights, which tie when two points sit within one
+// weight unit, so compare positions on the geometry instead. Called only when
+// both searches are still on their seeds at node, with zero graph weight.
+inline bool isSourceDownstream(const NodeID node,
+                               const PhantomNodeCandidates &sources,
+                               const PhantomNodeCandidates &targets)
+{
+    // A candidate list holds at most one phantom per node.
+    const auto source = std::find_if(
+        sources.begin(),
+        sources.end(),
+        [&](const auto &phantom)
+        {
+            return (phantom.IsValidForwardSource() && phantom.forward_segment_id.id == node) ||
+                   (phantom.IsValidReverseSource() && phantom.reverse_segment_id.id == node);
+        });
+    const auto target = std::find_if(
+        targets.begin(),
+        targets.end(),
+        [&](const auto &phantom)
+        {
+            return (phantom.IsValidForwardTarget() && phantom.forward_segment_id.id == node) ||
+                   (phantom.IsValidReverseTarget() && phantom.reverse_segment_id.id == node);
+        });
+    BOOST_ASSERT(source != sources.end());
+    BOOST_ASSERT(target != targets.end());
+
+    // Every geometry segment weighs at least 1, so a zero graph weight leaves no
+    // segment between the two positions: one coordinate is one place.
+    if (source->location == target->location)
+        return false;
+
+    // Both phantoms lie on node, so they share its direction of travel.
+    const auto source_position = std::tie(source->fwd_segment_position, source->forward_distance);
+    const auto target_position = std::tie(target->fwd_segment_position, target->forward_distance);
+    const bool forward = source->IsValidForwardSource() && source->forward_segment_id.id == node;
+    return forward ? source_position > target_position : source_position < target_position;
+}
 
 struct NodeBucket
 {

@@ -26,26 +26,23 @@ inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
                           EdgeDuration &duration,
                           EdgeDistance &distance)
 { // Special case for CH when contractor creates a loop edge node->node
-    BOOST_ASSERT(!isValidTablePath(weight - approach, duration, distance));
+    BOOST_ASSERT(weight - approach <= EdgeWeight{0});
 
     const auto loop_weight = ch::getLoopMetric<EdgeWeight>(facade, node);
     if (std::get<0>(loop_weight) != INVALID_EDGE_WEIGHT)
     {
         const auto new_weight_with_loop = weight + std::get<0>(loop_weight);
-        const auto loop_duration = ch::getLoopMetric<EdgeDuration>(facade, node);
-        const auto new_duration_with_loop = duration + std::get<0>(loop_duration);
-        const auto new_distance_with_loop = distance + std::get<1>(loop_duration);
-        if (isValidTablePath(
-                new_weight_with_loop - approach, new_duration_with_loop, new_distance_with_loop))
+        if (new_weight_with_loop - approach >= EdgeWeight{0})
         {
             weight = new_weight_with_loop;
-            duration = new_duration_with_loop;
-            distance = new_distance_with_loop;
+            auto result = ch::getLoopMetric<EdgeDuration>(facade, node);
+            duration += std::get<0>(result);
+            distance += std::get<1>(result);
             return true;
         }
     }
 
-    // No loop found or the adjusted path still has a negative metric.
+    // No loop found or adjusted weight is negative
     return false;
 }
 
@@ -108,7 +105,9 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<EdgeDuration> &durations_table,
                         std::vector<EdgeDistance> &distances_table,
                         std::vector<NodeID> &middle_nodes_table,
-                        const PhantomNodeCandidates &candidates)
+                        const PhantomNodeCandidates &candidates,
+                        const std::vector<PhantomNodeCandidates> &candidates_list,
+                        const std::vector<std::size_t> &target_indices)
 {
     // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is
     // the same
@@ -143,7 +142,14 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
 
         const auto approach = heapNode.data.approach + current_bucket.approach;
 
-        if (!isValidTablePath(new_weight - approach, new_duration, new_distance))
+        const auto graph_weight = new_weight - approach;
+        const bool force_step =
+            graph_weight == EdgeWeight{0} && heapNode.data.parent == heapNode.node &&
+            current_bucket.parent_node == heapNode.node &&
+            isSourceDownstream(
+                heapNode.node, candidates, candidates_list[target_indices[column_index]]);
+
+        if (graph_weight < EdgeWeight{0} || force_step)
         {
             if (addLoopWeight(
                     facade, heapNode.node, new_weight, approach, new_duration, new_distance))
@@ -257,7 +263,9 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                                durations_table,
                                distances_table,
                                middle_nodes_table,
-                               source_candidates);
+                               source_candidates,
+                               candidates_list,
+                               target_indices);
         }
     }
 

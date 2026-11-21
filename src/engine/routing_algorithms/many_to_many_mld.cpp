@@ -299,7 +299,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                              EdgeWeight weight,
                              EdgeDuration duration,
                              EdgeDistance distance,
-                             EdgeWeight approach)
+                             EdgeWeight approach,
+                             bool at_start)
     {
         auto candidates = target_nodes_index.equal_range(node);
         for (auto it = candidates.first; it != candidates.second;)
@@ -313,15 +314,24 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                 it->second;
 
             const auto path_weight = weight + target_weight;
-            const auto path_duration = duration + target_duration;
-            const auto path_distance = distance + target_distance;
             // The walk into an open area is charged at both ends and is not travel, so it
             // cannot make a target that sits before the source reachable.  Test the graph
             // part, or a degenerate pairing is accepted and the cell comes out short by
             // the stretch between them.  See ManyToManyHeapData::approach.
-            if (isValidTablePath(
-                    path_weight - (approach + target_approach), path_duration, path_distance))
+            const auto graph_weight = path_weight - (approach + target_approach);
+            const bool force_step =
+                graph_weight == EdgeWeight{0} && at_start &&
+                isSourceDownstream(
+                    node,
+                    candidates_list[DIRECTION == FORWARD_DIRECTION ? source_index
+                                                                   : target_indices[index]],
+                    candidates_list[DIRECTION == FORWARD_DIRECTION ? target_indices[index]
+                                                                   : source_index]);
+            if (graph_weight >= EdgeWeight{0} && !force_step)
             {
+                const auto path_duration = duration + target_duration;
+                const auto path_distance = distance + target_distance;
+
                 EdgeDistance nulldistance = {0};
                 auto &current_distance =
                     distances_table.empty() ? nulldistance : distances_table[index];
@@ -356,7 +366,7 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
             // the node (e.g destination is before source on oneway segment) we want to allow
             // node to be visited later in the search along a reachable path.
             // Therefore, we manually run first step of search without marking node as visited.
-            update_values(node, initial_weight, initial_duration, initial_distance, approach);
+            update_values(node, initial_weight, initial_duration, initial_distance, approach, true);
             relaxBorderEdges<DIRECTION>(facade,
                                         node,
                                         initial_weight,
@@ -432,7 +442,8 @@ oneToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                       heapNode.weight,
                       heapNode.data.duration,
                       heapNode.data.distance,
-                      heapNode.data.approach);
+                      heapNode.data.approach,
+                      false);
 
         // Relax outgoing edges
         relaxOutgoingEdges<DIRECTION>(
@@ -456,7 +467,9 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<EdgeDuration> &durations_table,
                         std::vector<EdgeDistance> &distances_table,
                         std::vector<NodeID> &middle_nodes_table,
-                        const PhantomNodeCandidates &candidates)
+                        const PhantomNodeCandidates &candidates,
+                        const std::vector<PhantomNodeCandidates> &candidates_list,
+                        const std::vector<std::size_t> &target_indices)
 {
     // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is
     // the same
@@ -499,7 +512,18 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         // ManyToManyHeapData::approach.
         const auto approach = heapNode.data.approach + current_bucket.approach;
 
-        if (isValidTablePath(new_weight - approach, new_duration, new_distance) &&
+        const auto graph_weight = new_weight - approach;
+        const bool force_step =
+            graph_weight == EdgeWeight{0} && heapNode.data.parent == heapNode.node &&
+            current_bucket.parent_node == heapNode.node &&
+            isSourceDownstream(
+                heapNode.node,
+                DIRECTION == FORWARD_DIRECTION ? candidates
+                                               : candidates_list[target_indices[column_idx]],
+                DIRECTION == FORWARD_DIRECTION ? candidates_list[target_indices[column_idx]]
+                                               : candidates);
+
+        if (graph_weight >= EdgeWeight{0} && !force_step &&
             std::tie(new_weight, new_duration, new_distance) <
                 std::tie(current_weight, current_duration, current_distance))
         {
@@ -653,7 +677,9 @@ manyToManySearch(SearchEngineData<Algorithm> &engine_working_data,
                                           durations_table,
                                           distances_table,
                                           middle_nodes_table,
-                                          source_candidates);
+                                          source_candidates,
+                                          candidates_list,
+                                          target_indices);
         }
     }
 
