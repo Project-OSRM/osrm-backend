@@ -57,8 +57,8 @@ CI runs every build-matrix entry even when another entry fails. Failed Linux
 wheel builds print the retained container's vcpkg configuration and error logs
 to help diagnose dependency rebuilds.
 
-The Linux wheel setup installs `perl-IPC-Cmd` and `perl-Time-Piece` before
-building. OpenSSL's vcpkg port needs these Perl modules when a registry update
+The Linux wheel setup clears the image's cached DNF metadata before installing
+`perl-IPC-Cmd` and `perl-Time-Piece`. OpenSSL's vcpkg port needs these Perl modules when a registry update
 invalidates the image's prebuilt dependency cache.
 
 For local source builds outside the manylinux image, e.g macOS, install vcpkg

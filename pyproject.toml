@@ -92,7 +92,7 @@ CMAKE_ARGS="-DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake 
 """
 
 # Needed when a newer registry rebuilds OpenSSL instead of using the image cache.
-before-all = "dnf install -y perl-IPC-Cmd perl-Time-Piece"
+before-all = "dnf clean metadata && dnf install -y perl-IPC-Cmd perl-Time-Piece"
 before-build = "ccache -s && ccache -M 500M"
 repair-wheel-command = "auditwheel repair -w {dest_dir} {wheel}"
 
