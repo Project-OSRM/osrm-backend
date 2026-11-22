@@ -52,7 +52,7 @@ BOOST_AUTO_TEST_CASE(keeps_turn_results_after_the_periodic_heap_check)
     edge.duration = EdgeDuration{10};
     edge.distance = EdgeDistance{10};
     const std::vector<ExtractionTurnLeg> other_roads;
-    const ExtractionTurn input(0, 1, 2, edge, edge, other_roads, other_roads, true);
+    const ExtractionTurn input(0, 1, 2, edge, edge, other_roads, other_roads, true, false);
     auto expected = input;
     environment.ProcessTurn(expected);
     BOOST_REQUIRE_GT(expected.duration, 0.0);

@@ -46,6 +46,8 @@ function setup()
     -- Set to 0 to cost turns purely by turn_bias.
     oncoming_turn_penalty     = 2.0,
     cardinal_directions       = false,
+    -- Additional seconds for u-turns at tagged turning facilities.
+    turning_facility_penalty  = 5,
 
     -- Penalty multiplier for roads with no lane markings (lane_markings=no)
     -- Applied to bidirectional roads to prefer roads with clear lane markings
@@ -636,7 +638,11 @@ function process_turn(profile, turn)
     end
 
     if is_u_turn then
-      duration = duration + profile.properties.u_turn_penalty
+      if turn.has_turning_facility then
+        duration = duration + profile.turning_facility_penalty
+      else
+        duration = duration + profile.properties.u_turn_penalty
+      end
     end
   end
 
