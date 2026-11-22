@@ -750,17 +750,16 @@ std::vector<bool> contractGraph(ContractorGraph &graph,
         // We cannot incorporate this into the loop above because the graph search done
         // during `ContractNode()` above may well intrude upon other nodes' zones of
         // "independence". *The graph cannot change while searches are done.*
+        // Remove downward edges even in the batch that reaches the core cutoff.
+        // The remaining core will be contracted separately for each exclusion filter.
         TIMER_START(post_process);
-        if (remaining_nodes.size() > number_of_core_nodes)
-        {
-            tbb::parallel_for_each(independent_nodes,
-                                   [&](const NodeID v)
-                                   {
-                                       // Algo 2: Move I to their Level
-                                       // and delete "down" edges
-                                       PostProcess(graph, v, node_data);
-                                   });
-        }
+        tbb::parallel_for_each(independent_nodes,
+                               [&](const NodeID v)
+                               {
+                                   // Algo 2: Move I to their Level
+                                   // and delete "down" edges
+                                   PostProcess(graph, v, node_data);
+                               });
         TIMER_STOP(post_process);
 
         // Algo 2: Insert E into Remaining graph
