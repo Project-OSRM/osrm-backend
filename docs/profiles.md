@@ -458,6 +458,7 @@ angle                              | Read          | Float                     |
 number_of_roads                    | Read          | Integer                   | Number of ways at the intersection of the turn
 is_u_turn                          | Read          | Boolean                   | Is the turn a u-turn?
 has_traffic_light                  | Read          | Boolean                   | Is a traffic light present at this turn?
+has_turning_facility               | Read          | Boolean                   | Is this intersection tagged highway=turning_circle, turning_loop, or mini_roundabout? Does not override turn restrictions or one-way access.
 is_left_hand_driving               | Read          | Boolean                   | Is left-hand traffic?
 source_restricted                  | Read          | Boolean                   | Is it from a restricted access road? (See definition in `process_way`)
 source_mode                        | Read          | Enum                      | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
@@ -487,8 +488,16 @@ target_road                        | Read          | ExtractionTurnLeg         |
 roads_on_the_right                 | Read          | Vector&lt;ExtractionTurnLeg&gt; | Vector with information about other roads on the right of the turn that are also connected at the intersection
 roads_on_the_left                  | Read          | Vector&lt;ExtractionTurnLeg&gt; | Vector with information about other roads on the left of the turn that are also connected at the intersection. If turn is a u turn, this is empty.
 weight                             | Read/write    | Float                     | Penalty to be applied for this turn (routing weight)
-duration                           | Read/write    | Float                     | Penalty to be applied for this turn (duration in deciseconds)
+duration                           | Read/write    | Float                     | Penalty to be applied for this turn (duration in seconds)
 
+
+#### Turning facilities
+
+The car profile uses `turning_facility_penalty` (5 seconds by default) instead
+of `properties.u_turn_penalty` (20 seconds) for U-turns at tagged turning
+facilities. Other applicable turn costs are still added. The
+`has_turning_facility` flag describes the intersection; it does not enable
+arbitrary U-turns or override explicit restrictions and one-way roads.
 
 #### from, via, and to
 Use these node IDs to retrieve obstacles. See: @ref ObstacleMap::get.
