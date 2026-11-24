@@ -39,6 +39,32 @@ Feature: Car - Handle traffic lights
             | k    | n  |  20.7s | turn with traffic light       |
 
 
+    Scenario: Car - Crossing tags preserve traffic light penalties
+        Given the node map
+            """
+            a-1-b-2-c
+            d-3-e-4-f
+            g-5-h-6-i
+            """
+
+        And the ways
+            | nodes | highway |
+            | abc   | primary |
+            | def   | primary |
+            | ghi   | primary |
+
+        And the nodes
+            | node | highway         | crossing        | crossing:signals | crossing:markings |
+            | b    | crossing        | traffic_signals |                  |                   |
+            | e    | crossing        |                 | yes              | zebra             |
+            | h    | traffic_signals |                 |                  |                   |
+
+        When I route I should get
+            | from | to | time  | weight |
+            | 1    | 2  | 11.1s | 11.1   |
+            | 3    | 4  | 11.1s | 11.1   |
+            | 5    | 6  | 13.1s | 13.1   |
+
     Scenario: Car - Traffic signal direction straight
         Given the node map
             """
