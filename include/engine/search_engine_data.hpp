@@ -8,6 +8,7 @@
 #include "util/typedefs.hpp"
 
 #include <cstddef>
+#include <cstdint>
 #include <functional>
 #include <memory>
 #include <vector>
@@ -139,6 +140,7 @@ struct MLDUnpackingCacheKey
     NodeID target;
     LevelID level;
     CellID cell_id;
+    std::uint64_t facade_id;
 
     bool operator==(const MLDUnpackingCacheKey &) const = default;
 };
@@ -151,6 +153,7 @@ struct MLDUnpackingCacheKeyHash
         h ^= std::hash<NodeID>{}(k.target) + 0x9e3779b9 + (h << 6) + (h >> 2);
         h ^= std::hash<LevelID>{}(k.level) + 0x9e3779b9 + (h << 6) + (h >> 2);
         h ^= std::hash<CellID>{}(k.cell_id) + 0x9e3779b9 + (h << 6) + (h >> 2);
+        h ^= std::hash<std::uint64_t>{}(k.facade_id) + 0x9e3779b9 + (h << 6) + (h >> 2);
         return h;
     }
 };

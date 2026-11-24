@@ -607,7 +607,8 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
             {
                 if (engine_working_data.unpacking_cache)
                 {
-                    MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
+                    const MLDUnpackingCacheKey cache_key{
+                        source, target, sublevel, parent_cell_id, facade.getUnpackingCacheId()};
                     auto &cache = *engine_working_data.unpacking_cache;
                     if (auto *cached = cache.get(cache_key))
                     {
@@ -654,7 +655,8 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                 {
                     if (engine_working_data.unpacking_cache)
                     {
-                        MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
+                        const MLDUnpackingCacheKey cache_key{
+                            source, target, sublevel, parent_cell_id, facade.getUnpackingCacheId()};
                         engine_working_data.unpacking_cache->insert(
                             cache_key,
                             {std::move(unpacked_subpath.nodes), std::move(unpacked_subpath.edges)});

@@ -20,7 +20,9 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -636,6 +638,11 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
 
     QueryGraph query_graph;
 
+    // Each exclusion and each loaded dataset has its own immutable facade.
+    inline static std::atomic<std::uint64_t> next_unpacking_cache_id{0};
+    const std::uint64_t m_unpacking_cache_id =
+        next_unpacking_cache_id.fetch_add(1, std::memory_order_relaxed);
+
     void InitializeInternalPointers(const storage::SharedDataIndex &index,
                                     const std::string &metric_name,
                                     const std::size_t exclude_index)
@@ -657,6 +664,8 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
         const std::size_t exclude_index)
         : allocator(std::move(allocator_))
     { InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index); }
+
+    std::uint64_t getUnpackingCacheId() const { return m_unpacking_cache_id; }
 
     const partitioner::MultiLevelPartitionView &GetMultiLevelPartition() const override
     { return mld_partition; }
