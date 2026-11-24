@@ -600,6 +600,8 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
 
             LevelID sublevel = level - 1;
 
+            const MLDUnpackingCacheKey cache_key{
+                source, target, sublevel, parent_cell_id, facade.getUnpackingCacheId()};
             constexpr bool has_cache = requires { engine_working_data.unpacking_cache; };
 
             bool cache_hit = false;
@@ -607,7 +609,6 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
             {
                 if (engine_working_data.unpacking_cache)
                 {
-                    MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
                     auto &cache = *engine_working_data.unpacking_cache;
                     if (auto *cached = cache.get(cache_key))
                     {
@@ -654,7 +655,6 @@ UnpackedPath search(SearchEngineData<Algorithm> &engine_working_data,
                 {
                     if (engine_working_data.unpacking_cache)
                     {
-                        MLDUnpackingCacheKey cache_key{source, target, sublevel, parent_cell_id};
                         engine_working_data.unpacking_cache->insert(
                             cache_key,
                             {std::move(unpacked_subpath.nodes), std::move(unpacked_subpath.edges)});
