@@ -105,6 +105,60 @@ Feature: Table searches with equal rounded weights at an intersection
             | c | 0 |
             | 3 | 0 |
 
+    # 7 and 8 project about 4 cm apart on xy, closer than the coordinate grid, so
+    # both snaps round to the same coordinate. They are still two positions. The
+    # speed update makes weight and duration round differently on xy. zv only
+    # gives the network a turn and leads nowhere back.
+    Scenario Outline: Distinct projections that round to one coordinate keep their order
+        Given the node locations
+            | node | lon      | lat      | id   |
+            | w    | -0.001   | -0.0004  | 1001 |
+            | x    | 0        | 0        | 1002 |
+            | y    | 0.0001   | 0.00004  | 1003 |
+            | z    | 0.001    | 0.0004   | 1004 |
+            | v    | 0.001    | 0.0014   |      |
+            | 7    | 0.000014 | 0.000037 |      |
+            | 8    | 0.000014 | 0.000038 |      |
+            | 9    | 0.000014 | 0.000037 |      |
+        And the ways
+            | nodes | oneway |
+            | wxyz  | yes    |
+            | zv    | yes    |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        And the speed file
+        """
+        1002,1003,1,12
+        """
+        And the query options
+            | scale_factor | <scale> |
+
+        When I request a travel time matrix I should get
+            |   | 7 | 8          |
+            | 7 | 0 | <duration> |
+            | 8 |   | 0          |
+        When I request a travel time matrix I should get
+            |   | 7 | 8          |
+            | 7 | 0 | <duration> |
+        When I request a travel time matrix I should get
+            |   | 7 |
+            | 7 | 0 |
+            | 8 |   |
+        When I request a travel time matrix I should get
+            |   | 7 | 8          |
+            | 7 | 0 | <duration> |
+            | 8 |   | 0          |
+            | 9 | 0 | <duration> |
+        When I request a travel distance matrix I should get
+            |   | 7 | 8 |
+            | 7 | 0 | 0 |
+            | 8 |   | 0 |
+
+        Examples:
+            | scale | duration |
+            | 1     | 0.1      |
+            | 1.6   | 0.2      |
+
     # b and f have identical coordinates but are distinct road positions. The
     # one-way road goes around the block between them without a junction there.
     Scenario: Returning to the same coordinate does not erase intervening travel
