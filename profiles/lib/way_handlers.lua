@@ -123,7 +123,8 @@ end
 
 -- set the road classification based on guidance globals configuration
 function WayHandlers.classification(profile,way,result,data)
-  set_classification(data.highway,result,way)
+  set_classification(
+      data.highway, result, way, data.is_physical_forward_oneway, data.is_physical_reverse_oneway)
 end
 
 -- handle destination tags
@@ -596,6 +597,13 @@ end
 
 -- handle oneways tags
 function WayHandlers.oneway(profile,way,result,data)
+  local physical_oneway = way:get_value_by_key("oneway")
+  data.is_physical_forward_oneway = physical_oneway == "yes" or physical_oneway == "1" or physical_oneway == "true" or
+      (physical_oneway == nil and
+       (data.highway == "motorway" or way:get_value_by_key("junction") == "roundabout" or
+        way:get_value_by_key("junction") == "circular"))
+  data.is_physical_reverse_oneway = physical_oneway == "-1"
+
   if not profile.oneway_handling then
     return
   end
@@ -618,6 +626,8 @@ function WayHandlers.oneway(profile,way,result,data)
     end
   end
 
+  data.is_forward_oneway = false
+  data.is_reverse_oneway = false
   data.oneway = oneway
 
   if oneway == "-1" then

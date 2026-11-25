@@ -24,7 +24,7 @@ class GraphCompressor
                   std::vector<TurnRestriction> &turn_restrictions,
                   std::vector<UnresolvedManeuverOverride> &maneuver_overrides,
                   util::NodeBasedDynamicGraph &graph,
-                  const std::vector<NodeBasedEdgeAnnotation> &node_data_container,
+                  std::vector<NodeBasedEdgeAnnotation> &node_data_container,
                   CompressedEdgeContainer &geometry_compressor);
 
   private:
