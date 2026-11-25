@@ -105,11 +105,11 @@ Feature: Table searches with equal rounded weights at an intersection
             | c | 0 |
             | 3 | 0 |
 
-    # 7 and 8 project about 4 cm apart on xy, closer than the coordinate grid, so
-    # both snaps round to the same coordinate. They are still two positions. The
-    # speed update makes weight and duration round differently on xy. zv only
-    # gives the network a turn and leads nowhere back.
-    Scenario Outline: Distinct projections that round to one coordinate keep their order
+    # 7 and 8 snap to xy about 4 cm apart. Both snapped coordinates round to the
+    # same value. The speed file makes the weight and the duration of xy round
+    # differently. Way zv only adds a turn: without a turn, osrm-contract and
+    # osrm-customize fail when they apply the speed file.
+    Scenario Outline: Points that snap to the same rounded coordinate keep their order
         Given the node locations
             | node | lon      | lat      | id   |
             | w    | -0.001   | -0.0004  | 1001 |
@@ -158,6 +158,166 @@ Feature: Table searches with equal rounded weights at an intersection
             | scale | duration |
             | 1     | 0.1      |
             | 1.6   | 0.2      |
+
+    # The same points on a two-way road. From 8 to 7, the reverse direction gives
+    # a legal path. The forward direction gives a backwards path with less weight.
+    # The table must use the legal path.
+    Scenario Outline: A backwards path on a two-way road does not replace the legal path
+        Given the node locations
+            | node | lon      | lat      | id   |
+            | w    | -0.001   | -0.0004  | 1001 |
+            | x    | 0        | 0        | 1002 |
+            | y    | 0.0001   | 0.00004  | 1003 |
+            | z    | 0.001    | 0.0004   | 1004 |
+            | 7    | 0.000014 | 0.000037 |      |
+            | 8    | 0.000014 | 0.000038 |      |
+            | 9    | 0.000014 | 0.000037 |      |
+        And the ways
+            | nodes |
+            | wxyz  |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        And the speed file
+        """
+        1002,1003,1,12
+        """
+        And the query options
+            | scale_factor | <scale> |
+
+        When I request a travel time matrix I should get
+            |   | 7          | 8          |
+            | 7 | 0          | <duration> |
+            | 8 | <duration> | 0          |
+        When I request a travel time matrix I should get
+            |   | 7          | 8 |
+            | 8 | <duration> | 0 |
+        When I request a travel time matrix I should get
+            |   | 7          |
+            | 7 | 0          |
+            | 8 | <duration> |
+        When I request a travel time matrix I should get
+            |   | 7          | 8          |
+            | 7 | 0          | <duration> |
+            | 8 | <duration> | 0          |
+            | 9 | 0          | <duration> |
+
+        Examples:
+            | scale | duration |
+            | 1     | 0.1      |
+            | 1.6   | 0.2      |
+
+    # The way uses oneway=-1, so traffic moves against the drawing direction.
+    # Thus 7 is in front of 8, and there is no route from 7 to 8. Way wv only
+    # adds a turn.
+    Scenario Outline: Points that snap to the same rounded coordinate keep their order on a reversed one-way road
+        Given the node locations
+            | node | lon      | lat      | id   |
+            | w    | -0.001   | -0.0004  | 1001 |
+            | x    | 0        | 0        | 1002 |
+            | y    | 0.0001   | 0.00004  | 1003 |
+            | z    | 0.001    | 0.0004   | 1004 |
+            | v    | -0.001   | -0.0014  |      |
+            | 7    | 0.000014 | 0.000037 |      |
+            | 8    | 0.000014 | 0.000038 |      |
+            | 9    | 0.000014 | 0.000037 |      |
+        And the ways
+            | nodes | oneway |
+            | wxyz  | -1     |
+            | wv    | yes    |
+        And the contract extra arguments "--segment-speed-file {speeds_file}"
+        And the customize extra arguments "--segment-speed-file {speeds_file}"
+        And the speed file
+        """
+        1003,1002,1,12
+        """
+        And the query options
+            | scale_factor | <scale> |
+
+        When I request a travel time matrix I should get
+            |   | 7          | 8 |
+            | 7 | 0          |   |
+            | 8 | <duration> | 0 |
+        When I request a travel time matrix I should get
+            |   | 7 | 8 |
+            | 7 | 0 |   |
+        When I request a travel time matrix I should get
+            |   | 7          |
+            | 7 | 0          |
+            | 8 | <duration> |
+        When I request a travel time matrix I should get
+            |   | 7          | 8 |
+            | 7 | 0          |   |
+            | 8 | <duration> | 0 |
+            | 9 | 0          |   |
+
+        Examples:
+            | scale | duration |
+            | 1     | 0.1      |
+            | 1.6   | 0.2      |
+
+    # At this speed, each segment has a weight of 1. Thus 7 and 8 have equal
+    # rounded weights, but they are 30 m apart.
+    Scenario: Points far apart with equal rounded weights keep their order
+        Given the node locations
+            | node | lon     | lat |
+            | l    | 0       | 0   |
+            | m    | 0.0009  | 0   |
+            | 7    | 0.00027 | 0   |
+            | 8    | 0.00054 | 0   |
+            | 9    | 0.00027 | 0   |
+        And the ways
+            | nodes | oneway | maxspeed:forward |
+            | lm    | yes    | 10000            |
+
+        When I request a travel distance matrix I should get
+            |   | 7 | 8       |
+            | 7 | 0 | 30 +- 1 |
+            | 8 |   | 0       |
+        When I request a travel time matrix I should get
+            |   | 7 | 8 |
+            | 7 | 0 | 0 |
+            | 8 |   | 0 |
+        When I request a travel distance matrix I should get
+            |   | 7 | 8       |
+            | 7 | 0 | 30 +- 1 |
+        When I request a travel distance matrix I should get
+            |   | 7 |
+            | 7 | 0 |
+            | 8 |   |
+        When I request a travel distance matrix I should get
+            |   | 7 | 8       |
+            | 7 | 0 | 30 +- 1 |
+            | 8 |   | 0       |
+            | 9 | 0 | 30 +- 1 |
+
+    # 7 and 8 are on opposite sides of the road. Both snap to the same position.
+    # Thus the travel between them costs 0 in each direction.
+    Scenario: Points on opposite sides of the road share one position
+        Given the node locations
+            | node | lon    | lat      |
+            | p    | -0.001 | 0        |
+            | q    | 0.001  | 0        |
+            | 7    | 0.0002 | 0.00003  |
+            | 8    | 0.0002 | -0.00003 |
+        And the ways
+            | nodes | oneway |
+            | pq    | yes    |
+
+        When I request a travel time matrix I should get
+            |   | 7 | 8 |
+            | 7 | 0 | 0 |
+            | 8 | 0 | 0 |
+        When I request a travel distance matrix I should get
+            |   | 7 | 8 |
+            | 7 | 0 | 0 |
+            | 8 | 0 | 0 |
+        When I request a travel distance matrix I should get
+            |   | 7 | 8 |
+            | 8 | 0 | 0 |
+        When I request a travel distance matrix I should get
+            |   | 7 |
+            | 7 | 0 |
+            | 8 | 0 |
 
     # b and f have identical coordinates but are distinct road positions. The
     # one-way road goes around the block between them without a junction there.
