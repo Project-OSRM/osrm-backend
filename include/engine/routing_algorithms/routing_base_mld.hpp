@@ -14,6 +14,7 @@
 #include <algorithm>
 #include <iterator>
 #include <limits>
+#include <optional>
 #include <tuple>
 #include <vector>
 
@@ -281,6 +282,42 @@ retrievePackedPathFromHeap(const SearchEngineData<Algorithm>::QueryHeap &forward
     return packed_path;
 }
 
+// A node holding a closed (zero-speed) segment has INVALID_EDGE_WEIGHT as its node weight, so no
+// path can run through it. A path that starts on it past the closure must still be able to leave
+// it. Its seed weight holds the negated raw sum of the segment weights up to the phantom, closed
+// segments counting INVALID_SEGMENT_WEIGHT, so leaving costs the raw sum over all segments, which
+// leaves the weight from the phantom on. A closed segment after the phantom blocks leaving.
+//
+// Returns INVALID_EDGE_WEIGHT if the node can't be left.
+template <typename Algorithm>
+EdgeWeight getLeavingNodeWeight(const DataFacade<Algorithm> &facade,
+                                const NodeID node,
+                                const bool is_source,
+                                const SeedPosition source_position)
+{
+    const auto node_weight = facade.GetNodeWeight(node);
+    if (node_weight != INVALID_EDGE_WEIGHT || !is_source ||
+        isClosedBetween(facade, node, source_position, std::nullopt))
+    {
+        return node_weight;
+    }
+
+    const auto leaving_weight = [](const auto &weights)
+    {
+        EdgeWeight weight_sum{0};
+        for (const SegmentWeight weight : weights)
+        {
+            weight_sum += alias_cast<EdgeWeight>(weight);
+        }
+        return weight_sum;
+    };
+
+    const auto geometry_index = facade.GetGeometryIndex(node);
+    return geometry_index.forward
+               ? leaving_weight(facade.GetUncompressedForwardWeights(geometry_index.id))
+               : leaving_weight(facade.GetUncompressedReverseWeights(geometry_index.id));
+}
+
 template <typename Heap>
 void insertOrUpdate(Heap &heap,
                     const NodeID node,
@@ -306,6 +343,14 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                         const typename Heap::HeapNode &heapNode,
                         const Args &...args)
 {
+    if constexpr (DIRECTION == REVERSE_DIRECTION)
+    {
+        if (!canLeaveTargetSeed(facade, heapNode))
+        {
+            return;
+        }
+    }
+
     const auto &partition = facade.GetMultiLevelPartition();
     const auto &cells = facade.GetCellStorage();
     const auto &metric = facade.GetCellMetric();
@@ -422,7 +467,16 @@ void relaxOutgoingEdges(const DataFacade<Algorithm> &facade,
                 checkParentCellRestriction(partition.GetCell(level + 1, to), args...))
             {
                 const auto node_weight =
-                    facade.GetNodeWeight(DIRECTION == FORWARD_DIRECTION ? heapNode.node : to);
+                    DIRECTION == FORWARD_DIRECTION
+                        ? getLeavingNodeWeight(facade,
+                                               heapNode.node,
+                                               heapNode.data.parent == heapNode.node,
+                                               heapNode.data.seed_position)
+                        : facade.GetNodeWeight(to);
+                if (node_weight == INVALID_EDGE_WEIGHT)
+                {
+                    continue;
+                }
                 const auto turn_penalty = facade.GetWeightPenaltyForEdgeID(edge_data.turn_id);
 
                 // TODO: BOOST_ASSERT(edge_data.weight == node_weight + turn_penalty);
@@ -473,8 +527,17 @@ void routingStep(const DataFacade<Algorithm> &facade,
         auto reverse_weight = reverseHeapNode->weight;
         auto path_weight = weight + reverse_weight;
 
+        const auto &source_node = DIRECTION == FORWARD_DIRECTION ? heapNode : *reverseHeapNode;
+        const auto &target_node = DIRECTION == FORWARD_DIRECTION ? *reverseHeapNode : heapNode;
+
         if (!shouldForceStep(force_step_nodes, heapNode, *reverseHeapNode) &&
-            (path_weight >= EdgeWeight{0}) && (path_weight < path_upper_bound))
+            (path_weight >= EdgeWeight{0}) && (path_weight < path_upper_bound) &&
+            canMeetAtNode(facade,
+                          heapNode.node,
+                          source_node.data.parent == source_node.node,
+                          source_node.data.seed_position,
+                          target_node.data.parent == target_node.node,
+                          target_node.data.seed_position))
         {
             middle_node = heapNode.node;
             path_upper_bound = path_weight;
@@ -768,7 +831,8 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                             source_phantom.GetForwardWeightAsSource(),
                             {source_phantom.forward_segment_id.id,
                              false,
-                             source_phantom.GetForwardDistanceAsSource()});
+                             source_phantom.GetForwardDistanceAsSource(),
+                             source_phantom.fwd_segment_position});
     }
 
     if (source_phantom.IsValidReverseSource())
@@ -777,7 +841,8 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                             source_phantom.GetReverseWeightAsSource(),
                             {source_phantom.reverse_segment_id.id,
                              false,
-                             source_phantom.GetReverseDistanceAsSource()});
+                             source_phantom.GetReverseDistanceAsSource(),
+                             source_phantom.fwd_segment_position});
     }
 
     if (target_phantom.IsValidForwardTarget())
@@ -786,7 +851,8 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                             target_phantom.GetForwardWeightAsTarget(),
                             {target_phantom.forward_segment_id.id,
                              false,
-                             target_phantom.GetForwardDistanceAsTarget()});
+                             target_phantom.GetForwardDistanceAsTarget(),
+                             target_phantom.fwd_segment_position});
     }
 
     if (target_phantom.IsValidReverseTarget())
@@ -795,7 +861,8 @@ double getNetworkDistance(SearchEngineData<Algorithm> &engine_working_data,
                             target_phantom.GetReverseWeightAsTarget(),
                             {target_phantom.reverse_segment_id.id,
                              false,
-                             target_phantom.GetReverseDistanceAsTarget()});
+                             target_phantom.GetReverseDistanceAsTarget(),
+                             target_phantom.fwd_segment_position});
     }
 
     const PhantomEndpoints endpoints{source_phantom, target_phantom};

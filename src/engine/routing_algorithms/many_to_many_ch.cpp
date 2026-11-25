@@ -58,6 +58,11 @@ void relaxOutgoingEdges(
         return;
     }
 
+    if (DIRECTION == REVERSE_DIRECTION && !canLeaveTargetSeed(facade, heapNode))
+    {
+        return;
+    }
+
     for (auto edge : facade.GetAdjacentEdgeRange(heapNode.node))
     {
         const auto &data = facade.GetEdgeData(edge);
@@ -140,6 +145,16 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
 
         const auto approach = heapNode.data.approach + current_bucket.approach;
 
+        if (!canMeetAtNode(facade,
+                           heapNode.node,
+                           heapNode.data.parent == heapNode.node,
+                           heapNode.data.seed_position,
+                           current_bucket.parent_node == heapNode.node,
+                           current_bucket.seed_position))
+        {
+            continue;
+        }
+
         if (new_weight - approach < EdgeWeight{0})
         {
             if (addLoopWeight(
@@ -180,7 +195,8 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                                            heapNode.weight,
                                            heapNode.data.duration,
                                            heapNode.data.distance,
-                                           heapNode.data.approach);
+                                           heapNode.data.approach,
+                                           heapNode.data.seed_position);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(facade, heapNode, query_heap, candidates);
 }

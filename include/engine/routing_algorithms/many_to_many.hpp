@@ -25,6 +25,8 @@ struct NodeBucket
     //! How much of @c weight is the walk into an open area rather than travel through the
     //! graph; see ManyToManyHeapData::approach, which this is copied from.
     EdgeWeight approach;
+    //! See HeapData::seed_position, which this is copied from.
+    SeedPosition seed_position;
 
     NodeBucket(NodeID middle_node,
                NodeID parent_node,
@@ -33,10 +35,11 @@ struct NodeBucket
                EdgeWeight weight,
                EdgeDuration duration,
                EdgeDistance distance,
-               EdgeWeight approach = EdgeWeight{0})
+               EdgeWeight approach = EdgeWeight{0},
+               SeedPosition seed_position = NODE_START_POSITION)
         : middle_node(middle_node), parent_node(parent_node), column_index(column_index),
           from_clique_arc(from_clique_arc), weight(weight), duration(duration), distance(distance),
-          approach(approach)
+          approach(approach), seed_position(seed_position)
     {
     }
 
@@ -46,10 +49,11 @@ struct NodeBucket
                EdgeWeight weight,
                EdgeDuration duration,
                EdgeDistance distance,
-               EdgeWeight approach = EdgeWeight{0})
+               EdgeWeight approach = EdgeWeight{0},
+               SeedPosition seed_position = NODE_START_POSITION)
         : middle_node(middle_node), parent_node(parent_node), column_index(column_index),
           from_clique_arc(false), weight(weight), duration(duration), distance(distance),
-          approach(approach)
+          approach(approach), seed_position(seed_position)
     {
     }
 
