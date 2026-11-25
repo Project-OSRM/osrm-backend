@@ -6,6 +6,7 @@
 #include "util/coordinate_calculation.hpp"
 #include "util/string_util.hpp"
 
+#include <cstdint>
 #include <cstdlib>
 
 #include <vector>
@@ -52,11 +53,15 @@ Status TablePlugin::HandleRequest(const RoutingAlgorithmsInterface &algorithms,
     const auto num_destinations =
         params.destinations.empty() ? params.coordinates.size() : params.destinations.size();
 
-    if (max_locations_distance_table > 0 &&
-        ((num_sources * num_destinations) >
-         static_cast<std::size_t>(max_locations_distance_table * max_locations_distance_table)))
+    if (max_locations_distance_table > 0 && num_destinations != 0)
     {
-        return Error("TooBig", "Too many table coordinates", result);
+        const auto limit = static_cast<std::uint64_t>(max_locations_distance_table);
+        const auto max_cells = limit * limit;
+        // Use division to compare the cell count without overflowing the request dimensions.
+        if (num_sources > max_cells / num_destinations)
+        {
+            return Error("TooBig", "Too many table coordinates", result);
+        }
     }
 
     if (!CheckAlgorithms(params, algorithms, result))
