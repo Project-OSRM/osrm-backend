@@ -3,6 +3,7 @@
 #include "osrm/contractor.hpp"
 #include "osrm/contractor_config.hpp"
 #include "osrm/exception.hpp"
+#include "util/available_threads.hpp"
 #include "util/log.hpp"
 #include "util/timezones.hpp"
 #include "util/version.hpp"
@@ -47,7 +48,7 @@ return_code parseArguments(int argc,
     config_options.add_options()(
         "threads,t",
         boost::program_options::value<unsigned int>(&contractor_config.requested_num_threads)
-            ->default_value(std::thread::hardware_concurrency()),
+            ->default_value(util::GetAvailableThreads()),
         "Number of threads to use")(
         "segment-speed-file",
         boost::program_options::value<std::vector<std::string>>(
@@ -195,7 +196,7 @@ try
         return EXIT_FAILURE;
     }
 
-    const unsigned recommended_num_threads = std::thread::hardware_concurrency();
+    const unsigned recommended_num_threads = util::GetAvailableThreads();
 
     if (recommended_num_threads != contractor_config.requested_num_threads)
     {
