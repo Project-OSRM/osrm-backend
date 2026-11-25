@@ -1,5 +1,7 @@
 #include <boost/test/unit_test.hpp>
 
+#include "coordinates.hpp"
+
 #include "osrm/match_parameters.hpp"
 #include "osrm/nearest_parameters.hpp"
 #include "osrm/route_parameters.hpp"
@@ -102,6 +104,29 @@ BOOST_AUTO_TEST_CASE(test_table_limits)
     auto &json_result = std::get<json::Object>(result);
     const auto code = std::get<json::String>(json_result.values["code"]).value;
     BOOST_CHECK(code == "TooBig"); // per the New-Server API spec
+}
+
+BOOST_AUTO_TEST_CASE(test_large_table_limits)
+{
+    osrm::EngineConfig config;
+    config.storage_config = {OSRM_TEST_DATA_DIR "/ch/monaco.osrm"};
+    config.use_shared_memory = false;
+
+    osrm::TableParameters params;
+    params.coordinates = {get_dummy_location(), get_locations_in_big_component().front()};
+
+    for (const int limit : {65536, 250000})
+    {
+        BOOST_TEST_CONTEXT("max-table-size " << limit)
+        {
+            config.max_locations_distance_table = limit;
+            const osrm::OSRM osrm{config};
+            osrm::json::Object result;
+            const auto status = osrm.Table(params, result);
+            BOOST_CHECK(status == osrm::Status::Ok);
+            BOOST_CHECK_EQUAL(std::get<osrm::json::String>(result.values.at("code")).value, "Ok");
+        }
+    }
 }
 
 BOOST_AUTO_TEST_CASE(test_match_coordinate_limits)
