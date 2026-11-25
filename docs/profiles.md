@@ -24,6 +24,13 @@ osrm-extract --profile profiles/foot.lua planet.osm.pbf --output /data/foot
 
 This avoids the need to create symbolic links to the input file.
 
+### Crossing tags
+
+The bundled profiles route the same way with legacy `crossing=*` tags and with
+`crossing:signals=*` and `crossing:markings=*`. Crossing-node behavior in the
+car and bicycle profiles is keyed on `highway=crossing`. Traffic light penalties
+use `highway=traffic_signals`.
+
 ## Processing flow
 It's important to understand that profiles are used when preprocessing the OSM data, NOT at query time when routes are computed.
 

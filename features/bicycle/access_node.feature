@@ -23,6 +23,14 @@ Feature: Bike - Access tags on nodes
             |             | no           | yes          |              | cycling |
             |             | yes          | no           |              |         |
 
+    Scenario: Bike - Crossing tags preserve access along the road
+        Then routability should be
+            | highway     | node/highway | node/bicycle | node/crossing   | node/crossing:signals | node/crossing:markings | bothw   |
+            | residential | crossing     | no           | traffic_signals |                       |                        | cycling |
+            | residential | crossing     | no           |                 | yes                   | zebra                  | cycling |
+            | residential | crossing     | no           | uncontrolled    | no                    |                        | cycling |
+            | residential |              | no           |                 | yes                   | zebra                  |         |
+
     Scenario: Bike - Overwriting implied acccess on nodes doesn't overwrite way
         Then routability should be
             | highway  | node/access | node/vehicle | node/bicycle | bothw   |

@@ -36,6 +36,14 @@ Feature: Foot - Access tags on ways
             | platform | no     | yes  | x     |
             | platform | no     | no   |       |
 
+    Scenario: Foot - Crossing tags preserve access on a crossing way
+        Then routability should be
+            | highway | footway  | crossing        | crossing:signals | crossing:markings | foot | bothw |
+            | footway | crossing | traffic_signals |                  |                   |      | x     |
+            | footway | crossing |                 | yes              | zebra             |      | x     |
+            | footway | crossing | unmarked        |                  |                   | no   |       |
+            | footway | crossing |                 | no               | no                | no   |       |
+
     Scenario: Foot - Overwriting implied acccess on ways
         Then routability should be
             | highway  | access | foot | bothw |
