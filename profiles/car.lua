@@ -12,11 +12,12 @@ resolve_access = require("lib/access").resolve_access
 limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
 Measure = require("lib/measure")
+Co2 = require("lib/co2")
 
 local access_tags = {'motorcar', 'motor_vehicle', 'vehicle', 'access'}
 
 function setup()
-  return {
+  local profile = {
     properties = {
       max_speed_for_map_matching      = 180/3.6, -- 180kmph -> m/s
       -- For routing based on duration, but weighted for preferring certain roads
@@ -25,6 +26,10 @@ function setup()
       -- weight_name                     = 'duration',
       -- For shortest distance without penalties for accessibility
       -- weight_name                     = 'distance',
+      -- For lowest CO2 emissions (grams, see the co2 table below) without penalties for accessibility
+      -- weight_name                     = 'co2',
+      -- For lowest CO2 emissions, weighted like 'routability' for preferring certain roads
+      -- weight_name                     = 'routability-co2',
       process_call_tagless_node      = false,
       u_turn_penalty                 = 20,
       continue_straight_at_waypoint  = true,
@@ -67,6 +72,40 @@ function setup()
     -- Size of the vehicle, to be limited mostly by legal restriction of the way
     vehicle_length = 4.8, -- in meters, 4.8m is the length of large or family car
     vehicle_weight = 2000, -- in kilograms
+
+    -- CO2 emission model, used only by the 'co2' and 'routability-co2' weights.
+    -- The weight unit is the gram of CO2.
+    co2 = {
+      -- Emission factor (g CO2/km) by travel speed (km/h), linearly interpolated
+      -- and clamped outside the range. The default values are indicative: they
+      -- follow the usual U shape of hot emission curves for an average recent
+      -- passenger car (high at low speed, lowest around 60-80 km/h, rising with
+      -- aerodynamic drag). Replace them with the curve of your fleet, e.g. from
+      -- COPERT or HBEFA, before relying on absolute values.
+      curve = {
+        {  5, 420 },
+        { 10, 300 },
+        { 20, 215 },
+        { 30, 178 },
+        { 40, 158 },
+        { 50, 146 },
+        { 60, 139 },
+        { 70, 136 },
+        { 80, 137 },
+        { 90, 142 },
+        { 100, 150 },
+        { 110, 161 },
+        { 120, 174 },
+        { 130, 189 },
+      },
+      -- Emissions per second spent waiting at turns, traffic signals, stops and
+      -- barriers, and on ways with a fixed duration (order of magnitude of an
+      -- idling petrol engine, about 0.8 l/h).
+      idle_g_per_s = 0.5,
+      -- Emissions allocated to the car per second on a ferry or shuttle train.
+      -- Kept equal to idling by default so that ferries do not become free shortcuts.
+      ferry_g_per_s = 0.5,
+    },
 
     -- Optional: upper limit for all speeds (e.g., 87 for trucks)
     -- When set, no derived speed will exceed this value
@@ -376,6 +415,12 @@ function setup()
     access_turn_classification = {
     }
   }
+
+  if Co2.is_co2_weight(profile) then
+    Co2.validate(profile)
+  end
+
+  return profile
 end
 
 function process_node(profile, node, result, relations)
@@ -651,11 +696,14 @@ function process_turn(profile, turn)
   -- for distance based routing we don't want to have penalties based on turn angle
   if weight_name == 'distance' then
      turn.weight = 0
+  elseif weight_name == 'co2' or weight_name == 'routability-co2' then
+     -- time lost at the turn is converted into idling emissions (grams of CO2)
+     turn.weight = duration * profile.co2.idle_g_per_s
   else
      turn.weight = duration
   end
 
-  if weight_name == 'routability' then
+  if weight_name == 'routability' or weight_name == 'routability-co2' then
       -- penalize turns from non-local access only segments onto local access only tags
       if not turn.source_restricted and turn.target_restricted then
           turn.weight = constants.max_turn_weight

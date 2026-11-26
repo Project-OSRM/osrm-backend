@@ -87,6 +87,39 @@ If you set the same rate on all ways, the result will be shortest path routing.
 If you set rate = speed on all ways, the result will be fastest path routing.
 If you want to prioritize certain streets, increase the rate on these.
 
+### Weights available in the car profile
+
+`car.lua` supports five values of `properties.weight_name`:
+
+weight_name       | Minimizes                  | Accessibility penalties | Weight unit
+------------------|----------------------------|-------------------------|---------------
+`routability`     | duration (default)         | yes                     | seconds
+`duration`        | duration                   | no                      | seconds
+`distance`        | distance                   | no                      | meters
+`co2`             | CO2 emissions              | no                      | grams of CO2
+`routability-co2` | CO2 emissions              | yes                     | grams of CO2
+
+Accessibility penalties are the rate multipliers of `WayHandlers.penalties` (service roads, narrow roads,
+roads without lane markings, alternating oneways, side roads, `priority`) and the maximal turn weight
+when entering a way with restricted access.
+
+The CO2 weights use the `co2` table of the profile:
+
+- `curve`: emission factor in g/km by travel speed in km/h, linearly interpolated and clamped at both
+  ends. The rate of a way is `1000 / grams_per_km(speed)` meters per gram. The default curve is
+  indicative and should be replaced by the curve of the actual fleet (COPERT, HBEFA...).
+- `idle_g_per_s`: grams per second spent at turns, traffic signals, stops, barriers and on ways with a
+  fixed duration (movable bridges).
+- `ferry_g_per_s`: grams per second on board a ferry or a shuttle train.
+
+Speeds and durations are not changed: `duration` in the responses keeps its meaning, and with `co2` the
+route `weight` is the estimated emission in grams. With `routability-co2` the weight also contains the
+penalties and is no longer a pure emission.
+
+Traffic updates with `--segment-speed-file` must provide the rate in the fourth column
+(`rate = 1000 / grams_per_km(speed)`, multiplied by the penalty for `routability-co2`): with three
+columns the updater falls back to a duration based weight on the updated segments.
+
 ## Elements
 
 ### api_version

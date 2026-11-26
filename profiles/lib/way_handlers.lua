@@ -10,8 +10,16 @@ local get_destination = require("lib/destination").get_destination
 local Tags = require('lib/tags')
 local Measure = require("lib/measure")
 local resolve_access = require("lib/access").resolve_access
+local Co2 = require("lib/co2")
 
 WayHandlers = {}
+
+-- true for the weights that apply the accessibility penalties
+-- ('routability' on duration, 'routability-co2' on CO2 emissions)
+function WayHandlers.is_routability(profile)
+  local name = profile.properties.weight_name
+  return name == 'routability' or name == 'routability-co2'
+end
 
 -- check that way has at least one tag that could imply routability-
 -- we store the checked tags in data, to avoid fetching again later
@@ -220,7 +228,7 @@ function WayHandlers.hov(profile,way,result,data)
   local all_hov_backward = WayHandlers.has_all_designated_hov_lanes(data.hov_lanes_backward)
 
   -- in this case we will use turn penalties instead of filtering out
-  if profile.properties.weight_name == 'routability' then
+  if WayHandlers.is_routability(profile) then
     if (all_hov_forward) then
       result.forward_restricted = true
     end
@@ -466,6 +474,10 @@ function WayHandlers.penalties(profile,way,result,data)
   local forward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, priority_forward_penalty)
   local backward_penalty = math.min(service_penalty, width_penalty, alternating_penalty, sideroad_penalty, priority_backward_penalty)
 
+  -- kept for WayHandlers.weights ('routability-co2' applies the same penalties to CO2 rates)
+  data.forward_penalty = forward_penalty
+  data.backward_penalty = backward_penalty
+
   if profile.properties.weight_name == 'routability' then
     if result.forward_speed > 0 then
       result.forward_rate = (result.forward_speed * forward_penalty) / 3.6
@@ -652,6 +664,54 @@ function WayHandlers.weights(profile,way,result,data)
     if (result.backward_mode ~= mode.inaccessible and result.backward_speed > 0) then
        result.backward_rate = 1
     end
+  elseif Co2.is_co2_weight(profile) then
+    WayHandlers.co2_weights(profile,way,result,data)
+  end
+end
+
+-- CO2 based weights ('co2' and 'routability-co2'), in grams of CO2.
+-- Speeds and durations are left untouched: travel time estimates stay the same,
+-- only the choice of the route changes.
+function WayHandlers.co2_weights(profile,way,result,data)
+  local forward_penalty = 1
+  local backward_penalty = 1
+  if profile.properties.weight_name == 'routability-co2' then
+    forward_penalty = data.forward_penalty or 1
+    backward_penalty = data.backward_penalty or 1
+  end
+
+  -- on ferries and shuttle trains the engine is off: the emissions are the share
+  -- allocated to the car by the carrier, per second on board
+  local function grams_per_s(way_mode)
+    if way_mode == mode.ferry then
+      return profile.co2.ferry_g_per_s
+    end
+    return profile.co2.idle_g_per_s
+  end
+
+  -- ways with a fixed duration (ferries, movable bridges): emissions follow the duration
+  if result.duration > 0 and forward_penalty == backward_penalty then
+    local way_mode = result.forward_mode
+    if way_mode == mode.inaccessible then
+      way_mode = result.backward_mode
+    end
+    result.weight = result.duration * grams_per_s(way_mode) / forward_penalty
+    return
+  end
+
+  local function rate(way_mode, speed)
+    if way_mode == mode.ferry then
+      return speed / 3.6 / grams_per_s(way_mode)
+    end
+    return Co2.rate(profile, speed)
+  end
+
+  result.weight = -1
+  if result.forward_mode ~= mode.inaccessible and result.forward_speed > 0 then
+    result.forward_rate = rate(result.forward_mode, result.forward_speed) * forward_penalty
+  end
+  if result.backward_mode ~= mode.inaccessible and result.backward_speed > 0 then
+    result.backward_rate = rate(result.backward_mode, result.backward_speed) * backward_penalty
   end
 end
 
