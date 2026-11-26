@@ -38,7 +38,7 @@ function Co2.rate(profile, speed)
   return 1000 / Co2.grams_per_km(profile, speed)
 end
 
--- sanity check of the configuration, called once from setup()
+-- sanity check of the configuration
 function Co2.validate(profile)
   local curve = profile.co2 and profile.co2.curve
   assert(curve and #curve >= 1, "co2.curve must contain at least one {speed, grams_per_km} point")
@@ -48,8 +48,20 @@ function Co2.validate(profile)
       assert(point[1] > curve[i-1][1], "co2.curve speeds must be strictly increasing")
     end
   end
-  assert(profile.co2.idle_g_per_s > 0, "co2.idle_g_per_s must be positive")
-  assert(profile.co2.ferry_g_per_km > 0, "co2.ferry_g_per_km must be positive")
+  assert((profile.co2.idle_g_per_s or 0) > 0, "co2.idle_g_per_s must be positive")
+  assert((profile.co2.ferry_g_per_km or 0) > 0, "co2.ferry_g_per_km must be positive")
+end
+
+-- profiles already validated in this Lua state; weak keys let them be collected
+local validated = setmetatable({}, {__mode = 'k'})
+
+-- validates the configuration on first use rather than in setup(), so that
+-- changes made after setup() (e.g. by a profile derived from car.lua) are checked
+function Co2.ensure_valid(profile)
+  if not validated[profile] then
+    Co2.validate(profile)
+    validated[profile] = true
+  end
 end
 
 return Co2

@@ -221,3 +221,22 @@ Feature: Car - weights
         When I route I should get
             | from | to | route       | weight |
             | s    | e  | sa,ab,be,be | 2327.6 |
+
+    Scenario: CO2 weights reject an invalid configuration set after setup
+        Given the profile file "car" initialized with
+        """
+        profile.properties.weight_name = 'co2'
+        profile.co2.ferry_g_per_km = 0
+        """
+        And the node map
+            """
+            a b
+            """
+        And the ways
+            | nodes |
+            | ab    |
+        And the data has been saved to disk
+
+        When I try to run "osrm-extract --profile {profile_file} {osm_file}"
+        Then it should exit with an error
+        And stderr should contain "co2.ferry_g_per_km must be positive"

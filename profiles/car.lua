@@ -17,7 +17,7 @@ Co2 = require("lib/co2")
 local access_tags = {'motorcar', 'motor_vehicle', 'vehicle', 'access'}
 
 function setup()
-  local profile = {
+  return {
     properties = {
       max_speed_for_map_matching      = 180/3.6, -- 180kmph -> m/s
       -- For routing based on duration, but weighted for preferring certain roads
@@ -451,12 +451,6 @@ function setup()
     access_turn_classification = {
     }
   }
-
-  if Co2.is_co2_weight(profile) then
-    Co2.validate(profile)
-  end
-
-  return profile
 end
 
 function process_node(profile, node, result, relations)

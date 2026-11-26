@@ -673,6 +673,8 @@ end
 -- Speeds and durations are left untouched: travel time estimates stay the same,
 -- only the choice of the route changes.
 function WayHandlers.co2_weights(profile,way,result,data)
+  Co2.ensure_valid(profile)
+
   local forward_penalty = 1
   local backward_penalty = 1
   if profile.properties.weight_name == 'routability-co2' then
