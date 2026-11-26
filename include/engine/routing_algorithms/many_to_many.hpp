@@ -3,16 +3,61 @@
 
 #include "engine/algorithm.hpp"
 #include "engine/datafacade.hpp"
+#include "engine/phantom_node.hpp"
 #include "engine/search_engine_data.hpp"
 
 #include "util/typedefs.hpp"
 
+#include <boost/assert.hpp>
+
+#include <algorithm>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace osrm::engine::routing_algorithms
 {
 namespace
 {
+// The table's counterpart of requiresForwardForce and requiresBackwardForce.
+// Those compare rounded weights, which tie when two points sit within one
+// weight unit, so compare positions on the geometry instead. Called only when
+// both searches are still on their seeds at node, with zero graph weight.
+inline bool isSourceDownstream(const NodeID node,
+                               const PhantomNodeCandidates &sources,
+                               const PhantomNodeCandidates &targets)
+{
+    // A candidate list holds at most one phantom per node.
+    const auto source = std::find_if(
+        sources.begin(),
+        sources.end(),
+        [&](const auto &phantom)
+        {
+            return (phantom.IsValidForwardSource() && phantom.forward_segment_id.id == node) ||
+                   (phantom.IsValidReverseSource() && phantom.reverse_segment_id.id == node);
+        });
+    const auto target = std::find_if(
+        targets.begin(),
+        targets.end(),
+        [&](const auto &phantom)
+        {
+            return (phantom.IsValidForwardTarget() && phantom.forward_segment_id.id == node) ||
+                   (phantom.IsValidReverseTarget() && phantom.reverse_segment_id.id == node);
+        });
+    BOOST_ASSERT(source != sources.end());
+    BOOST_ASSERT(target != targets.end());
+
+    // Both phantoms lie on node, so they share its direction of travel.
+    const bool forward = source->IsValidForwardSource() && source->forward_segment_id.id == node;
+    const auto position = [forward](const PhantomNode &phantom)
+    {
+        return std::make_pair(forward ? phantom.forward_order_segment
+                                      : phantom.reverse_order_segment,
+                              phantom.order_ratio);
+    };
+    return forward ? position(*source) > position(*target) : position(*source) < position(*target);
+}
+
 struct NodeBucket
 {
     NodeID middle_node;

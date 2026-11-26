@@ -154,6 +154,9 @@ class MockAreaFacade final : public MockBaseDataFacade
                                    true,
                                    vertex,
                                    vertex,
+                                   0.0,
+                                   0,
+                                   0,
                                    0};
     }
 };

@@ -26,7 +26,7 @@ inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
                           EdgeDuration &duration,
                           EdgeDistance &distance)
 { // Special case for CH when contractor creates a loop edge node->node
-    BOOST_ASSERT(weight - approach < EdgeWeight{0});
+    BOOST_ASSERT(weight - approach <= EdgeWeight{0});
 
     const auto loop_weight = ch::getLoopMetric<EdgeWeight>(facade, node);
     if (std::get<0>(loop_weight) != INVALID_EDGE_WEIGHT)
@@ -105,7 +105,9 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<EdgeDuration> &durations_table,
                         std::vector<EdgeDistance> &distances_table,
                         std::vector<NodeID> &middle_nodes_table,
-                        const PhantomNodeCandidates &candidates)
+                        const PhantomNodeCandidates &candidates,
+                        const std::vector<PhantomNodeCandidates> &candidates_list,
+                        const std::vector<std::size_t> &target_indices)
 {
     // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is
     // the same
@@ -140,7 +142,14 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
 
         const auto approach = heapNode.data.approach + current_bucket.approach;
 
-        if (new_weight - approach < EdgeWeight{0})
+        const auto graph_weight = new_weight - approach;
+        const bool force_step =
+            graph_weight == EdgeWeight{0} && heapNode.data.parent == heapNode.node &&
+            current_bucket.parent_node == heapNode.node &&
+            isSourceDownstream(
+                heapNode.node, candidates, candidates_list[target_indices[column_index]]);
+
+        if (graph_weight < EdgeWeight{0} || force_step)
         {
             if (addLoopWeight(
                     facade, heapNode.node, new_weight, approach, new_duration, new_distance))
@@ -254,7 +263,9 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
                                durations_table,
                                distances_table,
                                middle_nodes_table,
-                               source_candidates);
+                               source_candidates,
+                               candidates_list,
+                               target_indices);
         }
     }
 
