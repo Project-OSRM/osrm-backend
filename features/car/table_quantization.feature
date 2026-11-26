@@ -152,3 +152,100 @@ Feature: Table routes between nearby points with equal rounded weights
             |   | 4          |
             | 4 | 0          |
             | 5 | 3900 +- 50 |
+
+    # The weight is the distance, so the signal at q adds duration but no weight.
+    # 7 and 8 are both at q: 7 is before the signal and 8 is after it. The route
+    # from 8 to 7 must go back through the signal, so it is not possible.
+    Scenario: A traffic signal between two points at one node keeps their order
+        Given the profile file "car" initialized with
+        """
+        profile.properties.weight_name = 'distance'
+        """
+        And the node locations
+            | node | lon    | lat   |
+            | p    | -0.001 | 0     |
+            | q    | 0      | 0     |
+            | r    | 0.001  | 0.001 |
+            | 7    | 0      | 0     |
+            | 8    | 0      | 0     |
+            | 9    | 0      | 0     |
+        And the nodes
+            | node | highway         |
+            | q    | traffic_signals |
+        And the ways
+            | nodes | oneway |
+            | pqr   | yes    |
+        And the query options
+            | bearings | 90,10;45,10 |
+
+        When I request a travel time matrix I should get
+            |   | 7 | 8 |
+            | 7 | 0 | 2 |
+            | 8 |   | 0 |
+        When I request a travel distance matrix I should get
+            |   | 7 | 8 |
+            | 7 | 0 | 0 |
+            | 8 |   | 0 |
+
+        # Non-square requests list destination coordinates before source coordinates.
+        Given the query options
+            | bearings | 90,10;45,10;45,10 |
+        When I request a travel time matrix I should get
+            |   | 7 | 8 |
+            | 8 |   | 0 |
+
+        Given the query options
+            | bearings | 90,10;90,10;45,10 |
+        When I request a travel time matrix I should get
+            |   | 7 |
+            | 7 | 0 |
+            | 8 |   |
+
+        Given the query options
+            | bearings | 90,10;45,10;90,10;45,10;90,10 |
+        When I request a travel time matrix I should get
+            |   | 7 | 8 |
+            | 7 | 0 | 2 |
+            | 8 |   | 0 |
+            | 9 | 0 | 2 |
+
+    # The same road with oneway=-1, so traffic moves from r to p. Now 8 is before
+    # the signal and 7 is after it. The route from 7 to 8 is not possible.
+    Scenario: A traffic signal between two points at one node keeps their order on a reversed one-way road
+        Given the profile file "car" initialized with
+        """
+        profile.properties.weight_name = 'distance'
+        """
+        And the node locations
+            | node | lon    | lat   |
+            | p    | -0.001 | 0     |
+            | q    | 0      | 0     |
+            | r    | 0.001  | 0.001 |
+            | 7    | 0      | 0     |
+            | 8    | 0      | 0     |
+        And the nodes
+            | node | highway         |
+            | q    | traffic_signals |
+        And the ways
+            | nodes | oneway |
+            | pqr   | -1     |
+        And the query options
+            | bearings | 270,10;225,10 |
+
+        When I request a travel time matrix I should get
+            |   | 7 | 8 |
+            | 7 | 0 |   |
+            | 8 | 2 | 0 |
+
+        Given the query options
+            | bearings | 270,10;225,10;270,10 |
+        When I request a travel time matrix I should get
+            |   | 7 | 8 |
+            | 7 | 0 |   |
+
+        Given the query options
+            | bearings | 225,10;270,10;225,10 |
+        When I request a travel time matrix I should get
+            |   | 8 |
+            | 7 |   |
+            | 8 | 0 |
