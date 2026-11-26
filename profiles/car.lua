@@ -77,33 +77,55 @@ function setup()
     -- The weight unit is the gram of CO2.
     co2 = {
       -- Emission factor (g CO2/km) by travel speed (km/h), linearly interpolated
-      -- and clamped outside the range. The default values are indicative: they
-      -- follow the usual U shape of hot emission curves for an average recent
-      -- passenger car (high at low speed, lowest around 60-80 km/h, rising with
-      -- aerodynamic drag). Replace them with the curve of your fleet, e.g. from
-      -- COPERT or HBEFA, before relying on absolute values.
+      -- and clamped outside the range.
+      --
+      -- Default: COPERT hot emissions of a medium petrol passenger car, Euro 6 d/e.
+      -- Source: EMEP/EEA air pollutant emission inventory guidebook, chapter
+      -- 1.A.3.b.i-iv Road transport, Appendix 4 "Emission Factors" (July 2026
+      -- file, COPERT 5.10.1), sheet HOT_EMISSIONS_PARAMETERS, row
+      -- Passenger Cars / Petrol / Medium / Euro 6 d/e / pollutant EC (energy
+      -- consumption). The GDI, PFI and GDI+GPF technologies share the same row.
+      --
+      -- 1. Energy consumption in MJ/km, guidebook equation (25), valid 5-130 km/h:
+      --      EC(V) = (A*V^2 + B*V + C + D/V) / (E*V^2 + F*V + G) * (1 - RF)
+      --      A = 1.31723006778538e-4    B = 5.4859592952839e-3   C = 2.6191950512566
+      --      D = 1.72774612390592e-9    E = -8.50415012699799e-5 F = 2.3584384067406e-2
+      --      G = 0.344297577833879      RF = 0.23196729231897276
+      -- 2. Conversion to CO2 with the guidebook values for petrol:
+      --      g CO2/km = EC / 43.774 MJ/kg (Table 3-28) * 3.169 kg CO2/kg fuel (Table 3-29) * 1000
+      -- 3. Sampled at the speeds below and rounded to 0.1 g/km. The linear
+      --    interpolation stays within 1.4 % of the formula between 5 and 130 km/h.
+      --
+      -- These are hot emissions on a flat road with an average load: no cold
+      -- start, no slope, no traffic. To model another vehicle, apply steps 1-3 to
+      -- its row of the same sheet (e.g. Light Commercial Vehicles / Diesel /
+      -- N1-III for a large diesel van, with 42.695 MJ/kg for diesel).
       curve = {
-        {  5, 420 },
-        { 10, 300 },
-        { 20, 215 },
-        { 30, 178 },
-        { 40, 158 },
-        { 50, 146 },
-        { 60, 139 },
-        { 70, 136 },
-        { 80, 137 },
-        { 90, 142 },
-        { 100, 150 },
-        { 110, 161 },
-        { 120, 174 },
-        { 130, 189 },
+        {   5, 320.2 },
+        {  10, 261.4 },
+        {  15, 223.7 },
+        {  20, 197.8 },
+        {  30, 165.5 },
+        {  40, 147.2 },
+        {  50, 136.7 },
+        {  60, 131.0 },
+        {  70, 128.5 },
+        {  80, 128.6 },
+        {  90, 130.7 },
+        { 100, 134.6 },
+        { 110, 140.2 },
+        { 120, 147.6 },
+        { 130, 156.6 },
       },
       -- Emissions per second spent waiting at turns, traffic signals, stops and
-      -- barriers, and on ways with a fixed duration (order of magnitude of an
-      -- idling petrol engine, about 0.8 l/h).
+      -- barriers, and on ways with a fixed duration. COPERT has no idle factor
+      -- (its curves start at 5 km/h). 0.5 g/s is a petrol engine idling at about
+      -- 0.8 l/h: 0.8 l/h * 0.75 kg/l * 3.169 kg CO2/kg / 3600 = 0.53 g/s. This is
+      -- consistent with the curve above at 5 km/h: 320.2 g/km * 5 / 3600 = 0.44 g/s.
       idle_g_per_s = 0.5,
       -- Emissions allocated to the car per second on a ferry or shuttle train.
-      -- Kept equal to idling by default so that ferries do not become free shortcuts.
+      -- This is a modelling choice, not an emission measurement: it is kept equal
+      -- to idling so that ferries do not become free shortcuts.
       ferry_g_per_s = 0.5,
     },
 

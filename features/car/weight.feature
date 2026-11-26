@@ -112,7 +112,7 @@ Feature: Car - weights
 
         When I route I should get
             | from | to | route        | weight |
-            | s    | e  | sa,apb,be,be | 1529.6 |
+            | s    | e  | sa,apb,be,be | 1441.6 |
 
     Scenario: Routability CO2 weights prefer moderate speeds
         Given the profile file "car" initialized with
@@ -139,7 +139,7 @@ Feature: Car - weights
 
         When I route I should get
             | from | to | route        | weight |
-            | s    | e  | sa,apb,be,be | 1529.6 |
+            | s    | e  | sa,apb,be,be | 1441.6 |
 
     Scenario: CO2 weights ignore accessibility penalties
         # same map, the primary road is narrow (width=3): 'co2' ignores the accessibility
@@ -168,7 +168,7 @@ Feature: Car - weights
 
         When I route I should get
             | from | to | route        | weight |
-            | s    | e  | sa,apb,be,be | 1529.6 |
+            | s    | e  | sa,apb,be,be | 1441.6 |
 
     Scenario: Routability CO2 weights apply accessibility penalties
         Given the profile file "car" initialized with
@@ -195,7 +195,7 @@ Feature: Car - weights
 
         When I route I should get
             | from | to | route       | weight |
-            | s    | e  | sa,ab,be,be | 1851.1 |
+            | s    | e  | sa,ab,be,be | 1711.1 |
 
     Scenario: CO2 weights on a ferry follow the duration on board
         Given the profile file "car" initialized with
@@ -218,4 +218,4 @@ Feature: Car - weights
 
         When I route I should get
             | from | to | route       | weight |
-            | s    | e  | sa,ab,be,be | 978.8  |
+            | s    | e  | sa,ab,be,be | 972.8  |

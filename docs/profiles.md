@@ -106,8 +106,11 @@ when entering a way with restricted access.
 The CO2 weights use the `co2` table of the profile:
 
 - `curve`: emission factor in g/km by travel speed in km/h, linearly interpolated and clamped at both
-  ends. The rate of a way is `1000 / grams_per_km(speed)` meters per gram. The default curve is
-  indicative and should be replaced by the curve of the actual fleet (COPERT, HBEFA...).
+  ends. The rate of a way is `1000 / grams_per_km(speed)` meters per gram. The default curve is the
+  COPERT hot emission curve of a medium petrol passenger car, Euro 6 d/e (EMEP/EEA air pollutant
+  emission inventory guidebook, chapter 1.A.3.b.i-iv, Appendix 4, energy consumption converted to CO2
+  with the guidebook petrol values). The comment above `curve` in `car.lua` gives the coefficients and
+  the steps, so the curve of another vehicle category can be computed the same way.
 - `idle_g_per_s`: grams per second spent at turns, traffic signals, stops, barriers and on ways with a
   fixed duration (movable bridges).
 - `ferry_g_per_s`: grams per second on board a ferry or a shuttle train.
