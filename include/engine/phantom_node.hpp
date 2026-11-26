@@ -52,6 +52,7 @@ struct PhantomNode
           forward_duration(MAXIMAL_EDGE_DURATION), reverse_duration(MAXIMAL_EDGE_DURATION),
           forward_duration_offset{0}, reverse_duration_offset{0}, approach_weight{0},
           approach_duration{0}, approach_distance{0}, component({INVALID_COMPONENTID, 0}),
+          order_ratio{0}, forward_order_segment{0}, reverse_order_segment{0},
           fwd_segment_position(0), is_valid_forward_source{false}, is_valid_forward_target{false},
           is_valid_reverse_source{false}, is_valid_reverse_target{false}, bearing(0)
 
@@ -203,6 +204,9 @@ struct PhantomNode
                          bool is_valid_reverse_target,
                          const util::Coordinate location,
                          const util::Coordinate input_location,
+                         const double order_ratio,
+                         const unsigned short forward_order_segment,
+                         const unsigned short reverse_order_segment,
                          const unsigned short bearing)
         : forward_segment_id{other.forward_segment_id},
           reverse_segment_id{other.reverse_segment_id}, forward_weight{forward_weight},
@@ -213,7 +217,9 @@ struct PhantomNode
           reverse_duration{reverse_duration}, forward_duration_offset{forward_duration_offset},
           reverse_duration_offset{reverse_duration_offset}, approach_weight{0},
           approach_duration{0}, approach_distance{0}, component{component.id, component.is_tiny},
-          location{location}, input_location{input_location},
+          location{location}, input_location{input_location}, order_ratio{order_ratio},
+          forward_order_segment{forward_order_segment},
+          reverse_order_segment{reverse_order_segment},
           fwd_segment_position{other.fwd_segment_position},
           is_valid_forward_source{is_valid_forward_source},
           is_valid_forward_target{is_valid_forward_target},
@@ -256,6 +262,15 @@ struct PhantomNode
 
     util::Coordinate location; // this is the coordinate of x
     util::Coordinate input_location;
+    // The exact position of the point, to put two points on one road in order when
+    // their rounded coordinates and offsets are equal. The order segments count the
+    // segments before the point that have a length, a weight or a duration in each
+    // direction. order_ratio is the exact ratio on the segment of the point, and the
+    // end of a segment is ratio 0 on the next segment. Thus two points at the same
+    // position have equal offsets.
+    double order_ratio;
+    unsigned short forward_order_segment;
+    unsigned short reverse_order_segment;
     unsigned short fwd_segment_position;
     // is phantom node valid to be used as source or target
   private:
@@ -266,7 +281,7 @@ struct PhantomNode
     unsigned short bearing : 12;
 };
 
-static_assert(sizeof(PhantomNode) == 92, "PhantomNode has more padding than expected");
+static_assert(sizeof(PhantomNode) == 104, "PhantomNode has more padding than expected");
 
 using PhantomNodeCandidates = std::vector<PhantomNode>;
 using PhantomCandidateAlternatives = std::pair<PhantomNodeCandidates, PhantomNodeCandidates>;

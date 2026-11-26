@@ -369,15 +369,24 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                                 SegmentDuration{0}));
 
         EdgeDistance forward_distance_offset = {0};
-        // Sum up the distance from the start to the fwd_segment_position
-        for (auto current = forward_geometry.begin();
-             current < forward_geometry.begin() + data.fwd_segment_position;
-             ++current)
+        // A segment without length, weight and duration does not separate two points.
+        unsigned short forward_order_segment = 0;
+        unsigned short reverse_order_segment = 0;
+        for (std::size_t segment = 0; segment < data.fwd_segment_position; ++segment)
         {
+            const auto from = datafacade.GetCoordinateOfNode(forward_geometry[segment]);
+            const auto to = datafacade.GetCoordinateOfNode(forward_geometry[segment + 1]);
             forward_distance_offset +=
-                to_alias<EdgeDistance>(util::coordinate_calculation::greatCircleDistance(
-                    datafacade.GetCoordinateOfNode(*current),
-                    datafacade.GetCoordinateOfNode(*std::next(current))));
+                to_alias<EdgeDistance>(util::coordinate_calculation::greatCircleDistance(from, to));
+
+            const bool has_length = !(from == to);
+            const auto reverse_segment = reverse_weights.size() - 1 - segment;
+            if (has_length || forward_weights[segment] != SegmentWeight{0} ||
+                forward_durations[segment] != SegmentDuration{0})
+                ++forward_order_segment;
+            if (has_length || reverse_weights[reverse_segment] != SegmentWeight{0} ||
+                reverse_durations[reverse_segment] != SegmentDuration{0})
+                ++reverse_order_segment;
         }
 
         BOOST_ASSERT(data.fwd_segment_position <
@@ -424,6 +433,15 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                 datafacade.GetCoordinateOfNode(forward_geometry[data.fwd_segment_position + 1])));
 
         ratio = std::min(1.0, std::max(0.0, ratio));
+        // Only a segment with length gives ratio 1, and its end is the start of the next
+        // segment.
+        const bool at_segment_end = ratio == 1.0;
+        const double order_ratio = at_segment_end ? 0.0 : ratio;
+        if (at_segment_end)
+        {
+            ++forward_order_segment;
+            ++reverse_order_segment;
+        }
         if (data.forward_segment_id.id != SPECIAL_SEGMENTID)
         {
             forward_weight = to_alias<EdgeWeight>(from_alias<double>(forward_weight) * ratio);
@@ -469,6 +487,9 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
                         is_reverse_valid_target,
                         point_on_segment,
                         input_coordinate,
+                        order_ratio,
+                        forward_order_segment,
+                        reverse_order_segment,
                         static_cast<unsigned short>(util::coordinate_calculation::bearing(
                             coordinates[data.u], coordinates[data.v]))},
             current_perpendicular_distance};

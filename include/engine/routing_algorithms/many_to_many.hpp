@@ -12,6 +12,7 @@
 
 #include <algorithm>
 #include <tuple>
+#include <utility>
 #include <vector>
 
 namespace osrm::engine::routing_algorithms
@@ -46,16 +47,15 @@ inline bool isSourceDownstream(const NodeID node,
     BOOST_ASSERT(source != sources.end());
     BOOST_ASSERT(target != targets.end());
 
-    // Every geometry segment weighs at least 1, so a zero graph weight leaves no
-    // segment between the two positions: one coordinate is one place.
-    if (source->location == target->location)
-        return false;
-
     // Both phantoms lie on node, so they share its direction of travel.
-    const auto source_position = std::tie(source->fwd_segment_position, source->forward_distance);
-    const auto target_position = std::tie(target->fwd_segment_position, target->forward_distance);
     const bool forward = source->IsValidForwardSource() && source->forward_segment_id.id == node;
-    return forward ? source_position > target_position : source_position < target_position;
+    const auto position = [forward](const PhantomNode &phantom)
+    {
+        return std::make_pair(forward ? phantom.forward_order_segment
+                                      : phantom.reverse_order_segment,
+                              phantom.order_ratio);
+    };
+    return forward ? position(*source) > position(*target) : position(*source) < position(*target);
 }
 
 struct NodeBucket
