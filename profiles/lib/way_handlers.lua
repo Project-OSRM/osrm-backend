@@ -680,38 +680,38 @@ function WayHandlers.co2_weights(profile,way,result,data)
     backward_penalty = data.backward_penalty or 1
   end
 
-  -- on ferries and shuttle trains the engine is off: the emissions are the share
-  -- allocated to the car by the carrier, per second on board
-  local function grams_per_s(way_mode)
-    if way_mode == mode.ferry then
-      return profile.co2.ferry_g_per_s
-    end
-    return profile.co2.idle_g_per_s
+  local way_mode = result.forward_mode
+  if way_mode == mode.inaccessible then
+    way_mode = result.backward_mode
   end
 
-  -- ways with a fixed duration (ferries, movable bridges): emissions follow the duration
-  if result.duration > 0 and forward_penalty == backward_penalty then
-    local way_mode = result.forward_mode
-    if way_mode == mode.inaccessible then
-      way_mode = result.backward_mode
+  -- on ferries and shuttle trains the engine is off: the emissions are the share
+  -- allocated to the vehicle by the carrier, per km on board. The weight follows
+  -- the length of the way, even when its duration is fixed by a duration tag.
+  if way_mode == mode.ferry then
+    local ferry_rate = 1000 / profile.co2.ferry_g_per_km
+    result.weight = -1
+    if result.forward_mode ~= mode.inaccessible then
+      result.forward_rate = ferry_rate * forward_penalty
     end
-    result.weight = result.duration * grams_per_s(way_mode) / forward_penalty
+    if result.backward_mode ~= mode.inaccessible then
+      result.backward_rate = ferry_rate * backward_penalty
+    end
     return
   end
 
-  local function rate(way_mode, speed)
-    if way_mode == mode.ferry then
-      return speed / 3.6 / grams_per_s(way_mode)
-    end
-    return Co2.rate(profile, speed)
+  -- other ways with a fixed duration (movable bridges): emissions follow the duration
+  if result.duration > 0 and forward_penalty == backward_penalty then
+    result.weight = result.duration * profile.co2.idle_g_per_s / forward_penalty
+    return
   end
 
   result.weight = -1
   if result.forward_mode ~= mode.inaccessible and result.forward_speed > 0 then
-    result.forward_rate = rate(result.forward_mode, result.forward_speed) * forward_penalty
+    result.forward_rate = Co2.rate(profile, result.forward_speed) * forward_penalty
   end
   if result.backward_mode ~= mode.inaccessible and result.backward_speed > 0 then
-    result.backward_rate = rate(result.backward_mode, result.backward_speed) * backward_penalty
+    result.backward_rate = Co2.rate(profile, result.backward_speed) * backward_penalty
   end
 end
 

@@ -113,7 +113,11 @@ The CO2 weights use the `co2` table of the profile:
   the steps, so the curve of another vehicle category can be computed the same way.
 - `idle_g_per_s`: grams per second spent at turns, traffic signals, stops, barriers and on ways with a
   fixed duration (movable bridges).
-- `ferry_g_per_s`: grams per second on board a ferry or a shuttle train.
+- `ferry_g_per_km`: grams per km on board a ferry or a shuttle train, for the vehicle with its driver.
+  The weight of these ways follows their length, even when a `duration` tag fixes their duration. The
+  default (250 g/km) is derived from the UK DESNZ 2026 ferry conversion factors, which allocate the
+  CO2 of mixed passenger and freight ferries by transported mass. The comment in `car.lua` gives the
+  computation.
 
 Speeds and durations are not changed: `duration` in the responses keeps its meaning, and with `co2` the
 route `weight` is the estimated emission in grams. With `routability-co2` the weight also contains the

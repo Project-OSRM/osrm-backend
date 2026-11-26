@@ -49,7 +49,7 @@ function Co2.validate(profile)
     end
   end
   assert(profile.co2.idle_g_per_s > 0, "co2.idle_g_per_s must be positive")
-  assert(profile.co2.ferry_g_per_s > 0, "co2.ferry_g_per_s must be positive")
+  assert(profile.co2.ferry_g_per_km > 0, "co2.ferry_g_per_km must be positive")
 end
 
 return Co2

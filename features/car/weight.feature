@@ -197,7 +197,9 @@ Feature: Car - weights
             | from | to | route       | weight |
             | s    | e  | sa,ab,be,be | 1711.1 |
 
-    Scenario: CO2 weights on a ferry follow the duration on board
+    Scenario: CO2 weights on a ferry follow the distance on board
+        # 9 km of ferry at ferry_g_per_km (250 g/km) plus the access roads:
+        # the 30 min duration of the crossing does not change the weight
         Given the profile file "car" initialized with
         """
         profile.properties.weight_name = 'co2'
@@ -218,4 +220,4 @@ Feature: Car - weights
 
         When I route I should get
             | from | to | route       | weight |
-            | s    | e  | sa,ab,be,be | 972.8  |
+            | s    | e  | sa,ab,be,be | 2327.6 |

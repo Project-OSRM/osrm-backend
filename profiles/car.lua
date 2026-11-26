@@ -123,10 +123,24 @@ function setup()
       -- 0.8 l/h: 0.8 l/h * 0.75 kg/l * 3.169 kg CO2/kg / 3600 = 0.53 g/s. This is
       -- consistent with the curve above at 5 km/h: 320.2 g/km * 5 / 3600 = 0.44 g/s.
       idle_g_per_s = 0.5,
-      -- Emissions allocated to the car per second on a ferry or shuttle train.
-      -- This is a modelling choice, not an emission measurement: it is kept equal
-      -- to idling so that ferries do not become free shortcuts.
-      ferry_g_per_s = 0.5,
+      -- Emissions allocated to the vehicle per km on board a ferry (g CO2/km), for
+      -- a car with its driver only.
+      -- Source: UK DESNZ greenhouse gas conversion factors 2026 (flat file),
+      -- "Business travel- sea / Ferry", CO2 per passenger.km:
+      --   foot passenger 0.01848 kg, car passenger 0.12774 kg.
+      -- DESNZ allocates the CO2 of mixed passenger and freight (RoPax) ferries by
+      -- transported mass, with 1.25 t per car and 0.1 t per passenger and luggage
+      -- (methodology report 2026, section 7.5-7.10, Table 31). Its car passenger
+      -- factor is per person, the car being shared between its occupants.
+      -- The factor per vehicle is derived from the same mass allocation:
+      -- 1. CO2 per tonne.km = 0.01848 kg / 0.1 t = 0.1848 kg (foot passenger)
+      -- 2. car + driver = (1.25 t + 0.1 t) * 0.1848 kg = 0.249 kg per km -> 250 g/km
+      -- Check: the car passenger factor corresponds to 2.1 occupants per car,
+      -- (0.1 + 1.25 / 2.1) * 0.1848 = 0.128 kg.
+      -- Limits: DESNZ data comes from UK RoPax routes (2007 study). Fast ferries
+      -- and passenger-only ferries emit significantly more. Shuttle trains
+      -- (route=shuttle_train) also use this factor, although they are electric.
+      ferry_g_per_km = 250,
     },
 
     -- Optional: upper limit for all speeds (e.g., 87 for trucks)
