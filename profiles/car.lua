@@ -12,6 +12,7 @@ resolve_access = require("lib/access").resolve_access
 limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
 Measure = require("lib/measure")
+Co2 = require("lib/co2")
 
 local access_tags = {'motorcar', 'motor_vehicle', 'vehicle', 'access'}
 
@@ -25,6 +26,10 @@ function setup()
       -- weight_name                     = 'duration',
       -- For shortest distance without penalties for accessibility
       -- weight_name                     = 'distance',
+      -- For lowest CO2 emissions (grams, see the co2 table below) without penalties for accessibility
+      -- weight_name                     = 'co2',
+      -- For lowest CO2 emissions, weighted like 'routability' for preferring certain roads
+      -- weight_name                     = 'routability-co2',
       process_call_tagless_node      = false,
       u_turn_penalty                 = 20,
       continue_straight_at_waypoint  = true,
@@ -67,6 +72,76 @@ function setup()
     -- Size of the vehicle, to be limited mostly by legal restriction of the way
     vehicle_length = 4.8, -- in meters, 4.8m is the length of large or family car
     vehicle_weight = 2000, -- in kilograms
+
+    -- CO2 emission model, used only by the 'co2' and 'routability-co2' weights.
+    -- The weight unit is the gram of CO2.
+    co2 = {
+      -- Emission factor (g CO2/km) by travel speed (km/h), linearly interpolated
+      -- and clamped outside the range.
+      --
+      -- Default: COPERT hot emissions of a medium petrol passenger car, Euro 6 d/e.
+      -- Source: EMEP/EEA air pollutant emission inventory guidebook, chapter
+      -- 1.A.3.b.i-iv Road transport, Appendix 4 "Emission Factors" (July 2026
+      -- file, COPERT 5.10.1), sheet HOT_EMISSIONS_PARAMETERS, row
+      -- Passenger Cars / Petrol / Medium / Euro 6 d/e / pollutant EC (energy
+      -- consumption). The GDI, PFI and GDI+GPF technologies share the same row.
+      --
+      -- 1. Energy consumption in MJ/km, guidebook equation (25), valid 5-130 km/h:
+      --      EC(V) = (A*V^2 + B*V + C + D/V) / (E*V^2 + F*V + G) * (1 - RF)
+      --      A = 1.31723006778538e-4    B = 5.4859592952839e-3   C = 2.6191950512566
+      --      D = 1.72774612390592e-9    E = -8.50415012699799e-5 F = 2.3584384067406e-2
+      --      G = 0.344297577833879      RF = 0.23196729231897276
+      -- 2. Conversion to CO2 with the guidebook values for petrol:
+      --      g CO2/km = EC / 43.774 MJ/kg (Table 3-28) * 3.169 kg CO2/kg fuel (Table 3-29) * 1000
+      -- 3. Sampled at the speeds below and rounded to 0.1 g/km. The linear
+      --    interpolation stays within 1.4 % of the formula between 5 and 130 km/h.
+      --
+      -- These are hot emissions on a flat road with an average load: no cold
+      -- start, no slope, no traffic. To model another vehicle, apply steps 1-3 to
+      -- its row of the same sheet (e.g. Light Commercial Vehicles / Diesel /
+      -- N1-III for a large diesel van, with 42.695 MJ/kg for diesel).
+      curve = {
+        {   5, 320.2 },
+        {  10, 261.4 },
+        {  15, 223.7 },
+        {  20, 197.8 },
+        {  30, 165.5 },
+        {  40, 147.2 },
+        {  50, 136.7 },
+        {  60, 131.0 },
+        {  70, 128.5 },
+        {  80, 128.6 },
+        {  90, 130.7 },
+        { 100, 134.6 },
+        { 110, 140.2 },
+        { 120, 147.6 },
+        { 130, 156.6 },
+      },
+      -- Emissions per second spent waiting at turns, traffic signals, stops and
+      -- barriers, and on ways with a fixed duration. COPERT has no idle factor
+      -- (its curves start at 5 km/h). 0.5 g/s is a petrol engine idling at about
+      -- 0.8 l/h: 0.8 l/h * 0.75 kg/l * 3.169 kg CO2/kg / 3600 = 0.53 g/s. This is
+      -- consistent with the curve above at 5 km/h: 320.2 g/km * 5 / 3600 = 0.44 g/s.
+      idle_g_per_s = 0.5,
+      -- Emissions allocated to the vehicle per km on board a ferry (g CO2/km), for
+      -- a car with its driver only.
+      -- Source: UK DESNZ greenhouse gas conversion factors 2026 (flat file),
+      -- "Business travel- sea / Ferry", CO2 per passenger.km:
+      --   foot passenger 0.01848 kg, car passenger 0.12774 kg.
+      -- DESNZ allocates the CO2 of mixed passenger and freight (RoPax) ferries by
+      -- transported mass, with 1.25 t per car and 0.1 t per passenger and luggage
+      -- (methodology report 2026, section 7.5-7.10, Table 31). Its car passenger
+      -- factor is per person, the car being shared between its occupants.
+      -- The factor per vehicle is derived from the same mass allocation:
+      -- 1. CO2 per tonne.km = 0.01848 kg / 0.1 t = 0.1848 kg (foot passenger)
+      -- 2. car + driver = (1.25 t + 0.1 t) * 0.1848 kg = 0.249 kg per km -> 250 g/km
+      -- Check: the car passenger factor corresponds to 2.1 occupants per car,
+      -- (0.1 + 1.25 / 2.1) * 0.1848 = 0.128 kg.
+      -- Limits: DESNZ data comes from UK RoPax routes (2007 study). Fast ferries
+      -- and passenger-only ferries emit significantly more. Shuttle trains
+      -- (route=shuttle_train) also use this factor, although they are electric.
+      ferry_g_per_km = 250,
+    },
 
     -- Optional: upper limit for all speeds (e.g., 87 for trucks)
     -- When set, no derived speed will exceed this value
@@ -651,11 +726,14 @@ function process_turn(profile, turn)
   -- for distance based routing we don't want to have penalties based on turn angle
   if weight_name == 'distance' then
      turn.weight = 0
+  elseif weight_name == 'co2' or weight_name == 'routability-co2' then
+     -- time lost at the turn is converted into idling emissions (grams of CO2)
+     turn.weight = duration * profile.co2.idle_g_per_s
   else
      turn.weight = duration
   end
 
-  if weight_name == 'routability' then
+  if weight_name == 'routability' or weight_name == 'routability-co2' then
       -- penalize turns from non-local access only segments onto local access only tags
       if not turn.source_restricted and turn.target_restricted then
           turn.weight = constants.max_turn_weight

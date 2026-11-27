@@ -84,3 +84,159 @@ Feature: Car - weights
             | a,b       | 90 90    | abc,abc   | 200m     | 200,0     | 11.1s,0s       |
             | b,c       | 90 90    | abc,abc   | 200m     | 200,0     | 11.1s,0s       |
             | a,d       | 90 180   | abc,bd,bd | 400m     | 200,200,0 | 13.2s,11.1s,0s |
+
+    Scenario: CO2 weights prefer moderate speeds
+        # three parallel routes from a to b: ab residential 9 km (25 km/h, fewest meters),
+        # apb primary 10.5 km (64 km/h, lowest emissions), amb motorway 12.5 km (104 km/h, fastest)
+        Given the profile file "car" initialized with
+        """
+        profile.properties.weight_name = 'co2'
+        """
+
+        Given the node locations
+            | node | lat      | lon     |
+            | s    | 45.00000 | 4.99746 |
+            | a    | 45.00000 | 5.00000 |
+            | b    | 45.00000 | 5.11434 |
+            | e    | 45.00000 | 5.11688 |
+            | p    | 45.02446 | 5.05717 |
+            | m    | 44.96077 | 5.05717 |
+
+        And the ways
+            | nodes | highway     | maxspeed |
+            | sa    | residential |          |
+            | be    | residential |          |
+            | ab    | residential |          |
+            | apb   | primary     | 80       |
+            | amb   | motorway    | 130      |
+
+        When I route I should get
+            | from | to | route        | weight |
+            | s    | e  | sa,apb,be,be | 1441.6 |
+
+    Scenario: Routability CO2 weights prefer moderate speeds
+        Given the profile file "car" initialized with
+        """
+        profile.properties.weight_name = 'routability-co2'
+        """
+
+        Given the node locations
+            | node | lat      | lon     |
+            | s    | 45.00000 | 4.99746 |
+            | a    | 45.00000 | 5.00000 |
+            | b    | 45.00000 | 5.11434 |
+            | e    | 45.00000 | 5.11688 |
+            | p    | 45.02446 | 5.05717 |
+            | m    | 44.96077 | 5.05717 |
+
+        And the ways
+            | nodes | highway     | maxspeed |
+            | sa    | residential |          |
+            | be    | residential |          |
+            | ab    | residential |          |
+            | apb   | primary     | 80       |
+            | amb   | motorway    | 130      |
+
+        When I route I should get
+            | from | to | route        | weight |
+            | s    | e  | sa,apb,be,be | 1441.6 |
+
+    Scenario: CO2 weights ignore accessibility penalties
+        # same map, the primary road is narrow (width=3): 'co2' ignores the accessibility
+        # penalty, 'routability-co2' applies it and falls back to the residential road
+        Given the profile file "car" initialized with
+        """
+        profile.properties.weight_name = 'co2'
+        """
+
+        Given the node locations
+            | node | lat      | lon     |
+            | s    | 45.00000 | 4.99746 |
+            | a    | 45.00000 | 5.00000 |
+            | b    | 45.00000 | 5.11434 |
+            | e    | 45.00000 | 5.11688 |
+            | p    | 45.02446 | 5.05717 |
+            | m    | 44.96077 | 5.05717 |
+
+        And the ways
+            | nodes | highway     | maxspeed | width |
+            | sa    | residential |          |       |
+            | be    | residential |          |       |
+            | ab    | residential |          |       |
+            | apb   | primary     | 80       | 3     |
+            | amb   | motorway    | 130      |       |
+
+        When I route I should get
+            | from | to | route        | weight |
+            | s    | e  | sa,apb,be,be | 1441.6 |
+
+    Scenario: Routability CO2 weights apply accessibility penalties
+        Given the profile file "car" initialized with
+        """
+        profile.properties.weight_name = 'routability-co2'
+        """
+
+        Given the node locations
+            | node | lat      | lon     |
+            | s    | 45.00000 | 4.99746 |
+            | a    | 45.00000 | 5.00000 |
+            | b    | 45.00000 | 5.11434 |
+            | e    | 45.00000 | 5.11688 |
+            | p    | 45.02446 | 5.05717 |
+            | m    | 44.96077 | 5.05717 |
+
+        And the ways
+            | nodes | highway     | maxspeed | width |
+            | sa    | residential |          |       |
+            | be    | residential |          |       |
+            | ab    | residential |          |       |
+            | apb   | primary     | 80       | 3     |
+            | amb   | motorway    | 130      |       |
+
+        When I route I should get
+            | from | to | route       | weight |
+            | s    | e  | sa,ab,be,be | 1711.1 |
+
+    Scenario: CO2 weights on a ferry follow the distance on board
+        # 9 km of ferry at ferry_g_per_km (250 g/km) plus the access roads:
+        # the 30 min duration of the crossing does not change the weight
+        Given the profile file "car" initialized with
+        """
+        profile.properties.weight_name = 'co2'
+        """
+
+        Given the node locations
+            | node | lat      | lon     |
+            | s    | 45.00000 | 4.99746 |
+            | a    | 45.00000 | 5.00000 |
+            | b    | 45.00000 | 5.11434 |
+            | e    | 45.00000 | 5.11688 |
+
+        And the ways
+            | nodes | highway     | route | duration |
+            | sa    | residential |       |          |
+            | be    | residential |       |          |
+            | ab    | (nil)       | ferry | 00:30    |
+
+        When I route I should get
+            | from | to | route       | weight |
+            | s    | e  | sa,ab,be,be | 2327.6 |
+
+    Scenario: CO2 weights reject an invalid configuration set after setup
+        Given the profile file "car" initialized with
+        """
+        profile.properties.weight_name = 'co2'
+        profile.co2.ferry_g_per_km = 0
+        """
+        And the node map
+            """
+            a b
+            """
+        And the ways
+            | nodes |
+            | ab    |
+        And the data has been saved to disk
+
+        When I try to run "osrm-extract --profile {profile_file} {osm_file}"
+        Then it should exit with an error
+        And stderr should contain "co2.ferry_g_per_km must be positive"
