@@ -1,6 +1,8 @@
 #include "engine/routing_algorithms/many_to_many.hpp"
 #include "engine/routing_algorithms/routing_base_ch.hpp"
+#include "engine/routing_algorithms/single_target_early_stop.hpp"
 
+#include <array>
 #include <boost/assert.hpp>
 #include <ranges>
 
@@ -46,12 +48,13 @@ inline bool addLoopWeight(const DataFacade<ch::Algorithm> &facade,
     return false;
 }
 
-template <bool DIRECTION>
+template <bool DIRECTION, bool TRACK_METRICS = false>
 void relaxOutgoingEdges(
     const DataFacade<Algorithm> &facade,
     const typename SearchEngineData<Algorithm>::ManyToManyQueryHeap::HeapNode &heapNode,
     SearchEngineData<Algorithm>::ManyToManyQueryHeap &query_heap,
-    const PhantomNodeCandidates &)
+    const PhantomNodeCandidates &,
+    SingleTargetEarlyStop *bound = nullptr)
 {
     if (stallAtNode<DIRECTION>(facade, heapNode, query_heap))
     {
@@ -70,6 +73,10 @@ void relaxOutgoingEdges(
             const auto edge_distance = data.distance;
 
             BOOST_ASSERT_MSG(edge_weight > EdgeWeight{0}, "edge_weight invalid");
+            if constexpr (TRACK_METRICS)
+            {
+                BOOST_ASSERT(edge_duration >= 0 && edge_distance >= EdgeDistance{0});
+            }
             const auto to_weight = heapNode.weight + edge_weight;
             const auto to_duration = heapNode.data.duration + to_alias<EdgeDuration>(edge_duration);
             const auto to_distance = heapNode.data.distance + edge_distance;
@@ -78,6 +85,10 @@ void relaxOutgoingEdges(
             // New Node discovered -> Add to Heap + Node Info Storage
             if (!toHeapNode)
             {
+                if constexpr (TRACK_METRICS)
+                {
+                    bound->insertLabel(to_duration, to_distance);
+                }
                 query_heap.Insert(
                     to,
                     to_weight,
@@ -87,6 +98,11 @@ void relaxOutgoingEdges(
             else if (std::tie(to_weight, to_duration) <
                      std::tie(toHeapNode->weight, toHeapNode->data.duration))
             {
+                if constexpr (TRACK_METRICS)
+                {
+                    bound->removeLabel(toHeapNode->data.duration, toHeapNode->data.distance);
+                    bound->insertLabel(to_duration, to_distance);
+                }
                 toHeapNode->data = {
                     heapNode.node, to_duration, to_distance, heapNode.data.approach};
                 toHeapNode->weight = to_weight;
@@ -96,6 +112,7 @@ void relaxOutgoingEdges(
     }
 }
 
+template <bool TRACK_METRICS = false>
 void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         const std::size_t row_index,
                         const std::size_t number_of_targets,
@@ -105,11 +122,16 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
                         std::vector<EdgeDuration> &durations_table,
                         std::vector<EdgeDistance> &distances_table,
                         std::vector<NodeID> &middle_nodes_table,
-                        const PhantomNodeCandidates &candidates)
+                        const PhantomNodeCandidates &candidates,
+                        SingleTargetEarlyStop *bound = nullptr)
 {
     // Take a copy of the extracted node because otherwise could be modified later if toHeapNode is
     // the same
     const auto heapNode = query_heap.DeleteMinGetHeapNode();
+    if constexpr (TRACK_METRICS)
+    {
+        bound->removeLabel(heapNode.data.duration, heapNode.data.distance);
+    }
 
     // Check if each encountered node has an entry
     const auto &bucket_list = std::equal_range(search_space_with_buckets.begin(),
@@ -160,7 +182,8 @@ void forwardRoutingStep(const DataFacade<Algorithm> &facade,
         }
     }
 
-    relaxOutgoingEdges<FORWARD_DIRECTION>(facade, heapNode, query_heap, candidates);
+    relaxOutgoingEdges<FORWARD_DIRECTION, TRACK_METRICS>(
+        facade, heapNode, query_heap, candidates, bound);
 }
 
 void backwardRoutingStep(const DataFacade<Algorithm> &facade,
@@ -183,6 +206,39 @@ void backwardRoutingStep(const DataFacade<Algorithm> &facade,
                                            heapNode.data.approach);
 
     relaxOutgoingEdges<REVERSE_DIRECTION>(facade, heapNode, query_heap, candidates);
+}
+
+template <bool SOURCE> bool hasDuplicateSeeds(const PhantomNodeCandidates &candidates)
+{
+    const auto ids = [](const PhantomNode &candidate)
+    {
+        const bool forward =
+            SOURCE ? candidate.IsValidForwardSource() : candidate.IsValidForwardTarget();
+        const bool reverse =
+            SOURCE ? candidate.IsValidReverseSource() : candidate.IsValidReverseTarget();
+        return std::array{forward ? candidate.forward_segment_id.id : SPECIAL_NODEID,
+                          reverse ? candidate.reverse_segment_id.id : SPECIAL_NODEID};
+    };
+    for (std::size_t i = 0; i < candidates.size(); ++i)
+    {
+        const auto current = ids(candidates[i]);
+        if (current[0] != SPECIAL_NODEID && current[0] == current[1])
+        {
+            return true;
+        }
+        for (std::size_t j = 0; j < i; ++j)
+        {
+            const auto previous = ids(candidates[j]);
+            for (const auto node : current)
+            {
+                if (node != SPECIAL_NODEID && (node == previous[0] || node == previous[1]))
+                {
+                    return true;
+                }
+            }
+        }
+    }
+    return false;
 }
 
 } // namespace ch
@@ -230,6 +286,29 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
     // Order lookup buckets
     std::sort(search_space_with_buckets.begin(), search_space_with_buckets.end());
 
+    const bool single_target =
+        number_of_targets == 1 && !search_space_with_buckets.empty() &&
+        !ch::hasDuplicateSeeds<false>(candidates_list[target_indices.front()]) &&
+        facade.hasNonnegativeTurnDurations();
+    ch::SingleTargetEarlyStop target_bound;
+    if (single_target)
+    {
+        for (const auto &candidate : candidates_list[target_indices.front()])
+        {
+            if (candidate.IsValidForwardTarget() || candidate.IsValidReverseTarget())
+            {
+                target_bound.addTargetApproach(candidate.approach_weight,
+                                               candidate.approach_duration,
+                                               candidate.approach_distance);
+            }
+        }
+        for (const auto &bucket : search_space_with_buckets)
+        {
+            target_bound.addTarget(
+                bucket.weight, bucket.duration, bucket.distance, bucket.approach);
+        }
+    }
+
     // Find shortest paths from sources to all accessible nodes
     for (std::uint32_t row_index = 0; row_index < source_indices.size(); ++row_index)
     {
@@ -241,6 +320,54 @@ manyToManySearch(SearchEngineData<ch::Algorithm> &engine_working_data,
             facade.GetNumberOfNodes());
         auto &query_heap = *(engine_working_data.many_to_many_heap);
         insertSourceInHeap(query_heap, source_candidates);
+
+        if (single_target && !ch::hasDuplicateSeeds<true>(source_candidates))
+        {
+            auto bound = target_bound;
+            for (const auto &candidate : source_candidates)
+            {
+                if (candidate.IsValidForwardSource() || candidate.IsValidReverseSource())
+                {
+                    bound.addSourceApproach(candidate.approach_weight,
+                                            candidate.approach_duration,
+                                            candidate.approach_distance);
+                }
+            }
+            for (const auto &candidate : source_candidates)
+            {
+                if (candidate.IsValidForwardSource())
+                {
+                    bound.addSource(candidate.GetForwardDurationAsSource(),
+                                    candidate.GetForwardDistanceAsSource(),
+                                    candidate.approach_weight);
+                }
+                if (candidate.IsValidReverseSource())
+                {
+                    bound.addSource(candidate.GetReverseDurationAsSource(),
+                                    candidate.GetReverseDistanceAsSource(),
+                                    candidate.approach_weight);
+                }
+            }
+            while (!query_heap.Empty())
+            {
+                if (bound.shouldStop(query_heap.MinKey(), weights_table[row_index]))
+                {
+                    break;
+                }
+                forwardRoutingStep<true>(facade,
+                                         row_index,
+                                         number_of_targets,
+                                         query_heap,
+                                         search_space_with_buckets,
+                                         weights_table,
+                                         durations_table,
+                                         distances_table,
+                                         middle_nodes_table,
+                                         source_candidates,
+                                         &bound);
+            }
+            continue;
+        }
 
         // Explore search space
         while (!query_heap.Empty())
