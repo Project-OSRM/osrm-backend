@@ -112,6 +112,13 @@ export default class SharedSteps {
               got.route = (instructions || '').trim();
             }
 
+            if (headers.has('exit_numbers')) {
+              got.exit_numbers = hasRoute
+                ? this.extractInstructionList(json.routes[0], (step) =>
+                  Object.hasOwn(step.maneuver, 'exit') ? String(step.maneuver.exit) : '-')
+                : '';
+            }
+
             if (headers.has('summary')) {
               got.summary = (summary || '').trim();
             }

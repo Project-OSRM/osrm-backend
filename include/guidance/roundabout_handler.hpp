@@ -27,6 +27,7 @@ struct RoundaboutFlags
     bool on_roundabout;
     bool can_enter;
     bool can_exit_separately;
+    bool can_exit_separately_without_pushing;
 };
 } // namespace detail
 
@@ -72,8 +73,7 @@ class RoundaboutHandler final : public IntersectionHandler
     // Performs the distinction between roundabout and rotaries.
     Intersection handleRoundabouts(const RoundaboutType roundabout_type,
                                    const EdgeID via_edge,
-                                   const bool on_roundabout,
-                                   const bool can_exit_roundabout,
+                                   const detail::RoundaboutFlags flags,
                                    Intersection intersection) const;
 
     bool
