@@ -12,6 +12,7 @@
 #include <tbb/parallel_pipeline.h>
 
 #include <thread>
+#include <tuple>
 
 namespace osrm::guidance
 {
@@ -66,6 +67,9 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                                                        lane_description_map,
                                                        turn_analysis,
                                                        lane_data_map);
+
+    const auto first_dynamic_lane_description_id =
+        static_cast<LaneDescriptionID>(lane_description_map.data.size());
 
     bearing_class_by_node_based_node.resize(node_based_graph.GetNumberOfNodes(),
                                             std::numeric_limits<std::uint32_t>::max());
@@ -341,6 +345,33 @@ void annotateTurns(const util::NodeBasedDynamicGraph &node_based_graph,
                       [&turn_data_container](const auto &turn_data)
                       { turn_data_container.push_back(turn_data); });
     }
+
+    // IDs were handed out in thread arrival order, make them independent of it
+    const auto lane_description_remap = lane_description_map.Renumber(
+        first_dynamic_lane_description_id,
+        [](const auto &key) { return key; },
+        [](const auto &a, const auto &b) { return a < b; });
+    const auto lane_data_remap = lane_data_map.Renumber(
+        0,
+        [&](auto key)
+        {
+            key.second = lane_description_remap[key.second];
+            return key;
+        },
+        [](const auto &a, const auto &b)
+        {
+            return std::tie(a.first.lanes_in_turn, a.first.first_lane_from_the_right, a.second) <
+                   std::tie(b.first.lanes_in_turn, b.first.first_lane_from_the_right, b.second);
+        });
+    const auto entry_class_remap = entry_class_hash.Renumber(
+        0, [](const auto &key) { return key; }, [](const auto &a, const auto &b) { return a < b; });
+    const auto bearing_class_remap = bearing_class_hash.Renumber(
+        0, [](const auto &key) { return key; }, [](const auto &a, const auto &b) { return a < b; });
+
+    turn_data_container.remapIDs(lane_data_remap, entry_class_remap);
+    for (auto &id : bearing_class_by_node_based_node)
+        if (id < bearing_class_remap.size())
+            id = bearing_class_remap[id];
 
     util::Log() << "done.";
 
