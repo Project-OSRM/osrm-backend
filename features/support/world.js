@@ -83,7 +83,9 @@ class OSRMWorld extends World {
     if (this.osmCacheFile && fs.existsSync(this.osmCacheFile))
       await this.attach(fs.createReadStream(this.osmCacheFile),
         { mediaType: 'application/osm+xml', fileName: path.basename(this.osmCacheFile) });
-    return env.osrmLoader.after(scenario);
+    await env.osrmLoader.after(scenario);
+    if (this.spatialPackDirectory)
+      fs.rmSync(this.spatialPackDirectory, { recursive: true, force: true });
   }
 
   setProfile(profile) {

@@ -1,11 +1,15 @@
 #include "storage/compact_dataset.hpp"
 #include "storage/storage.hpp"
+#include "storage/view_factory.hpp"
 
 #include "../common/temporary_file.hpp"
 
 #include <boost/test/unit_test.hpp>
 
 #include <fstream>
+#include <memory>
+#include <string_view>
+#include <vector>
 
 namespace
 {
@@ -113,6 +117,33 @@ BOOST_AUTO_TEST_CASE(version_metadata_does_not_change_query_layout)
     BOOST_CHECK(!after.HasBlock(osrm::storage::COMPACT_VERSION_ENTRY));
     BOOST_CHECK_EQUAL(before.GetSizeOfLayout(), after.GetSizeOfLayout());
     BOOST_CHECK(osrm::storage::isCompactDataset(directory.path / "compact"));
+}
+
+BOOST_AUTO_TEST_CASE(rejects_invalid_spatial_geometry_metadata)
+{
+    auto layout = std::make_unique<osrm::storage::ContiguousDataLayout>();
+    const auto count_block = "/common/nbn_data/coordinates_spatial/count";
+    layout->SetBlock(count_block, {1, sizeof(std::uint64_t)});
+    layout->SetBlock("/common/segment_data/index", {0, 0});
+    std::vector<char> buffer(layout->GetSizeOfLayout());
+    std::vector<osrm::storage::SharedDataIndex::AllocatedRegion> regions;
+    regions.push_back({buffer.data(), std::move(layout)});
+    const osrm::storage::SharedDataIndex index(std::move(regions));
+
+    const auto reject = [](std::string_view message)
+    { return [message](const osrm::util::exception &error) { return error.what() == message; }; };
+    auto &count = *index.GetBlockPtr<std::uint64_t>(count_block);
+    for (const std::uint64_t invalid_count : {std::uint64_t{0}, std::uint64_t{SPECIAL_NODEID}})
+    {
+        count = invalid_count;
+        BOOST_CHECK_EXCEPTION(
+            osrm::storage::make_spatial_coordinate_view(index, "/common/nbn_data/coordinates"),
+            osrm::util::exception,
+            reject("Invalid packed node coordinate count"));
+    }
+    BOOST_CHECK_EXCEPTION(osrm::storage::make_segment_data_view(index, "/common/segment_data"),
+                          osrm::util::exception,
+                          reject("Missing segment geometry index"));
 }
 
 BOOST_AUTO_TEST_SUITE_END()

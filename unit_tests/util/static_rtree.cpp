@@ -1,6 +1,7 @@
 #include "util/static_rtree.hpp"
 #include "extractor/edge_based_node_segment.hpp"
 #include "engine/geospatial_query.hpp"
+#include "util/block_delta_encoding.hpp"
 #include "util/coordinate.hpp"
 #include "util/coordinate_calculation.hpp"
 #include "util/exception.hpp"
@@ -18,8 +19,11 @@
 #include <cstdint>
 
 #include <algorithm>
+#include <array>
+#include <fstream>
 #include <random>
 #include <string>
+#include <string_view>
 #include <unordered_set>
 #include <utility>
 #include <vector>
@@ -517,6 +521,28 @@ BOOST_AUTO_TEST_CASE(bbox_search_tests)
         auto results = query.Search(bbox);
         BOOST_CHECK_EQUAL(results.size(), 3);
     }
+}
+
+BOOST_AUTO_TEST_CASE(rejects_unaligned_packed_leaf_file)
+{
+    TemporaryFile tmp;
+    {
+        std::ofstream leaves(tmp.path, std::ios::binary);
+        leaves.put('\0');
+        BOOST_REQUIRE(leaves.good());
+    }
+
+    const std::array<unsigned, 2> endpoints{0, 1};
+    const auto encoded = encodeBlockDelta<unsigned>(endpoints);
+    BOOST_REQUIRE(encoded);
+    const SpatialDeltaView packed{encoded->Headers, encoded->Words};
+    std::array<std::uint64_t, 2> levels{0, 0};
+    using View = StaticRTree<TestData, storage::Ownership::View>;
+    BOOST_CHECK_EXCEPTION(
+        View({}, {levels.data(), levels.size()}, tmp.path, {}, packed),
+        exception,
+        [](const exception &error)
+        { return std::string_view(error.what()) == "Invalid packed R-tree leaf file size"; });
 }
 
 BOOST_AUTO_TEST_SUITE_END()
