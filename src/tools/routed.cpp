@@ -111,6 +111,7 @@ inline unsigned generateServerProgramOptions(const int argc,
                                              EngineConfig &config,
                                              int &requested_thread_num,
                                              short &keepalive_timeout,
+                                             int &shutdown_timeout,
                                              unsigned &max_header_size,
                                              std::uint64_t &max_body_size)
 {
@@ -149,6 +150,10 @@ inline unsigned generateServerProgramOptions(const int argc,
         ("keepalive-timeout,k",
          value<short>(&keepalive_timeout)->default_value(5),
          "Default keepalive-timeout. Default: 5 seconds.") //
+        ("shutdown-timeout",
+         value<int>(&shutdown_timeout)->default_value(2),
+         "Seconds to wait for open requests to finish after SIGINT, SIGQUIT or SIGTERM before "
+         "aborting. Default: 2 seconds.") //
         ("shared-memory,s",
          value<bool>(&config.use_shared_memory)->implicit_value(true)->default_value(false),
          "Load data from shared memory") //
@@ -260,6 +265,12 @@ inline unsigned generateServerProgramOptions(const int argc,
 
     boost::program_options::notify(option_variables);
 
+    if (shutdown_timeout <= 0)
+    {
+        util::Log(logERROR) << "--shutdown-timeout must be a positive number of seconds";
+        return INIT_FAILED;
+    }
+
     if (max_header_size == 0)
     {
         max_header_size = server::deriveMaxHeaderSize(config);
@@ -304,6 +315,7 @@ try
 
     int requested_thread_num = 1;
     short keepalive_timeout = 5;
+    int shutdown_timeout = 2;
     // Size of 0 means: Determine automatically based on coordinate limits.
     unsigned max_header_size = 0;
     std::uint64_t max_body_size = 0;
@@ -316,6 +328,7 @@ try
                                                               config,
                                                               requested_thread_num,
                                                               keepalive_timeout,
+                                                              shutdown_timeout,
                                                               max_header_size,
                                                               max_body_size);
     if (init_result == INIT_OK_DO_NOT_START_ENGINE)
@@ -358,6 +371,7 @@ try
     util::Log() << "IP address: " << ip_address;
     util::Log() << "IP port: " << ip_port;
     util::Log() << "Keepalive timeout: " << keepalive_timeout;
+    util::Log() << "Shutdown timeout: " << shutdown_timeout;
     util::Log() << "Maximum header size: " << max_header_size;
     util::Log() << "Maximum request body size: " << max_body_size;
 
@@ -413,9 +427,9 @@ try
 #endif
         util::Log() << "initiating shutdown";
         routing_server->Stop();
-        util::Log() << "stopping threads";
+        util::Log() << "waiting up to " << shutdown_timeout << " seconds for open requests";
 
-        auto status = future.wait_for(std::chrono::seconds(2));
+        auto status = future.wait_for(std::chrono::seconds(shutdown_timeout));
 
         if (status == std::future_status::ready)
         {
@@ -423,7 +437,8 @@ try
         }
         else
         {
-            util::Log(logWARNING) << "Didn't exit within 2 seconds. Hard abort!";
+            util::Log(logWARNING) << "Didn't exit within " << shutdown_timeout
+                                  << " seconds. Hard abort!";
             std::exit(EXIT_FAILURE);
         }
     }
