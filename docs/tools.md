@@ -137,6 +137,7 @@ osrm-routed <base.osrm> [options]
 | `--ip <address>` | `-i` | `0.0.0.0` | IP address to listen on. |
 | `--port <n>` | `-p` | `5000` | TCP port to listen on. |
 | `--keepalive-timeout <s>` | `-k` | `5` | HTTP keep-alive timeout in seconds. |
+| `--shutdown-timeout <s>` | | `2` | After `SIGINT`, `SIGQUIT` or `SIGTERM`, the server stops accepting connections, closes idle ones and waits this many seconds for open requests to finish. Requests still running after that are aborted, and the exit code is 1. |
 | `--trial` | | | Start up fully, then exit immediately. Useful to validate a dataset without serving traffic. |
 
 ### Data loading

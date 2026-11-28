@@ -22,16 +22,32 @@ Connection::Connection(tcp::socket socket,
                        RequestHandler &handler,
                        unsigned max_header_size,
                        std::uint64_t max_body_size,
-                       short keepalive_timeout)
+                       short keepalive_timeout,
+                       const std::atomic<bool> &shutting_down)
     : stream_(std::move(socket)), request_handler_(handler), max_header_size_(max_header_size),
-      max_body_size_(max_body_size), keepalive_timeout_(keepalive_timeout)
+      max_body_size_(max_body_size), keepalive_timeout_(keepalive_timeout),
+      shutting_down_(shutting_down)
 { stream_.expires_after(std::chrono::seconds(keepalive_timeout_)); }
 
 void Connection::start() { handle_read(); }
 
+void Connection::shutdown()
+{
+    boost::asio::post(stream_.get_executor(),
+                      [self = shared_from_this()]()
+                      {
+                          // Completes the pending read with operation_aborted, which closes the
+                          // connection.
+                          if (self->reading_)
+                          {
+                              self->stream_.cancel();
+                          }
+                      });
+}
+
 void Connection::handle_read()
 {
-    if (processed_requests_ >= KEEPALIVE_MAX_REQUESTS)
+    if (processed_requests_ >= KEEPALIVE_MAX_REQUESTS || shutting_down_)
     {
         handle_close();
         return;
@@ -47,12 +63,14 @@ void Connection::handle_read()
 
     stream_.expires_after(std::chrono::seconds(keepalive_timeout_));
 
+    reading_ = true;
     auto self = shared_from_this();
     bhttp::async_read(stream_,
                       message_buffer_,
                       *parser_,
                       [self](boost::beast::error_code ec, std::size_t)
                       {
+                          self->reading_ = false;
                           if (!ec)
                           {
                               self->request_ = self->parser_->release();
@@ -211,7 +229,9 @@ bool Connection::should_keep_alive() const
         return false;
     }
 
-    return true;
+    // During shutdown, close the connection after the response instead of waiting for another
+    // request.
+    return !shutting_down_;
 }
 
 std::vector<char> Connection::compress_buffers(const std::vector<char> &uncompressed_data,

@@ -11,6 +11,7 @@
 #include <boost/beast/version.hpp>
 #include <boost/config.hpp>
 
+#include <atomic>
 #include <cstdint>
 #include <memory>
 #include <optional>
@@ -29,13 +30,18 @@ class Connection : public std::enable_shared_from_this<Connection>
                         RequestHandler &handler,
                         unsigned max_header_size,
                         std::uint64_t max_body_size,
-                        short keepalive_timeout);
+                        short keepalive_timeout,
+                        const std::atomic<bool> &shutting_down);
 
     Connection(const Connection &) = delete;
     Connection &operator=(const Connection &) = delete;
 
     /// Start the first asynchronous operation for the connection.
     void start();
+
+    /// Close the connection if it is waiting for a request. A request that is being processed
+    /// is still answered, with "Connection: close".
+    void shutdown();
 
   private:
     void handle_read();
@@ -65,6 +71,8 @@ class Connection : public std::enable_shared_from_this<Connection>
     std::uint64_t max_body_size_;
     short keepalive_timeout_;
     short processed_requests_ = 0;
+    const std::atomic<bool> &shutting_down_;
+    bool reading_ = false;
 };
 
 } // namespace osrm::server

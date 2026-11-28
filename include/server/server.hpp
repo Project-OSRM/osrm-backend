@@ -17,8 +17,10 @@
 #include <sys/types.h>
 #endif
 
+#include <algorithm>
+#include <atomic>
+#include <cstddef>
 #include <cstdint>
-#include <future>
 #include <memory>
 #include <string>
 #include <thread>
@@ -136,29 +138,33 @@ class Server : public std::enable_shared_from_this<Server>
         }
     }
 
+    // Stops accepting connections and closes the idle ones. Requests that are already being
+    // processed are answered with "Connection: close". Run() returns once all of them are done.
     void Stop()
     {
-        auto stop_promise = std::make_shared<std::promise<void>>();
-        auto stop_future = stop_promise->get_future();
-
-        // Posting the close to the acceptors strand ensures
-        // we do not have a race condition with async_accept.
+        // Posting to the acceptor's strand avoids a race with async_accept and with the
+        // registration of new connections in OnAccept.
         boost::asio::post(acceptor.get_executor(),
-                          [self = shared_from_this(), stop_promise]()
+                          [self = shared_from_this()]()
                           {
+                              self->shutting_down = true;
+
                               boost::beast::error_code ec;
                               (void)self->acceptor.close(ec);
                               if (ec)
                               {
                                   util::Log(logDEBUG) << "Error closing acceptor: " << ec.message();
                               }
-                              // Stop the io_context
-                              self->io_context.stop();
-                              stop_promise->set_value();
-                          });
 
-        // The above function is async, this simply waits until it succeeded
-        stop_future.wait();
+                              for (const auto &weak_connection : self->connections)
+                              {
+                                  if (auto connection = weak_connection.lock())
+                                  {
+                                      connection->shutdown();
+                                  }
+                              }
+                              self->connections.clear();
+                          });
     }
 
     void RegisterServiceHandler(std::unique_ptr<ServiceHandlerInterface> service_handler_)
@@ -181,6 +187,13 @@ class Server : public std::enable_shared_from_this<Server>
 
     void OnAccept(boost::beast::error_code ec, boost::asio::ip::tcp::socket socket)
     {
+        if (shutting_down)
+        {
+            // Accepted just before Stop() closed the acceptor; the socket is closed when it goes
+            // out of scope.
+            return;
+        }
+
         if (!ec)
         {
             // Create the connection and start it
@@ -188,7 +201,17 @@ class Server : public std::enable_shared_from_this<Server>
                                                            request_handler,
                                                            max_header_size,
                                                            max_body_size,
-                                                           keepalive_timeout);
+                                                           keepalive_timeout,
+                                                           shutting_down);
+
+            // Only accessed on the acceptor's strand, like in Stop(). Closed connections are
+            // pruned whenever the list has doubled, so this stays amortized constant time.
+            if (connections.size() >= next_prune_size)
+            {
+                std::erase_if(connections, [](const auto &weak) { return weak.expired(); });
+                next_prune_size = std::max<std::size_t>(64, 2 * connections.size());
+            }
+            connections.push_back(connection);
 
             connection->start();
         }
@@ -211,6 +234,9 @@ class Server : public std::enable_shared_from_this<Server>
     std::uint64_t max_body_size;
     boost::asio::io_context io_context;
     boost::asio::ip::tcp::acceptor acceptor;
+    std::atomic<bool> shutting_down = false;
+    std::vector<std::weak_ptr<Connection>> connections;
+    std::size_t next_prune_size = 64;
 };
 
 } // namespace osrm::server
