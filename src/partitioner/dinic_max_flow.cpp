@@ -29,6 +29,56 @@ auto makeHasNeighborNotInCheck(const DinicMaxFlow::SourceSinkNodes &set,
 
 } // end namespace
 
+class DinicMaxFlow::FlowEdges
+{
+  public:
+    explicit FlowEdges(const std::size_t size) : m_targets(size, SPECIAL_NODEID) {}
+
+    bool contains(const NodeID from, const NodeID to) const
+    {
+        const auto target = m_targets[from];
+        return target == from ? m_overflow.contains(key(from, to)) : target == to;
+    }
+
+    bool erase(const NodeID from, const NodeID to)
+    {
+        auto &target = m_targets[from];
+        if (target == from)
+            return m_overflow.erase(key(from, to)) != 0;
+        if (target != to)
+            return false;
+        target = SPECIAL_NODEID;
+        return true;
+    }
+
+    void insert(const NodeID from, const NodeID to)
+    {
+        BOOST_ASSERT(from != to && !contains(from, to));
+
+        auto &target = m_targets[from];
+        if (target == SPECIAL_NODEID)
+        {
+            target = to;
+            return;
+        }
+
+        // A self-loop cannot carry augmenting flow, so the source ID marks overflow.
+        if (target != from)
+        {
+            m_overflow.insert(key(from, target));
+            target = from;
+        }
+        m_overflow.insert(key(from, to));
+    }
+
+  private:
+    static std::uint64_t key(const NodeID from, const NodeID to)
+    { return (static_cast<std::uint64_t>(from) << std::numeric_limits<NodeID>::digits) | to; }
+
+    std::vector<NodeID> m_targets;
+    std::unordered_set<std::uint64_t> m_overflow;
+};
+
 DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
                                               const SourceSinkNodes &source_nodes,
                                               const SourceSinkNodes &sink_nodes) const
@@ -132,7 +182,7 @@ DinicMaxFlow::ComputeLevelGraph(const BisectionGraphView &view,
     }
     // check if there is flow present on an edge
     const auto has_flow = [&](const NodeID from, const NodeID to)
-    { return flow[from].contains(to); };
+    { return flow.contains(from, to); };
 
     // perform a relaxation step in the BFS algorithm
     const auto relax_node = [&](const NodeID node_id)
@@ -185,11 +235,8 @@ std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
         const auto augment_one = [&flow](const NodeID from, const NodeID to)
         {
             // check if there is flow in the opposite direction
-            auto existing_edge = flow[to].find(from);
-            if (existing_edge != flow[to].end())
-                flow[to].erase(existing_edge); // remove flow from reverse edges first
-            else
-                flow[from].insert(to); // only add flow if no opposite flow exists
+            if (!flow.erase(to, from))
+                flow.insert(from, to);
 
             // do augmentation on all pairs, never stop early:
             return false;
@@ -263,7 +310,7 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
             dfs_stack.top().edge_iterator++;
 
             // check if the edge is valid
-            const auto has_capacity = !flow[target].contains(path.back());
+            const auto has_capacity = !flow.contains(target, path.back());
             const auto descends_level_graph = levels[target] + 1 == levels[path.back()];
 
             if (has_capacity && descends_level_graph)

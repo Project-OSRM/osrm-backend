@@ -4,7 +4,6 @@
 #include "partitioner/bisection_graph_view.hpp"
 
 #include <cstdint>
-#include <set>
 #include <unordered_set>
 #include <vector>
 
@@ -40,9 +39,7 @@ class DinicMaxFlow
     // the level of each node in the graph (==hops in BFS from source)
     using LevelGraph = std::vector<Level>;
 
-    // this is actually faster than using an unordered_set<Edge>, stores all edges that have
-    // capacity grouped by node
-    using FlowEdges = std::vector<std::set<NodeID>>;
+    class FlowEdges;
 
     // The level graph (see [1]) is based on a BFS computation. We assign a level to all nodes
     // (starting with 0 for all source nodes) and assign the hop distance in the residual graph as
