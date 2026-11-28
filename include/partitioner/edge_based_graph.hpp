@@ -5,12 +5,16 @@
 #include "storage/io.hpp"
 #include "util/coordinate.hpp"
 #include "util/dynamic_graph.hpp"
+#include "util/permutation.hpp"
 #include "util/typedefs.hpp"
+
+#include <boost/assert.hpp>
 
 #include <cstdint>
 
 #include <algorithm>
 #include <iterator>
+#include <vector>
 
 namespace osrm::partitioner
 {
@@ -39,6 +43,18 @@ struct DynamicEdgeBasedGraph : util::DynamicGraph<EdgeBasedGraphEdgeData>
                           std::uint32_t connectivity_checksum)
         : Base(nodes, graph), connectivity_checksum(connectivity_checksum)
     {
+    }
+
+    // Keep each adjacency list at its existing edge indices while changing node IDs.
+    void renumberNodes(const std::vector<NodeID> &permutation)
+    {
+        BOOST_ASSERT(permutation.size() == GetNumberOfNodes());
+        for (auto &edge : edge_list)
+        {
+            if (edge.target != SPECIAL_NODEID)
+                edge.target = permutation[edge.target];
+        }
+        util::inplacePermutation(node_array.begin(), node_array.end(), permutation);
     }
 
     std::uint32_t connectivity_checksum;

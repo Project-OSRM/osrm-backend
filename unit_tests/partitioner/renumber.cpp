@@ -83,4 +83,31 @@ BOOST_AUTO_TEST_CASE(unsplitable_case)
     CHECK_EQUAL_RANGE(permutation, 0, 7, 8, 5, 6, 11, 4, 3, 9, 10, 1, 2);
 }
 
+BOOST_AUTO_TEST_CASE(node_renumbering_preserves_edge_positions)
+{
+    auto graph = makeGraph({{0, 1}, {0, 2}, {2, 1}});
+    const std::vector<NodeID> old_to_new{2, 0, 1};
+
+    auto compacted = makeGraph({{0, 1}, {0, 2}, {2, 1}});
+    compacted.Renumber(old_to_new);
+
+    const auto first_edge = graph.BeginEdges(0);
+    graph.renumberNodes(old_to_new);
+    BOOST_CHECK_EQUAL(graph.BeginEdges(2), first_edge);
+    for (const auto node : osrm::util::irange<NodeID>(0, graph.GetNumberOfNodes()))
+    {
+        BOOST_REQUIRE_EQUAL(graph.GetOutDegree(node), compacted.GetOutDegree(node));
+        for (auto edge = graph.BeginEdges(node), compact_edge = compacted.BeginEdges(node);
+             edge != graph.EndEdges(node);
+             ++edge, ++compact_edge)
+        {
+            BOOST_CHECK_EQUAL(graph.GetTarget(edge), compacted.GetTarget(compact_edge));
+            BOOST_CHECK_EQUAL(graph.GetEdgeData(edge).forward,
+                              compacted.GetEdgeData(compact_edge).forward);
+            BOOST_CHECK_EQUAL(graph.GetEdgeData(edge).backward,
+                              compacted.GetEdgeData(compact_edge).backward);
+        }
+    }
+}
+
 BOOST_AUTO_TEST_SUITE_END()
