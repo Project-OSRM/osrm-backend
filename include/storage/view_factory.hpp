@@ -31,6 +31,7 @@
 #include "util/coordinate.hpp"
 #include "util/packed_vector.hpp"
 #include "util/range_table.hpp"
+#include "util/spatial_delta_view.hpp"
 #include "util/static_graph.hpp"
 #include "util/static_rtree.hpp"
 #include "util/typedefs.hpp"
@@ -118,6 +119,33 @@ inline auto make_turn_data_view(const SharedDataIndex &index, const std::string 
         turn_instructions, lane_data_ids, entry_class_ids, pre_turn_bearings, post_turn_bearings);
 }
 
+inline util::SpatialDeltaView make_spatial_delta_view(const SharedDataIndex &index,
+                                                      const std::string &name)
+{
+    const auto headers = make_vector_view<util::BlockDeltaHeader>(index, name + "/headers");
+    const auto words = make_vector_view<std::uint64_t>(index, name + "/words");
+    return {{headers.data(), headers.size()}, {words.data(), words.size()}};
+}
+
+inline util::SpatialCoordinateView make_spatial_coordinate_view(const SharedDataIndex &index,
+                                                                const std::string &name)
+{
+    const auto prefix = name + "_spatial";
+    if (index.HasBlock(prefix + "/count"))
+    {
+        const auto count = make_vector_view<std::uint64_t>(index, prefix + "/count");
+        if (count.size() != 1 || count.front() == 0 || count.front() >= SPECIAL_NODEID)
+            throw util::exception("Invalid packed node coordinate count");
+        const auto lon = make_spatial_delta_view(index, prefix + "/lon");
+        const auto lat = make_spatial_delta_view(index, prefix + "/lat");
+        lon.validate(count.front());
+        lat.validate(count.front());
+        return {lon, lat, static_cast<std::size_t>(count.front())};
+    }
+    const auto coords = make_vector_view<util::Coordinate>(index, name);
+    return {coords.data(), coords.size()};
+}
+
 inline auto make_segment_data_view(const SharedDataIndex &index, const std::string &name)
 {
     const auto forward_sources_name = index.HasBlock(name + "/constant_forward_sources")
@@ -131,9 +159,13 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
                                  : name + "/shared_costs";
     auto geometry_begin_indices = make_vector_view<unsigned>(index, name + "/index");
 
-    auto node_list = make_vector_view<NodeID>(index, name + "/nodes");
+    util::vector_view<NodeID> node_list;
+    if (index.HasBlock(name + "/nodes"))
+        node_list = make_vector_view<NodeID>(index, name + "/nodes");
 
-    auto num_entries = index.GetBlockEntries(name + "/nodes");
+    if (geometry_begin_indices.empty())
+        throw util::exception("Missing segment geometry index");
+    auto num_entries = geometry_begin_indices.back();
     if (index.HasBlock(cost_prefix + "/descriptors"))
     {
         const auto pool = make_vector_view<std::uint64_t>(index, cost_prefix + "/packed");
@@ -195,7 +227,7 @@ inline auto make_osm_ids_view(const SharedDataIndex &index, const std::string &n
 
 inline auto make_nbn_data_view(const SharedDataIndex &index, const std::string &name)
 {
-    return std::make_tuple(make_coordinates_view(index, name + "/coordinates"),
+    return std::make_tuple(make_spatial_coordinate_view(index, name + "/coordinates"),
                            make_osm_ids_view(index, name + "/osm_node_ids"));
 }
 
@@ -215,7 +247,11 @@ inline auto make_search_tree_view(const SharedDataIndex &index, const std::strin
     const auto rtree_level_starts =
         make_vector_view<std::uint64_t>(index, name + "/search_tree_level_starts");
 
-    const auto coordinates = make_coordinates_view(index, "/common/nbn_data/coordinates");
+    const auto coordinates = make_spatial_coordinate_view(index, "/common/nbn_data/coordinates");
+    const auto endpoint_name = name + "/spatial_endpoints";
+    const auto endpoints = index.HasBlock(endpoint_name + "/headers")
+                               ? make_spatial_delta_view(index, endpoint_name)
+                               : util::SpatialDeltaView{};
 
     const char *path = index.template GetBlockPtr<char>(name + "/file_index_path");
 
@@ -226,7 +262,7 @@ inline auto make_search_tree_view(const SharedDataIndex &index, const std::strin
     }
 
     return util::StaticRTree<RTreeLeaf, storage::Ownership::View>{
-        search_tree, rtree_level_starts, path, coordinates};
+        search_tree, rtree_level_starts, path, coordinates, endpoints};
 }
 
 /**

@@ -275,7 +275,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetForwardDatasources(const DirectionalGeometryID id) const
     {
-        if (fwd_datasources.size() != nodes.size())
+        if (fwd_datasources.size() != index.back())
         {
             const auto len = index[id + 1] - index[id] - 1;
             BOOST_ASSERT(len <= fwd_datasources.size());
@@ -288,7 +288,7 @@ template <storage::Ownership Ownership> class SegmentDataContainerImpl
 
     auto GetReverseDatasources(const DirectionalGeometryID id) const
     {
-        if (rev_datasources.size() != nodes.size())
+        if (rev_datasources.size() != index.back())
         {
             const auto len = index[id + 1] - index[id] - 1;
             BOOST_ASSERT(len <= rev_datasources.size());

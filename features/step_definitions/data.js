@@ -31,6 +31,10 @@ Given(/^the data load extra arguments "(.*?)"$/, function (args, callback) {
   callback();
 });
 
+Given(/^the dataset is spatially packed$/, function () {
+  this.spatialPacking = true;
+});
+
 Given(/^a grid size of ([0-9.]+) meters$/, function (meters, callback) {
   this.setGridSize(meters);
   callback();

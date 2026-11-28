@@ -45,7 +45,7 @@ class MockBaseDataFacade : public engine::datafacade::BaseDataFacade
     {
         static NodeID data[] = {0, 1, 2, 3};
         static extractor::SegmentDataView::SegmentNodeVector nodes(data, 4);
-        return NodeForwardRange{nodes.data(), nodes.size()};
+        return util::makeSpatialNodeRange({{nodes.data(), nodes.size()}, {}}, 0, nodes.size());
     }
     NodeReverseRange GetUncompressedReverseGeometry(const EdgeID id) const override
     { return NodeReverseRange(GetUncompressedForwardGeometry(id)); }

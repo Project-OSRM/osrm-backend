@@ -1,5 +1,6 @@
 // Core data manipulation utilities for building synthetic test scenarios and OSM data
 import fs from 'fs';
+import path from 'node:path';
 import util from 'util';
 
 import CheapRuler from 'cheap-ruler';
@@ -320,6 +321,16 @@ export default class Data {
     callback();
   }
 
+  packSpatialData() {
+    const source = this.osrmCacheFile;
+    this.spatialPackDirectory = fs.mkdtempSync(path.join(path.dirname(source), 'spatial-'));
+    const output = path.join(this.spatialPackDirectory, 'serving');
+    const child = runBinSync('osrm-spatial-pack', [source, output], { env: this.environment }, this.log);
+    if (child.error) throw child.error;
+    if (child.status !== 0) throw new Error(`osrm-spatial-pack failed: ${child.stderr}`);
+    this.osrmCacheFile = path.join(output, path.basename(source));
+  }
+
   // This is called on every "When I X I should Y"
   // On the first call in every scenario it should load the data
   // into osrm-routed or osrm-datastore
@@ -327,6 +338,8 @@ export default class Data {
     if (!this.dataLoaded) {
       this.writeOSM();
       this.runExtractionChain();
+      if (this.spatialPacking)
+        this.packSpatialData();
       await env.osrmLoader.before(this);
       this.dataLoaded = true;
     }

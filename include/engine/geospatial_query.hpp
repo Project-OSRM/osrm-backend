@@ -377,7 +377,7 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
             forward_distance_offset +=
                 to_alias<EdgeDistance>(util::coordinate_calculation::greatCircleDistance(
                     datafacade.GetCoordinateOfNode(*current),
-                    datafacade.GetCoordinateOfNode(*std::next(current))));
+                    datafacade.GetCoordinateOfNode(*(current + 1))));
         }
 
         BOOST_ASSERT(data.fwd_segment_position <
@@ -405,13 +405,13 @@ template <typename RTreeT, typename DataFacadeT> class GeospatialQuery
         EdgeDistance reverse_distance_offset = {0};
         // Sum up the distance from just after the fwd_segment_position to the end
         for (auto current = forward_geometry.begin() + data.fwd_segment_position + 1;
-             current != std::prev(forward_geometry.end());
+             current != forward_geometry.end() - 1;
              ++current)
         {
             reverse_distance_offset +=
                 to_alias<EdgeDistance>(util::coordinate_calculation::greatCircleDistance(
                     datafacade.GetCoordinateOfNode(*current),
-                    datafacade.GetCoordinateOfNode(*std::next(current))));
+                    datafacade.GetCoordinateOfNode(*(current + 1))));
         }
 
         EdgeWeight reverse_weight = alias_cast<EdgeWeight>(

@@ -35,7 +35,7 @@ When(
 );
 
 When(
-  /^I try to run "(osrm-[a-z]+)\s?(.*?)"$/,
+  /^I try to run "(osrm-[a-z-]+)\s?(.*?)"$/,
   function (binary, options, callback) {
     const child = runBinSync(
       binary,
