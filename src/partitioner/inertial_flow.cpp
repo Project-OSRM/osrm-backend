@@ -4,11 +4,12 @@
 #include "partitioner/reorder_first_last.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <iterator>
+#include <limits>
 #include <mutex>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -19,18 +20,9 @@ namespace osrm::partitioner
 {
 namespace
 {
-// Spatially ordered sources and sink ids.
-// The node ids refer to nodes in the GraphView.
-struct SpatialOrder
-{
-    std::unordered_set<NodeID> sources;
-    std::unordered_set<NodeID> sinks;
-};
-
-// Creates a spatial order of n * sources "first" and n * sink "last" node ids.
-// The slope determines the spatial order for sorting node coordinates.
-SpatialOrder
-makeSpatialOrder(const BisectionGraphView &view, const double ratio, const double slope)
+// Mark the n * ratio nodes at each end of the spatial order as terminals.
+std::vector<DinicMaxFlow::Terminal>
+makeTerminals(const BisectionGraphView &view, const double ratio, const double slope)
 {
     struct NodeWithCoordinate
     {
@@ -75,18 +67,14 @@ makeSpatialOrder(const BisectionGraphView &view, const double ratio, const doubl
 
     reorderFirstLast(embedding, n, spatially);
 
-    SpatialOrder order;
-
-    order.sources.reserve(n);
-    order.sinks.reserve(n);
-
+    using Terminal = DinicMaxFlow::Terminal;
+    std::vector<Terminal> terminals(embedding.size(), Terminal::None);
     for (auto it = begin(embedding), last = begin(embedding) + n; it != last; ++it)
-        order.sources.insert(it->nid);
-
+        terminals[it->nid] = Terminal::Source;
     for (auto it = end(embedding) - n, last = end(embedding); it != last; ++it)
-        order.sinks.insert(it->nid);
+        terminals[it->nid] = Terminal::Sink;
 
-    return order;
+    return terminals;
 }
 
 // Makes n cuts with different spatial orders and returns the best.
@@ -98,7 +86,7 @@ DinicMaxFlow::MinCut bestMinCut(const BisectionGraphView &view,
     DinicMaxFlow::MinCut best;
     best.num_edges = -1;
 
-    const auto get_balance = [&view, balance](const auto num_nodes_source)
+    const auto get_balance = [&view, balance](const std::size_t num_nodes_source)
     {
         const auto perfect_balance = view.NumberOfNodes() / 2;
         const auto allowed_balance = balance * perfect_balance;
@@ -113,6 +101,13 @@ DinicMaxFlow::MinCut bestMinCut(const BisectionGraphView &view,
 
     auto best_balance = 1;
 
+    // The incumbent uses an integral balance factor. When every factor rounds to
+    // one, an accepted cut can only decrease the incumbent edge count.
+    const auto maximum_balance = get_balance(0);
+    std::atomic<std::size_t> best_edge_count{std::numeric_limits<std::size_t>::max()};
+    const auto cut_limit =
+        maximum_balance >= 1.0 && maximum_balance < 2.0 ? &best_edge_count : nullptr;
+
     std::mutex lock;
 
     tbb::blocked_range<std::size_t> range{0, n, 1};
@@ -124,34 +119,38 @@ DinicMaxFlow::MinCut bestMinCut(const BisectionGraphView &view,
         return std::abs(difference);
     };
 
-    tbb::parallel_for(range,
-                      [&](const auto &chunk)
-                      {
-                          for (auto round = chunk.begin(), end = chunk.end(); round != end; ++round)
-                          {
-                              const auto slope = -1. + round * (2. / n);
+    tbb::parallel_for(
+        range,
+        [&](const auto &chunk)
+        {
+            for (auto round = chunk.begin(), end = chunk.end(); round != end; ++round)
+            {
+                const auto slope = -1. + round * (2. / n);
 
-                              auto order = makeSpatialOrder(view, ratio, slope);
-                              auto cut = DinicMaxFlow()(view, order.sources, order.sinks);
-                              auto cut_balance = get_balance(cut.num_nodes_source);
+                const auto terminals = makeTerminals(view, ratio, slope);
+                auto cut = DinicMaxFlow()(view, terminals, cut_limit);
+                if (!cut)
+                    continue;
+                auto cut_balance = get_balance(cut->num_nodes_source);
 
-                              {
-                                  std::lock_guard<std::mutex> guard{lock};
+                {
+                    std::lock_guard<std::mutex> guard{lock};
 
-                                  // Swap to keep the destruction of the old object outside of
-                                  // critical section.
-                                  if (cut.num_edges * cut_balance < best.num_edges * best_balance ||
-                                      (cut.num_edges == best.num_edges &&
-                                       balance_delta(cut.num_nodes_source) <
-                                           balance_delta(best.num_nodes_source)))
-                                  {
-                                      best_balance = cut_balance;
-                                      std::swap(best, cut);
-                                  }
-                              }
-                              // cut gets destroyed here
-                          }
-                      });
+                    // Swap to keep the destruction of the old object outside of
+                    // critical section.
+                    if (cut->num_edges * cut_balance < best.num_edges * best_balance ||
+                        (cut->num_edges == best.num_edges &&
+                         balance_delta(cut->num_nodes_source) <
+                             balance_delta(best.num_nodes_source)))
+                    {
+                        best_balance = cut_balance;
+                        std::swap(best, *cut);
+                        best_edge_count.store(best.num_edges, std::memory_order_relaxed);
+                    }
+                }
+                // cut gets destroyed here
+            }
+        });
 
     return best;
 }

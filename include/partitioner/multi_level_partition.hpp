@@ -5,6 +5,7 @@
 #include "util/exception.hpp"
 #include "util/for_each_pair.hpp"
 #include "util/msb.hpp"
+#include "util/permutation.hpp"
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
 
@@ -294,12 +295,10 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
         // level 0: 2 4 3 5 1 0
         // level 1: 3 3 4 4 1 2
         // level 2: 0 0 1 1 2 2 (< sorted)
-        for (const auto &partition : partitions)
         {
-            std::stable_sort(permutation.begin(),
-                             permutation.end(),
-                             [&partition](const auto lhs, const auto rhs)
-                             { return partition[lhs] < partition[rhs]; });
+            std::vector<NodeID> scratch(num_nodes);
+            for (const auto &partition : partitions)
+                util::stableOrderByKey(permutation, scratch, partition);
         }
 
         // top down assign new cell ids

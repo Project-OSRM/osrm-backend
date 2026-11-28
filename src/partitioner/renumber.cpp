@@ -2,6 +2,8 @@
 
 #include "util/permutation.hpp"
 
+#include <numeric>
+
 namespace osrm::partitioner
 {
 namespace
@@ -39,29 +41,24 @@ std::vector<LevelID> getHighestBorderLevel(const DynamicEdgeBasedGraph &graph,
 std::vector<std::uint32_t> makePermutation(const DynamicEdgeBasedGraph &graph,
                                            const std::vector<Partition> &partitions)
 {
-    std::vector<std::uint32_t> ordering(graph.GetNumberOfNodes());
+    std::vector<NodeID> ordering(graph.GetNumberOfNodes());
+    std::vector<NodeID> scratch(ordering.size());
     std::iota(ordering.begin(), ordering.end(), 0);
 
     // Sort the nodes by cell ID recursively:
     // Nodes in the same cell will be sorted by cell ID on the level below
     for (const auto &partition : partitions)
-    {
-        std::stable_sort(ordering.begin(),
-                         ordering.end(),
-                         [&partition](const auto lhs, const auto rhs)
-                         { return partition[lhs] < partition[rhs]; });
-    }
+        util::stableOrderByKey(ordering, scratch, partition);
 
     // Now sort the nodes by the level at which they are a border node, descening.
     // That means nodes that are border nodes on the highest level will have a very low ID,
     // whereas nodes that are nerver border nodes are sorted to the end of the array.
     // Note: Since we use a stable sort that preserves the cell sorting within each level
     auto border_level = getHighestBorderLevel(graph, partitions);
-    std::stable_sort(ordering.begin(),
-                     ordering.end(),
-                     [&border_level](const auto lhs, const auto rhs)
-                     { return border_level[lhs] > border_level[rhs]; });
+    util::stableOrderByKey(ordering, scratch, border_level, true);
 
-    return util::orderingToPermutation(ordering);
+    for (const auto rank : util::irange<NodeID>(0, graph.GetNumberOfNodes()))
+        scratch[ordering[rank]] = rank;
+    return scratch;
 }
 } // namespace osrm::partitioner

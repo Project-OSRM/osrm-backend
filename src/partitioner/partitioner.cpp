@@ -128,7 +128,7 @@ int Partitioner::Run(const PartitionerConfig &config)
 
     TIMER_START(renumber);
     auto permutation = makePermutation(edge_based_graph, partitions);
-    renumber(edge_based_graph, permutation);
+    edge_based_graph.renumberNodes(permutation);
     renumber(partitions, permutation);
 
     // Prepared routing graphs and cell metrics refer to the previous node order.
