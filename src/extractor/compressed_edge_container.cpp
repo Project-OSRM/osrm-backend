@@ -1,14 +1,19 @@
 #include "extractor/compressed_edge_container.hpp"
+#include "extractor/files.hpp"
+#include "extractor/heap_pages.hpp"
 #include "util/log.hpp"
 
 #include <boost/assert.hpp>
 
+#include <algorithm>
 #include <filesystem>
 
 namespace osrm::extractor
 {
 
-CompressedEdgeContainer::CompressedEdgeContainer()
+CompressedEdgeContainer::CompressedEdgeContainer(std::filesystem::path spool_parent)
+    : m_geometry_records(std::move(spool_parent)),
+      m_geometry_buckets(std::make_unique<GeometryBuckets>())
 {
     m_free_list.reserve(100);
     IncreaseFreeList();
@@ -16,54 +21,55 @@ CompressedEdgeContainer::CompressedEdgeContainer()
 
 void CompressedEdgeContainer::IncreaseFreeList()
 {
-    m_compressed_oneway_geometries.resize(m_compressed_oneway_geometries.size() + 100);
     for (unsigned i = 100; i > 0; --i)
     {
+        m_geometry_buckets->buckets.emplace_back();
         m_free_list.emplace_back(free_list_maximum);
         ++free_list_maximum;
     }
 }
 
+void CompressedEdgeContainer::initializeEdgeIndex(std::size_t edge_capacity)
+{
+    m_edge_id_to_list_index.resize(edge_capacity);
+    std::fill(m_edge_id_to_list_index.begin(), m_edge_id_to_list_index.end(), NoBucket);
+}
+
+void CompressedEdgeContainer::moveEdgeMappings(EdgeID source, EdgeID destination, unsigned count)
+{
+    const auto begin = m_edge_id_to_list_index.begin();
+    std::move(begin + source, begin + source + count, begin + destination);
+}
+
+void CompressedEdgeContainer::resizeEdgeIndex(std::size_t edge_capacity)
+{
+    BOOST_ASSERT(edge_capacity <= m_edge_id_to_list_index.size());
+    m_edge_id_to_list_index.resize(edge_capacity);
+}
+
+void CompressedEdgeContainer::assignBucket(EdgeID edge)
+{
+    if (edge >= m_edge_id_to_list_index.size())
+    {
+        const auto old_size = m_edge_id_to_list_index.size();
+        m_edge_id_to_list_index.resize(std::size_t(edge) + 1);
+        std::fill(
+            m_edge_id_to_list_index.begin() + old_size, m_edge_id_to_list_index.end(), NoBucket);
+    }
+    if (m_free_list.empty())
+        IncreaseFreeList();
+    m_edge_id_to_list_index[edge] = m_free_list.back();
+    m_free_list.pop_back();
+}
+
 bool CompressedEdgeContainer::HasEntryForID(const EdgeID edge_id) const
-{
-    auto iter = m_edge_id_to_list_index_map.find(edge_id);
-    return iter != m_edge_id_to_list_index_map.end();
-}
-
-bool CompressedEdgeContainer::HasZippedEntryForForwardID(const EdgeID edge_id) const
-{
-    auto iter = m_forward_edge_id_to_zipped_index_map.find(edge_id);
-    return iter != m_forward_edge_id_to_zipped_index_map.end();
-}
-
-bool CompressedEdgeContainer::HasZippedEntryForReverseID(const EdgeID edge_id) const
-{
-    auto iter = m_reverse_edge_id_to_zipped_index_map.find(edge_id);
-    return iter != m_reverse_edge_id_to_zipped_index_map.end();
-}
+{ return m_geometry_buckets && findBucket(edge_id) < m_geometry_buckets->buckets.size(); }
 
 unsigned CompressedEdgeContainer::GetPositionForID(const EdgeID edge_id) const
 {
-    auto map_iterator = m_edge_id_to_list_index_map.find(edge_id);
-    BOOST_ASSERT(map_iterator != m_edge_id_to_list_index_map.end());
-    BOOST_ASSERT(map_iterator->second < m_compressed_oneway_geometries.size());
-    return map_iterator->second;
-}
-
-unsigned CompressedEdgeContainer::GetZippedPositionForForwardID(const EdgeID edge_id) const
-{
-    auto map_iterator = m_forward_edge_id_to_zipped_index_map.find(edge_id);
-    BOOST_ASSERT(map_iterator != m_forward_edge_id_to_zipped_index_map.end());
-    BOOST_ASSERT(map_iterator->second < segment_data->nodes.size());
-    return map_iterator->second;
-}
-
-unsigned CompressedEdgeContainer::GetZippedPositionForReverseID(const EdgeID edge_id) const
-{
-    auto map_iterator = m_reverse_edge_id_to_zipped_index_map.find(edge_id);
-    BOOST_ASSERT(map_iterator != m_reverse_edge_id_to_zipped_index_map.end());
-    BOOST_ASSERT(map_iterator->second < segment_data->nodes.size());
-    return map_iterator->second;
+    const auto bucket = findBucket(edge_id);
+    BOOST_ASSERT(bucket < m_geometry_buckets->buckets.size());
+    return bucket;
 }
 
 SegmentWeight CompressedEdgeContainer::ClipWeight(const EdgeWeight weight)
@@ -123,29 +129,11 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     // 1. append via node id to list of edge_id_1
     // 2. find list for edge_id_2, if yes add all elements and delete it
 
-    // Add via node id. List is created if it does not exist
     if (!HasEntryForID(edge_id_1))
-    {
-        // create a new entry in the map
-        if (0 == m_free_list.size())
-        {
-            // make sure there is a place to put the entries
-            IncreaseFreeList();
-        }
-        BOOST_ASSERT(!m_free_list.empty());
-        m_edge_id_to_list_index_map[edge_id_1] = m_free_list.back();
-        m_free_list.pop_back();
-    }
+        assignBucket(edge_id_1);
+    const auto edge_bucket_id1 = GetPositionForID(edge_id_1);
 
-    // find bucket index
-    const auto iter = m_edge_id_to_list_index_map.find(edge_id_1);
-    BOOST_ASSERT(iter != m_edge_id_to_list_index_map.end());
-    const unsigned edge_bucket_id1 = iter->second;
-    BOOST_ASSERT(edge_bucket_id1 == GetPositionForID(edge_id_1));
-    BOOST_ASSERT(edge_bucket_id1 < m_compressed_oneway_geometries.size());
-
-    std::vector<OnewayCompressedEdge> &edge_bucket_list1 =
-        m_compressed_oneway_geometries[edge_bucket_id1];
+    OnewayEdgeBucket &edge_bucket_list1 = m_geometry_buckets->buckets[edge_bucket_id1];
 
     bool was_empty = edge_bucket_list1.empty();
 
@@ -173,18 +161,16 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     {
         // second edge is not atomic anymore
         const unsigned list_to_remove_index = GetPositionForID(edge_id_2);
-        BOOST_ASSERT(list_to_remove_index < m_compressed_oneway_geometries.size());
+        BOOST_ASSERT(list_to_remove_index < m_geometry_buckets->buckets.size());
 
-        std::vector<OnewayCompressedEdge> &edge_bucket_list2 =
-            m_compressed_oneway_geometries[list_to_remove_index];
+        OnewayEdgeBucket &edge_bucket_list2 = m_geometry_buckets->buckets[list_to_remove_index];
 
         // found an existing list, append it to the list of edge_id_1
         edge_bucket_list1.insert(
             edge_bucket_list1.end(), edge_bucket_list2.begin(), edge_bucket_list2.end());
 
         // remove the list of edge_id_2
-        m_edge_id_to_list_index_map.erase(edge_id_2);
-        BOOST_ASSERT(!m_edge_id_to_list_index_map.contains(edge_id_2));
+        m_edge_id_to_list_index[edge_id_2] = NoBucket;
         edge_bucket_list2.clear();
         BOOST_ASSERT(0 == edge_bucket_list2.size());
         m_free_list.emplace_back(list_to_remove_index);
@@ -198,135 +184,127 @@ void CompressedEdgeContainer::CompressEdge(const EdgeID edge_id_1,
     }
 }
 
-void CompressedEdgeContainer::AddUncompressedEdge(const EdgeID edge_id,
-                                                  const NodeID target_node_id,
-                                                  const EdgeWeight weight,
-                                                  const EdgeDuration duration)
-{
-    // remove super-trivial geometries
-    BOOST_ASSERT(SPECIAL_EDGEID != edge_id);
-    BOOST_ASSERT(SPECIAL_NODEID != target_node_id);
-    BOOST_ASSERT(INVALID_EDGE_WEIGHT != weight);
-    BOOST_ASSERT(INVALID_EDGE_DURATION != duration);
-
-    // Add via node id. List is created if it does not exist
-    if (!HasEntryForID(edge_id))
-    {
-        // create a new entry in the map
-        if (0 == m_free_list.size())
-        {
-            // make sure there is a place to put the entries
-            IncreaseFreeList();
-        }
-        BOOST_ASSERT(!m_free_list.empty());
-        m_edge_id_to_list_index_map[edge_id] = m_free_list.back();
-        m_free_list.pop_back();
-    }
-
-    // find bucket index
-    const auto iter = m_edge_id_to_list_index_map.find(edge_id);
-    BOOST_ASSERT(iter != m_edge_id_to_list_index_map.end());
-    const unsigned edge_bucket_id = iter->second;
-    BOOST_ASSERT(edge_bucket_id == GetPositionForID(edge_id));
-    BOOST_ASSERT(edge_bucket_id < m_compressed_oneway_geometries.size());
-
-    std::vector<OnewayCompressedEdge> &edge_bucket_list =
-        m_compressed_oneway_geometries[edge_bucket_id];
-
-    // note we don't save the start coordinate: it is implicitly given by edge_id
-    // weight is the distance to the (currently) last coordinate in the bucket
-    // Don't re-add this if it's already in there.
-    if (edge_bucket_list.empty())
-    {
-        edge_bucket_list.emplace_back(
-            OnewayCompressedEdge{target_node_id, ClipWeight(weight), ClipDuration(duration)});
-    }
-}
-
-void CompressedEdgeContainer::InitializeBothwayVector()
-{
-    segment_data = std::make_unique<SegmentDataContainer>();
-    segment_data->index.reserve(m_compressed_oneway_geometries.size());
-    segment_data->nodes.reserve(m_compressed_oneway_geometries.size());
-    segment_data->fwd_weights.reserve(m_compressed_oneway_geometries.size());
-    segment_data->rev_weights.reserve(m_compressed_oneway_geometries.size());
-    segment_data->fwd_durations.reserve(m_compressed_oneway_geometries.size());
-    segment_data->rev_durations.reserve(m_compressed_oneway_geometries.size());
-    segment_data->fwd_datasources.reserve(m_compressed_oneway_geometries.size());
-    segment_data->rev_datasources.reserve(m_compressed_oneway_geometries.size());
-}
-
-unsigned CompressedEdgeContainer::ZipEdges(const EdgeID f_edge_id, const EdgeID r_edge_id)
+unsigned CompressedEdgeContainer::ZipEdges(const util::NodeBasedDynamicGraph &graph,
+                                           EdgeID forward_edge,
+                                           EdgeID reverse_edge)
 {
     if (!segment_data)
-        InitializeBothwayVector();
+        segment_data = std::make_unique<SegmentDataContainer>();
 
-    const auto &forward_bucket = GetBucketReference(f_edge_id);
-    const auto &reverse_bucket = GetBucketReference(r_edge_id);
+    const unsigned geometry_id = segment_data->index.size();
+    segment_data->index.emplace_back(m_geometry_records.size());
 
-    BOOST_ASSERT(forward_bucket.size() == reverse_bucket.size());
-
-    const unsigned zipped_geometry_id = segment_data->index.size();
-    m_forward_edge_id_to_zipped_index_map[f_edge_id] = zipped_geometry_id;
-    m_reverse_edge_id_to_zipped_index_map[r_edge_id] = zipped_geometry_id;
-
-    segment_data->index.emplace_back(segment_data->nodes.size());
-
-    const auto &first_node = reverse_bucket.back();
-
-    constexpr DatasourceID LUA_SOURCE = 0;
-
-    segment_data->nodes.emplace_back(first_node.node_id);
-    segment_data->fwd_weights.emplace_back(INVALID_SEGMENT_WEIGHT);
-    segment_data->rev_weights.emplace_back(first_node.weight);
-    segment_data->fwd_durations.emplace_back(INVALID_SEGMENT_DURATION);
-    segment_data->rev_durations.emplace_back(first_node.duration);
-    segment_data->fwd_datasources.emplace_back(LUA_SOURCE);
-    segment_data->rev_datasources.emplace_back(LUA_SOURCE);
-
-    for (std::size_t i = 0; i < forward_bucket.size() - 1; ++i)
+    if (!HasEntryForID(forward_edge))
     {
-        const auto &fwd_node = forward_bucket.at(i);
-        const auto &rev_node = reverse_bucket.at(reverse_bucket.size() - 2 - i);
-
-        BOOST_ASSERT(fwd_node.node_id == rev_node.node_id);
-
-        segment_data->nodes.emplace_back(fwd_node.node_id);
-        segment_data->fwd_weights.emplace_back(fwd_node.weight);
-        segment_data->rev_weights.emplace_back(rev_node.weight);
-        segment_data->fwd_durations.emplace_back(fwd_node.duration);
-        segment_data->rev_durations.emplace_back(rev_node.duration);
-        segment_data->fwd_datasources.emplace_back(LUA_SOURCE);
-        segment_data->rev_datasources.emplace_back(LUA_SOURCE);
+        BOOST_ASSERT(!HasEntryForID(reverse_edge));
+        const auto &forward = graph.GetEdgeData(forward_edge);
+        const auto &reverse = graph.GetEdgeData(reverse_edge);
+        BOOST_ASSERT(forward.weight != INVALID_EDGE_WEIGHT &&
+                     reverse.weight != INVALID_EDGE_WEIGHT);
+        BOOST_ASSERT(forward.duration != INVALID_EDGE_DURATION &&
+                     reverse.duration != INVALID_EDGE_DURATION);
+        m_geometry_records.append({graph.GetTarget(reverse_edge),
+                                   INVALID_SEGMENT_WEIGHT,
+                                   ClipWeight(reverse.weight),
+                                   INVALID_SEGMENT_DURATION,
+                                   ClipDuration(reverse.duration)});
+        m_geometry_records.append({graph.GetTarget(forward_edge),
+                                   ClipWeight(forward.weight),
+                                   INVALID_SEGMENT_WEIGHT,
+                                   ClipDuration(forward.duration),
+                                   INVALID_SEGMENT_DURATION});
+        m_edge_id_to_list_index[forward_edge] = PackedGeometry;
+        m_edge_id_to_list_index[reverse_edge] = PackedGeometry;
+        return geometry_id;
     }
 
+    const auto &forward_bucket = GetBucketReference(forward_edge);
+    const auto &reverse_bucket = GetBucketReference(reverse_edge);
+    BOOST_ASSERT(forward_bucket.size() == reverse_bucket.size());
+    BOOST_ASSERT(!forward_bucket.empty());
+    const auto &first_node = reverse_bucket.back();
+    m_geometry_records.append({first_node.node_id,
+                               INVALID_SEGMENT_WEIGHT,
+                               first_node.weight,
+                               INVALID_SEGMENT_DURATION,
+                               first_node.duration});
+    for (std::size_t i = 0; i + 1 < forward_bucket.size(); ++i)
+    {
+        const auto &forward = forward_bucket.at(i);
+        const auto &reverse = reverse_bucket.at(reverse_bucket.size() - 2 - i);
+        BOOST_ASSERT(forward.node_id == reverse.node_id);
+        m_geometry_records.append(
+            {forward.node_id, forward.weight, reverse.weight, forward.duration, reverse.duration});
+    }
     const auto &last_node = forward_bucket.back();
-
-    segment_data->nodes.emplace_back(last_node.node_id);
-    segment_data->fwd_weights.emplace_back(last_node.weight);
-    segment_data->rev_weights.emplace_back(INVALID_SEGMENT_WEIGHT);
-    segment_data->fwd_durations.emplace_back(last_node.duration);
-    segment_data->rev_durations.emplace_back(INVALID_SEGMENT_DURATION);
-    segment_data->fwd_datasources.emplace_back(LUA_SOURCE);
-    segment_data->rev_datasources.emplace_back(LUA_SOURCE);
-
-    return zipped_geometry_id;
+    m_geometry_records.append({last_node.node_id,
+                               last_node.weight,
+                               INVALID_SEGMENT_WEIGHT,
+                               last_node.duration,
+                               INVALID_SEGMENT_DURATION});
+    return geometry_id;
 }
 
-void CompressedEdgeContainer::PrintStatistics() const
+void CompressedEdgeContainer::releaseEquivalentEdgeGeometry(EdgeID forward, EdgeID reverse)
 {
-    const uint64_t compressed_edges = m_compressed_oneway_geometries.size();
-    BOOST_ASSERT(0 == compressed_edges % 2);
-    BOOST_ASSERT(m_compressed_oneway_geometries.size() + m_free_list.size() > 0);
-
-    uint64_t compressed_geometries = 0;
-    uint64_t longest_chain_length = 0;
-    for (const std::vector<OnewayCompressedEdge> &current_vector : m_compressed_oneway_geometries)
+    if (findBucket(forward) == PackedGeometry)
     {
-        compressed_geometries += current_vector.size();
-        longest_chain_length = std::max(longest_chain_length, (uint64_t)current_vector.size());
+        BOOST_ASSERT(findBucket(reverse) == PackedGeometry);
+        return;
     }
+    auto &forward_bucket = m_geometry_buckets->buckets[GetPositionForID(forward)];
+    auto &reverse_bucket = m_geometry_buckets->buckets[GetPositionForID(reverse)];
+    const auto forward_interior = std::span(forward_bucket.data(), forward_bucket.size() - 1);
+    const auto reverse_interior = std::span(reverse_bucket.data(), reverse_bucket.size() - 1);
+    if (std::ranges::equal(forward_interior,
+                           reverse_interior | std::views::reverse,
+                           {},
+                           &OnewayCompressedEdge::node_id,
+                           &OnewayCompressedEdge::node_id))
+    {
+        OnewayEdgeBucket(&m_geometry_buckets->memory).swap(forward_bucket);
+        OnewayEdgeBucket(&m_geometry_buckets->memory).swap(reverse_bucket);
+        m_edge_id_to_list_index[forward] = PackedGeometry;
+        m_edge_id_to_list_index[reverse] = PackedGeometry;
+    }
+}
 
+void CompressedEdgeContainer::releaseGeometryBuckets()
+{
+    m_geometry_buckets.reset();
+    m_edge_id_to_list_index.clear();
+    decltype(m_free_list)().swap(m_free_list);
+}
+
+void CompressedEdgeContainer::loadPackedGeometry()
+{
+    m_geometry_records.finish();
+    const auto count = m_geometry_records.size();
+    segment_data->index.push_back(count);
+    segment_data->nodes.reserve(count);
+    segment_data->fwd_weights.reserve(count);
+    segment_data->rev_weights.reserve(count);
+    segment_data->fwd_durations.reserve(count);
+    segment_data->rev_durations.reserve(count);
+    m_geometry_records.forEachBatch(
+        [&](std::span<const GeometryRecord> records)
+        {
+            for (const auto &record : records)
+            {
+                segment_data->nodes.emplace_back(record.node);
+                segment_data->fwd_weights.emplace_back(record.forward_weight);
+                segment_data->rev_weights.emplace_back(record.reverse_weight);
+                segment_data->fwd_durations.emplace_back(record.forward_duration);
+                segment_data->rev_durations.emplace_back(record.reverse_duration);
+            }
+        });
+    m_geometry_records.clear();
+    segment_data->fwd_datasources.assign(count, 0);
+    segment_data->rev_datasources.assign(count, 0);
+}
+
+bool CompressedEdgeContainer::finalizeGeometry(const util::NodeBasedDynamicGraph &graph)
+{
     if (clipped_weights > 0)
     {
         util::Log(logWARNING) << "Clipped " << clipped_weights << " segment weights to "
@@ -338,6 +316,75 @@ void CompressedEdgeContainer::PrintStatistics() const
                               << MAX_SEGMENT_DURATION;
     }
 
+    const auto ready = [&](EdgeID edge)
+    {
+        const auto bucket = findBucket(edge);
+        return bucket == PackedGeometry ||
+               (bucket == NoBucket && graph.GetEdgeData(edge).geometry_id.id == SPECIAL_GEOMETRYID);
+    };
+    const auto all_packed = [&]
+    {
+        for (const auto node : util::irange(0u, graph.GetNumberOfNodes()))
+        {
+            if (!std::ranges::all_of(graph.GetAdjacentEdgeRange(node), ready))
+                return false;
+        }
+        return true;
+    }();
+    if (all_packed)
+    {
+        releaseGeometryBuckets();
+        releaseUnusedHeapPages();
+    }
+    loadPackedGeometry();
+    m_use_packed_geometry = true;
+
+    if (!all_packed)
+    {
+        const auto matches = [&](EdgeID edge)
+        {
+            if (ready(edge))
+                return true;
+            const auto geometry = graph.GetEdgeData(edge).geometry_id;
+            const auto bucket = findBucket(edge);
+            return geometry.id < segment_data->GetNumberOfGeometries() &&
+                   bucket < m_geometry_buckets->buckets.size() &&
+                   std::ranges::equal(m_geometry_buckets->buckets[bucket],
+                                      getGeometryNodes(edge, geometry),
+                                      {},
+                                      &OnewayCompressedEdge::node_id);
+        };
+        for (const auto node : util::irange(0u, graph.GetNumberOfNodes()))
+        {
+            if (!std::ranges::all_of(graph.GetAdjacentEdgeRange(node), matches))
+            {
+                m_has_fallback_geometry = true;
+                util::Log() << "Retaining per-edge geometry for mismatched sequences";
+                return false;
+            }
+        }
+        releaseGeometryBuckets();
+    }
+    util::Log() << "Using packed geometry for edge expansion and guidance";
+    return true;
+}
+
+void CompressedEdgeContainer::PrintStatistics(unsigned live_edges) const
+{
+    std::uint64_t stored_edges = 0;
+    std::uint64_t stored_segments = 0;
+    std::uint64_t longest_chain_length = 1;
+    for (const OnewayEdgeBucket &current_vector : m_geometry_buckets->buckets)
+    {
+        stored_edges += !current_vector.empty();
+        stored_segments += current_vector.size();
+        longest_chain_length =
+            std::max(longest_chain_length, static_cast<std::uint64_t>(current_vector.size()));
+    }
+
+    BOOST_ASSERT(stored_edges <= live_edges);
+    const std::uint64_t compressed_edges = live_edges;
+    const auto compressed_geometries = stored_segments + live_edges - stored_edges;
     util::Log() << "Geometry successfully removed:"
                    "\n  compressed edges: "
                 << compressed_edges << "\n  compressed geometries: " << compressed_geometries
@@ -350,8 +397,8 @@ void CompressedEdgeContainer::PrintStatistics() const
 const CompressedEdgeContainer::OnewayEdgeBucket &
 CompressedEdgeContainer::GetBucketReference(const EdgeID edge_id) const
 {
-    const unsigned index = m_edge_id_to_list_index_map.at(edge_id);
-    return m_compressed_oneway_geometries.at(index);
+    const unsigned index = GetPositionForID(edge_id);
+    return m_geometry_buckets->buckets.at(index);
 }
 
 // Since all edges are technically in the compressed geometry container,
@@ -383,11 +430,20 @@ NodeID CompressedEdgeContainer::GetLastEdgeSourceID(const EdgeID edge_id) const
     return bucket[bucket.size() - 2].node_id;
 }
 
-std::unique_ptr<SegmentDataContainer> CompressedEdgeContainer::ToSegmentData()
+void CompressedEdgeContainer::writeGeometryAndReleaseCosts(const std::filesystem::path &path)
 {
-    // Finalize the index
-    segment_data->index.push_back(segment_data->nodes.size());
+    files::writeSegmentData(path, *segment_data);
+    segment_data->fwd_weights = {};
+    segment_data->rev_weights = {};
+    segment_data->fwd_durations = {};
+    segment_data->rev_durations = {};
+    decltype(segment_data->fwd_datasources)().swap(segment_data->fwd_datasources);
+    decltype(segment_data->rev_datasources)().swap(segment_data->rev_datasources);
+}
 
-    return std::move(segment_data);
+void CompressedEdgeContainer::releaseGeometry()
+{
+    segment_data.reset();
+    releaseGeometryBuckets();
 }
 } // namespace osrm::extractor

@@ -16,6 +16,7 @@ Use `./scripts/format.sh` to format the code. Ensure clang-format-22 is availabl
 Specific practices to follow (see [wiki](https://github.com/Project-OSRM/osrm-backend/wiki/Coding-Standards)):
 
 - **No `using namespace`**: Always use explicit `std::` prefixes, never `using namespace std;` (especially in headers)
+- **Prefer STL over C APIs**: Use C++ standard library equivalents instead of raw C functions where available, such as `std::copy` or `std::copy_n` instead of `memcpy`, and `std::equal` instead of `memcmp`. Preserve byte-exact semantics when required.
 - **Naming conventions**:
   - Type names (classes, structs, enums): `UpperCamelCase` (e.g. `TextFileReader`)
   - Variables: `lower_case_with_underscores`, private members start with `m_` (e.g. `m_node_count`)

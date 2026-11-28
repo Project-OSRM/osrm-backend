@@ -2,6 +2,7 @@
 #include "extractor/conditional_turn_penalty.hpp"
 #include "extractor/edge_based_edge.hpp"
 #include "extractor/files.hpp"
+#include "extractor/heap_pages.hpp"
 #include "extractor/intersection/intersection_analysis.hpp"
 #include "extractor/scripting_environment.hpp"
 #include "extractor/serialization.hpp"
@@ -42,27 +43,16 @@ EdgeBasedGraphFactory::EdgeBasedGraphFactory(
     const std::vector<util::Coordinate> &coordinates,
     const StringTable &string_table,
     const std::unordered_set<EdgeID> &segregated_edges,
-    const extractor::LaneDescriptionMap &lane_description_map)
-    : m_edge_based_node_container(node_data_container), m_connectivity_checksum(0),
+    const extractor::LaneDescriptionMap &lane_description_map,
+    RecordSpool<EdgeBasedEdge> &edge_records,
+    RecordSpool<EdgeBasedNodeSegment> &segment_records)
+    : m_edge_based_node_segments(segment_records), m_edge_based_node_container(node_data_container),
+      m_edge_based_edge_list(edge_records), m_connectivity_checksum(0),
       m_number_of_edge_based_nodes(0), m_coordinates(coordinates),
       m_node_based_graph(node_based_graph), m_compressed_edge_container(compressed_edge_container),
       string_table(string_table), segregated_edges(segregated_edges),
       lane_description_map(lane_description_map)
 {
-}
-
-void EdgeBasedGraphFactory::GetEdgeBasedEdges(
-    util::DeallocatingVector<EdgeBasedEdge> &output_edge_list)
-{
-    BOOST_ASSERT_MSG(0 == output_edge_list.size(), "Vector is not empty");
-    using std::swap; // Koenig swap
-    swap(m_edge_based_edge_list, output_edge_list);
-}
-
-void EdgeBasedGraphFactory::GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes)
-{
-    using std::swap; // Koenig swap
-    swap(nodes, m_edge_based_node_segments);
 }
 
 void EdgeBasedGraphFactory::GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights)
@@ -124,20 +114,15 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
         m_edge_based_node_weights[nbe_to_ebn_mapping[edge_id_1]] |=
             EdgeWeight{static_cast<EdgeWeight::value_type>(0x80000000)};
 
-    BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1) ==
-                 m_compressed_edge_container.HasEntryForID(edge_id_2));
-    BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_1));
-    BOOST_ASSERT(m_compressed_edge_container.HasEntryForID(edge_id_2));
-    const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(edge_id_1);
-    BOOST_ASSERT(forward_geometry.size() ==
-                 m_compressed_edge_container.GetBucketReference(edge_id_2).size());
+    const auto forward_geometry =
+        m_compressed_edge_container.getGeometryNodes(edge_id_1, forward_data.geometry_id);
+    BOOST_ASSERT(
+        forward_geometry.size() ==
+        m_compressed_edge_container.getGeometryNodes(edge_id_2, reverse_data.geometry_id).size());
     const auto segment_count = forward_geometry.size();
 
     // There should always be some geometry
     BOOST_ASSERT(0 != segment_count);
-
-    // const unsigned packed_geometry_id = m_compressed_edge_container.ZipEdges(edge_id_1,
-    // edge_id_2);
 
     NodeID current_edge_source_coordinate_id = node_u;
 
@@ -173,11 +158,10 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
     // Add segments of edge-based nodes
     for (const auto i : util::irange(std::size_t{0}, segment_count))
     {
-        BOOST_ASSERT(
-            current_edge_source_coordinate_id ==
-            m_compressed_edge_container.GetBucketReference(edge_id_2)[segment_count - 1 - i]
-                .node_id);
-        const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
+        BOOST_ASSERT(current_edge_source_coordinate_id ==
+                     m_compressed_edge_container.getGeometryNodes(
+                         edge_id_2, reverse_data.geometry_id)[segment_count - 1 - i]);
+        const NodeID current_edge_target_coordinate_id = forward_geometry[i];
 
         // don't add node-segments for penalties
         if (current_edge_target_coordinate_id == current_edge_source_coordinate_id)
@@ -186,13 +170,13 @@ NBGToEBG EdgeBasedGraphFactory::InsertEdgeBasedNode(const NodeID node_u, const N
         BOOST_ASSERT(current_edge_target_coordinate_id != current_edge_source_coordinate_id);
 
         // build edges
-        m_edge_based_node_segments.emplace_back(
-            edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_1]),
-            edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_2]),
-            current_edge_source_coordinate_id,
-            current_edge_target_coordinate_id,
-            i,
-            forward_data.flags.startpoint || reverse_data.flags.startpoint);
+        m_edge_based_node_segments.append(
+            EdgeBasedNodeSegment(edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_1]),
+                                 edge_id_to_segment_id(nbe_to_ebn_mapping[edge_id_2]),
+                                 current_edge_source_coordinate_id,
+                                 current_edge_target_coordinate_id,
+                                 i,
+                                 forward_data.flags.startpoint || reverse_data.flags.startpoint));
 
         current_edge_source_coordinate_id = current_edge_target_coordinate_id;
     }
@@ -230,7 +214,9 @@ void EdgeBasedGraphFactory::Run(
         auto mapping = GenerateEdgeExpandedNodes(way_restriction_map);
         files::writeNBGMapping(cnbg_ebg_mapping_path, mapping);
     }
+    m_edge_based_node_segments.finish();
     TIMER_STOP(generate_nodes);
+    releaseUnusedHeapPages();
 
     TIMER_START(generate_edges);
     GenerateEdgeExpandedEdges(scripting_environment,
@@ -305,8 +291,6 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
     {
         util::UnbufferedLog log;
         util::Percent progress(log, m_node_based_graph.GetNumberOfNodes());
-
-        // m_compressed_edge_container.InitializeBothwayVector();
 
         // loop over all edges and generate new set of nodes
         for (const auto nbg_node_u : util::irange(0u, m_node_based_graph.GetNumberOfNodes()))
@@ -394,7 +378,8 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             // an input location can snap to. Without this, it would be possible to not find
             // certain routes that end on a via-way, because they are only routable via the
             // duplicated edge.
-            const auto &forward_geometry = m_compressed_edge_container.GetBucketReference(eid);
+            const auto forward_geometry =
+                m_compressed_edge_container.getGeometryNodes(eid, edge_data.geometry_id);
             const auto segment_count = forward_geometry.size();
 
             NodeID current_edge_source_coordinate_id = node_u;
@@ -413,7 +398,7 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
             // Add segments of edge-based nodes
             for (const auto i : util::irange(std::size_t{0}, segment_count))
             {
-                const NodeID current_edge_target_coordinate_id = forward_geometry[i].node_id;
+                const NodeID current_edge_target_coordinate_id = forward_geometry[i];
 
                 // don't add node-segments for penalties
                 if (current_edge_target_coordinate_id == current_edge_source_coordinate_id)
@@ -423,12 +408,13 @@ EdgeBasedGraphFactory::GenerateEdgeExpandedNodes(const WayRestrictionMap &way_re
                              current_edge_source_coordinate_id);
 
                 // build edges
-                m_edge_based_node_segments.emplace_back(edge_id_to_segment_id(edge_based_node_id),
-                                                        SegmentID{SPECIAL_SEGMENTID, false},
-                                                        current_edge_source_coordinate_id,
-                                                        current_edge_target_coordinate_id,
-                                                        i,
-                                                        forward_data.flags.startpoint);
+                m_edge_based_node_segments.append(
+                    EdgeBasedNodeSegment(edge_id_to_segment_id(edge_based_node_id),
+                                         SegmentID{SPECIAL_SEGMENTID, false},
+                                         current_edge_source_coordinate_id,
+                                         current_edge_target_coordinate_id,
+                                         i,
+                                         forward_data.flags.startpoint));
 
                 current_edge_source_coordinate_id = current_edge_target_coordinate_id;
             }
@@ -493,7 +479,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     // FIXME these need to be tuned in pre-allocated size
     std::vector<TurnPenalty> turn_weight_penalties;
     std::vector<TurnPenalty> turn_duration_penalties;
-    std::vector<lookup::TurnIndexBlock> turn_penalties_index;
+    RecordSpool<lookup::TurnIndexBlock> turn_penalties_index{
+        std::filesystem::path(turn_penalties_index_filename).parent_path()};
 
     // Now, renumber all our maneuver overrides to use edge-based-nodes
     std::vector<StorageManeuverOverride> storage_maneuver_overrides;
@@ -526,15 +513,20 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 
         auto const transfer_data = [&](const EdgeWithData &edge_with_data)
         {
-            m_edge_based_edge_list.push_back(edge_with_data.edge);
+            auto edge = edge_with_data.edge;
+            if (m_edge_based_edge_list.size() == std::numeric_limits<EdgeID>::max())
+                throw util::exception("Too many edge-expanded edges" + SOURCE_REF);
+            edge.data.turn_id = static_cast<EdgeID>(m_edge_based_edge_list.size());
+            m_edge_based_edge_list.append(edge);
             turn_weight_penalties.push_back(edge_with_data.turn_weight_penalty);
             turn_duration_penalties.push_back(edge_with_data.turn_duration_penalty);
-            turn_penalties_index.push_back(edge_with_data.turn_index);
+            turn_penalties_index.append(edge_with_data.turn_index);
         };
 
         struct EdgesPipelineBuffer
         {
             std::size_t nodes_processed = 0;
+            std::size_t node_based_edges = 0;
 
             std::vector<EdgeWithData> continuous_data; // may need this
             std::vector<EdgeWithData> delayed_data;    // may need this
@@ -617,6 +609,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // node. But we'll check anyway.
             const bool is_traffic_light = scripting_environment.m_obstacle_map.any(
                 node_along_road_entering, intersection_node, Obstacle::Type::TrafficSignals);
+            const bool has_turning_facility = scripting_environment.m_obstacle_map.any(
+                SPECIAL_NODEID, intersection_node, Obstacle::Type::Turning);
             const bool is_uturn =
                 guidance::getTurnDirection(turn_angle) == guidance::DirectionModifier::UTurn;
 
@@ -627,6 +621,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                                  is_uturn),
                 is_uturn,
                 is_traffic_light,
+                has_turning_facility,
                 m_edge_based_node_container.GetAnnotation(edge_data1.annotation_data)
                     .is_left_hand_driving,
                 // source info
@@ -699,14 +694,16 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             // `node_along_road_entering`;
             // otherwise, we need to look up the node immediately preceding the turn from the
             // compressed edge container.
-            const bool isTrivial = m_compressed_edge_container.IsTrivial(node_based_edge_from);
+            auto entering = m_compressed_edge_container.getGeometryNodes(node_based_edge_from,
+                                                                         edge_data1.geometry_id);
+            BOOST_ASSERT(!entering.empty());
+            const auto from_node =
+                entering.size() == 1 ? node_along_road_entering : entering[entering.size() - 2];
 
-            const auto &from_node =
-                isTrivial ? node_along_road_entering
-                          : m_compressed_edge_container.GetLastEdgeSourceID(node_based_edge_from);
-
-            const auto &to_node =
-                m_compressed_edge_container.GetFirstEdgeTargetID(node_based_edge_to);
+            auto exiting = m_compressed_edge_container.getGeometryNodes(node_based_edge_to,
+                                                                        edge_data2.geometry_id);
+            BOOST_ASSERT(!exiting.empty());
+            const auto to_node = exiting.front();
 
             lookup::TurnIndexBlock turn_index_block = {from_node, intersection_node, to_node};
 
@@ -768,10 +765,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
                     // an outgoing edge. Therefore, we have to search all connected edges for edges
                     // entering `b`
 
+                    buffer->node_based_edges += incoming_edges.size();
                     for (const intersection::IntersectionEdge &incoming_edge : incoming_edges)
                     {
-                        ++node_based_edge_counter;
-
                         const intersection::IntersectionView connected_roads =
                             intersection::getConnectedRoadsForEdgeGeometries(
                                 m_node_based_graph,
@@ -1142,6 +1138,7 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
             [&](const auto &buffer)
             {
                 routing_progress.PrintAddition(buffer->nodes_processed);
+                node_based_edge_counter += buffer->node_based_edges;
 
                 m_connectivity_checksum = buffer->checksum.update_checksum(m_connectivity_checksum);
 
@@ -1259,17 +1256,8 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
     }
 
     util::Log() << "done.";
-    util::Log() << "Renumbering turns";
-    // Now, update the turn_id property on every EdgeBasedEdge - it will equal the position in the
-    // m_edge_based_edge_list array for each object.
-    tbb::parallel_for(tbb::blocked_range<NodeID>(0, m_edge_based_edge_list.size()),
-                      [this](const tbb::blocked_range<NodeID> &range)
-                      {
-                          for (auto x = range.begin(), end = range.end(); x != end; ++x)
-                          {
-                              m_edge_based_edge_list[x].data.turn_id = x;
-                          }
-                      });
+    m_edge_based_edge_list.finish();
+    turn_penalties_index.finish();
 
     // re-hash conditionals to connect to their respective edge-based edges. Due to the ordering, we
     // do not really have a choice but to index the conditional penalties and walk over all
@@ -1295,6 +1283,9 @@ void EdgeBasedGraphFactory::GenerateEdgeExpandedEdges(
 std::vector<ConditionalTurnPenalty>
 EdgeBasedGraphFactory::IndexConditionals(std::vector<Conditional> &&conditionals) const
 {
+    if (conditionals.empty())
+        return {};
+
     std::unordered_multimap<std::pair<NodeID, NodeID>, ConditionalTurnPenalty *> index;
 
     // build and index of all conditional restrictions
@@ -1304,15 +1295,19 @@ EdgeBasedGraphFactory::IndexConditionals(std::vector<Conditional> &&conditionals
 
     std::vector<ConditionalTurnPenalty> indexed_restrictions;
 
-    for (auto const &edge : m_edge_based_edge_list)
-    {
-        auto const range = index.equal_range(std::make_pair(edge.source, edge.target));
-        for (auto itr = range.first; itr != range.second; ++itr)
+    m_edge_based_edge_list.forEachBatch(
+        [&](std::span<const EdgeBasedEdge> edges)
         {
-            itr->second->turn_offset = edge.data.turn_id;
-            indexed_restrictions.push_back(*itr->second);
-        }
-    }
+            for (const auto &edge : edges)
+            {
+                const auto range = index.equal_range(std::make_pair(edge.source, edge.target));
+                for (auto itr = range.first; itr != range.second; ++itr)
+                {
+                    itr->second->turn_offset = edge.data.turn_id;
+                    indexed_restrictions.push_back(*itr->second);
+                }
+            }
+        });
 
     return indexed_restrictions;
 }

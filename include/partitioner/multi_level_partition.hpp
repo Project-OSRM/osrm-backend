@@ -1,6 +1,7 @@
 #ifndef OSRM_PARTITIONER_MULTI_LEVEL_PARTITION_HPP
 #define OSRM_PARTITIONER_MULTI_LEVEL_PARTITION_HPP
 
+#include "util/block_delta.hpp"
 #include "util/exception.hpp"
 #include "util/for_each_pair.hpp"
 #include "util/msb.hpp"
@@ -90,10 +91,22 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     {
     }
 
+    MultiLevelPartitionImpl(LevelDataPtr levels,
+                            Vector<CellID> children,
+                            Vector<util::BlockDeltaHeader> headers,
+                            Vector<std::uint64_t> words,
+                            std::uint64_t *count)
+        requires(Ownership == storage::Ownership::View)
+        : level_data(levels), cell_to_children(std::move(children)),
+          partition_headers(std::move(headers)), partition_words(std::move(words)),
+          partition_count(count)
+    {
+    }
+
     // returns the index of the cell the vertex is contained at level l
     CellID GetCell(LevelID l, NodeID node) const
     {
-        auto p = partition[node];
+        auto p = readPartition(node);
         auto lidx = LevelIDToIndex(l);
         auto masked = p & level_data->lidx_to_mask[lidx];
         return masked >> level_data->lidx_to_offset[lidx];
@@ -107,10 +120,12 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
 
     LevelID GetHighestDifferentLevel(NodeID first, NodeID second) const
     {
-        if (partition[first] == partition[second])
+        const auto first_partition = readPartition(first);
+        const auto second_partition = readPartition(second);
+        if (first_partition == second_partition)
             return 0;
 
-        auto msb = util::msb(partition[first] ^ partition[second]);
+        auto msb = util::msb(first_partition ^ second_partition);
         return level_data->bit_to_level[msb];
     }
 
@@ -159,7 +174,16 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     // We save the sentinel as last node in the partition information.
     // It has the highest cell id in each level so we can derived the range
     // of cell ids efficiently.
-    inline NodeID GetSentinelNode() const { return partition.size() - 1; }
+    inline NodeID GetSentinelNode() const
+    { return (partition_count ? *partition_count : partition.size()) - 1; }
+
+    PartitionID readPartition(NodeID node) const
+    {
+        if constexpr (Ownership == storage::Ownership::View)
+            if (partition_count)
+                return util::decodeBlockDelta(partition_headers, partition_words, node);
+        return partition[node];
+    }
 
     void SetCellID(LevelID l, NodeID node, CellID cell_id)
     {
@@ -326,6 +350,9 @@ template <storage::Ownership Ownership> class MultiLevelPartitionImpl final
     LevelDataPtr level_data = {};
     Vector<PartitionID> partition;
     Vector<CellID> cell_to_children;
+    Vector<util::BlockDeltaHeader> partition_headers;
+    Vector<std::uint64_t> partition_words;
+    std::uint64_t *partition_count = nullptr;
 };
 
 template <>

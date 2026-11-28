@@ -2,6 +2,7 @@
 
 #include "extractor/compressed_edge_container.hpp"
 #include "extractor/extraction_turn.hpp"
+#include "extractor/heap_pages.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/turn_path_compressor.hpp"
 
@@ -28,6 +29,17 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
 {
     const unsigned original_number_of_nodes = graph.GetNumberOfNodes();
     const unsigned original_number_of_edges = graph.GetNumberOfEdges();
+    constexpr auto ReclaimSlots = (128 * 1024 * 1024) / sizeof(util::NodeBasedDynamicGraph::Edge);
+    const auto original_slots = graph.GetEdgeCapacity();
+    geometry_compressor.initializeEdgeIndex(original_slots);
+    const auto compact_edges = [&]
+    {
+        graph.compactEdgesInNodeOrder(
+            [&](EdgeID source, EdgeID destination, unsigned count)
+            { geometry_compressor.moveEdgeMappings(source, destination, count); });
+        geometry_compressor.resizeEdgeIndex(graph.GetEdgeCapacity());
+        releaseUnusedHeapPages();
+    };
     const std::vector<ExtractionTurnLeg> no_other_roads;
 
     TurnPathCompressor turn_path_compressor(turn_restrictions, maneuver_overrides);
@@ -71,6 +83,9 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
         for (const NodeID node_v : util::irange(0u, original_number_of_nodes))
         {
             progress.PrintStatus(node_v);
+            if (node_v % 65536 == 0 &&
+                graph.GetEdgeCapacity() - graph.GetNumberOfEdges() >= ReclaimSlots)
+                compact_edges();
 
             // only contract degree 2 vertices
             if (2 != graph.GetOutDegree(node_v))
@@ -276,7 +291,9 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
                                              no_other_roads,
                                              no_other_roads,
                                              scripting_environment.m_obstacle_map.any(
-                                                 from, via, Obstacle::Type::TrafficSignals)};
+                                                 from, via, Obstacle::Type::TrafficSignals),
+                                             // Turning facilities are incompressible.
+                                             false};
                     scripting_environment.ProcessTurn(fake_turn);
                     penalties.duration +=
                         to_alias<EdgeDuration>(fake_turn.duration * SECOND_TO_DECISECOND);
@@ -353,20 +370,11 @@ void GraphCompressor::Compress(ScriptingEnvironment &scripting_environment,
         }
     }
 
+    if (graph.GetEdgeCapacity() != graph.GetNumberOfEdges())
+        compact_edges();
+    util::Log() << "Compacted node-based graph from " << original_slots << " to "
+                << graph.GetEdgeCapacity() << " edge slots";
     PrintStatistics(original_number_of_nodes, original_number_of_edges, graph);
-
-    // Repeate the loop, but now add all edges as uncompressed values.
-    // The function AddUncompressedEdge does nothing if the edge is already
-    // in the CompressedEdgeContainer.
-    for (const NodeID node_u : util::irange(0u, original_number_of_nodes))
-    {
-        for (const auto edge_id : util::irange(graph.BeginEdges(node_u), graph.EndEdges(node_u)))
-        {
-            const EdgeData &data = graph.GetEdgeData(edge_id);
-            const NodeID target = graph.GetTarget(edge_id);
-            geometry_compressor.AddUncompressedEdge(edge_id, target, data.weight, data.duration);
-        }
-    }
 }
 
 void GraphCompressor::PrintStatistics(unsigned original_number_of_nodes,

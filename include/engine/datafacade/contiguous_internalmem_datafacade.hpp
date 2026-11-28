@@ -20,7 +20,9 @@
 #include <boost/assert.hpp>
 
 #include <algorithm>
+#include <atomic>
 #include <cstddef>
+#include <cstdint>
 #include <iterator>
 #include <memory>
 #include <string>
@@ -190,7 +192,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     void InitializeInternalPointers(const storage::SharedDataIndex &index,
                                     const std::string &metric_name,
-                                    const std::size_t exclude_index)
+                                    const std::size_t exclude_index,
+                                    bool ch = false)
     {
         // TODO: For multi-metric support we need to have separate exclude classes per metric
         (void)metric_name;
@@ -232,9 +235,11 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
         edge_based_node_data = make_ebn_data_view(index, "/common/ebg_node_data");
 
-        if (isIndexed(index, "/common/turn_data"))
+        const std::string turn_prefix =
+            ch && index.HasBlock("/ch/turn_penalty/weight") ? "/ch" : "/common";
+        if (isIndexed(index, turn_prefix + "/turn_data"))
         {
-            turn_data = make_turn_data_view(index, "/common/turn_data");
+            turn_data = make_turn_data_view(index, turn_prefix + "/turn_data");
         }
 
         if (isIndexed(index, "/common/names"))
@@ -250,8 +255,8 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
             m_lane_tuple_id_pairs = make_lane_data_view(index, "/common/turn_lanes");
         }
 
-        m_turn_weight_penalties = make_turn_weight_view(index, "/common/turn_penalty");
-        m_turn_duration_penalties = make_turn_duration_view(index, "/common/turn_penalty");
+        m_turn_weight_penalties = make_turn_weight_view(index, turn_prefix + "/turn_penalty");
+        m_turn_duration_penalties = make_turn_duration_view(index, turn_prefix + "/turn_penalty");
 
         segment_data = make_segment_data_view(index, "/common/segment_data");
 
@@ -273,9 +278,10 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     // allocator
     ContiguousInternalMemoryDataFacadeBase(std::shared_ptr<ContiguousBlockAllocator> allocator_,
                                            const std::string &metric_name,
-                                           const std::size_t exclude_index)
+                                           const std::size_t exclude_index,
+                                           bool ch = false)
         : allocator(std::move(allocator_))
-    { InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index); }
+    { InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index, ch); }
 
     // node and edge information access
     util::Coordinate GetCoordinateOfNode(const NodeID node_based_node_id) const override final
@@ -614,7 +620,7 @@ class ContiguousInternalMemoryDataFacade<CH>
     ContiguousInternalMemoryDataFacade(const std::shared_ptr<ContiguousBlockAllocator> &allocator,
                                        const std::string &metric_name,
                                        const std::size_t exclude_index)
-        : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index),
+        : ContiguousInternalMemoryDataFacadeBase(allocator, metric_name, exclude_index, true),
           ContiguousInternalMemoryAlgorithmDataFacade<CH>(allocator, metric_name, exclude_index)
     {
     }
@@ -631,6 +637,11 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
     using GraphEdge = QueryGraph::EdgeArrayEntry;
 
     QueryGraph query_graph;
+
+    // Each exclusion and each loaded dataset has its own immutable facade.
+    inline static std::atomic<std::uint64_t> next_unpacking_cache_id{0};
+    const std::uint64_t m_unpacking_cache_id =
+        next_unpacking_cache_id.fetch_add(1, std::memory_order_relaxed);
 
     void InitializeInternalPointers(const storage::SharedDataIndex &index,
                                     const std::string &metric_name,
@@ -653,6 +664,8 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
         const std::size_t exclude_index)
         : allocator(std::move(allocator_))
     { InitializeInternalPointers(allocator->GetIndex(), metric_name, exclude_index); }
+
+    std::uint64_t getUnpackingCacheId() const { return m_unpacking_cache_id; }
 
     const partitioner::MultiLevelPartitionView &GetMultiLevelPartition() const override
     { return mld_partition; }
@@ -692,7 +705,7 @@ template <> class ContiguousInternalMemoryAlgorithmDataFacade<MLD> : public Algo
     NodeID GetTarget(const EdgeID edge_based_edge_id) const override final
     { return query_graph.GetTarget(edge_based_edge_id); }
 
-    const EdgeData &GetEdgeData(const EdgeID edge_based_edge_id) const override final
+    EdgeData GetEdgeData(const EdgeID edge_based_edge_id) const override final
     { return query_graph.GetEdgeData(edge_based_edge_id); }
 
     EdgeRange GetBorderEdgeRange(const LevelID level,

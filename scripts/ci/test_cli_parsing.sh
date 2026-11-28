@@ -246,9 +246,13 @@ assert_exit_nonzero "extract/--bogus-flag exits nonzero" \
 assert_exit_nonzero "routed/--bogus-flag exits nonzero" \
     "$ROUTED" --bogus-flag "$NONEXISTENT"
 
-# --- summary ---------------------------------------------------------------
+assert_exit_nonzero "routed rejects the former cell sharing flag" \
+    "$ROUTED" --experimental-share-cell-metrics --version
 
-echo
+# --- dataset preparation ---------------------------------------------------
+assert_output_matches "customize/turn identities are required" '^required .osrm.edges$' "$CUSTOMIZE" --list-inputs
+assert_output_not_matches "customize/no export mode" 'compact-output' "$CUSTOMIZE" --help
+
 echo "----------------------------------------"
 echo "$PASS passed, $FAIL failed"
 if [ "$FAIL" -gt 0 ]; then

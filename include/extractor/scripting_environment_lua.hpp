@@ -11,6 +11,7 @@
 #include <memory>
 #include <mutex>
 #include <string>
+#include <vector>
 
 // TODO(themarex): array-bounds check is disabled because of a false-positive in sol2
 #pragma GCC diagnostic push
@@ -37,6 +38,7 @@ struct LuaScriptingContext final
                     ExtractionWay &result,
                     const ExtractionRelationContainer &relations);
     void ProcessRelation(const osmium::Relation &, const ExtractionRelationContainer &relations);
+    void collectUnusedMemory();
 
     ProfileProperties properties;
     RasterContainer raster_sources;
@@ -55,6 +57,10 @@ struct LuaScriptingContext final
     sol::protected_function relation_function;
 
     int api_version = 4;
+    unsigned turns_since_heap_check = 0;
+    std::size_t live_heap_bytes = 0;
+    std::vector<std::string> node_required_tags;
+    std::vector<std::string> way_required_tags;
     sol::table profile_table;
 
     // Reference to immutable location dependent data and locations memo

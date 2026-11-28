@@ -18,6 +18,7 @@
 
 #include <algorithm>
 #include <iterator>
+#include <tuple>
 #include <vector>
 
 namespace osrm::partitioner
@@ -60,15 +61,23 @@ splitBidirectionalEdges(const std::vector<extractor::EdgeBasedEdge> &edges)
 template <typename OutputEdgeT>
 std::vector<OutputEdgeT> prepareEdgesForUsageInGraph(std::vector<extractor::EdgeBasedEdge> edges)
 {
-    // sort into blocks of edges with same source + target
-    // the we partition by the forward flag to sort all edges with a forward direction first.
-    // the we sort by weight to ensure the first forward edge is the smallest forward edge
+    const auto metric_key = [](const auto &data)
+    {
+        return std::make_tuple(data.weight,
+                               static_cast<EdgeDuration::value_type>(data.duration),
+                               data.distance,
+                               data.turn_id);
+    };
+
+    // Sort endpoints and traversal direction before the complete metric and turn ID.
     std::sort(begin(edges),
               end(edges),
-              [](const auto &lhs, const auto &rhs)
+              [metric_key](const auto &lhs, const auto &rhs)
               {
-                  return std::tie(lhs.source, lhs.target, rhs.data.forward, lhs.data.weight) <
-                         std::tie(rhs.source, rhs.target, lhs.data.forward, rhs.data.weight);
+                  return std::make_tuple(
+                             lhs.source, lhs.target, !lhs.data.forward, metric_key(lhs.data)) <
+                         std::make_tuple(
+                             rhs.source, rhs.target, !rhs.data.forward, metric_key(rhs.data));
               });
 
     std::vector<OutputEdgeT> output_edges;
@@ -119,8 +128,8 @@ std::vector<OutputEdgeT> prepareEdgesForUsageInGraph(std::vector<extractor::Edge
             BOOST_ASSERT(first_backward->data.backward);
             BOOST_ASSERT(first_backward != end_interval);
 
-            // same weight, so we can just merge them
-            if (begin_interval->data.weight == first_backward->data.weight)
+            // Opposite turns can share a weight while carrying different metadata.
+            if (metric_key(begin_interval->data) == metric_key(first_backward->data))
             {
                 OutputEdgeT merged{source, target, begin_interval->data};
                 merged.data.backward = true;

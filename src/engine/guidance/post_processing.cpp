@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstddef>
+#include <iterator>
 #include <utility>
 
 namespace osrm::engine::guidance
@@ -47,7 +48,9 @@ void compressRange(const RouteStepIterator begin, const RouteStepIterator end)
 
 // this function handles a single roundabout between enter (which might be missing) to exit (which
 // might be missing as well)
-void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterator end)
+void processRoundaboutExits(const RouteStepIterator leg_begin,
+                            const RouteStepIterator begin,
+                            const RouteStepIterator end)
 {
     auto const last = end - 1;
     // If we do not exit the roundabout, there is no exit to report. All good here
@@ -80,8 +83,18 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
                leavesRoundabout(step.maneuver.instruction);
     };
 
-    // exit count
-    const auto exit = std::count_if(begin, end, passes_exit_or_leaves_roundabout);
+    bool dismount_exit = false;
+    if (last->mode == extractor::TRAVEL_MODE_PUSHING_BIKE)
+    {
+        const auto leg_rend = std::make_reverse_iterator(leg_begin);
+        const auto incoming = std::find_if(
+            std::make_reverse_iterator(last),
+            leg_rend,
+            [](const auto &step) { return step.mode != extractor::TRAVEL_MODE_INACCESSIBLE; });
+        dismount_exit = incoming != leg_rend && incoming->mode == extractor::TRAVEL_MODE_CYCLING;
+    }
+    const auto exit =
+        dismount_exit ? 0 : std::count_if(begin, end, passes_exit_or_leaves_roundabout);
 
     // removes all intermediate instructions, assigns names and exit numbers
     BOOST_ASSERT(leavesRoundabout(last->maneuver.instruction));
@@ -138,7 +151,8 @@ void processRoundaboutExits(const RouteStepIterator begin, const RouteStepIterat
 
 // roundabout groups are a sequence of roundabout instructions. This can contain enter/exit
 // instructions in between
-void processRoundaboutGroups(const std::pair<RouteStepIterator, RouteStepIterator> &range)
+void processRoundaboutGroups(const RouteStepIterator leg_begin,
+                             const std::pair<RouteStepIterator, RouteStepIterator> &range)
 {
     const auto leaves_roundabout = [](auto const &step)
     { return leavesRoundabout(step.maneuver.instruction); };
@@ -149,12 +163,12 @@ void processRoundaboutGroups(const std::pair<RouteStepIterator, RouteStepIterato
         auto exit = std::find_if(itr, range.second, leaves_roundabout);
         if (exit == range.second)
         {
-            processRoundaboutExits(itr, exit);
+            processRoundaboutExits(leg_begin, itr, exit);
             itr = exit;
         }
         else
         {
-            processRoundaboutExits(itr, exit + 1);
+            processRoundaboutExits(leg_begin, itr, exit + 1);
             itr = exit + 1;
         }
     }
@@ -210,7 +224,11 @@ std::vector<RouteStep> handleRoundabouts(std::vector<RouteStep> steps)
     };
 
     // for each range of instructions between begin/end of a roundabout assign
-    util::group_by(steps.begin(), steps.end(), is_on_roundabout, processRoundaboutGroups);
+    util::group_by(steps.begin(),
+                   steps.end(),
+                   is_on_roundabout,
+                   [leg_begin = steps.begin()](const auto &range)
+                   { processRoundaboutGroups(leg_begin, range); });
 
     BOOST_ASSERT(steps.front().intersections.size() >= 1);
     BOOST_ASSERT(steps.front().intersections.front().bearings.size() == 1);

@@ -8,21 +8,26 @@
 
 #include <tbb/parallel_sort.h>
 
+#include <functional>
+#include <tuple>
 #include <vector>
 
 namespace osrm::contractor
 {
 
 // Make sure to move in the input edge list!
-template <typename InputEdgeContainer>
-ContractorGraph toContractorGraph(NodeID number_of_nodes, const InputEdgeContainer &input_edge_list)
+template <typename InputEdgeContainer, typename TurnIDFunction = std::identity>
+ContractorGraph toContractorGraph(NodeID number_of_nodes,
+                                  const InputEdgeContainer &input_edge_list,
+                                  TurnIDFunction turn_id = {})
 {
     std::vector<ContractorEdge> edges;
     edges.reserve(input_edge_list.size() * 2);
 
     for (const auto &input_edge : input_edge_list)
     {
-        if (input_edge.data.weight == INVALID_EDGE_WEIGHT)
+        if (input_edge.data.weight == INVALID_EDGE_WEIGHT ||
+            (!input_edge.data.forward && !input_edge.data.backward))
             continue;
 
 #ifndef NDEBUG
@@ -37,13 +42,14 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, const InputEdgeContain
                                   << static_cast<unsigned int>(input_edge.target);
         }
 #endif
+        const auto id = turn_id(input_edge.data.turn_id);
         edges.emplace_back(input_edge.source,
                            input_edge.target,
                            std::max(input_edge.data.weight, {1}),
                            to_alias<EdgeDuration>(input_edge.data.duration),
                            input_edge.data.distance,
                            1,
-                           input_edge.data.turn_id,
+                           id,
                            false, // shortcut
                            input_edge.data.forward,
                            input_edge.data.backward);
@@ -54,12 +60,15 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, const InputEdgeContain
                            to_alias<EdgeDuration>(input_edge.data.duration),
                            input_edge.data.distance,
                            1,
-                           input_edge.data.turn_id,
+                           id,
                            false,
                            input_edge.data.backward,
                            input_edge.data.forward);
     };
     tbb::parallel_sort(edges.begin(), edges.end());
+
+    const auto edge_key = [](const ContractorEdgeData &data)
+    { return std::tie(data.weight, data.duration, data.distance, data.id); };
 
     NodeID edge = 0;
     for (NodeID i = 0; i < edges.size();)
@@ -88,26 +97,20 @@ ContractorGraph toContractorGraph(NodeID number_of_nodes, const InputEdgeContain
         // remove parallel edges
         while (i < edges.size() && edges[i].source == source && edges[i].target == target)
         {
-            if (edges[i].data.forward)
+            if (edges[i].data.forward && edge_key(edges[i].data) < edge_key(forward_edge.data))
             {
-                forward_edge.data.weight = std::min(edges[i].data.weight, forward_edge.data.weight);
-                forward_edge.data.duration =
-                    std::min(edges[i].data.duration, forward_edge.data.duration);
-                forward_edge.data.distance =
-                    std::min(edges[i].data.distance, forward_edge.data.distance);
+                forward_edge.data = edges[i].data;
+                forward_edge.data.backward = false;
             }
-            if (edges[i].data.backward)
+            if (edges[i].data.backward && edge_key(edges[i].data) < edge_key(reverse_edge.data))
             {
-                reverse_edge.data.weight = std::min(edges[i].data.weight, reverse_edge.data.weight);
-                reverse_edge.data.duration =
-                    std::min(edges[i].data.duration, reverse_edge.data.duration);
-                reverse_edge.data.distance =
-                    std::min(edges[i].data.distance, reverse_edge.data.distance);
+                reverse_edge.data = edges[i].data;
+                reverse_edge.data.forward = false;
             }
             ++i;
         }
         // merge edges (s,t) and (t,s) into bidirectional edge
-        if (forward_edge.data.weight == reverse_edge.data.weight)
+        if (edge_key(forward_edge.data) == edge_key(reverse_edge.data))
         {
             if (forward_edge.data.weight != INVALID_EDGE_WEIGHT)
             {

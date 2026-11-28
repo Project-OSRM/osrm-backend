@@ -13,6 +13,8 @@ limit = require("lib/maxspeed").limit
 Utils = require("lib/utils")
 Measure = require("lib/measure")
 
+local access_tags = {'motorcar', 'motor_vehicle', 'vehicle', 'access'}
+
 function setup()
   return {
     properties = {
@@ -44,6 +46,8 @@ function setup()
     -- Set to 0 to cost turns purely by turn_bias.
     oncoming_turn_penalty     = 2.0,
     cardinal_directions       = false,
+    -- Additional seconds for u-turns at tagged turning facilities.
+    turning_facility_penalty  = 5,
 
     -- Penalty multiplier for roads with no lane markings (lane_markings=no)
     -- Applied to bidirectional roads to prefer roads with clear lane markings
@@ -133,12 +137,7 @@ function setup()
       'unknown',
     },
 
-    access_tags_hierarchy = Sequence {
-      'motorcar',
-      'motor_vehicle',
-      'vehicle',
-      'access'
-    },
+    access_tags_hierarchy = Sequence {table.unpack(access_tags)},
 
     service_tag_forbidden = Set {
       'emergency_access'
@@ -435,7 +434,25 @@ function process_node(profile, node, result, relations)
   Obstacles.process_node(profile, node)
 end
 
-function process_way(profile, way, result, relations)
+local function get_cached_tag(self, key, fallback)
+  local value = self.tags[key]
+  if value == nil then value = fallback end
+  if value ~= '' then return value end
+end
+
+local cached_way_metatable = {
+  __index = function(self, key)
+    local member = self.native[key]
+    if type(member) == 'function' then
+      return function(_, ...)
+        return member(self.native, ...)
+      end
+    end
+    return member
+  end
+}
+
+local function process_way_with_tags(profile, way, result, relations, tag_source)
   -- the intial filtering of ways based on presence of tags
   -- affects processing times significantly, because all ways
   -- have to be checked.
@@ -450,9 +467,9 @@ function process_way(profile, way, result, relations)
   -- data table for storing intermediate values during processing
   local data = {
     -- prefetch tags
-    highway = way:get_value_by_key('highway'),
-    bridge = way:get_value_by_key('bridge'),
-    route = way:get_value_by_key('route')
+    highway = tag_source:get_value_by_key('highway'),
+    bridge = tag_source:get_value_by_key('bridge'),
+    route = tag_source:get_value_by_key('route')
   }
 
   -- perform an quick initial check and abort if the way is
@@ -531,45 +548,65 @@ function process_way(profile, way, result, relations)
     WayHandlers.way_classification_for_turn
   }
 
-  WayHandlers.run(profile, way, result, data, handlers, relations)
+  WayHandlers.run(profile, tag_source, result, data, handlers, relations)
 
   if profile.cardinal_directions then
       Relations.process_way_refs(way, relations, result)
   end
 end
 
+function process_way(profile, way, result, relations)
+  process_way_with_tags(profile, way, result, relations, way)
+end
+
+local function process_way_cached(profile, way, result, relations)
+  local tag_source = setmetatable({
+    native = way,
+    tags = way:snapshot_tags(),
+    get_value_by_key = get_cached_tag
+  }, cached_way_metatable)
+  process_way_with_tags(profile, way, result, relations, tag_source)
+end
+
 function process_turn(profile, turn)
   -- Use a sigmoid function to return a penalty that maxes out at turn_penalty
   -- over the space of 0-180 degrees.  Values here were chosen by fitting
   -- the function to some turn penalty samples from real driving.
-  local turn_penalty = profile.turn_penalty
-  local turn_bias = turn.is_left_hand_driving and 1. / profile.turn_bias or profile.turn_bias
-
-  for _, obs in pairs(obstacle_map:get(turn.from, turn.via)) do
-    -- disregard a minor stop if entering by the major road
-    -- rationale: if a stop sign is tagged at the center of the intersection with stop=minor
-    -- it should only penalize the minor roads entering the intersection
-    if obs.type == obstacle_type.stop_minor and not Obstacles.entering_by_minor_road(turn) then
-        goto skip
+  if obstacle_map:any(turn.via) then
+    for _, obs in pairs(obstacle_map:get(turn.from, turn.via)) do
+      -- disregard a minor stop if entering by the major road
+      -- rationale: if a stop sign is tagged at the center of the intersection with stop=minor
+      -- it should only penalize the minor roads entering the intersection
+      if obs.type == obstacle_type.stop_minor and not Obstacles.entering_by_minor_road(turn) then
+          goto skip
+      end
+      -- heuristic to infer the direction of a stop without an explicit direction tag
+      -- rationale: a stop sign should not be placed farther than 20m from the intersection
+      if turn.number_of_roads == 2
+          and obs.type == obstacle_type.stop
+          and obs.direction == obstacle_direction.none
+          and turn.source_road.distance < 20
+          and turn.target_road.distance > 20 then
+              goto skip
+      end
+      turn.duration = turn.duration + obs.duration
+      ::skip::
     end
-    -- heuristic to infer the direction of a stop without an explicit direction tag
-    -- rationale: a stop sign should not be placed farther than 20m from the intersection
-    if turn.number_of_roads == 2
-        and obs.type == obstacle_type.stop
-        and obs.direction == obstacle_direction.none
-        and turn.source_road.distance < 20
-        and turn.target_road.distance > 20 then
-            goto skip
-    end
-    turn.duration = turn.duration + obs.duration
-    ::skip::
   end
 
-  if turn.number_of_roads > 2 or turn.source_mode ~= turn.target_mode or turn.is_u_turn then
-    if turn.angle >= 0 then
-      turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 / turn_bias) *  turn.angle/180 - 6.5*turn_bias)))
+  local is_left_hand_driving = turn.is_left_hand_driving
+  local number_of_roads = turn.number_of_roads
+  local is_u_turn = turn.is_u_turn
+  local duration = turn.duration
+  local turn_penalty = profile.turn_penalty
+  local turn_bias = is_left_hand_driving and 1. / profile.turn_bias or profile.turn_bias
+
+  if number_of_roads > 2 or turn.source_mode ~= turn.target_mode or is_u_turn then
+    local angle = turn.angle
+    if angle >= 0 then
+      duration = duration + turn_penalty / (1 + math.exp( -((13 / turn_bias) *  angle/180 - 6.5*turn_bias)))
     else
-      turn.duration = turn.duration + turn_penalty / (1 + math.exp( -((13 * turn_bias) * -turn.angle/180 - 6.5/turn_bias)))
+      duration = duration + turn_penalty / (1 + math.exp( -((13 * turn_bias) * -angle/180 - 6.5/turn_bias)))
     end
 
     -- A turn across oncoming traffic waits for a gap, a turn away from it does
@@ -588,31 +625,37 @@ function process_turn(profile, turn)
     -- point where a bend becomes a turn. U-turns are excluded because
     -- u_turn_penalty already pays for crossing traffic through 180 degrees.
     local crosses_oncoming
-    if turn.is_left_hand_driving then
-      crosses_oncoming = turn.angle > 0
+    if is_left_hand_driving then
+      crosses_oncoming = angle > 0
     else
-      crosses_oncoming = turn.angle < 0
+      crosses_oncoming = angle < 0
     end
 
-    if crosses_oncoming and not turn.is_u_turn and turn.number_of_roads > 2
+    if crosses_oncoming and not is_u_turn and number_of_roads > 2
        and not turn.source_is_roundabout and not turn.target_is_roundabout then
-      local sharpness = 1 / (1 + math.exp( -(13 * math.abs(turn.angle)/180 - 3.25)))
-      turn.duration = turn.duration + profile.oncoming_turn_penalty * sharpness
+      local sharpness = 1 / (1 + math.exp( -(13 * math.abs(angle)/180 - 3.25)))
+      duration = duration + profile.oncoming_turn_penalty * sharpness
     end
 
-    if turn.is_u_turn then
-      turn.duration = turn.duration + profile.properties.u_turn_penalty
+    if is_u_turn then
+      if turn.has_turning_facility then
+        duration = duration + profile.turning_facility_penalty
+      else
+        duration = duration + profile.properties.u_turn_penalty
+      end
     end
   end
 
+  turn.duration = duration
+  local weight_name = profile.properties.weight_name
   -- for distance based routing we don't want to have penalties based on turn angle
-  if profile.properties.weight_name == 'distance' then
+  if weight_name == 'distance' then
      turn.weight = 0
   else
-     turn.weight = turn.duration
+     turn.weight = duration
   end
 
-  if profile.properties.weight_name == 'routability' then
+  if weight_name == 'routability' then
       -- penalize turns from non-local access only segments onto local access only tags
       if not turn.source_restricted and turn.target_restricted then
           turn.weight = constants.max_turn_weight
@@ -624,5 +667,9 @@ return {
   setup = setup,
   process_way = process_way,
   process_node = process_node,
-  process_turn = process_turn
+  process_turn = process_turn,
+  tag_filters = {
+    [process_node] = {any = {'barrier', 'highway', table.unpack(access_tags)}},
+    [process_way] = {any = {'highway', 'route'}, callback = process_way_cached}
+  }
 }

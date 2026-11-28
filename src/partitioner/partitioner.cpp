@@ -9,6 +9,7 @@
 #include "partitioner/recursive_bisection.hpp"
 #include "partitioner/remove_unconnected.hpp"
 #include "partitioner/renumber.hpp"
+#include "storage/compact_dataset.hpp"
 
 #include "extractor/compressed_node_based_graph_edge.hpp"
 #include "extractor/files.hpp"
@@ -62,6 +63,11 @@ auto getGraphBisection(const PartitionerConfig &config)
 
 int Partitioner::Run(const PartitionerConfig &config)
 {
+    storage::requireMutableDataset(config.base_path);
+    if (!config.output_path.empty())
+        storage::requireMutableDataset(config.output_path);
+    storage::invalidateQueryData(config.output_path.empty() ? config.base_path
+                                                            : config.output_path);
     tbb::global_control gc(tbb::global_control::max_allowed_parallelism,
                            config.requested_num_threads);
 
@@ -124,6 +130,19 @@ int Partitioner::Run(const PartitionerConfig &config)
     auto permutation = makePermutation(edge_based_graph, partitions);
     edge_based_graph.renumberNodes(permutation);
     renumber(partitions, permutation);
+
+    // Prepared routing graphs and cell metrics refer to the previous node order.
+    if (std::filesystem::remove(config.GetOutputPath(".osrm.hsgr")))
+    {
+        util::Log(logWARNING)
+            << "Removed stale .osrm.hsgr. Re-run osrm-contract after osrm-partition.";
+    }
+    const auto &output_path = config.output_path.empty() ? config.base_path : config.output_path;
+    for (const auto *suffix : {".osrm.mldgr", ".osrm.cell_metrics"})
+    {
+        std::filesystem::remove(output_path.string() + suffix);
+    }
+
     {
         renumber(mapping, permutation);
         extractor::files::writeNBGMapping(config.GetOutputPath(".osrm.cnbg_to_ebg").string(),
@@ -179,12 +198,6 @@ int Partitioner::Run(const PartitionerConfig &config)
 
         extractor::files::writeManeuverOverrides(
             output_filename, maneuver_overrides, node_sequences);
-    }
-    if (std::filesystem::exists(config.GetOutputPath(".osrm.hsgr")))
-    {
-        util::Log(logWARNING) << "Found existing .osrm.hsgr file, removing. You need to re-run "
-                                 "osrm-contract after osrm-partition.";
-        std::filesystem::remove(config.GetOutputPath(".osrm.hsgr"));
     }
     TIMER_STOP(renumber);
     util::Log() << "Renumbered data in " << TIMER_SEC(renumber) << " seconds";

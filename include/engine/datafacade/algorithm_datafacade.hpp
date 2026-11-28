@@ -91,7 +91,7 @@ template <> class AlgorithmDataFacade<MLD>
 
     virtual NodeID GetTarget(const EdgeID edge_based_edge_id) const = 0;
 
-    virtual const EdgeData &GetEdgeData(const EdgeID edge_based_edge_id) const = 0;
+    virtual EdgeData GetEdgeData(const EdgeID edge_based_edge_id) const = 0;
 
     virtual const partitioner::MultiLevelPartitionView &GetMultiLevelPartition() const = 0;
 

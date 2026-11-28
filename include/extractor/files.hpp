@@ -7,8 +7,11 @@
 #include "extractor/packed_osm_ids.hpp"
 #include "extractor/profile_properties.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/record_spool.hpp"
 #include "extractor/serialization.hpp"
 #include "extractor/turn_lane_types.hpp"
+
+#include "storage/block_vector_encoding.hpp"
 
 #include "util/coordinate.hpp"
 #include "util/guidance/bearing_class.hpp"
@@ -20,6 +23,19 @@
 
 namespace osrm::extractor::files
 {
+template <typename Records>
+void writeRecords(storage::tar::FileWriter &writer, const std::string &name, const Records &records)
+{ storage::serialization::write(writer, name, records); }
+
+template <typename Record>
+void writeRecords(storage::tar::FileWriter &writer,
+                  const std::string &name,
+                  const RecordSpool<Record> &records)
+{
+    writer.WriteElementCount64(name, records.size());
+    writer.WriteBatches<Record>(
+        name, records.size(), [&](auto write) { records.forEachBatch(write); });
+}
 
 // writes the .osrm.icd file
 template <typename IntersectionBearingsT, typename EntryClassVectorT>
@@ -84,7 +100,7 @@ void writeEdgeBasedGraph(const std::filesystem::path &path,
 
     writer.WriteElementCount64("/common/number_of_edge_based_nodes", 1);
     writer.WriteFrom("/common/number_of_edge_based_nodes", number_of_edge_based_nodes);
-    storage::serialization::write(writer, "/common/edge_based_edge_list", edge_based_edge_list);
+    writeRecords(writer, "/common/edge_based_edge_list", edge_based_edge_list);
     writer.WriteElementCount64("/common/connectivity_checksum", 1);
     writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
 }
@@ -393,7 +409,11 @@ inline void writeTurnWeightPenalty(const std::filesystem::path &path,
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
-    storage::serialization::write(writer, "/common/turn_penalty/weight", turn_penalty);
+    std::vector<std::uint16_t> values(turn_penalty.size());
+    for (std::size_t i = 0; i < values.size(); ++i)
+        values[i] = std::bit_cast<std::uint16_t>(turn_penalty[i]);
+    storage::writeCompactVector<std::uint16_t>(
+        writer, "/preprocessing/turn_penalty/weight", {values.data(), values.size()});
 }
 
 // read .osrm.turn_weight_penalties
@@ -403,7 +423,17 @@ inline void readTurnWeightPenalty(const std::filesystem::path &path, TurnPenalty
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
-    storage::serialization::read(reader, "/common/turn_penalty/weight", turn_penalty);
+    if (reader.HasEntry("/preprocessing/turn_penalty/weight") ||
+        reader.HasEntry("/preprocessing/turn_penalty/weight_blocks/headers"))
+    {
+        std::vector<std::uint16_t> values;
+        storage::readCompactVector(reader, "/preprocessing/turn_penalty/weight", values);
+        turn_penalty.resize(values.size());
+        for (std::size_t i = 0; i < values.size(); ++i)
+            turn_penalty[i] = std::bit_cast<TurnPenalty>(values[i]);
+    }
+    else
+        storage::serialization::read(reader, "/common/turn_penalty/weight", turn_penalty);
 }
 
 // writes .osrm.turn_duration_penalties
@@ -414,7 +444,11 @@ inline void writeTurnDurationPenalty(const std::filesystem::path &path,
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
-    storage::serialization::write(writer, "/common/turn_penalty/duration", turn_penalty);
+    std::vector<std::uint16_t> values(turn_penalty.size());
+    for (std::size_t i = 0; i < values.size(); ++i)
+        values[i] = std::bit_cast<std::uint16_t>(turn_penalty[i]);
+    storage::writeCompactVector<std::uint16_t>(
+        writer, "/preprocessing/turn_penalty/duration", {values.data(), values.size()});
 }
 
 // read .osrm.turn_weight_penalties
@@ -424,7 +458,17 @@ inline void readTurnDurationPenalty(const std::filesystem::path &path, TurnPenal
     const auto fingerprint = storage::tar::FileReader::VerifyFingerprint;
     storage::tar::FileReader reader{path, fingerprint};
 
-    storage::serialization::read(reader, "/common/turn_penalty/duration", turn_penalty);
+    if (reader.HasEntry("/preprocessing/turn_penalty/duration") ||
+        reader.HasEntry("/preprocessing/turn_penalty/duration_blocks/headers"))
+    {
+        std::vector<std::uint16_t> values;
+        storage::readCompactVector(reader, "/preprocessing/turn_penalty/duration", values);
+        turn_penalty.resize(values.size());
+        for (std::size_t i = 0; i < values.size(); ++i)
+            turn_penalty[i] = std::bit_cast<TurnPenalty>(values[i]);
+    }
+    else
+        storage::serialization::read(reader, "/common/turn_penalty/duration", turn_penalty);
 }
 
 // writes .osrm.turn_penalties_index
@@ -435,7 +479,7 @@ inline void writeTurnPenaltiesIndex(const std::filesystem::path &path,
     const auto fingerprint = storage::tar::FileWriter::GenerateFingerprint;
     storage::tar::FileWriter writer{path, fingerprint};
 
-    storage::serialization::write(writer, "/extractor/turn_index", turn_penalties_index);
+    writeRecords(writer, "/extractor/turn_index", turn_penalties_index);
 }
 
 // read .osrm.turn_penalties_index

@@ -13,12 +13,12 @@
 #include "extractor/node_data_container.hpp"
 #include "extractor/node_restriction_map.hpp"
 #include "extractor/query_node.hpp"
+#include "extractor/record_spool.hpp"
 #include "extractor/string_table.hpp"
 #include "extractor/turn_lane_types.hpp"
 #include "extractor/way_restriction_map.hpp"
 
 #include "util/concurrent_id_map.hpp"
-#include "util/deallocating_vector.hpp"
 #include "util/node_based_graph.hpp"
 #include "util/typedefs.hpp"
 
@@ -65,7 +65,9 @@ class EdgeBasedGraphFactory
                                    const std::vector<util::Coordinate> &coordinates,
                                    const StringTable &string_table,
                                    const std::unordered_set<EdgeID> &segregated_edges,
-                                   const LaneDescriptionMap &lane_description_map);
+                                   const LaneDescriptionMap &lane_description_map,
+                                   RecordSpool<EdgeBasedEdge> &edge_records,
+                                   RecordSpool<EdgeBasedNodeSegment> &segment_records);
 
     void Run(ScriptingEnvironment &scripting_environment,
              const std::string &turn_weight_penalties_filename,
@@ -80,8 +82,6 @@ class EdgeBasedGraphFactory
              const std::vector<UnresolvedManeuverOverride> &maneuver_overrides);
 
     // The following get access functions destroy the content in the factory
-    void GetEdgeBasedEdges(util::DeallocatingVector<EdgeBasedEdge> &edges);
-    void GetEdgeBasedNodeSegments(std::vector<EdgeBasedNodeSegment> &nodes);
     void GetEdgeBasedNodeWeights(std::vector<EdgeWeight> &output_node_weights);
     void GetEdgeBasedNodeDurations(std::vector<EdgeDuration> &output_node_durations);
     void GetEdgeBasedNodeDistances(std::vector<EdgeDistance> &output_node_distances);
@@ -111,9 +111,9 @@ class EdgeBasedGraphFactory
     std::vector<EdgeDistance> m_edge_based_node_distances;
 
     //! list of edge based nodes (compressed segments)
-    std::vector<EdgeBasedNodeSegment> m_edge_based_node_segments;
+    RecordSpool<EdgeBasedNodeSegment> &m_edge_based_node_segments;
     EdgeBasedNodeDataContainer &m_edge_based_node_container;
-    util::DeallocatingVector<EdgeBasedEdge> m_edge_based_edge_list;
+    RecordSpool<EdgeBasedEdge> &m_edge_based_edge_list;
     std::uint32_t m_connectivity_checksum;
 
     // The number of edge-based nodes is mostly made up out of the edges in the node-based graph.

@@ -34,7 +34,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "extractor/extractor_config.hpp"
 #include "extractor/graph_compressor.hpp"
 #include "extractor/maneuver_override.hpp"
-#include "extractor/packed_osm_ids.hpp"
+#include "extractor/record_spool.hpp"
 
 #include "restriction_graph.hpp"
 #include "util/typedefs.hpp"
@@ -42,6 +42,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 namespace osrm::extractor
 {
 
+class NodeBasedGraphFactory;
 class ScriptingEnvironment;
 struct ProfileProperties;
 
@@ -58,8 +59,6 @@ class Extractor
         std::vector<TurnRestriction> turn_restrictions;
         std::vector<UnresolvedManeuverOverride> unresolved_maneuver_overrides;
         std::vector<util::Coordinate> osm_coordinates;
-        extractor::PackedOSMIDs osm_node_ids;
-        std::vector<NodeBasedEdge> edge_list;
         std::vector<NodeBasedEdgeAnnotation> annotation_data;
     };
 
@@ -67,7 +66,8 @@ class Extractor
     ExtractorConfig config;
 
     ParsedOSMData ParseOSMData(ScriptingEnvironment &scripting_environment,
-                               const unsigned number_of_threads);
+                               unsigned number_of_threads,
+                               RecordSpool<NodeBasedEdge> &prepared_edges);
 
     EdgeID BuildEdgeExpandedGraph(
         // input data
@@ -83,18 +83,18 @@ class Extractor
         ScriptingEnvironment &scripting_environment,
         // output data
         EdgeBasedNodeDataContainer &edge_based_nodes_container,
-        std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
+        RecordSpool<EdgeBasedNodeSegment> &edge_based_node_segments,
         std::vector<EdgeWeight> &edge_based_node_weights,
         std::vector<EdgeDuration> &edge_based_node_durations,
         std::vector<EdgeDistance> &edge_based_node_distances,
-        util::DeallocatingVector<EdgeBasedEdge> &edge_based_edge_list,
+        RecordSpool<EdgeBasedEdge> &edge_based_edge_list,
         std::uint32_t &connectivity_checksum);
 
-    void FindComponents(unsigned max_edge_id,
-                        const util::DeallocatingVector<EdgeBasedEdge> &input_edge_list,
-                        const std::vector<EdgeBasedNodeSegment> &input_node_segments,
+    bool FindComponents(unsigned max_edge_id,
+                        const RecordSpool<EdgeBasedEdge> &input_edge_list,
+                        const RecordSpool<EdgeBasedNodeSegment> &input_node_segments,
                         EdgeBasedNodeDataContainer &nodes_container) const;
-    void BuildRTree(std::vector<EdgeBasedNodeSegment> edge_based_node_segments,
+    void BuildRTree(const std::vector<EdgeBasedNodeSegment> &edge_based_node_segments,
                     const std::vector<util::Coordinate> &coordinates);
 
     /**
@@ -103,10 +103,8 @@ class Extractor
      */
     void WriteOpenAreas(const std::vector<area::PolygonRecord> &polygons);
 
-    void ProcessGuidanceTurns(const util::NodeBasedDynamicGraph &node_based_graph,
+    void ProcessGuidanceTurns(NodeBasedGraphFactory &node_based_graph_factory,
                               const EdgeBasedNodeDataContainer &edge_based_node_container,
-                              const std::vector<util::Coordinate> &node_coordinates,
-                              const CompressedEdgeContainer &compressed_edge_container,
                               const RestrictionGraph &restriction_graph,
                               const StringTable &string_table,
                               LaneDescriptionMap lane_description_map,

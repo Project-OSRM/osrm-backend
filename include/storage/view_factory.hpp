@@ -88,6 +88,10 @@ inline auto make_turn_lane_description_views(const SharedDataIndex &index, const
 
 inline auto make_ebn_data_view(const SharedDataIndex &index, const std::string &name)
 {
+    if (index.HasBlock(name + "/nodes8"))
+        return extractor::EdgeBasedNodeDataView{
+            make_vector_view<std::uint64_t>(index, name + "/nodes8"),
+            make_vector_view<extractor::NodeBasedEdgeAnnotation>(index, name + "/annotations")};
     auto edge_based_node_data = make_vector_view<extractor::EdgeBasedNode>(index, name + "/nodes");
     auto annotation_data =
         make_vector_view<extractor::NodeBasedEdgeAnnotation>(index, name + "/annotations");
@@ -116,11 +120,35 @@ inline auto make_turn_data_view(const SharedDataIndex &index, const std::string 
 
 inline auto make_segment_data_view(const SharedDataIndex &index, const std::string &name)
 {
+    const auto forward_sources_name = index.HasBlock(name + "/constant_forward_sources")
+                                          ? name + "/constant_forward_sources"
+                                          : name + "/forward_data_sources";
+    const auto reverse_sources_name = index.HasBlock(name + "/constant_reverse_sources")
+                                          ? name + "/constant_reverse_sources"
+                                          : name + "/reverse_data_sources";
+    const auto cost_prefix = index.HasBlock(name + "/adaptive_costs/descriptors")
+                                 ? name + "/adaptive_costs"
+                                 : name + "/shared_costs";
     auto geometry_begin_indices = make_vector_view<unsigned>(index, name + "/index");
 
     auto node_list = make_vector_view<NodeID>(index, name + "/nodes");
 
     auto num_entries = index.GetBlockEntries(name + "/nodes");
+    if (index.HasBlock(cost_prefix + "/descriptors"))
+    {
+        const auto pool = make_vector_view<std::uint64_t>(index, cost_prefix + "/packed");
+        const auto descriptors =
+            make_vector_view<std::uint64_t>(index, cost_prefix + "/descriptors");
+        const auto count = descriptors.back();
+        return extractor::SegmentDataView{
+            geometry_begin_indices,
+            node_list,
+            make_vector_view<DatasourceID>(index, forward_sources_name),
+            make_vector_view<DatasourceID>(index, reverse_sources_name),
+            descriptors,
+            extractor::SegmentDataView::SegmentWeightVector{pool, count},
+            extractor::SegmentDataView::SegmentDurationVector{pool, count}};
+    }
 
     extractor::SegmentDataView::SegmentWeightVector fwd_weight_list(
         make_vector_view<extractor::SegmentDataView::SegmentWeightVector::block_type>(
@@ -142,11 +170,9 @@ inline auto make_segment_data_view(const SharedDataIndex &index, const std::stri
             index, name + "/reverse_durations/packed"),
         num_entries);
 
-    auto fwd_datasources_list =
-        make_vector_view<DatasourceID>(index, name + "/forward_data_sources");
+    auto fwd_datasources_list = make_vector_view<DatasourceID>(index, forward_sources_name);
 
-    auto rev_datasources_list =
-        make_vector_view<DatasourceID>(index, name + "/reverse_data_sources");
+    auto rev_datasources_list = make_vector_view<DatasourceID>(index, reverse_sources_name);
 
     return extractor::SegmentDataView{geometry_begin_indices,
                                       node_list,
@@ -257,6 +283,11 @@ inline auto make_intersection_bearings_view(const SharedDataIndex &index, const 
     util::RangeTable<16, storage::Ownership::View> bearing_range_table(
         bearing_offsets, bearing_blocks, static_cast<unsigned>(bearing_values.size()));
 
+    if (index.HasBlock(name + "/node_to_class_id16"))
+        return extractor::IntersectionBearingsView{
+            bearing_values,
+            make_vector_view<std::uint16_t>(index, name + "/node_to_class_id16"),
+            bearing_range_table};
     auto bearing_class_id = make_vector_view<BearingClassID>(index, name + "/node_to_class_id");
     return extractor::IntersectionBearingsView{
         bearing_values, bearing_class_id, bearing_range_table};
@@ -286,6 +317,13 @@ inline auto make_partition_view(const SharedDataIndex &index, const std::string 
     auto level_data_ptr =
         index.template GetBlockPtr<partitioner::MultiLevelPartitionView::LevelData>(name +
                                                                                     "/level_data");
+    if (index.HasBlock(name + "/partition_blocks/headers"))
+        return partitioner::MultiLevelPartitionView{
+            level_data_ptr,
+            make_vector_view<CellID>(index, name + "/cell_to_children"),
+            make_vector_view<util::BlockDeltaHeader>(index, name + "/partition_blocks/headers"),
+            make_vector_view<std::uint64_t>(index, name + "/partition_blocks/words"),
+            index.GetBlockPtr<std::uint64_t>(name + "/partition_blocks/count")};
     auto partition = make_vector_view<PartitionID>(index, name + "/partition");
     auto cell_to_children = make_vector_view<CellID>(index, name + "/cell_to_children");
 
@@ -313,6 +351,14 @@ inline auto make_filtered_cell_metric_view(const SharedDataIndex &index,
     customizer::CellMetricView cell_metric;
 
     auto prefix = name + "/exclude/" + std::to_string(exclude_index);
+    if (index.HasBlock(prefix + "/cell_value_offsets"))
+    {
+        auto weights = make_vector_view<EdgeWeight>(index, name + "/shared/weights");
+        auto durations = make_vector_view<EdgeDuration>(index, name + "/shared/durations");
+        auto distances = make_vector_view<EdgeDistance>(index, name + "/shared/distances");
+        auto offsets = make_vector_view<std::uint64_t>(index, prefix + "/cell_value_offsets");
+        return customizer::CellMetricView{weights, durations, distances, offsets};
+    }
     auto weights_block_id = prefix + "/weights";
     auto durations_block_id = prefix + "/durations";
     auto distances_block_id = prefix + "/distances";
@@ -321,37 +367,22 @@ inline auto make_filtered_cell_metric_view(const SharedDataIndex &index,
     auto durations = make_vector_view<EdgeDuration>(index, durations_block_id);
     auto distances = make_vector_view<EdgeDistance>(index, distances_block_id);
 
-    return customizer::CellMetricView{weights, durations, distances};
-}
-
-inline auto make_cell_metric_view(const SharedDataIndex &index, const std::string &name)
-{
-    std::vector<customizer::CellMetricView> cell_metric_excludes;
-
-    std::vector<std::string> metric_prefix_names;
-    index.List(name + "/exclude/", std::back_inserter(metric_prefix_names));
-    for (const auto &prefix : metric_prefix_names)
-    {
-        auto weights_block_id = prefix + "/weights";
-        auto durations_block_id = prefix + "/durations";
-        auto distances_block_id = prefix + "/distances";
-
-        auto weights = make_vector_view<EdgeWeight>(index, weights_block_id);
-        auto durations = make_vector_view<EdgeDuration>(index, durations_block_id);
-        auto distances = make_vector_view<EdgeDistance>(index, distances_block_id);
-
-        cell_metric_excludes.push_back(customizer::CellMetricView{weights, durations, distances});
-    }
-
-    return cell_metric_excludes;
+    return customizer::CellMetricView{weights, durations, distances, {}};
 }
 
 inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std::string &name)
 {
-    auto node_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry>(
-        index, name + "/node_array");
-    auto edge_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry>(
-        index, name + "/edge_array");
+    util::vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry> node_list;
+    const bool block_nodes = index.HasBlock(name + "/node_blocks/headers");
+    if (!block_nodes)
+        node_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::NodeArrayEntry>(
+            index, name + "/node_array");
+    util::vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry> edge_list;
+    const auto packed_name = name + "/edge_array6";
+    const bool packed = index.HasBlock(packed_name);
+    if (!packed)
+        edge_list = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeArrayEntry>(
+            index, name + "/edge_array");
     auto node_to_offset = make_vector_view<customizer::MultiLevelEdgeBasedGraphView::EdgeOffset>(
         index, name + "/node_to_edge_offset");
     auto node_weights = make_vector_view<EdgeWeight>(index, name + "/node_weights");
@@ -360,14 +391,27 @@ inline auto make_multi_level_graph_view(const SharedDataIndex &index, const std:
     auto is_forward_edge = make_vector_view<bool>(index, name + "/is_forward_edge");
     auto is_backward_edge = make_vector_view<bool>(index, name + "/is_backward_edge");
 
-    return customizer::MultiLevelEdgeBasedGraphView(node_list,
-                                                    edge_list,
-                                                    node_to_offset,
-                                                    node_weights,
-                                                    node_durations,
-                                                    node_distances,
-                                                    is_forward_edge,
-                                                    is_backward_edge);
+    auto graph = customizer::MultiLevelEdgeBasedGraphView(node_list,
+                                                          edge_list,
+                                                          node_to_offset,
+                                                          node_weights,
+                                                          node_durations,
+                                                          node_distances,
+                                                          is_forward_edge,
+                                                          is_backward_edge);
+    if (block_nodes)
+        graph.bindNodeBlocks(
+            make_vector_view<util::BlockDeltaHeader>(index, name + "/node_blocks/headers"),
+            make_vector_view<std::uint64_t>(index, name + "/node_blocks/words"),
+            index.GetBlockPtr<std::uint64_t>(name + "/node_blocks/count"));
+    if (packed)
+    {
+        const auto bytes = make_vector_view<std::uint8_t>(index, packed_name);
+        if (index.GetBlockSize(packed_name) != bytes.size())
+            throw util::exception("Packed graph byte count does not match the archive");
+        graph.bindPackedEdges(bytes);
+    }
+    return graph;
 }
 
 inline auto make_maneuver_overrides_views(const SharedDataIndex &index, const std::string &name)

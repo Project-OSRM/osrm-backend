@@ -8,6 +8,8 @@
 #include "storage/serialization.hpp"
 #include "storage/shared_memory_ownership.hpp"
 #include "storage/tar.hpp"
+#include "util/block_delta_encoding.hpp"
+#include "util/serialization.hpp"
 
 namespace osrm::customizer::serialization
 {
@@ -17,6 +19,7 @@ inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  detail::CellMetricImpl<Ownership> &metric)
 {
+    BOOST_ASSERT(metric.cell_value_offsets.empty());
     storage::serialization::read(reader, name + "/weights", metric.weights);
     storage::serialization::read(reader, name + "/durations", metric.durations);
     storage::serialization::read(reader, name + "/distances", metric.distances);
@@ -27,6 +30,7 @@ inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const detail::CellMetricImpl<Ownership> &metric)
 {
+    BOOST_ASSERT(metric.cell_value_offsets.empty());
     storage::serialization::write(writer, name + "/weights", metric.weights);
     storage::serialization::write(writer, name + "/durations", metric.durations);
     storage::serialization::write(writer, name + "/distances", metric.distances);
@@ -37,11 +41,11 @@ inline void read(storage::tar::FileReader &reader,
                  const std::string &name,
                  MultiLevelGraph<EdgeDataT, Ownership> &graph)
 {
-    storage::serialization::read(reader, name + "/node_array", graph.node_array);
+    util::serialization::read(
+        reader, name, static_cast<util::StaticGraph<EdgeDataT, Ownership> &>(graph));
     storage::serialization::read(reader, name + "/node_weights", graph.node_weights);
     storage::serialization::read(reader, name + "/node_durations", graph.node_durations);
     storage::serialization::read(reader, name + "/node_distances", graph.node_distances);
-    storage::serialization::read(reader, name + "/edge_array", graph.edge_array);
     storage::serialization::read(reader, name + "/is_forward_edge", graph.is_forward_edge);
     storage::serialization::read(reader, name + "/is_backward_edge", graph.is_backward_edge);
     storage::serialization::read(reader, name + "/node_to_edge_offset", graph.node_to_edge_offset);
@@ -52,11 +56,46 @@ inline void write(storage::tar::FileWriter &writer,
                   const std::string &name,
                   const MultiLevelGraph<EdgeDataT, Ownership> &graph)
 {
-    storage::serialization::write(writer, name + "/node_array", graph.node_array);
+    std::vector<std::uint32_t> offsets(graph.GetNumberOfNodes() + 1);
+    for (std::size_t i = 0; i < offsets.size(); ++i)
+        offsets[i] = graph.BeginEdges(i);
+    // CSR block names are shared with StaticGraph's query view.
+    const auto blocks = util::encodeBlockDelta<std::uint32_t>(offsets);
+    if (blocks && blocks->Headers.size() * sizeof(util::BlockDeltaHeader) +
+                          blocks->Words.size() * sizeof(std::uint64_t) <
+                      offsets.size() * sizeof(std::uint32_t))
+    {
+        storage::serialization::write(writer, name + "/node_blocks/headers", blocks->Headers);
+        storage::serialization::write(writer, name + "/node_blocks/words", blocks->Words);
+        writer.WriteElementCount64(name + "/node_blocks/count", 1);
+        writer.WriteFrom(name + "/node_blocks/count", std::uint64_t(offsets.size()));
+    }
+    else
+    {
+        static_assert(sizeof(typename MultiLevelGraph<EdgeDataT, Ownership>::NodeArrayEntry) ==
+                      sizeof(std::uint32_t));
+        storage::serialization::write(writer, name + "/node_array", offsets);
+    }
     storage::serialization::write(writer, name + "/node_weights", graph.node_weights);
     storage::serialization::write(writer, name + "/node_durations", graph.node_durations);
     storage::serialization::write(writer, name + "/node_distances", graph.node_distances);
-    storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
+    bool narrow = std::endian::native == std::endian::little;
+    for (std::size_t i = 0; i < graph.GetNumberOfEdges(); ++i)
+        narrow &= graph.GetTarget(i) < (1u << 25) && graph.GetEdgeData(i).turn_id < (1u << 22);
+    if (narrow)
+    {
+        std::vector<std::uint8_t> packed(std::size_t(graph.GetNumberOfEdges()) * 6 + 8, 0);
+        for (std::size_t i = 0; i < graph.GetNumberOfEdges(); ++i)
+        {
+            const auto word = std::uint64_t(graph.GetTarget(i)) |
+                              (std::uint64_t(graph.GetEdgeData(i).turn_id) << 25);
+            const auto bytes = std::bit_cast<std::array<std::uint8_t, 8>>(word);
+            std::copy_n(bytes.begin(), 6, packed.begin() + i * 6);
+        }
+        storage::serialization::write(writer, name + "/edge_array6", packed);
+    }
+    else
+        storage::serialization::write(writer, name + "/edge_array", graph.edge_array);
     storage::serialization::write(writer, name + "/is_forward_edge", graph.is_forward_edge);
     storage::serialization::write(writer, name + "/is_backward_edge", graph.is_backward_edge);
     storage::serialization::write(writer, name + "/node_to_edge_offset", graph.node_to_edge_offset);

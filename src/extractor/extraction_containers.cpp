@@ -2,6 +2,7 @@
 #include "extractor/extraction_segment.hpp"
 #include "extractor/extraction_way.hpp"
 #include "extractor/files.hpp"
+#include "extractor/heap_pages.hpp"
 #include "extractor/restriction.hpp"
 #include "extractor/serialization.hpp"
 #include "extractor/string_table.hpp"
@@ -19,8 +20,11 @@
 #include <boost/assert.hpp>
 #include <boost/numeric/conversion/cast.hpp>
 
+#include <tbb/blocked_range.h>
+#include <tbb/parallel_for.h>
 #include <tbb/parallel_sort.h>
 
+#include <algorithm>
 #include <limits>
 
 namespace
@@ -374,7 +378,8 @@ get_via_node_path_from_OSM_ids(const std::string &turn_relation_type,
 namespace osrm::extractor
 {
 
-ExtractionContainers::ExtractionContainers()
+ExtractionContainers::ExtractionContainers(std::filesystem::path edge_spool_parent)
+    : m_edge_spool(std::move(edge_spool_parent))
 {
     // Insert four empty strings offsets for name, ref, destination, pronunciation, and exits
     name_offsets.push_back(0);
@@ -386,6 +391,23 @@ ExtractionContainers::ExtractionContainers()
     name_offsets.push_back(0);
     // Sentinel for offset into used_nodes
     way_node_id_offsets.push_back(0);
+}
+
+void ExtractionContainers::restoreEdges()
+{
+    if (m_edge_spool.spilled())
+    {
+        util::UnbufferedLog log;
+        log << "Reading " << m_edge_spool.size() << " spooled road edges ... " << std::flush;
+        TIMER_START(read_spooled_edges);
+        all_edges_list = m_edge_spool.takeVector();
+        TIMER_STOP(read_spooled_edges);
+        log << "ok, after " << TIMER_SEC(read_spooled_edges) << "s";
+    }
+    else
+    {
+        all_edges_list = m_edge_spool.takeVector();
+    }
 }
 
 /**
@@ -401,7 +423,9 @@ ExtractionContainers::ExtractionContainers()
  *
  */
 void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environment,
-                                       const std::string &name_file_name)
+                                       const std::string &name_file_name,
+                                       NodeLocationIndex *locations,
+                                       RecordSpool<NodeBasedEdge> &prepared_edges)
 {
     const auto restriction_ways = IdentifyRestrictionWays();
     const auto maneuver_override_ways = IdentifyManeuverOverrideWays();
@@ -412,8 +436,11 @@ void ExtractionContainers::PrepareData(ScriptingEnvironment &scripting_environme
     way_node_id_offsets.clear();
     way_node_id_offsets.shrink_to_fit();
 
-    PrepareNodes();
-    PrepareEdges(scripting_environment);
+    PrepareNodes(locations);
+    releaseUnusedHeapPages();
+    restoreEdges();
+    PrepareEdges(scripting_environment, prepared_edges);
+    EdgeVector().swap(all_edges_list);
     scripting_environment.m_obstacle_map.fixupNodes(used_node_id_list);
 
     PrepareManeuverOverrides(maneuver_override_ways);
@@ -435,7 +462,25 @@ void ExtractionContainers::WriteCharData(const std::string &file_name)
     log << "ok, after " << TIMER_SEC(write_index) << "s";
 }
 
-void ExtractionContainers::PrepareNodes()
+void ExtractionContainers::checkUsedNodeCount(std::size_t original_used_count)
+{
+    const auto dropped_count = original_used_count - used_node_id_list.size();
+    if (dropped_count > 0)
+    {
+        util::Log(logWARNING) << dropped_count
+                              << " node(s) referenced by ways were not found in the input data"
+                                 " and will be ignored";
+    }
+    if (used_node_id_list.size() > std::numeric_limits<NodeID>::max())
+    {
+        throw util::exception("There are too many nodes remaining after filtering, OSRM only "
+                              "supports 2^32 unique nodes, but there were " +
+                              std::to_string(used_node_id_list.size()) + SOURCE_REF);
+    }
+    max_internal_node_id = boost::numeric_cast<std::uint64_t>(used_node_id_list.size());
+}
+
+void ExtractionContainers::PrepareNodes(NodeLocationIndex *locations)
 {
     {
         util::UnbufferedLog log;
@@ -454,6 +499,42 @@ void ExtractionContainers::PrepareNodes()
         used_node_id_list.resize(new_end - used_node_id_list.begin());
         TIMER_STOP(erasing_dups);
         log << "ok, after " << TIMER_SEC(erasing_dups) << "s";
+    }
+
+    if (locations)
+    {
+        const auto original_used_count = used_node_id_list.size();
+        {
+            util::UnbufferedLog log;
+            log << "Reading used nodes from OSM location index ... " << std::flush;
+            TIMER_START(read_used_nodes);
+            releaseUnusedHeapPages();
+            std::vector<osmium::Location> selected_locations(original_used_count);
+            tbb::parallel_for(tbb::blocked_range<std::size_t>(0, original_used_count),
+                              [&](const tbb::blocked_range<std::size_t> &range)
+                              {
+                                  for (auto index = range.begin(); index != range.end(); ++index)
+                                      selected_locations[index] = locations->get_noexcept(
+                                          from_alias<std::uint64_t>(used_node_id_list[index]));
+                              });
+            locations->clear();
+            releaseUnusedHeapPages();
+            used_nodes.reserve(original_used_count);
+            for (std::size_t index = 0; index < original_used_count; ++index)
+            {
+                if (selected_locations[index].is_undefined())
+                    continue;
+                const auto id = used_node_id_list[index];
+                used_node_id_list[used_nodes.size()] = id;
+                used_nodes.push_back(makeQueryNode(id, selected_locations[index]));
+            }
+            used_node_id_list.resize(used_nodes.size());
+            TIMER_STOP(read_used_nodes);
+            log << "ok, after " << TIMER_SEC(read_used_nodes) << "s";
+        }
+        checkUsedNodeCount(original_used_count);
+        util::Log() << "Processed " << max_internal_node_id << " nodes";
+        return;
     }
 
     {
@@ -501,20 +582,7 @@ void ExtractionContainers::PrepareNodes()
 
         // Remove unused nodes and check maximal internal node id
         used_node_id_list.resize(std::distance(used_node_id_list.begin(), used_nodes_iter));
-        const auto dropped_count = original_used_count - used_node_id_list.size();
-        if (dropped_count > 0)
-        {
-            util::Log(logWARNING) << dropped_count
-                                  << " node(s) referenced by ways were not found in the input data"
-                                     " and will be ignored";
-        }
-        if (used_node_id_list.size() > std::numeric_limits<NodeID>::max())
-        {
-            throw util::exception("There are too many nodes remaining after filtering, OSRM only "
-                                  "supports 2^32 unique nodes, but there were " +
-                                  std::to_string(used_node_id_list.size()) + SOURCE_REF);
-        }
-        max_internal_node_id = boost::numeric_cast<std::uint64_t>(used_node_id_list.size());
+        checkUsedNodeCount(original_used_count);
         TIMER_STOP(id_map);
         log << "ok, after " << TIMER_SEC(id_map) << "s";
     }
@@ -554,7 +622,8 @@ void ExtractionContainers::PrepareNodes()
     util::Log() << "Processed " << max_internal_node_id << " nodes";
 }
 
-void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environment)
+void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environment,
+                                        RecordSpool<NodeBasedEdge> &prepared_edges)
 {
     // Sort edges by start.
     {
@@ -845,7 +914,6 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
         }
     }
 
-    used_edges.reserve(all_edges_list.size());
     {
         util::UnbufferedLog log;
         log << "Writing used edges       ... " << std::flush;
@@ -861,17 +929,18 @@ void ExtractionContainers::PrepareEdges(ScriptingEnvironment &scripting_environm
 
             // IMPORTANT: here, we're using slicing to only write the data from the base
             // class of NodeBasedEdgeWithOSM
-            used_edges.push_back(edge.result);
+            prepared_edges.append(edge.result);
         }
 
-        if (used_edges.size() > std::numeric_limits<uint32_t>::max())
+        prepared_edges.finish();
+        if (prepared_edges.size() > std::numeric_limits<uint32_t>::max())
         {
             throw util::exception("There are too many edges, OSRM only supports 2^32" + SOURCE_REF);
         }
 
         TIMER_STOP(write_edges);
         log << "ok, after " << TIMER_SEC(write_edges) << "s";
-        log << " -- Processed " << used_edges.size() << " edges";
+        log << " -- Processed " << prepared_edges.size() << " edges";
     }
 }
 

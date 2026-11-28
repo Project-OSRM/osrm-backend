@@ -59,6 +59,15 @@ Profiles can also define a `process_segment` function to handle differences in s
 
 At the end of the file, a table is returned with references to the setup and processing functions the profile has defined.
 
+### Optional tag filters
+
+A profile can add `tag_filters` to its returned function table. Each entry is keyed by its `process_node` or `process_way` function. For example, `[process_way] = {any = {'highway', 'route'}}` skips the callback for ways that lack both keys. With an empty list, the callback receives its usual inputs. A filter may also specify a `callback` to process matching objects in place of the original function.
+
+Use a filter only when processing an object with none of the listed keys would have no effect. Keep the list in the Lua profile up to date when adding a tag that can affect an otherwise skipped object. Declare the setup and filtered function in the selected profile file. Imported profiles and replacement callbacks retain their regular behavior unless the selected profile declares its own filter for them.
+
+`way:snapshot_tags()` copies the way's tags into a Lua table for repeated reads. It includes every key, keeps empty values, and uses the first value for duplicate keys.
+
+
 ## Understanding speed, weight and rate
 When computing a route from A to B there can be different measures of what is the best route. That's why there's a need for different profiles.
 
@@ -449,6 +458,7 @@ angle                              | Read          | Float                     |
 number_of_roads                    | Read          | Integer                   | Number of ways at the intersection of the turn
 is_u_turn                          | Read          | Boolean                   | Is the turn a u-turn?
 has_traffic_light                  | Read          | Boolean                   | Is a traffic light present at this turn?
+has_turning_facility               | Read          | Boolean                   | Is this intersection tagged highway=turning_circle, turning_loop, or mini_roundabout? Does not override turn restrictions or one-way access.
 is_left_hand_driving               | Read          | Boolean                   | Is left-hand traffic?
 source_restricted                  | Read          | Boolean                   | Is it from a restricted access road? (See definition in `process_way`)
 source_mode                        | Read          | Enum                      | Travel mode before the turn. Defined in `include/extractor/travel_mode.hpp`
@@ -478,8 +488,16 @@ target_road                        | Read          | ExtractionTurnLeg         |
 roads_on_the_right                 | Read          | Vector&lt;ExtractionTurnLeg&gt; | Vector with information about other roads on the right of the turn that are also connected at the intersection
 roads_on_the_left                  | Read          | Vector&lt;ExtractionTurnLeg&gt; | Vector with information about other roads on the left of the turn that are also connected at the intersection. If turn is a u turn, this is empty.
 weight                             | Read/write    | Float                     | Penalty to be applied for this turn (routing weight)
-duration                           | Read/write    | Float                     | Penalty to be applied for this turn (duration in deciseconds)
+duration                           | Read/write    | Float                     | Penalty to be applied for this turn (duration in seconds)
 
+
+#### Turning facilities
+
+The car profile uses `turning_facility_penalty` (5 seconds by default) instead
+of `properties.u_turn_penalty` (20 seconds) for U-turns at tagged turning
+facilities. Other applicable turn costs are still added. The
+`has_turning_facility` flag describes the intersection; it does not enable
+arbitrary U-turns or override explicit restrictions and one-way roads.
 
 #### from, via, and to
 Use these node IDs to retrieve obstacles. See: @ref ObstacleMap::get.

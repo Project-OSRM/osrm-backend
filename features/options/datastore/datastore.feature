@@ -16,7 +16,9 @@ Feature: osrm-datastore command line options
         And the data has been contracted
 
         When I try to run "osrm-datastore"
-        Then stderr should contain "the argument for"
+        Then stdout should contain "osrm-datastore"
+        And stdout should contain "Options:"
+        And stderr should be empty
         And it should exit successfully
 
     Scenario: osrm-datastore - Updates should work

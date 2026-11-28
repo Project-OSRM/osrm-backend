@@ -1,4 +1,5 @@
 #include "guidance/roundabout_handler.hpp"
+#include "extractor/travel_mode.hpp"
 #include "guidance/constants.hpp"
 
 #include "util/assert.hpp"
@@ -60,11 +61,7 @@ Intersection RoundaboutHandler::operator()(const NodeID from_nid,
     const auto flags = getRoundaboutFlags(from_nid, via_eid, intersection);
     const auto roundabout_type = getRoundaboutType(node_based_graph.GetTarget(via_eid));
     // find the radius of the roundabout
-    return handleRoundabouts(roundabout_type,
-                             via_eid,
-                             flags.on_roundabout,
-                             flags.can_exit_separately,
-                             std::move(intersection));
+    return handleRoundabouts(roundabout_type, via_eid, flags, std::move(intersection));
 }
 
 detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
@@ -75,6 +72,7 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
     bool on_roundabout = in_edge_class.roundabout || in_edge_class.circular;
     bool can_enter_roundabout = false;
     bool can_exit_roundabout_separately = false;
+    bool can_exit_roundabout_separately_without_pushing = false;
 
     const bool lhs =
         node_data_container.GetAnnotation(in_edge_data.annotation_data).is_left_hand_driving;
@@ -102,9 +100,15 @@ detail::RoundaboutFlags RoundaboutHandler::getRoundaboutFlags(
         else if (node_based_graph.GetTarget(road.eid) != from_nid && !can_enter_roundabout)
         {
             can_exit_roundabout_separately = true;
+            can_exit_roundabout_separately_without_pushing |=
+                node_data_container.GetAnnotation(edge.annotation_data).travel_mode !=
+                extractor::TRAVEL_MODE_PUSHING_BIKE;
         }
     }
-    return {on_roundabout, can_enter_roundabout, can_exit_roundabout_separately};
+    return {on_roundabout,
+            can_enter_roundabout,
+            can_exit_roundabout_separately,
+            can_exit_roundabout_separately_without_pushing};
 }
 
 // If we want to see a roundabout as a turn, the exits have to be distinct enough to be seen a
@@ -273,10 +277,11 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
     {
         double length = 0.;
         auto last_coord = node_coordinates[source_node];
-        const auto &edge_bucket = compressed_geometries.GetBucketReference(eid);
-        for (const auto &compressed_edge : edge_bucket)
+        const auto geometry = compressed_geometries.getGeometryNodes(
+            eid, node_based_graph.GetEdgeData(eid).geometry_id, node_based_graph.GetTarget(eid));
+        for (const auto node : geometry)
         {
-            const auto next_coord = node_coordinates[compressed_edge.node_id];
+            const auto next_coord = node_coordinates[node];
             length += util::coordinate_calculation::greatCircleDistance(last_coord, next_coord);
             last_coord = next_coord;
         }
@@ -370,21 +375,19 @@ RoundaboutType RoundaboutHandler::getRoundaboutType(const NodeID nid) const
 
 Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabout_type,
                                                   const EdgeID via_eid,
-                                                  const bool on_roundabout,
-                                                  const bool can_exit_roundabout_separately,
+                                                  const detail::RoundaboutFlags flags,
                                                   Intersection intersection) const
 {
     NodeID node_at_center_of_intersection = node_based_graph.GetTarget(via_eid);
     const auto &in_edge_data = node_based_graph.GetEdgeData(via_eid);
 
-    const bool lhs =
-        node_data_container.GetAnnotation(in_edge_data.annotation_data).is_left_hand_driving;
+    const auto &in_annotation = node_data_container.GetAnnotation(in_edge_data.annotation_data);
+    const bool lhs = in_annotation.is_left_hand_driving;
     const int step = lhs ? -1 : 1;
 
-    if (on_roundabout)
+    if (flags.on_roundabout)
     {
-        // Shoule hopefully have only a single exit and continue
-        // at least for cars. How about bikes?
+        const bool cycling = in_annotation.travel_mode == extractor::TRAVEL_MODE_CYCLING;
         for (std::size_t cnt = 0, idx = lhs ? intersection.size() - 1 : 0;
              cnt < intersection.size();
              ++cnt, idx += step)
@@ -392,7 +395,6 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
             auto &road = intersection[idx];
             auto &turn = road;
             const auto &out_data = node_based_graph.GetEdgeData(road.eid).flags;
-            ;
             if (out_data.roundabout || out_data.circular)
             {
                 // TODO can forks happen in roundabouts? E.g. required lane changes
@@ -410,31 +412,33 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
                 }
                 else
                 {
-                    // Check if there is a non-service exit
-                    const auto has_non_ignorable_exit = [&]()
+                    const bool include_low_priority =
+                        out_data.road_classification.IsLowPriorityRoadClass();
+                    const auto has_countable_exit = [&]()
                     {
                         for (const auto eid :
                              node_based_graph.GetAdjacentEdgeRange(node_at_center_of_intersection))
                         {
-                            const auto &leaving_edge = node_based_graph.GetEdgeData(eid);
-                            if (!leaving_edge.reversed && !leaving_edge.flags.roundabout &&
-                                !leaving_edge.flags.circular &&
-                                !leaving_edge.flags.road_classification.IsLowPriorityRoadClass())
+                            const auto &edge = node_based_graph.GetEdgeData(eid);
+                            if (edge.reversed || edge.flags.roundabout || edge.flags.circular ||
+                                (!include_low_priority &&
+                                 edge.flags.road_classification.IsLowPriorityRoadClass()))
+                                continue;
+
+                            if (!cycling ||
+                                node_data_container.GetAnnotation(edge.annotation_data)
+                                        .travel_mode != extractor::TRAVEL_MODE_PUSHING_BIKE)
                                 return true;
                         }
                         return false;
                     };
-
-                    // Count normal exits and service roads, if the roundabout is a service road
-                    // itself
-                    if (out_data.road_classification.IsLowPriorityRoadClass() ||
-                        has_non_ignorable_exit())
+                    if ((!cycling && include_low_priority) || has_countable_exit())
                     {
                         turn.instruction = TurnInstruction::REMAIN_ROUNDABOUT(
                             roundabout_type, getTurnDirection(turn.angle));
                     }
                     else
-                    { // Suppress exit instructions from normal roundabouts to service roads
+                    {
                         turn.instruction = {TurnType::Suppressed, getTurnDirection(turn.angle)};
                     }
                 }
@@ -455,7 +459,8 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
              ++cnt, idx += step)
         {
             auto &turn = intersection[idx];
-            const auto &out_data = node_based_graph.GetEdgeData(turn.eid).flags;
+            const auto &out_edge = node_based_graph.GetEdgeData(turn.eid);
+            const auto &out_data = out_edge.flags;
 
             // A roundabout consists of exactly two roads at an intersection. by toggeling this
             // flag, we can switch between roads crossing the roundabout and roads that are on the
@@ -468,6 +473,11 @@ Intersection RoundaboutHandler::handleRoundabouts(const RoundaboutType roundabou
 
             if (out_data.roundabout || out_data.circular)
             {
+                const bool cycling =
+                    node_data_container.GetAnnotation(out_edge.annotation_data).travel_mode ==
+                    extractor::TRAVEL_MODE_CYCLING;
+                const bool can_exit_roundabout_separately =
+                    cycling ? flags.can_exit_separately_without_pushing : flags.can_exit_separately;
                 if (can_exit_roundabout_separately)
                     turn.instruction = TurnInstruction::ENTER_ROUNDABOUT_AT_EXIT(
                         roundabout_type, getTurnDirection(turn.angle));

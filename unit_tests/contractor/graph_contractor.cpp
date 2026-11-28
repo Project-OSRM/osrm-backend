@@ -212,8 +212,9 @@ BOOST_AUTO_TEST_CASE(contract_excludable_graph)
         HAS(3, 0)
         HAS(3, 2)
         HAS(2, 0)
-        HAS(0, 2)
 
+        // The last shared-core batch contracts node 2 and removes the downward edge.
+        NOT(0, 2)
         NOT(0, 1)
         NOT(2, 1)
         NOT(0, 3)

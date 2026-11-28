@@ -36,6 +36,15 @@ option(ENABLE_NODE_BINDINGS "Build NodeJs bindings" OFF)
 option(ENABLE_PYTHON_BINDINGS "Build Python bindings" OFF)
 option(ENABLE_SANITIZER "Use memory sanitizer for Debug build" OFF)
 
+if(BUILD_AS_SUBPROJECT)
+  set(OSRM_BUILD_AUXILIARY_TARGETS_DEFAULT OFF)
+else()
+  set(OSRM_BUILD_AUXILIARY_TARGETS_DEFAULT ON)
+endif()
+
+option(OSRM_BUILD_TESTING "Build OSRM test targets" ${OSRM_BUILD_AUXILIARY_TARGETS_DEFAULT})
+option(OSRM_BUILD_BENCHMARKS "Build OSRM benchmark targets" ${OSRM_BUILD_AUXILIARY_TARGETS_DEFAULT})
+
 # Dependencies are provided by vcpkg in manifest mode (see vcpkg.json).
 # The vcpkg toolchain file is wired up via CMakePresets.json or by passing
 # -DCMAKE_TOOLCHAIN_FILE=$VCPKG_ROOT/scripts/buildsystems/vcpkg.cmake.
@@ -68,8 +77,14 @@ endif()
 # add @loader_path/$ORIGIN to rpath to make binaries relocatable
 if(APPLE)
   set(CMAKE_BUILD_RPATH "@loader_path")
+  if(NOT CMAKE_INSTALL_RPATH)
+    set(CMAKE_INSTALL_RPATH "@loader_path/../lib")
+  endif()
 elseif(NOT WIN32)
   set(CMAKE_BUILD_RPATH "\$ORIGIN")
+  if(NOT CMAKE_INSTALL_RPATH)
+    set(CMAKE_INSTALL_RPATH "\$ORIGIN/../lib")
+  endif()
   # https://stackoverflow.com/questions/6324131/rpath-origin-not-having-desired-effect
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -Wl,-z,origin")
 endif()
@@ -159,6 +174,10 @@ configure_file(
   ${CMAKE_CURRENT_BINARY_DIR}/include/util/version.hpp
 )
 file(GLOB UtilGlob src/util/*.cpp src/util/*/*.cpp)
+set(SharedUtilSources
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/util/exception.cpp"
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/util/log.cpp")
+list(REMOVE_ITEM UtilGlob ${SharedUtilSources})
 file(GLOB ExtractorGlob src/extractor/*.cpp src/extractor/*/*.cpp)
 file(GLOB GuidanceGlob src/guidance/*.cpp src/extractor/intersection/*.cpp)
 file(GLOB PartitionerGlob src/partitioner/*.cpp)
@@ -192,13 +211,15 @@ add_executable(osrm-partition src/tools/partition.cpp)
 add_executable(osrm-customize src/tools/customize.cpp)
 add_executable(osrm-contract src/tools/contract.cpp)
 add_executable(osrm-datastore src/tools/store.cpp $<TARGET_OBJECTS:UTIL>)
-add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
+add_library(osrm src/osrm/osrm.cpp $<TARGET_OBJECTS:ENGINE> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_contract src/osrm/contractor.cpp $<TARGET_OBJECTS:CONTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_extract src/osrm/extractor.cpp $<TARGET_OBJECTS:EXTRACTOR> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_partition src/osrm/partitioner.cpp $<TARGET_OBJECTS:PARTITIONER> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_customize src/osrm/customizer.cpp $<TARGET_OBJECTS:CUSTOMIZER> $<TARGET_OBJECTS:UTIL>)
 add_library(osrm_update $<TARGET_OBJECTS:UPDATER> $<TARGET_OBJECTS:UTIL>)
-add_library(osrm_store $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
+# Share exception types and logging state across OSRM libraries.
+add_library(osrm_store ${SharedUtilSources} $<TARGET_OBJECTS:STORAGE> $<TARGET_OBJECTS:UTIL>)
+set_target_properties(osrm_store PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS ON)
 
 # ALIAS targets with :: provide compile-time safety: typos error at configure time, not link time
 add_library(osrm::osrm ALIAS osrm)
@@ -321,11 +342,39 @@ find_package(Threads REQUIRED)
 include(CheckCXXSourceRuns)
 
 find_package(LibArchive REQUIRED)
+if(WIN32)
+  # libarchive uses BCryptGenRandom; FindLibArchive does not expose this dependency.
+  set_property(TARGET LibArchive::LibArchive APPEND PROPERTY INTERFACE_LINK_LIBRARIES bcrypt)
+endif()
 
-# Header-only libraries from vcpkg. Each provides a CMake CONFIG package.
+add_dependency_includes(${LibArchive_INCLUDE_DIRS})
+if(TARGET LibArchive::LibArchive)
+  get_target_property(_libarchive_includes LibArchive::LibArchive INTERFACE_INCLUDE_DIRECTORIES)
+  if(_libarchive_includes)
+    add_dependency_includes(${_libarchive_includes})
+  endif()
+endif()
+
+# Header-only libraries consumed through CMake package configs.
 find_package(RapidJSON CONFIG REQUIRED)
 find_package(sol2 CONFIG REQUIRED)
 find_package(flatbuffers CONFIG REQUIRED)
+# TBB is linked later, but discover it here so the include-harvesting loop
+# below can see TBB::tbb for OBJECT libraries that were already created.
+find_package(TBB CONFIG REQUIRED)
+# Always link the release build of TBB, even in Debug/Coverage configurations.
+# vcpkg's debug TBB enables internal debug assertions (e.g. intrusive_list
+# invariants) that trip during osrm-extract's test-data generation on
+# ubuntu-24.04 under gcc-13. The master branch never hit this because it
+# linked the system's release-only TBB. Do the same here.
+foreach(_tbb_target TBB::tbb TBB::tbbmalloc TBB::tbbmalloc_proxy)
+  if(TARGET ${_tbb_target})
+    set_target_properties(${_tbb_target} PROPERTIES
+      MAP_IMPORTED_CONFIG_DEBUG        Release
+      MAP_IMPORTED_CONFIG_MINSIZEREL   Release
+      MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
+  endif()
+endforeach()
 
 # Driving-side classifier. Compiled, not header-only: its wasm core is shipped
 # as transpiled C and built once by the overlay port.
@@ -334,9 +383,11 @@ find_package(gauche CONFIG REQUIRED)
 # Generate flatbuffers C++ headers from .fbs schemas at build time.
 # This removes the need to commit pre-generated headers and pin the
 # flatbuffers version — any compatible flatc will regenerate them.
-# BuildFlatBuffers.cmake is shipped alongside flatbuffers-config.cmake
-# but not on CMAKE_MODULE_PATH, so locate it via the package's own dir.
-include("${flatbuffers_DIR}/BuildFlatBuffers.cmake")
+# Some package configs define this helper command themselves instead of placing
+# BuildFlatBuffers.cmake next to the generated config file.
+if(NOT COMMAND flatbuffers_generate_headers)
+  include("${flatbuffers_DIR}/BuildFlatBuffers.cmake")
+endif()
 set(FLATBUFFERS_SCHEMAS
     ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/fbresult.fbs
     ${CMAKE_CURRENT_SOURCE_DIR}/include/engine/api/flatbuffers/route.fbs
@@ -374,11 +425,12 @@ include_directories(SYSTEM ${VTZERO_INCLUDE_DIR})
 # target and push them into the directory-level include_directories, which
 # DOES apply retroactively to earlier targets. Consumers (unit tests, etc.)
 # inherit the same search paths via the directory.
-set(_osrm_vcpkg_header_targets
+set(_osrm_dependency_header_targets
     sol2::sol2
     rapidjson RapidJSON::RapidJSON
-    flatbuffers::flatbuffers)
-foreach(_dep IN LISTS _osrm_vcpkg_header_targets)
+    flatbuffers::flatbuffers flatbuffers::libflatbuffers
+    TBB::tbb)
+foreach(_dep IN LISTS _osrm_dependency_header_targets)
   if(TARGET ${_dep})
     get_target_property(_inc ${_dep} INTERFACE_INCLUDE_DIRECTORIES)
     if(_inc)
@@ -398,15 +450,6 @@ endif()
 # All dependencies below come from vcpkg (vcpkg.json). The vcpkg toolchain
 # file exposes them via standard CMake find_package() / imported targets.
 find_package(Boost 1.83 REQUIRED CONFIG COMPONENTS ${BOOST_COMPONENTS})
-find_package(TBB CONFIG REQUIRED)
-foreach(_tbb_target TBB::tbb TBB::tbbmalloc TBB::tbbmalloc_proxy)
-  if(TARGET ${_tbb_target})
-    set_target_properties(${_tbb_target} PROPERTIES
-      MAP_IMPORTED_CONFIG_DEBUG        Release
-      MAP_IMPORTED_CONFIG_MINSIZEREL   Release
-      MAP_IMPORTED_CONFIG_RELWITHDEBINFO Release)
-  endif()
-endforeach()
 find_package(EXPAT REQUIRED)
 find_package(BZip2 REQUIRED)
 find_package(Lua 5.4 REQUIRED)
@@ -559,20 +602,20 @@ set(UTIL_LIBRARIES
     ${ZLIB_LIBRARY})
 
 # Libraries
-target_link_libraries(osrm ${ENGINE_LIBRARIES} LibArchive::LibArchive)
-target_link_libraries(osrm_update ${UPDATER_LIBRARIES} LibArchive::LibArchive)
+target_link_libraries(osrm ${ENGINE_LIBRARIES} osrm_store)
+target_link_libraries(osrm_update ${UPDATER_LIBRARIES} osrm_store)
 target_link_libraries(osrm_contract ${CONTRACTOR_LIBRARIES} osrm_update osrm_store)
-target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES} LibArchive::LibArchive)
-target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES} LibArchive::LibArchive)
+target_link_libraries(osrm_extract ${EXTRACTOR_LIBRARIES} osrm_store)
+target_link_libraries(osrm_partition ${PARTITIONER_LIBRARIES} osrm_store)
 target_link_libraries(osrm_customize ${CUSTOMIZER_LIBRARIES} osrm_update osrm_store)
 target_link_libraries(osrm_store ${STORAGE_LIBRARIES} LibArchive::LibArchive)
 
 add_executable(osrm-components src/tools/components.cpp $<TARGET_OBJECTS:UTIL>)
-target_link_libraries(osrm-components ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${UTIL_LIBRARIES} LibArchive::LibArchive)
+target_link_libraries(osrm-components osrm_store ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES} ${UTIL_LIBRARIES})
 install(TARGETS osrm-components DESTINATION bin)
 
 add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTIL>)
-target_link_libraries(osrm-io-benchmark ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES})
+target_link_libraries(osrm-io-benchmark osrm_store ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES})
 install(TARGETS osrm-io-benchmark DESTINATION bin)
 
 if(ENABLE_ASSERTIONS)
@@ -602,16 +645,20 @@ set(UtilHeader include/util/coordinate.hpp include/util/json_container.hpp inclu
 set(ExtractorHeader include/extractor/extractor.hpp include/storage/io_config.hpp include/extractor/extractor_config.hpp include/extractor/travel_mode.hpp)
 set(PartitionerHeader include/partitioner/partitioner.hpp include/partitioner/partitioner_config.hpp)
 set(ContractorHeader include/contractor/contractor.hpp include/contractor/contractor_config.hpp)
+set(CustomizerHeader include/customizer/customizer_config.hpp)
+set(UpdaterHeader include/updater/updater_config.hpp)
 set(StorageHeader include/storage/storage.hpp include/storage/io_config.hpp include/storage/storage_config.hpp)
-install(FILES ${EngineHeader} DESTINATION include/osrm/engine)
-install(FILES ${UtilHeader} DESTINATION include/osrm/util)
-install(FILES ${StorageHeader} DESTINATION include/osrm/storage)
-install(FILES ${ExtractorHeader} DESTINATION include/osrm/extractor)
-install(FILES ${PartitionerHeader} DESTINATION include/osrm/partitioner)
-install(FILES ${ContractorHeader} DESTINATION include/osrm/contractor)
-install(FILES ${LibraryGlob} DESTINATION include/osrm)
-install(FILES ${ParametersGlob} DESTINATION include/osrm/engine/api)
-install(FILES ${ApiHeader} DESTINATION include/osrm/engine/api)
+install(FILES ${EngineHeader} DESTINATION include/osrm/engine COMPONENT Development)
+install(FILES ${UtilHeader} DESTINATION include/osrm/util COMPONENT Development)
+install(FILES ${StorageHeader} DESTINATION include/osrm/storage COMPONENT Development)
+install(FILES ${ExtractorHeader} DESTINATION include/osrm/extractor COMPONENT Development)
+install(FILES ${PartitionerHeader} DESTINATION include/osrm/partitioner COMPONENT Development)
+install(FILES ${ContractorHeader} DESTINATION include/osrm/contractor COMPONENT Development)
+install(FILES ${CustomizerHeader} DESTINATION include/osrm/customizer COMPONENT Development)
+install(FILES ${UpdaterHeader} DESTINATION include/osrm/updater COMPONENT Development)
+install(FILES ${LibraryGlob} DESTINATION include/osrm COMPONENT Development)
+install(FILES ${ParametersGlob} DESTINATION include/osrm/engine/api COMPONENT Development)
+install(FILES ${ApiHeader} DESTINATION include/osrm/engine/api COMPONENT Development)
 # Flatbuffers headers are provided by the vcpkg port and installed into the
 # consumer's sysroot directly; we no longer ship them as part of libosrm.
 
@@ -657,7 +704,7 @@ if(BUILD_AS_SUBPROJECT)
   set(LibOSRM_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/include" PARENT_SCOPE)
   set(LibOSRM_LIBRARY_DIR "${CMAKE_CURRENT_BINARY_DIR}" PARENT_SCOPE)
   set(LibOSRM_LIBRARIES "osrm" PARENT_SCOPE)
-  set(LibOSRM_DEPENDENT_LIBRARIES "${ENGINE_LIBRARIES}" PARENT_SCOPE)
+  set(LibOSRM_DEPENDENT_LIBRARIES "osrm_store;${ENGINE_LIBRARIES}" PARENT_SCOPE)
   set(LibOSRM_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/include"
     "${CMAKE_CURRENT_SOURCE_DIR}/include/osrm"
     "${CMAKE_CURRENT_SOURCE_DIR}/third_party"
@@ -719,10 +766,14 @@ else()
 endif()
 
 
-# Modular build system: each directory registered here provides its own CMakeLists.txt
-enable_testing()
-add_subdirectory(unit_tests)
-add_subdirectory(src/benchmarks)
+if(OSRM_BUILD_TESTING)
+  enable_testing()
+  add_subdirectory(unit_tests)
+endif()
+
+if(OSRM_BUILD_BENCHMARKS)
+  add_subdirectory(src/benchmarks)
+endif()
 
 if(ENABLE_NODE_BINDINGS)
   add_subdirectory(src/nodejs)

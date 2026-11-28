@@ -1,6 +1,7 @@
 #ifndef OSRM_GUIDANCE_FILES_HPP
 #define OSRM_GUIDANCE_FILES_HPP
 
+#include "guidance/compact_turn_data.hpp"
 #include "guidance/serialization.hpp"
 #include "guidance/turn_data_container.hpp"
 
@@ -29,7 +30,24 @@ inline void readTurnData(const std::filesystem::path &path,
     storage::tar::FileReader reader{path, fingerprint};
 
     reader.ReadInto("/common/connectivity_checksum", connectivity_checksum);
-    serialization::read(reader, "/common/turn_data", turn_data);
+    if (reader.HasEntry("/preprocessing/turn_data/turn_instructions"))
+    {
+        if constexpr (std::is_same_v<TurnDataT, TurnDataView>)
+            throw util::exception("Routing turn data must be loaded from the prepared graph");
+        else
+        {
+            const auto original = readOriginalTurnData(path);
+            turn_data = TurnDataT{};
+            for (auto id : original.Mapping)
+                turn_data.push_back({original.Values.GetTurnInstruction(id),
+                                     original.Values.GetLaneDataID(id),
+                                     original.Values.GetEntryClassID(id),
+                                     original.Values.GetPreTurnBearing(id),
+                                     original.Values.GetPostTurnBearing(id)});
+        }
+    }
+    else
+        serialization::read(reader, "/common/turn_data", turn_data);
 }
 
 // writes .osrm.edges
@@ -47,7 +65,10 @@ inline void writeTurnData(const std::filesystem::path &path,
 
     writer.WriteElementCount64("/common/connectivity_checksum", 1);
     writer.WriteFrom("/common/connectivity_checksum", connectivity_checksum);
-    serialization::write(writer, "/common/turn_data", turn_data);
+    const auto compact = compactTurnData(turn_data);
+    serialization::write(writer, "/preprocessing/turn_data", compact.Values);
+    storage::writeCompactVector<EdgeID>(
+        writer, "/preprocessing/turn_ids", {compact.Mapping.data(), compact.Mapping.size()});
 }
 } // namespace osrm::guidance::files
 
