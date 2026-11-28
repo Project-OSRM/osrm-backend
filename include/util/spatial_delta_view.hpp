@@ -91,7 +91,7 @@ using SpatialNodeRange =
 
 inline SpatialNodeRange
 makeSpatialNodeRange(SpatialNodeLookup lookup, std::size_t begin, std::size_t end)
-{ return {std::views::iota(begin, end), lookup}; }
+{ return SpatialNodeRange{std::views::iota(begin, end), lookup}; }
 } // namespace osrm::util
 
 #endif

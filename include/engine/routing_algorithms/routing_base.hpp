@@ -422,7 +422,7 @@ template <typename FacadeT> EdgeDistance computeEdgeDistance(const FacadeT &faca
     for (auto current = geometry_range.begin(); current < geometry_range.end() - 1; ++current)
     {
         total_distance += util::coordinate_calculation::greatCircleDistance(
-            facade.GetCoordinateOfNode(*current), facade.GetCoordinateOfNode(*std::next(current)));
+            facade.GetCoordinateOfNode(*current), facade.GetCoordinateOfNode(*(current + 1)));
     }
 
     return total_distance;
