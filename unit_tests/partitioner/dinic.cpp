@@ -71,7 +71,14 @@ BOOST_AUTO_TEST_CASE(horizontal_cut_between_two_grids)
 
     DinicMaxFlow flow;
     const auto cut = flow(view, terminals);
-    BOOST_CHECK(cut.num_edges == 4);
+    BOOST_REQUIRE(cut);
+    BOOST_CHECK_EQUAL(cut->num_edges, 4);
+    const std::atomic<std::size_t> too_small{3};
+    const std::atomic<std::size_t> equal{4};
+    BOOST_CHECK(!flow(view, terminals, &too_small));
+    const auto accepted = flow(view, terminals, &equal);
+    BOOST_REQUIRE(accepted);
+    BOOST_CHECK(accepted->flags == cut->flags);
 }
 
 BOOST_AUTO_TEST_SUITE_END()

@@ -66,8 +66,10 @@ class DinicMaxFlow::FlowEdges
     std::unordered_set<std::uint64_t> m_overflow;
 };
 
-DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
-                                              std::span<const Terminal> terminals) const
+std::optional<DinicMaxFlow::MinCut>
+DinicMaxFlow::operator()(const BisectionGraphView &view,
+                         std::span<const Terminal> terminals,
+                         const std::atomic<std::size_t> *cut_limit) const
 {
     BOOST_ASSERT(terminals.size() == view.NumberOfNodes());
 
@@ -99,7 +101,7 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
     // allocate storage for the flow
     FlowEdges flow(view.NumberOfNodes());
     std::size_t flow_value = 0;
-    do
+    while (cut_limit == nullptr || flow_value <= cut_limit->load(std::memory_order_relaxed))
     {
         auto levels = ComputeLevelGraph(view, border_source_nodes, terminals, flow);
 
@@ -118,7 +120,8 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
         {
             return MakeCut(terminals, levels, flow_value);
         }
-    } while (true);
+    }
+    return std::nullopt;
 }
 
 DinicMaxFlow::MinCut DinicMaxFlow::MakeCut(std::span<const Terminal> terminals,

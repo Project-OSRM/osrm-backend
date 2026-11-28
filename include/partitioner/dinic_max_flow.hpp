@@ -3,7 +3,9 @@
 
 #include "partitioner/bisection_graph_view.hpp"
 
+#include <atomic>
 #include <cstdint>
+#include <optional>
 #include <span>
 #include <vector>
 
@@ -30,7 +32,10 @@ class DinicMaxFlow
         Sink
     };
 
-    MinCut operator()(const BisectionGraphView &view, std::span<const Terminal> terminals) const;
+    // A partial flow above the optional cut limit cannot produce a competitive cut.
+    std::optional<MinCut> operator()(const BisectionGraphView &view,
+                                     std::span<const Terminal> terminals,
+                                     const std::atomic<std::size_t> *cut_limit = nullptr) const;
 
   private:
     // the level of each node in the graph (==hops in BFS from source)

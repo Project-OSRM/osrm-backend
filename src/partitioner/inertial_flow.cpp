@@ -4,9 +4,11 @@
 #include "partitioner/reorder_first_last.hpp"
 
 #include <algorithm>
+#include <atomic>
 #include <cmath>
 #include <cstddef>
 #include <iterator>
+#include <limits>
 #include <mutex>
 #include <utility>
 #include <vector>
@@ -84,7 +86,7 @@ DinicMaxFlow::MinCut bestMinCut(const BisectionGraphView &view,
     DinicMaxFlow::MinCut best;
     best.num_edges = -1;
 
-    const auto get_balance = [&view, balance](const auto num_nodes_source)
+    const auto get_balance = [&view, balance](const std::size_t num_nodes_source)
     {
         const auto perfect_balance = view.NumberOfNodes() / 2;
         const auto allowed_balance = balance * perfect_balance;
@@ -99,6 +101,13 @@ DinicMaxFlow::MinCut bestMinCut(const BisectionGraphView &view,
 
     auto best_balance = 1;
 
+    // The incumbent uses an integral balance factor. When every factor rounds to
+    // one, an accepted cut can only decrease the incumbent edge count.
+    const auto maximum_balance = get_balance(0);
+    std::atomic<std::size_t> best_edge_count{std::numeric_limits<std::size_t>::max()};
+    const auto cut_limit =
+        maximum_balance >= 1.0 && maximum_balance < 2.0 ? &best_edge_count : nullptr;
+
     std::mutex lock;
 
     tbb::blocked_range<std::size_t> range{0, n, 1};
@@ -110,34 +119,38 @@ DinicMaxFlow::MinCut bestMinCut(const BisectionGraphView &view,
         return std::abs(difference);
     };
 
-    tbb::parallel_for(range,
-                      [&](const auto &chunk)
-                      {
-                          for (auto round = chunk.begin(), end = chunk.end(); round != end; ++round)
-                          {
-                              const auto slope = -1. + round * (2. / n);
+    tbb::parallel_for(
+        range,
+        [&](const auto &chunk)
+        {
+            for (auto round = chunk.begin(), end = chunk.end(); round != end; ++round)
+            {
+                const auto slope = -1. + round * (2. / n);
 
-                              const auto terminals = makeTerminals(view, ratio, slope);
-                              auto cut = DinicMaxFlow()(view, terminals);
-                              auto cut_balance = get_balance(cut.num_nodes_source);
+                const auto terminals = makeTerminals(view, ratio, slope);
+                auto cut = DinicMaxFlow()(view, terminals, cut_limit);
+                if (!cut)
+                    continue;
+                auto cut_balance = get_balance(cut->num_nodes_source);
 
-                              {
-                                  std::lock_guard<std::mutex> guard{lock};
+                {
+                    std::lock_guard<std::mutex> guard{lock};
 
-                                  // Swap to keep the destruction of the old object outside of
-                                  // critical section.
-                                  if (cut.num_edges * cut_balance < best.num_edges * best_balance ||
-                                      (cut.num_edges == best.num_edges &&
-                                       balance_delta(cut.num_nodes_source) <
-                                           balance_delta(best.num_nodes_source)))
-                                  {
-                                      best_balance = cut_balance;
-                                      std::swap(best, cut);
-                                  }
-                              }
-                              // cut gets destroyed here
-                          }
-                      });
+                    // Swap to keep the destruction of the old object outside of
+                    // critical section.
+                    if (cut->num_edges * cut_balance < best.num_edges * best_balance ||
+                        (cut->num_edges == best.num_edges &&
+                         balance_delta(cut->num_nodes_source) <
+                             balance_delta(best.num_nodes_source)))
+                    {
+                        best_balance = cut_balance;
+                        std::swap(best, *cut);
+                        best_edge_count.store(best.num_edges, std::memory_order_relaxed);
+                    }
+                }
+                // cut gets destroyed here
+            }
+        });
 
     return best;
 }
