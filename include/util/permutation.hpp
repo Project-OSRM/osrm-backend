@@ -5,6 +5,9 @@
 
 #include <boost/assert.hpp>
 
+#include <algorithm>
+#include <concepts>
+#include <numeric>
 #include <vector>
 
 namespace osrm::util
@@ -54,6 +57,44 @@ void inplacePermutation(const RandomAccessIterator &begin,
         was_replaced[old_index] = true;
         permutation_detail::swap(buffer, begin[index]);
     }
+}
+
+// Stably reorder node indices using a dense integer key for each node.
+template <typename Index, std::unsigned_integral Key>
+void stableOrderByKey(std::vector<Index> &ordering,
+                      std::vector<Index> &scratch,
+                      const std::vector<Key> &keys,
+                      const bool descending = false)
+{
+    BOOST_ASSERT(keys.size() == ordering.size() && scratch.size() == ordering.size());
+    if (keys.empty())
+        return;
+
+    const auto max_key = *std::max_element(keys.begin(), keys.end());
+    if (max_key == 0)
+        return;
+
+    // Keep the histogram bounded even for sparse identifiers.
+    if (max_key >= keys.size())
+    {
+        std::stable_sort(ordering.begin(),
+                         ordering.end(),
+                         [&](const auto lhs, const auto rhs)
+                         { return descending ? keys[lhs] > keys[rhs] : keys[lhs] < keys[rhs]; });
+        return;
+    }
+
+    std::vector<std::size_t> offsets(static_cast<std::size_t>(max_key) + 1, 0);
+    for (const auto key : keys)
+        ++offsets[key];
+    if (descending)
+        std::exclusive_scan(offsets.rbegin(), offsets.rend(), offsets.rbegin(), std::size_t{0});
+    else
+        std::exclusive_scan(offsets.begin(), offsets.end(), offsets.begin(), std::size_t{0});
+
+    for (const auto node : ordering)
+        scratch[offsets[keys[node]]++] = node;
+    ordering.swap(scratch);
 }
 
 template <typename IndexT>
