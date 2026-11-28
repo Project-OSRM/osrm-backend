@@ -618,6 +618,11 @@ add_executable(osrm-io-benchmark src/tools/io-benchmark.cpp $<TARGET_OBJECTS:UTI
 target_link_libraries(osrm-io-benchmark osrm_store ${BOOST_BASE_LIBRARIES} ${TBB_LIBRARIES})
 install(TARGETS osrm-io-benchmark DESTINATION bin)
 
+add_executable(osrm-spatial-pack src/tools/spatial-pack.cpp $<TARGET_OBJECTS:UTIL>)
+target_link_libraries(osrm-spatial-pack osrm_store ${TBB_LIBRARIES} ${BOOST_BASE_LIBRARIES})
+set_property(TARGET osrm-spatial-pack PROPERTY INSTALL_RPATH_USE_LINK_PATH TRUE)
+install(TARGETS osrm-spatial-pack DESTINATION bin)
+
 if(ENABLE_ASSERTIONS)
   message(STATUS "Enabling assertions")
   add_definitions(-DBOOST_ENABLE_ASSERT_HANDLER)

@@ -6,7 +6,7 @@ OSRM stores and loads the files produced by preprocessing.
 
 ## Common Options
 
-These flags are accepted by every tool.
+The main preprocessing and routing tools accept these flags.
 
 | Flag | Short | Description |
 |------|-------|-------------|
@@ -121,6 +121,19 @@ osrm-contract <input.osrm> [options]
 | `--time-zone-file <file>` | | GeoJSON file with time-zone boundaries, required for conditional restriction parsing. |
 
 ---
+
+## osrm-spatial-pack
+
+Creates a query-only copy of a prepared CH or MLD dataset in a new output directory. The copy orders node coordinates by Hilbert rank and delta encodes the coordinates, geometry node IDs, and road R-tree endpoints.
+
+```bash
+osrm-spatial-pack data.osrm serving
+osrm-routed --algorithm mld --mmap serving/data.osrm
+```
+
+Use `--algorithm ch` for CH data. A dataset with both graphs can serve either algorithm. Apply updates to the source dataset and repack it into a new directory to serve updated routes.
+
+The output directory must be new. An interrupted pack leaves an incomplete marker that prevents OSRM from loading the partial copy. The smallest extracts may grow because each packed archive member adds metadata.
 
 ## osrm-routed
 

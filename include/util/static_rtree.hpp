@@ -12,6 +12,7 @@
 #include "util/integer_range.hpp"
 #include "util/mmap_file.hpp"
 #include "util/rectangle.hpp"
+#include "util/spatial_delta_view.hpp"
 #include "util/timing_util.hpp"
 #include "util/typedefs.hpp"
 #include "util/vector_view.hpp"
@@ -149,7 +150,9 @@ class StaticRTree
   public:
     using Rectangle = RectangleInt2D;
     using EdgeData = EdgeDataT;
-    using CoordinateList = Vector<util::Coordinate>;
+    using CoordinateList = std::conditional_t<Ownership == storage::Ownership::View,
+                                              SpatialCoordinateView,
+                                              Vector<util::Coordinate>>;
 
     static_assert(LEAF_PAGE_SIZE >= sizeof(EdgeDataT), "page size is too small");
     static_assert(((LEAF_PAGE_SIZE - 1) & LEAF_PAGE_SIZE) == 0, "page size is not a power of 2");
@@ -247,13 +250,40 @@ class StaticRTree
     // Representation of the in-memory search tree
     Vector<TreeNode> m_search_tree;
     // Reference to the actual lon/lat data we need for doing math
-    util::vector_view<const Coordinate> m_coordinate_list;
+    SpatialCoordinateView m_coordinate_list;
     // Holds the start indexes of each level in m_search_tree
     Vector<std::uint64_t> m_tree_level_starts;
     // mmap'd .fileIndex file
     boost::iostreams::mapped_file_source m_objects_region;
     // This is a view of the EdgeDataT data mmap'd from the .fileIndex file
     util::vector_view<const EdgeDataT> m_objects;
+    using CompactLeaf = std::array<unsigned, 3>;
+    util::vector_view<const CompactLeaf> m_compact_objects;
+    SpatialDeltaView m_endpoints;
+
+    std::size_t objectCount() const
+    { return m_endpoints ? m_compact_objects.size() : m_objects.size(); }
+
+    EdgeDataT getObject(std::size_t index) const
+    {
+        if constexpr (requires(EdgeDataT edge) {
+                          edge.fwd_segment_position;
+                          edge.is_startpoint;
+                      })
+        {
+            if (m_endpoints)
+            {
+                const auto &leaf = m_compact_objects[index];
+                return EdgeDataT{std::bit_cast<SegmentID>(leaf[0]),
+                                 std::bit_cast<SegmentID>(leaf[1]),
+                                 m_endpoints[2 * index],
+                                 m_endpoints[2 * index + 1],
+                                 static_cast<unsigned short>(leaf[2] & 32767u),
+                                 (leaf[2] & 32768u) != 0};
+            }
+        }
+        return m_objects[index];
+    }
 
   public:
     StaticRTree() = default;
@@ -476,13 +506,21 @@ class StaticRTree
     explicit StaticRTree(Vector<TreeNode> search_tree_,
                          Vector<std::uint64_t> tree_level_starts,
                          const std::filesystem::path &on_disk_file_name,
-                         const Vector<Coordinate> &coordinate_list)
-        : m_search_tree(std::move(search_tree_)),
-          m_coordinate_list(coordinate_list.data(), coordinate_list.size()),
-          m_tree_level_starts(std::move(tree_level_starts))
+                         SpatialCoordinateView coordinate_list,
+                         SpatialDeltaView endpoints = {})
+        : m_search_tree(std::move(search_tree_)), m_coordinate_list(coordinate_list),
+          m_tree_level_starts(std::move(tree_level_starts)), m_endpoints(endpoints)
     {
         BOOST_ASSERT(m_tree_level_starts.size() >= 2);
-        m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);
+        if (m_endpoints)
+        {
+            m_compact_objects = mmapFile<CompactLeaf>(on_disk_file_name, m_objects_region);
+            if (m_objects_region.size() % sizeof(CompactLeaf) != 0)
+                throw exception("Invalid packed R-tree leaf file size");
+            m_endpoints.validate(2 * m_compact_objects.size());
+        }
+        else
+            m_objects = mmapFile<EdgeDataT>(on_disk_file_name, m_objects_region);
     }
 
     /* Returns all features inside the bounding box.
@@ -586,7 +624,7 @@ class StaticRTree
             }
             else
             { // current candidate is an actual road segment
-                const auto &edge_data = m_objects[current_query_node.segment_index];
+                const auto &edge_data = getObject(current_query_node.segment_index);
                 // We deliberately make an edge data copy here, we mutate the value below
                 CandidateSegment current_candidate{current_query_node.fixed_projected_coordinate,
                                                    edge_data};
@@ -643,7 +681,7 @@ class StaticRTree
                 // last
                 for (const auto current_child_index : child_indexes(current_tree_index))
                 {
-                    const auto &current_edge = m_objects[current_child_index];
+                    const auto &current_edge = getObject(current_child_index);
 
                     // we don't need to project the coordinates here,
                     // because we use the unprojected rectangle to test against
@@ -698,12 +736,29 @@ class StaticRTree
         // Check that we're actually looking at the bottom level of the tree
         BOOST_ASSERT(is_leaf(leaf_id));
 
+        NodeID previous_u = SPECIAL_NODEID;
+        NodeID previous_v = SPECIAL_NODEID;
+        FloatCoordinate previous_projected_u{};
+        FloatCoordinate previous_projected_v{};
+        const auto project_endpoint = [&](NodeID node)
+        {
+            if (node == previous_u)
+                return previous_projected_u;
+            if (node == previous_v)
+                return previous_projected_v;
+            return web_mercator::fromWGS84(m_coordinate_list[node]);
+        };
+
         for (const auto i : child_indexes(leaf_id))
         {
-            const auto &current_edge = m_objects[i];
+            const auto &current_edge = getObject(i);
 
-            const auto projected_u = web_mercator::fromWGS84(m_coordinate_list[current_edge.u]);
-            const auto projected_v = web_mercator::fromWGS84(m_coordinate_list[current_edge.v]);
+            const auto projected_u = project_endpoint(current_edge.u);
+            const auto projected_v = project_endpoint(current_edge.v);
+            previous_u = current_edge.u;
+            previous_v = current_edge.v;
+            previous_projected_u = projected_u;
+            previous_projected_v = projected_v;
 
             FloatCoordinate projected_nearest;
             std::tie(std::ignore, projected_nearest) =
@@ -783,11 +838,11 @@ class StaticRTree
         {
             const std::uint64_t first_child_index = parent.offset * LEAF_NODE_SIZE;
             const std::uint64_t end_child_index = std::min(
-                first_child_index + LEAF_NODE_SIZE, static_cast<std::uint64_t>(m_objects.size()));
+                first_child_index + LEAF_NODE_SIZE, static_cast<std::uint64_t>(objectCount()));
 
             BOOST_ASSERT(first_child_index < std::numeric_limits<std::uint32_t>::max());
             BOOST_ASSERT(end_child_index < std::numeric_limits<std::uint32_t>::max());
-            BOOST_ASSERT(end_child_index <= m_objects.size());
+            BOOST_ASSERT(end_child_index <= objectCount());
 
             return irange<std::size_t>(first_child_index, end_child_index);
         }

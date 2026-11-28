@@ -26,6 +26,7 @@
 #include "util/guidance/turn_lanes.hpp"
 #include "util/integer_range.hpp"
 #include "util/packed_vector.hpp"
+#include "util/spatial_delta_view.hpp"
 #include "util/string_util.hpp"
 #include "util/typedefs.hpp"
 
@@ -49,7 +50,7 @@ class BaseDataFacade
   public:
     using RTreeLeaf = extractor::EdgeBasedNodeSegment;
 
-    using NodeForwardRange = std::span<const NodeID>;
+    using NodeForwardRange = util::SpatialNodeRange;
     using NodeReverseRange = std::ranges::reverse_view<NodeForwardRange>;
 
     using WeightForwardRange =

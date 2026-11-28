@@ -144,13 +144,15 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
 
     std::uint32_t m_check_sum;
     std::string_view m_data_timestamp;
-    util::vector_view<util::Coordinate> m_coordinate_list;
+    util::SpatialCoordinateView m_coordinate_list;
     extractor::PackedOSMIDsView m_osmnodeid_list;
     std::optional<util::vector_view<std::uint32_t>> m_lane_description_offsets;
     std::optional<util::vector_view<extractor::TurnLaneType::Mask>> m_lane_description_masks;
     util::vector_view<TurnPenalty> m_turn_weight_penalties;
     util::vector_view<TurnPenalty> m_turn_duration_penalties;
     extractor::SegmentDataView segment_data;
+    util::vector_view<unsigned> geometry_index;
+    util::SpatialNodeLookup geometry_nodes;
     extractor::EdgeBasedNodeDataView edge_based_node_data;
     std::optional<osrm::guidance::TurnDataView> turn_data;
 
@@ -258,7 +260,20 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
         m_turn_weight_penalties = make_turn_weight_view(index, turn_prefix + "/turn_penalty");
         m_turn_duration_penalties = make_turn_duration_view(index, turn_prefix + "/turn_penalty");
 
-        segment_data = make_segment_data_view(index, "/common/segment_data");
+        const std::string geometry_name = "/common/segment_data";
+        segment_data = make_segment_data_view(index, geometry_name);
+        geometry_index = make_vector_view<unsigned>(index, geometry_name + "/index");
+        if (index.HasBlock(geometry_name + "/nodes_spatial/headers"))
+        {
+            geometry_nodes.packed =
+                make_spatial_delta_view(index, geometry_name + "/nodes_spatial");
+            geometry_nodes.packed.validate(geometry_index.back());
+        }
+        else
+        {
+            const auto nodes = make_vector_view<NodeID>(index, geometry_name + "/nodes");
+            geometry_nodes.plain = {nodes.data(), nodes.size()};
+        }
 
         m_datasources = index.GetBlockPtr<extractor::Datasources>("/common/data_sources_names");
 
@@ -291,10 +306,13 @@ class ContiguousInternalMemoryDataFacadeBase : public BaseDataFacade
     { return m_osmnodeid_list[node_based_node_id]; }
 
     NodeForwardRange GetUncompressedForwardGeometry(const PackedGeometryID id) const override final
-    { return segment_data.GetForwardGeometry(id); }
+    {
+        return util::makeSpatialNodeRange(
+            geometry_nodes, geometry_index[id], geometry_index[id + 1]);
+    }
 
     NodeReverseRange GetUncompressedReverseGeometry(const PackedGeometryID id) const override final
-    { return segment_data.GetReverseGeometry(id); }
+    { return NodeReverseRange{GetUncompressedForwardGeometry(id)}; }
 
     DurationForwardRange
     GetUncompressedForwardDurations(const PackedGeometryID id) const override final

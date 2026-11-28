@@ -8,7 +8,8 @@
 
 namespace osrm::storage
 {
-inline constexpr std::uint64_t COMPACT_DATASET_VERSION = 2;
+inline constexpr std::uint64_t SPATIAL_PACKED_DATASET_VERSION = 3;
+inline constexpr auto COMPACT_DATASET_VERSION = SPATIAL_PACKED_DATASET_VERSION;
 inline constexpr auto COMPACT_VERSION_ENTRY = "/common/compact_format/version";
 inline constexpr auto COMPACT_INCOMPLETE_FILE = ".osrm-compact-incomplete";
 
@@ -44,8 +45,8 @@ inline bool isCompactDataset(const std::filesystem::path &base_path)
 inline void requireMutableDataset(const std::filesystem::path &base_path)
 {
     if (isCompactDataset(base_path))
-        throw util::exception("This legacy query-only dataset needs to be rebuilt with the current "
-                              "preprocessing tools.");
+        throw util::exception("Query-only datasets cannot be modified. Run the preprocessing "
+                              "tools on the source dataset.");
 }
 } // namespace osrm::storage
 
