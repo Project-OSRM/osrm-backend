@@ -4,7 +4,7 @@
 #include "partitioner/bisection_graph_view.hpp"
 
 #include <cstdint>
-#include <unordered_set>
+#include <span>
 #include <vector>
 
 namespace osrm::partitioner
@@ -23,17 +23,14 @@ class DinicMaxFlow
         std::vector<bool> flags;
     };
 
-    // input parameter storing the set o
-    using SourceSinkNodes = std::unordered_set<NodeID>;
+    enum class Terminal : std::uint8_t
+    {
+        None,
+        Source,
+        Sink
+    };
 
-    MinCut operator()(const BisectionGraphView &view,
-                      const SourceSinkNodes &source_nodes,
-                      const SourceSinkNodes &sink_nodes) const;
-
-    // validates the inpiut parameters to the flow algorithm (e.g. not intersecting)
-    bool Validate(const BisectionGraphView &view,
-                  const SourceSinkNodes &source_nodes,
-                  const SourceSinkNodes &sink_nodes) const;
+    MinCut operator()(const BisectionGraphView &view, std::span<const Terminal> terminals) const;
 
   private:
     // the level of each node in the graph (==hops in BFS from source)
@@ -52,8 +49,7 @@ class DinicMaxFlow
     // would assign s = 0, a,b = 1, t=2
     LevelGraph ComputeLevelGraph(const BisectionGraphView &view,
                                  const std::vector<NodeID> &border_source_nodes,
-                                 const SourceSinkNodes &source_nodes,
-                                 const SourceSinkNodes &sink_nodes,
+                                 std::span<const Terminal> terminals,
                                  const FlowEdges &flow) const;
 
     // Using the above levels (see ComputeLevelGraph), we can use multiple DFS (that can now be
@@ -62,7 +58,7 @@ class DinicMaxFlow
     std::size_t BlockingFlow(FlowEdges &flow,
                              LevelGraph &levels,
                              const BisectionGraphView &view,
-                             const SourceSinkNodes &source_nodes,
+                             std::span<const Terminal> terminals,
                              const std::vector<NodeID> &border_sink_nodes) const;
 
     // Finds a single augmenting path from a node to the sink side following levels in the level
@@ -73,10 +69,10 @@ class DinicMaxFlow
                                           const NodeID from,
                                           const BisectionGraphView &view,
                                           const FlowEdges &flow,
-                                          const SourceSinkNodes &source_nodes) const;
+                                          std::span<const Terminal> terminals) const;
 
     // Builds an actual cut result from a level graph
-    MinCut MakeCut(const BisectionGraphView &view,
+    MinCut MakeCut(std::span<const Terminal> terminals,
                    const LevelGraph &levels,
                    const std::size_t flow_value) const;
 };

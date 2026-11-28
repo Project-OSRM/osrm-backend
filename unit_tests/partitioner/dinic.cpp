@@ -60,16 +60,17 @@ BOOST_AUTO_TEST_CASE(horizontal_cut_between_two_grids)
     RecursiveBisectionState bisection_state(graph);
     BisectionGraphView view(graph);
 
-    DinicMaxFlow::SourceSinkNodes sources, sinks;
+    using Terminal = DinicMaxFlow::Terminal;
+    std::vector<Terminal> terminals(view.NumberOfNodes(), Terminal::None);
 
     for (int i = 0; i < 10; ++i)
     {
-        sources.insert(static_cast<NodeID>(i));
-        sinks.insert(static_cast<NodeID>(1000 + i));
+        terminals[i] = Terminal::Source;
+        terminals[1000 + i] = Terminal::Sink;
     }
 
     DinicMaxFlow flow;
-    const auto cut = flow(view, sources, sinks);
+    const auto cut = flow(view, terminals);
     BOOST_CHECK(cut.num_edges == 4);
 }
 

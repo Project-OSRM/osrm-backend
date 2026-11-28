@@ -8,7 +8,6 @@
 #include <cstddef>
 #include <iterator>
 #include <mutex>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -19,18 +18,9 @@ namespace osrm::partitioner
 {
 namespace
 {
-// Spatially ordered sources and sink ids.
-// The node ids refer to nodes in the GraphView.
-struct SpatialOrder
-{
-    std::unordered_set<NodeID> sources;
-    std::unordered_set<NodeID> sinks;
-};
-
-// Creates a spatial order of n * sources "first" and n * sink "last" node ids.
-// The slope determines the spatial order for sorting node coordinates.
-SpatialOrder
-makeSpatialOrder(const BisectionGraphView &view, const double ratio, const double slope)
+// Mark the n * ratio nodes at each end of the spatial order as terminals.
+std::vector<DinicMaxFlow::Terminal>
+makeTerminals(const BisectionGraphView &view, const double ratio, const double slope)
 {
     struct NodeWithCoordinate
     {
@@ -75,18 +65,14 @@ makeSpatialOrder(const BisectionGraphView &view, const double ratio, const doubl
 
     reorderFirstLast(embedding, n, spatially);
 
-    SpatialOrder order;
-
-    order.sources.reserve(n);
-    order.sinks.reserve(n);
-
+    using Terminal = DinicMaxFlow::Terminal;
+    std::vector<Terminal> terminals(embedding.size(), Terminal::None);
     for (auto it = begin(embedding), last = begin(embedding) + n; it != last; ++it)
-        order.sources.insert(it->nid);
-
+        terminals[it->nid] = Terminal::Source;
     for (auto it = end(embedding) - n, last = end(embedding); it != last; ++it)
-        order.sinks.insert(it->nid);
+        terminals[it->nid] = Terminal::Sink;
 
-    return order;
+    return terminals;
 }
 
 // Makes n cuts with different spatial orders and returns the best.
@@ -131,8 +117,8 @@ DinicMaxFlow::MinCut bestMinCut(const BisectionGraphView &view,
                           {
                               const auto slope = -1. + round * (2. / n);
 
-                              auto order = makeSpatialOrder(view, ratio, slope);
-                              auto cut = DinicMaxFlow()(view, order.sources, order.sinks);
+                              const auto terminals = makeTerminals(view, ratio, slope);
+                              auto cut = DinicMaxFlow()(view, terminals);
                               auto cut_balance = get_balance(cut.num_nodes_source);
 
                               {

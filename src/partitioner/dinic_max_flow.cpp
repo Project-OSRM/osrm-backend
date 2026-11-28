@@ -1,11 +1,10 @@
 #include "partitioner/dinic_max_flow.hpp"
-#include "util/integer_range.hpp"
 
 #include <algorithm>
 #include <limits>
-#include <numeric>
 #include <queue>
 #include <stack>
+#include <unordered_set>
 
 namespace osrm::partitioner
 {
@@ -14,18 +13,6 @@ namespace
 {
 
 const auto constexpr INVALID_LEVEL = std::numeric_limits<DinicMaxFlow::Level>::max();
-
-auto makeHasNeighborNotInCheck(const DinicMaxFlow::SourceSinkNodes &set,
-                               const BisectionGraphView &view)
-{
-    return [&](const NodeID nid)
-    {
-        const auto is_not_contained = [&set](const BisectionEdge &edge)
-        { return !set.contains(edge.target); };
-        return view.EndEdges(nid) !=
-               std::find_if(view.BeginEdges(nid), view.EndEdges(nid), is_not_contained);
-    };
-}
 
 } // end namespace
 
@@ -80,30 +67,28 @@ class DinicMaxFlow::FlowEdges
 };
 
 DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
-                                              const SourceSinkNodes &source_nodes,
-                                              const SourceSinkNodes &sink_nodes) const
+                                              std::span<const Terminal> terminals) const
 {
-    BOOST_ASSERT(Validate(view, source_nodes, sink_nodes));
-    // for the inertial flow algorithm, we use quite a large set of nodes as source/sink nodes. Only
-    // a few of them can be part of the process, since they are grouped together. A standard
-    // parameterisation would be 25% sink/source nodes. This already includes 50% of the graph. By
-    // only focussing on a small set on the outside of the source/sink blob, we can save quite some
-    // overhead in initialisation/search cost.
+    BOOST_ASSERT(terminals.size() == view.NumberOfNodes());
 
+    // Start only from the boundary of each terminal region.
     std::vector<NodeID> border_source_nodes;
-    border_source_nodes.reserve(0.01 * source_nodes.size());
-
-    std::copy_if(source_nodes.begin(),
-                 source_nodes.end(),
-                 std::back_inserter(border_source_nodes),
-                 makeHasNeighborNotInCheck(source_nodes, view));
-
     std::vector<NodeID> border_sink_nodes;
-    border_sink_nodes.reserve(0.01 * sink_nodes.size());
-    std::copy_if(sink_nodes.begin(),
-                 sink_nodes.end(),
-                 std::back_inserter(border_sink_nodes),
-                 makeHasNeighborNotInCheck(sink_nodes, view));
+    for (std::size_t index = 0; index < terminals.size(); ++index)
+    {
+        const auto terminal = terminals[index];
+        if (terminal == Terminal::None)
+            continue;
+
+        const auto node = static_cast<NodeID>(index);
+        const auto edges = view.Edges(node);
+        if (std::ranges::any_of(
+                edges, [&](const auto &edge) { return terminals[edge.target] != terminal; }))
+        {
+            auto &border = terminal == Terminal::Source ? border_source_nodes : border_sink_nodes;
+            border.push_back(node);
+        }
+    }
 
     // edges in current flow that have capacity
     // The graph (V,E) contains undirected edges for all (u,v) \in V x V. We describe the flow as a
@@ -116,7 +101,7 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
     std::size_t flow_value = 0;
     do
     {
-        auto levels = ComputeLevelGraph(view, border_source_nodes, source_nodes, sink_nodes, flow);
+        auto levels = ComputeLevelGraph(view, border_source_nodes, terminals, flow);
 
         // check if the sink can be reached from the source, it's enough to check the border
         const auto separated =
@@ -127,43 +112,38 @@ DinicMaxFlow::MinCut DinicMaxFlow::operator()(const BisectionGraphView &view,
 
         if (!separated)
         {
-            flow_value += BlockingFlow(flow, levels, view, source_nodes, border_sink_nodes);
+            flow_value += BlockingFlow(flow, levels, view, terminals, border_sink_nodes);
         }
         else
         {
-            // mark levels for all sources to not confuse make-cut (due to the border nodes
-            // heuristic)
-            for (auto s : source_nodes)
-                levels[s] = 0;
-            auto cut = MakeCut(view, levels, flow_value);
-            return cut;
+            return MakeCut(terminals, levels, flow_value);
         }
     } while (true);
 }
 
-DinicMaxFlow::MinCut DinicMaxFlow::MakeCut(const BisectionGraphView &view,
+DinicMaxFlow::MinCut DinicMaxFlow::MakeCut(std::span<const Terminal> terminals,
                                            const LevelGraph &levels,
                                            const std::size_t flow_value) const
 {
-    const auto is_valid_level = [](const Level level) { return level != INVALID_LEVEL; };
+    BOOST_ASSERT(terminals.size() == levels.size());
 
-    // all elements within `levels` are on the source side
-    // This part should opt to find the most balanced cut, which is not necessarily the case right
-    // now. There is potential for optimisation here.
-    std::vector<bool> result(view.NumberOfNodes());
-
-    BOOST_ASSERT(view.NumberOfNodes() == levels.size());
-    std::size_t source_side_count = std::count_if(levels.begin(), levels.end(), is_valid_level);
-    std::transform(levels.begin(), levels.end(), result.begin(), is_valid_level);
-
+    // Interior sources are also on the source side, although BFS skips them.
+    std::vector<bool> result(levels.size());
+    std::size_t source_side_count = 0;
+    for (std::size_t node = 0; node < levels.size(); ++node)
+    {
+        const auto on_source_side =
+            levels[node] != INVALID_LEVEL || terminals[node] == Terminal::Source;
+        result[node] = on_source_side;
+        source_side_count += on_source_side;
+    }
     return {source_side_count, flow_value, std::move(result)};
 }
 
 DinicMaxFlow::LevelGraph
 DinicMaxFlow::ComputeLevelGraph(const BisectionGraphView &view,
                                 const std::vector<NodeID> &border_source_nodes,
-                                const SourceSinkNodes &source_nodes,
-                                const SourceSinkNodes &sink_nodes,
+                                std::span<const Terminal> terminals,
                                 const FlowEdges &flow) const
 {
     LevelGraph levels(view.NumberOfNodes(), INVALID_LEVEL);
@@ -177,7 +157,7 @@ DinicMaxFlow::ComputeLevelGraph(const BisectionGraphView &view,
         levels[node_id] = 0;
         level_queue.push(node_id);
         for (const auto &edge : view.Edges(node_id))
-            if (source_nodes.contains(edge.target))
+            if (terminals[edge.target] == Terminal::Source)
                 levels[edge.target] = 0;
     }
     // check if there is flow present on an edge
@@ -188,7 +168,7 @@ DinicMaxFlow::ComputeLevelGraph(const BisectionGraphView &view,
     const auto relax_node = [&](const NodeID node_id)
     {
         // don't relax sink nodes
-        if (sink_nodes.contains(node_id))
+        if (terminals[node_id] == Terminal::Sink)
             return;
 
         const auto level = levels[node_id] + 1;
@@ -221,7 +201,7 @@ DinicMaxFlow::ComputeLevelGraph(const BisectionGraphView &view,
 std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
                                        LevelGraph &levels,
                                        const BisectionGraphView &view,
-                                       const SourceSinkNodes &source_nodes,
+                                       std::span<const Terminal> terminals,
                                        const std::vector<NodeID> &border_sink_nodes) const
 {
     // track the number of augmenting paths (which in sum will equal the number of unique border
@@ -257,7 +237,7 @@ std::size_t DinicMaxFlow::BlockingFlow(FlowEdges &flow,
         while (true)
         {
             // as long as there are augmenting paths from the sink, add them
-            const auto path = GetAugmentingPath(levels, sink_node_id, view, flow, source_nodes);
+            const auto path = GetAugmentingPath(levels, sink_node_id, view, flow, terminals);
             if (path.empty())
                 break;
             else
@@ -279,10 +259,10 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
                                                     const NodeID node_id,
                                                     const BisectionGraphView &view,
                                                     const FlowEdges &flow,
-                                                    const SourceSinkNodes &source_nodes) const
+                                                    std::span<const Terminal> terminals) const
 {
     std::vector<NodeID> path;
-    BOOST_ASSERT(!source_nodes.contains(node_id));
+    BOOST_ASSERT(terminals[node_id] != Terminal::Source);
 
     // Keeps the local state of the DFS in forms of the iterators
     struct DFSState
@@ -319,7 +299,7 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
                 path.push_back(target);
 
                 // termination
-                if (source_nodes.contains(target))
+                if (terminals[target] == Terminal::Source)
                 {
                     std::reverse(path.begin(), path.end());
                     return path;
@@ -337,26 +317,6 @@ std::vector<NodeID> DinicMaxFlow::GetAugmentingPath(LevelGraph &levels,
     }
     BOOST_ASSERT(path.empty());
     return path;
-}
-
-bool DinicMaxFlow::Validate(const BisectionGraphView &view,
-                            const SourceSinkNodes &source_nodes,
-                            const SourceSinkNodes &sink_nodes) const
-{
-    // sink and source cannot share a common node
-    const auto separated =
-        std::find_if(source_nodes.begin(),
-                     source_nodes.end(),
-                     [&sink_nodes](const auto node)
-                     { return sink_nodes.contains(node); }) == source_nodes.end();
-
-    const auto invalid_id = [&view](const NodeID nid) { return nid >= view.NumberOfNodes(); };
-    const auto in_range_source =
-        std::find_if(source_nodes.begin(), source_nodes.end(), invalid_id) == source_nodes.end();
-    const auto in_range_sink =
-        std::find_if(sink_nodes.begin(), sink_nodes.end(), invalid_id) == sink_nodes.end();
-
-    return separated && in_range_source && in_range_sink;
 }
 
 } // namespace osrm::partitioner
