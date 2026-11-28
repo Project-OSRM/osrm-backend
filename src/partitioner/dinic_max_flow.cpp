@@ -21,11 +21,14 @@ class DinicMaxFlow::FlowEdges
   public:
     explicit FlowEdges(const std::size_t size) : m_targets(size, SPECIAL_NODEID) {}
 
-    bool contains(const NodeID from, const NodeID to) const
+    auto outgoing(const NodeID from) const
     {
         const auto target = m_targets[from];
-        return target == from ? m_overflow.contains(key(from, to)) : target == to;
+        return [this, from, target](const NodeID to)
+        { return target == from ? m_overflow.contains(key(from, to)) : target == to; };
     }
+
+    bool contains(const NodeID from, const NodeID to) const { return outgoing(from)(to); }
 
     bool erase(const NodeID from, const NodeID to)
     {
@@ -163,39 +166,23 @@ DinicMaxFlow::ComputeLevelGraph(const BisectionGraphView &view,
             if (terminals[edge.target] == Terminal::Source)
                 levels[edge.target] = 0;
     }
-    // check if there is flow present on an edge
-    const auto has_flow = [&](const NodeID from, const NodeID to)
-    { return flow.contains(from, to); };
-
-    // perform a relaxation step in the BFS algorithm
-    const auto relax_node = [&](const NodeID node_id)
-    {
-        // don't relax sink nodes
-        if (terminals[node_id] == Terminal::Sink)
-            return;
-
-        const auto level = levels[node_id] + 1;
-        for (const auto &edge : view.Edges(node_id))
-        {
-            const auto target = edge.target;
-            // don't relax edges with flow on them
-            if (has_flow(node_id, target))
-                continue;
-
-            // don't go back, only follow edges to new nodes
-            if (levels[target] > level)
-            {
-                level_queue.push(target);
-                levels[target] = level;
-            }
-        }
-    };
-
-    // compute the levels of level graph using BFS
     while (!level_queue.empty())
     {
-        relax_node(level_queue.front());
+        const auto node = level_queue.front();
         level_queue.pop();
+
+        const auto next_level = levels[node] + 1;
+        const auto has_flow = flow.outgoing(node);
+        for (const auto &edge : view.Edges(node))
+        {
+            const auto target = edge.target;
+            if (levels[target] <= next_level || has_flow(target))
+                continue;
+
+            levels[target] = next_level;
+            if (terminals[target] != Terminal::Sink)
+                level_queue.push(target);
+        }
     }
 
     return levels;
